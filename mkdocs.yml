@@ -1,4 +1,5 @@
-site_name: Ligato Documentation
+site_name: Ligato
+site_description: Ligato documentation
 repo_url: https://github.com/ligato/docs.ligato.io
 
 theme: readthedocs
