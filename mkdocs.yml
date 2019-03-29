@@ -2,7 +2,7 @@ site_name: Ligato Documentation
 repo_url: https://github.com/ligato/docs.ligato.io
 
 nav:
-- Home: Home.md
+- Home: index.md
 - CNF: 'CNF/CNF-definition.md'
 - CN Infra: 'Infra/cn-toc-file.md' 
 - VPP Agent: 'user-guide/User-Guide.md'
