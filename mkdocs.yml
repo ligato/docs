@@ -1,6 +1,8 @@
 site_name: Ligato Documentation
 repo_url: https://github.com/ligato/docs.ligato.io
 
+theme: readthedocs
+
 nav:
 - Home: index.md
 - CNF: 'CNF/CNF-definition.md'
