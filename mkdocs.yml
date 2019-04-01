@@ -7,30 +7,30 @@ theme: readthedocs
 extra_css:
   - extra.css
 
-nav:
-  - INTRODUCTION:
-    - CNF definition: intro/cnf-definition.md
-    - Overview: intro/overview.md
-    - CN-Infra: intro/cn-toc-file.md
-  - USER GUIDE:
-    - Quickstart guide: user-guide/quickstart.md
-    - Learn how to: user-guide/learn-how-to.md
-    - Concepts: user-guide/concepts.md
-    - References: user-guide/references.md
-    - Default VPP plugins: user-guide/default-vpp-plugins.md
-    - Other VPP plugins: user-guide/other-vpp-plugins.md
-    - Linux plugins: user-guide/linux-plugins.md
-    - Framework plugins: user-guide/framework-plugins.md
-  - DEVELOPER GUIDE:
-    - KV Descriptors: developer-guide/implementing-your-own-kvdescriptor.md
-    - Go Docs: developer-guide/godocs.md
-  - TUTORIALS:
-    - Hello World: tutorials/01_hello-world.md
-    - Plugin Dependencies: tutorials/02_plugin-deps.md
-    - REST Handler: tutorials/03_rest-handler.md
-    - KV Datastore: tutorials/04_kv-store.md
-    - KV Scheduler: tutorials/05_kv-scheduler.md
-    - Plugin Lookup: tutorials/06_plugin-lookup.md
-    - VPP Connection: tutorials/07_vpp-connection.md
-  - TROUBLESHOOTING:
-    - FAQ: troubleshooting/faq.md
+pages:
+- INTRODUCTION:
+  - CNF definition: intro/cnf-definition.md
+  - Overview: intro/overview.md
+  - CN-Infra: intro/cn-toc-file.md
+- USER GUIDE:
+  - Quickstart guide: user-guide/quickstart.md
+  - Learn how to: user-guide/learn-how-to.md
+  - Concepts: user-guide/concepts.md
+  - References: user-guide/references.md
+  - Default VPP plugins: user-guide/default-vpp-plugins.md
+  - Other VPP plugins: user-guide/other-vpp-plugins.md
+  - Linux plugins: user-guide/linux-plugins.md
+  - Framework plugins: user-guide/framework-plugins.md
+- DEVELOPER GUIDE:
+  - KV Descriptors: developer-guide/implementing-your-own-kvdescriptor.md
+  - Go Docs: developer-guide/godocs.md
+- TUTORIALS:
+  - Hello World: tutorials/01_hello-world.md
+  - Plugin Dependencies: tutorials/02_plugin-deps.md
+  - REST Handler: tutorials/03_rest-handler.md
+  - KV Datastore: tutorials/04_kv-store.md
+  - KV Scheduler: tutorials/05_kv-scheduler.md
+  - Plugin Lookup: tutorials/06_plugin-lookup.md
+  - VPP Connection: tutorials/07_vpp-connection.md
+- TROUBLESHOOTING:
+  - FAQ: troubleshooting/faq.md
