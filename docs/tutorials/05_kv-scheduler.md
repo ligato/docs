@@ -1,8 +1,8 @@
 # Tutorial: Using the KV Scheduler in your plugin
 
-This tutorial shows how to use the ['KV Scheduler'][5] in our hello world plugin that was created in previous
-tutorials. You will learn how to prepare a descriptor, generate the adapter and wire the plugin with the KV 
-Scheduler. 
+This tutorial shows how to use the ['KV Scheduler'][5] in our hello world plugin that was created in the 
+[previous tutorials](https://ligato.io/cn-infra/tutorials/01_hello-world). You will learn how to prepare
+a descriptor, generate the adapter and "wire" the plugin with the KV Scheduler. 
 
 Requirements:
 * Complete and understand the ['Hello World Agent'](https://ligato.io/cn-infra/tutorials/01_hello-world) tutorial
