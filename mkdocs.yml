@@ -5,7 +5,7 @@ repo_url: https://github.com/ligato/docs.ligato.io
 theme: readthedocs
 
 extra_css:
-  - extra.css
+  - css/extra.css
 
 nav:
 - INTRODUCTION:

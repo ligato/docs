@@ -792,7 +792,7 @@ All the incoming traffic matching one of the VPP interface addresses, and also m
 
 ### <a name="pths-model">Model</a>
 
-The punt plugin defines the following [model](../model/punt/punt.proto) which grants support for two main configuration items defined by different northbound keys.
+The punt plugin defines the following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/punt/punt.proto) which grants support for two main configuration items defined by different northbound keys.
 
 The punt to host is defined as `ToHost` object in the generated proto model. 
 

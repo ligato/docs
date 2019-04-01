@@ -125,7 +125,7 @@ The ACL plugin handles the configuration of the VPP access control lists. The AC
 
 **Interface plugin**
 
-More in: [if plugin](VPP-Interface-plugin) 
+More in: [if plugin](../user-guide/default-vpp-plugins.md) 
 
 The interface plugin creates various types of interfaces (e.g. DPDK, MEMIF, TAP ...) in the VPP, and also configure base fields (IP address, MAC address) or more advanced features like unnumbered interfaces or RX-mode. 
 
@@ -137,13 +137,13 @@ The plugin configures VPP Security policy databases (SPD) and security associati
 
 **L2 plugin**
 
-More in: [l2-plugin](L2-plugin)
+More in: [l2-plugin](../user-guide/default-vpp-plugins.md)
 
 The plugin handles data link layer configuration items - VPP bridge domains, forwarding information base (FIB) or VPP cross-connects.
 
 **L3 plugin**
 
-More in: [l3-plugin](L3-plugin.md)
+More in: [l3-plugin](../user-guide/default-vpp-plugins.md)
 
 The L3 plugin configures L3-related features like ARPs (including proxy ARPs) or Routes.
 
@@ -182,7 +182,7 @@ The Linux L3 plugin can be used to configure Linux routes or ARPs.
 
 **Namespace plugin**
 
-More in: [ns-plugin](Namespace-plugin.)
+More in: [ns-plugin](../user-guide/linux-plugins.md)
 
 The namespace plugin is a helper plugin tied with the Linux interface/l3 plugins. It manages namespaces in terms of Linux (named namespace) or as a microservice in the container-based environment.  
 

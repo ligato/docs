@@ -347,7 +347,7 @@ So we ended up with the configuration which cannot be removed (until the bridge 
 
 The vpp-agent uses northbound API definition of every supported configuration item, while the single proto-modelled dataset may call multiple binary API calls to the VPP. For example NB interface configuration creates the interface itself, sets its state, MAC address, IP addresses and other. However, the vpp-agent goes even further - it allows to "configure" VPP items with not-yet-existing references. Such an item is not really configured (since it cannot be), but the agent "remembers" it and puts to the VPP when possible, without any other intervention, thus removing strict VPP ordering.
 
-**Note:** if you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide](../quickstart.md).
+**Note:** if you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide](quickstart.md).
 
 1. Let's start from the end and put configuration for the FIB entry:
 ```bash
@@ -423,7 +423,7 @@ The output:
 Notice that the first performed operation was removal of the FIB entry, but the value was not discarded by the vpp-agent since it still exists in the ETCD. The vpp-agent put the value back to the cache. This is important step since the FIB entry is removed before the bridge domain, so it will not get mis-configured and stuck in the VPP. The value no longer exists on the VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any action required from outside.
 The second step means that the interface `if1` was removed from the bridge domain, before its removal in the last step of the transaction.
 
-The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here](../KVScheduler.md).
+The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here](other-vpp-plugins.md).
 
 # VPP multi-version support
 
