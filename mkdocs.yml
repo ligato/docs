@@ -32,5 +32,11 @@ nav:
   - KV Scheduler: tutorials/05_kv-scheduler.md
   - Plugin Lookup: tutorials/06_plugin-lookup.md
   - VPP Connection: tutorials/07_vpp-connection.md
+- TOOLS:
+    - VPP-Agent-Ctl: tools/vpp-agent-ctl.md
 - TROUBLESHOOTING:
   - FAQ: troubleshooting/faq.md
+
+markdown_extensions:
+  - toc:
+      permalink: 

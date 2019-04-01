@@ -1,3 +1,5 @@
+# KV Scheduler
+
 **Related article:** [Implement your own KV Descriptor](../developer-guide/implementing-your-own-kvdescriptor.md)
 
 A major enhancement that led to the increase of the agent's major version number from 1.x to 2.x, is an introduction of a new framework, called **KVScheduler**, providing transaction-based configuration processing with a generic mechanism for dependency resolution between configuration items, which in effect simplifies and unifies the configurators. KVScheduler is shipped as a separate [plugin], even though it is now a core component around which all the VPP and Linux configurators have been re-build.
