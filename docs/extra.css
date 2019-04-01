@@ -1,0 +1,8 @@
+.wy-menu-vertical span {
+    color: steelblue;
+    font-weight: bold;
+}
+
+.wy-menu-vertical a, .wy-menu-vertical .subnav a {
+    margin-left: -12px;
+}
