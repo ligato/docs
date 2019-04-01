@@ -5,7 +5,7 @@ repo_url: https://github.com/ligato/docs.ligato.io
 theme: readthedocs
 
 nav:
-- Home: index.md
+- Home: index.rst
 - CNF: 'CNF/CNF-definition.md'
 - CN Infra: 'Infra/cn-toc-file.md' 
 - VPP Agent: 'user-guide/User-Guide.md'
