@@ -18,10 +18,10 @@ agents tied together with a common life-cycle management mechanism.
 
 * Pointers
 
-# Overview
+### Overview
 
-# Architecture
+### Architecture
 
-# Plugins
+### Plugins
 
-# Examples
+### Examples

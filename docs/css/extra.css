@@ -6,3 +6,10 @@
 .wy-menu-vertical a, .wy-menu-vertical .subnav a {
     margin-left: -12px;
 }
+
+li.toctree-l3 > a:link,
+li.toctree-l3 > a:visited {
+    font-weight: bold;
+    color: dimgrey;
+    margin-left: -24px;
+}
