@@ -4,7 +4,7 @@ repo_url: https://github.com/ligato/docs.ligato.io
 
 theme: readthedocs
 
-pages:
+nav:
   - INTRODUCTION:
     - CNF definition: intro/cnf-definition.md
     - Overview: intro/overview.md
