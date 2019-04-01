@@ -7,7 +7,7 @@ theme: readthedocs
 extra_css:
   - extra.css
 
-pages:
+nav:
 - INTRODUCTION:
   - CNF definition: intro/cnf-definition.md
   - Overview: intro/overview.md
