@@ -191,7 +191,7 @@ The VPP-Agent-ctl is a utility tool whose primary purpose is to test and trouble
 
 Container-based development environment for the VPP-Agent and for app/extension plugins. Docker image is available for [development](https://hub.docker.com/r/ligato/dev-vpp-agent) and [production](https://hub.docker.com/r/ligato/vpp-agent) version of the VPP-Agent with compatible VPP.
 
-# <a name="whattodo">What to do next?</a>
+# What to do next?
 
 Already familiar with the VPP-Agent basics and concepts? [Learn how to use it](Learn-how-to), try some of our [examples](https://github.com/ligato/vpp-agent/blob/master/examples/README.md), read more in other [user-guide articles](../User-Guide) or try to make your own plugin. //TODO link to dev guide  
 
