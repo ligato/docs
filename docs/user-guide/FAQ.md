@@ -72,7 +72,7 @@ Make sure that:
 * The VPP-Agent is connected to given KVDB
 * The plugin configuring given data type is loaded (watcher to the key type was started)
 * The microservice label is defined correctly in the key inside KVDB, and in the Agent
-* The key is in the correct format (please refer to the [user guide](../User-Guide.md) and find appropriate plugin documentation)
+* The key is in the correct format (please refer to the [user guide](User-Guide.md) and find appropriate plugin documentation)
 * If the Redis database is used, make sure the event notifications are allowed (they are usually disabled by default). If not, enable it with command `config SET notify-keyspace-events KA` (use for example `redis-cli`), and try again
 
 ## <a name="grpc">GRPC</a>

@@ -1,4 +1,35 @@
+Ligato vpp-agent
+================
+
 Welcome to the vpp-agent wiki, a collection of information about the [vpp-agent](https://ligato.io/vpp-agent).
+
+Introduction
+------------
+
+CNF
+---
+
+User Guide
+----------
+
+Developer Guide
+---------------
+
+Tutorials
+---------
+
+Go Docs
+-------
+
+Testing
+-------
+
+Troubleshooting
+---------------
+
+Releases
+--------
+
 
 ## Getting started with the vpp-agent
 - [User Guide](user-guide/User-Guide) is the best place to start for users.
