@@ -1,12 +1,14 @@
-**Related article:** [KV Scheduler](../user-guide/framework-plugins.md)
+# KV Descriptor developer guide
 
-KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler](KVScheduler) is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
+**Related article:** [KV Scheduler](../usser-guide/framework-plugins.md#kv-scheduler)
+
+KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler](../user-guide/framework-plugins.md#kv-scheduler) is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
 
 In VPP-Agent v2, all the VPP and Linux plugins were re-written (and decoupled from each other), in a way that every supported configuration item is now described by its own descriptor inside the corresponding plugin, i.e. there is a descriptor for [Linux interfaces][linux-interface-descr], [VPP interfaces][vpp-interface-descr], [VPP routes][vpp-route-descr], etc. The full list of existing descriptors can be found [here][existing-descriptors].
 
 This design pattern improves modularity, resulting in loosely coupled plugins, allowing further extensibility beyond the already supported configuration items. The KVScheduler is not even limited to VPP/Linux as the SB plane. Actually, the control plane for any system whose items can be represented as key-value pairs and operated through CRUD operations qualifies for integration with the framework. Here we provide a step-by-step guide to implementing and registering your own KVDescriptor.
 
-## Descriptor API
+### Descriptor API
 
 Let's start first by understanding the [descriptor API][descriptor-api]. First of all, descriptor is not an interface that needs to be implemented, but rather a structure to be initialized with right attribute values and callbacks to CRUD operations. This was chosen to reinforce the fact that descriptors are meant to be `stateless` - the state of values is instead kept by the scheduler and run-time information can be stored into the metadata optionally carried with each value. The state of the graph with values and their metadata should determine what exactly will be executed in the SB plane. The graph is already exposed via formatted logs and REST API, therefore if descriptors do not hide any state internally, the system state will be fully visible.
 
@@ -63,7 +65,7 @@ What follows is a list of all descriptor attributes, each with detailed explanat
   - if in order to dump values, some other descriptors have to be dumped first, here you can list them
   - [for example][dump-deps-example], in order to dump routes, interfaces have to be dumped first, to learn the mapping between interface names (NB ID) and their indexes (SB ID) from the metadata map of the interface plugin
 
-## Descriptor Adapter
+### Descriptor Adapter
 
 One inconvenience that you will quickly discover when using this generalized approach of value description, is that the KVDescriptor API uses bare `proto.Message` interface for values. It means that normally you cannot define Add, Modify, Delete and other callbacks directly for your model, instead you have to use `proto.Message` for input and output parameters and do all the re-typing inside the callbacks.
 
@@ -81,10 +83,10 @@ For example, `go:generate` for VPP interface can be found [here][vpp-iface-adapt
 The import paths have to include packages with your own data type definitions for value (package with protobuf model) and, if used, also for metadata. The import path can be relative to the file with the `go:generate` command (hence the plugin's top-level directory is prefered).
 Running `go generate <your-plugin-path>` will generate the adapter for your descriptor into `adapter` sub-directory.
 
-## Registering Descriptor
+### Registering Descriptor
 
 Once you have adapter generated and CRUD callbacks prepared, you can initialize and register your descriptor.
-First, import adapter into the go file with the descriptor ([assuming recommended directory layout](#plugin-directory-layout)):
+First, import adapter into the go file with the descriptor ([assuming recommended directory layout](implementing-your-own-kvdescriptor.md#plugin-directory-layout)):
 ```
 import "github.com/<your-organization>/<your-agent>/plugins/<your-plugin>/descriptor/adapter"
 ```
@@ -139,7 +141,7 @@ func NewPlugin(opts ...Option) *<your-plugin> {
 
 In order to obtain and expose the metadata map (if used), call [KVScheduler.GetMetadataMap(<Descriptor-Name>)][get-metadata-map], after the descriptor has been registered, which will give you a map reference that can be then passed further via plugin's own API for other plugins to access read-only. An example for VPP interface metadata map can be found [here][get-metadata-map-example].
 
-## <a name="plugin-directory-layout">Plugin Directory Layout</a>
+### Plugin Directory Layout
 
 While it is not mandatory, we recommend to follow the same directory layout used for all VPP-agent plugins:
 ```
