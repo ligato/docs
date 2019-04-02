@@ -33,6 +33,9 @@ nav:
   - KV Scheduler: tutorials/05_kv-scheduler.md
   - Plugin Lookup: tutorials/06_plugin-lookup.md
   - VPP Connection: tutorials/07_vpp-connection.md
+- TESTING:
+  - CSIT tests locally: testing/tests-locally.md
+  - Robot framework guide: testing/robot-framework-guide.md
 - TOOLS:
     - VPP-Agent-Ctl: tools/vpp-agent-ctl.md
 - TROUBLESHOOTING:

@@ -1,6 +1,6 @@
 # KV Descriptor developer guide
 
-**Related article:** [KV Scheduler](../usser-guide/framework-plugins.md#kv-scheduler)
+**Related article:** [KV Scheduler](../user-guide/framework-plugins.md#kv-scheduler)
 
 KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler](../user-guide/framework-plugins.md#kv-scheduler) is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
 
