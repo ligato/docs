@@ -1,15 +1,39 @@
+/* Search bar */
+.wy-side-nav-search {
+    background-color: #65BF53;
+    text-align: left;
+}
+
+/* Menu title format */
 .wy-menu-vertical span {
-    color: steelblue;
+    color: #65BF53;
     font-weight: bold;
 }
 
+/* Second level menu alignment */
 .wy-menu-vertical a, .wy-menu-vertical .subnav a {
     margin-left: -12px;
 }
 
+/* Drop-down menu */
 li.toctree-l3 > a:link,
 li.toctree-l3 > a:visited {
     font-weight: bold;
-    color: dimgrey;
+    color: #696969;
     margin-left: -24px;
+}
+
+/* Hyperlink setup */
+a {
+    color: #65BF53;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer
+}
+
+/* Menu highlight */
+.wy-menu-vertical a:active {
+    background-color: #65BF53;
+    cursor: pointer;
+    color: #ffffff;
 }
