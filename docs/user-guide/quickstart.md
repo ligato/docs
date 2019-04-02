@@ -3,6 +3,7 @@ This page is a quickstart how-to guide for the vpp-agent
 # Vpp-agent quickstart guide
 
 You will learn how to:
+
 - install the vpp-agent
 - install and use the ETCD and Kafka
 - run the vpp-agent container
