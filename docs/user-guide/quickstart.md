@@ -1,6 +1,6 @@
 This page is a quickstart how-to guide for the vpp-agent
 
-# Vpp-agent quickstart guide
+# Vpp-agent Quickstart Guide
 
 You will learn how to:
 
