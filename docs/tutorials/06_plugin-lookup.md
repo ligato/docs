@@ -3,7 +3,9 @@
 In this tutorial, we learn how to resolve dependencies between multiple plugins in various scenarios. 
 
 Requirements:
+
 * Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
+
 * Complete and understand the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
 
 The vpp-agent is based on plugins. A plugin is the go structure satisfying the plugin interface defined by the infrastructure. The plugin often performs only specified task (like a connection to the KVDB, starting HTTP handlers, support for a part of the VPP API, etc.) and often requires other plugins to work with. A good example is KVDB sync - a plugin synchronizing events from various data stores but requires one or more KVDB plugins to connect and provide the actual data. 
