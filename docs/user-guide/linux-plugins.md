@@ -8,20 +8,11 @@ Namespaces are also supported, however they are handled by a different plugin. I
 
 The vpp-agent uses external library to fetch data about OS interfaces and manage them.  
 
-* [Model](#ifs-model)
-  - [Veth](#ifs-veth)
-  - [TAP](#ifs-tap)
-* [Configuration](#ifs-config)
-* [Limitations](#ifs-limit)
-* [Disable the Linux plugin](#ifs-disable)  
-
-#### <a name="ifs-model">Model</a>
-
 The Linux interface model defines following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/linux/interfaces/interface.proto) describing model with the first part common for all interface types, and the second part specific for every interface type. The interface have an optional namespace field. The interface name is required, and the host name can be specified as well. If not, the host name will be the same as the logical name.
 
 Tn the generated model, the interface is referenced as the `Interface` object 
 
-##### <a name="ifs-veth">Veth</a>
+### Veth
 
 The VETH (virtual Ethernet) device is a local Ethernet tunnel. Devices are created in pairs. Packets transmitted on one device in the pair are immediately received on the other device. When either device is down, the link state of the pair is down. The VETH configuration when namespaces need to communicate to the main host namespace or between each other.
 
@@ -31,7 +22,7 @@ The type-specific configuration is of type `VethLink` and contains a mandatory f
 
 The VETH interface is in the vpp-agent used as an target for the VPP af-packet interface. 
 
-##### <a name="ifs-tap">TAP</a>
+### TAP
 
 The TAP interface is a virtual network kernel interface which simulates a link-layer device. TAP interfaces are not directly created by the vpp-agent - they are automatically put to the host OD default namespace by the VPP after the VPP TAP interface is created. The [VPP interface plugin model](VPP-Interface-plugin) for TAPs defines a special field used to define the host name of the Linux TAP interface created.
  
@@ -39,7 +30,7 @@ After that, the Linux interface can be modified by the linux plugin - IP or MAC 
  
 The Linux tap delete means that the interface is reverted to the original state, all configured fields are stripped and it is moved back to default namespace. The interface disappears when its VPP counterpart is removed. 
 
-#### <a name="ifs-config">Configuration</a>
+**Configuration**
 
 How to configure an Linux interface:
 
@@ -187,40 +178,31 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-#### <a name="ifs-limit">Limitations</a>
+### Limitations
 
 The linux plugin namespace management requires docker ran in the privileged mode (with the `--privileged`) parameter. Otherwise, the vpp-agent can fail to start. 
 
-#### <a name="ifs-disable">Disable the Linux plugin</a>
+### Disable the Linux interface plugin
 
 Use the Linux config file for interfaces and for l3 plugin and set `disabled` na `true` (both of them must be disabled).
 
 # Linux L3 plugin
 
-The Linux L3 plugin is capable of configuring **Linux ARP** entries and **Linux routes**. The Linux L3 plugin is dependent on [Linux interface plugin](used/Linux-Interface-plugin.md) since both configuration items are dependent on the Linux interface managed by it.
+The Linux L3 plugin is capable of configuring **Linux ARP** entries and **Linux routes**. The Linux L3 plugin is dependent on [Linux interface plugin](linux-plugins.md#linux-interface-plugin) since both configuration items are dependent on the Linux interface managed by it.
 
 L3 configuration items support Linux namespace in the same manner as the Linux interfaces.  
 
-- [Linux ARP entries](#linux-arps)
-  * [Model](#linux-arpmodel)
-  * [Configuration](#linux-arpconf)
-- [Linux Routes](#linux-routes)
-  * [Model](#linux-routesmodel)
-  * [Configuration](#linux-routesconf)
-
-## <a name="linux-arps">Linux ARP entries</a>  
+### Linux ARP entries
 
 Linux ARP is a communication protocol which helps to discover a MAC address associated with the given IP address. The plugin makes a use of the very simple proto model with interface, IP address and MAC address fields. All those fields are mandatory.
 
 The namespace resolution is automatic and user does not need to care about it. Since the ARP entry is dependent on the associated Linux interface, the configuration is postponed till the moment the interface appears. Target namespace is derived from the interface identified by the unique name. The interface host name has to be unique within the namespace scope.   
 
-## <a name="linux-arpmodel">Model</a>  
-
 The northbound Linux plugin API defines ARP in the following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/linux/l3/arp.proto). Every ARP entry is defined with MAC address, IP address, and an interface. The IP address and the interface are a part of the key.
 
 In the generated proto model, the ARP is referred to the `ARPEntry` object.
 
-## <a name="linux-arpconf">Configuration</a> 
+**Configuration**
 
 How to configure Linux ARP entry:
 
@@ -296,17 +278,15 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-## <a name="linux-routes">Linux Routes</a>  
+### Linux Routes
 
 A routing table is a data table listing the routes to particular network destinations and metrics (distances) associated with routes. The route interface is mandatory (the namespace is derived from the interface, the same principle as for the Linux ARP). If source and gateway IP addresses are set, they must be valid and the gateway IP address must be evaluated as reachable.
 Every route defines a scope, the options are 'Global', 'Site', 'Link' and 'Host'. The scope is also expected to be defined the route config.  
 
-## <a name="linux-routesmodel">Model</a>
-
 The northbound Linux plugin API defines Route in the following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/linux/l3/route.proto). 
 In the generate file, the route is reffered as `Route`.
 
-## <a name="linux-routesconf">Configuration</a> 
+**Configuration**
 
 How to configure a Linux Route:
 
@@ -385,11 +365,12 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The namespace plugin is an auxiliary plugin used mainly by other Linux plugins to handle namespaces and microservices.
 
-* [Namespaces](#ns)
-* [Microservices](#ms)
-* [Model](#model)
+The namespace [model](https://github.com/ligato/vpp-agent/blob/master/api/models/linux/namespace/namespace.proto) contains two fields - the type, and the reference.
+The namespace can be of type named, defined by a process ID, referenced by a file handle or as a docker container running some microservice. The reference is a namespace identifier (namespace ID, specific PID, file path or a microservice label).
 
-### <a name="ns">Namespaces</a>
+The namespace is imported in the [Linux interface plugin](linux-plugins.md#linux-interface-plugin), by itself does not define any keys (except notifications). 
+
+### Namespaces
 
 The agent has full support for Linux network namespaces. It is possible to attach Linux interface/ARP/route into a new, existing or even yet-to-be-created network namespace via the `Namespace` configuration section inside data model.
 
@@ -397,13 +378,8 @@ Namespace can be referenced in multiple ways. The most low-level link to a names
 
 A `namespace` configuration section should be seen as a union of values. First, set the type and then store the reference into the appropriate field (`pid` vs. `name` vs `microservice`). The agent supports both PID-based references as well as `named` namespaces.
 
-### <a name="ms">Microservices</a>
+### Microservices
 
 Additionally, we provide a non-standard namespace reference, denoted as `MICROSERVICE_REF_NS`, which is specific to ecosystems with microservices. It is possible to attach interface/ARP/route into the namespace of a container that runs microservice with a given label. To make it even simpler, it is not required to start the microservice before the configured item is pushed. The agent will postpone interface (re)configuration until the referenced microservice gets launched. Behind the scenes, the agent communicates with the docker daemon to construct and maintain an up-to-date map of microservice labels to PIDs and IDs of their corresponding containers. Whenever a new microservice is detected, all pending interfaces are moved to its namespace.
 
-### <a name="model">Model</a>
 
-The namespace [model](https://github.com/ligato/vpp-agent/blob/master/api/models/linux/namespace/namespace.proto) contains two fields - the type, and the reference.
-The namespace can be of type named, defined by a process ID, referenced by a file handle or as a docker container running some microservice. The reference is a namespace identifier (namespace ID, specific PID, file path or a microservice label).
-
-The namespace is imported in the [Linux interface plugin](Linux-Interface-plugin), by itself does not define any keys (except notifications). 

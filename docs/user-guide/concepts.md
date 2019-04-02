@@ -1,20 +1,20 @@
-# Table of contents
-- [What is Model?](#model)
-- [Model Spec](#spec)
+This page contains information about Ligato vpp-agent and cn-infra concepts.
 
-## <a name="model">What is Model?</a>
+# What is a Model?
+
 The model represents a northbound API data model defined together with specific protobuf message. 
 It is used to allow generating keys prefix and name of model instance using its value data. 
 The key (prefix + name) is used for storing model in a key-value database.
 
 ### Model components
+
 - model spec
 - protobuf message (`proto.Message`)
 - name template (optional)
 
 Single protobuf message can only be represented by one model.
 
-## <a name="spec">Model Spec</a>
+### Model Specification
 Model spec (specification) describes particular model using module, version and type fields:
   - `module` - defines module, which groups models (vpp, linux..)
   - `version` - describes version of value data (e.g. v1)
@@ -27,23 +27,14 @@ config/<module>/<version>/<type>/
 
 # Key-value store overview
 
-This page describes supported key-value data bases and how to use them
+This section describes supported key-value data bases and how to use them
 
-- [Why KV store?](#wkvs)
-- [What KV store can I use?](#wkvsciu)
-  - [ETCD](#etcd)
-  - [Redis](#redis)
-  - [Consul](#consul)
-  - [Bolt](#bolt)
-  - [FileDB](#filedb)
-- [How to use it in a plugin](#htuiip)
-
-## <a name="wkvs">Why KV store?</a>
+### Why KV store?
 
 The VPP-Agent uses external KV store to keep desired state of the VPP/Linux configuration, eventually to store and export certain VPP statistics. The Agent reacts to data events created by changes within a data-store, in case the change of the data was done under a watched key with proper microservice label.
 It is the microservice label which allows to use single KVDB to serve multiple Agents. Every Agent defines its own label and uses it to distinguish what data were designed for it. 
 
-![KVDB_microservice_label](https://user-images.githubusercontent.com/15376606/54192255-c832ff00-44b7-11e9-84d3-626a911538c6.png)
+![KVDB_microservice_label](../img/KVDB_microservice_label.png)
 
 Underlying CN-Infra plugin validates key prefix (always in format `/vnf-agent/<microservice-label>`) and if the label matches, KV-pair is passed to VPP-Agent configuration watchers. If the prefix of the rest of the key is registered, KV-pair is sent via channel to particular watcher for processing.
 
@@ -51,7 +42,7 @@ The Agent can also connect to multiple different KVDB stores - the plugin called
 
 However it is not inevitable to use the Agent with any KVDB store - it can perfectly work without it, obtaining configuration via GRPC (REST in the future) or via local or remote Clientv2(//TODO add link) API (if the Agent is used as library). The KVDB offers very convenient way how to store and manage configuration data.
 
-## <a name="wkvsciu">What KV store can I use?</a>
+### What KV store can I use?
 
 Technically any. The CN-Infra the VPP-Agent is based on provides connectors to several types of KVDB (see the list below). All of them are built on the common abstraction (called KVDB sync). It comes with significant advantages - the most important is that the change of the data store can be done very easily.
 
@@ -105,9 +96,9 @@ The orchestrator now connects to redis data base.
 
 Another advantage is that to add support for new KVDB basically means to write a plugin able to establish connection to the desired database and wire it with the KVDB sync, which is significantly easier and faster.
 
-#### <a name="etcd">ETCD</a>
+### ETCD
 
-More information: [etcd documentation](https://github.com/ligato/cn-infra/tree/master/db/keyval/etcd/README.md)
+More information: [etcd documentation](../intro/kv-store.md#etcd-plugin)
 
 The ETCD is a distributed KV store that provides data read-write. The ETCD can be started on local machine in its own container with following command: 
 ```bash
@@ -130,9 +121,9 @@ Note that if the config file is not provided, the connector plugin will not be s
 
 Recommended tool to manage ETCD database is the official `etcdctl`.
 
-#### <a name="redis">Redis</a>
+### Redis
 
-More information: [redis documentation](https://github.com/ligato/cn-infra/blob/master/db/keyval/redis/README.md)
+More information: [redis documentation](../intro/kv-store.md#redis)
 
 Redis is another type of in-memory data structure store, used as a database, cache or message broker. 
 
@@ -153,21 +144,21 @@ Recommended tool to manage Redis database is the `redis-cli` tool.
 
 **Important note:** the Redis server is by default started with keyspace event notifications disabled. It means, no data change events are forwarded to the Agent watcher. To enable it, use `config SET notify-keyspace-events KA` command directly in the `redis-cli`, or change the settings in the Redis server startup config.
 
-#### <a name="consul">Consul</a>
+### Consul
 
-More information: [consul documentation](https://github.com/ligato/cn-infra/blob/master/db/keyval/consul/README.md)
+More information: [consul documentation](../intro/kv-store.md#consul-plugin)
 
 // TBD
 
-#### <a name="bolt">Bolt</a>
+### Bolt
   
 More information: bolt documentation // TODO no readme
   
 // TBD
 
-#### <a name="filedb">FileDB</a>
+### FileDB
 
-More information: [fileDB documentation](https://github.com/ligato/cn-infra/blob/master/db/keyval/filedb/README.md)
+More information: [fileDB documentation](../intro/kv-store.md#filedb)
 
 The fileDB is a special case of database, which uses host OS filesystem as a database. The key-value configuration is stored in text files in defined path. The fileDB connector works as any other KVDB connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
 
@@ -186,7 +177,7 @@ In this case, absence of the config file does not prevent agent from starting, s
 
 The file with configuration can be edited with any text editor, like `vim`.
 
-## <a name="htuiip">How to use it in a plugin</a>
+### How to use it in a plugin
 
 In the plugin which intends to use KVDB connection for publishing or watching, define similar fields of the type:
 ```go 

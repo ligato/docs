@@ -9,7 +9,7 @@ Parts of the key in `<>` must be set with the same value as in a model. The micr
 
 Link in key title redirects to the associated proto definition.
 
-### <a name="vpp">VPP keys</a>
+### VPP keys
 
 **[Access control lists:](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/acl/acl.proto)**
 
@@ -130,7 +130,7 @@ Key:
 /vnf-agent/vpp1/config/vpp/stn/v2/rule/<interface>/ip/<ip_address>
 ```
 
-### <a name="linux">Linux keys</a>
+### Linux keys
 
 **[Linux interfaces:](https://github.com/ligato/vpp-agent/blob/master/api/models/linux/interfaces/interface.proto)**
 

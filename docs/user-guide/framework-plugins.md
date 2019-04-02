@@ -4,7 +4,7 @@
 
 A major enhancement that led to the increase of the agent's major version number from 1.x to 2.x, is an introduction of a new framework, called **KVScheduler**, providing transaction-based configuration processing with a generic mechanism for dependency resolution between configuration items, which in effect simplifies and unifies the configurators. KVScheduler is shipped as a separate [plugin], even though it is now a core component around which all the VPP and Linux configurators have been re-build.
 
-## Motivation
+### Motivation
 
 KVScheduler is a reaction to a series of drawbacks of the original design, which gradually arose with the set of supported configuration items growing:
 * plugins `vpp` and `linux` became bloated and complicated, suffering with race conditions and a lack of visibility
@@ -12,7 +12,7 @@ KVScheduler is a reaction to a series of drawbacks of the original design, which
 * configurators would communicate with each other only through notifications, and react to changes asynchronously to ensure proper operation ordering - i.e. the problem of dependency resolution was effectively distributed across all configurators, making it very difficult to understand, predict and stabilize the system behavior from the developer's global viewpoint
 * a culmination of all the issues above was an unreliable and unpredictable re-synchronization (or resync for short), also known as state reconciliation, between northbound (desired state) and southbound (actual state) - something that was meant to be marketed as the main feature of the VPP-Agent.
 
-## Basic concepts and terminology
+### Basic concepts and terminology
 
 KVScheduler solves problems common to all configurators through generalization - moving away from specific configuration items and describing the system with abstract terms:
 * **Model** is a description for a single item type, defined as Protobuf Message (for example Bridge Domain model can be found [here][bd-model-example])
@@ -28,7 +28,7 @@ KVScheduler solves problems common to all configurators through generalization -
 * **Graph** of values is a kvscheduler-internal in-memory storage for all configured and pending key-value pairs, with edges representing inter-value relations, such as "depends-on" and "is-derived-from" - configurators no longer have to implement their own caches for pending values
 * **KVDescriptor** assigns implementations of CRUD operations and defines derived values and dependencies to a single value type - this is what configurators basically boil down to - to learn more, please read how to [implement your own KVDescriptor](Implementing-your-own-KVDescriptor)
 
-## Dependencies
+### Dependencies
 
 The idea behind scheduler is based on the Mediator pattern - configurators do not communicate directly, but instead interact through the mediator. This reduces the dependencies between communicating objects, thereby reducing coupling.
 
@@ -44,7 +44,7 @@ The scheduler learns two kinds of relations between values that have to be respe
    - a derived value exists only as long as its base does and gets removed (immediately, not pending) once the base value goes away
    - a derived value may be described by a different descriptor than the base and usually represents the property of the base value (that other values may depend on) or an extra action to be taken when additional dependencies are met.
 
-## Resync 
+### Resync 
 
 Configurators no longer have to implement resync on their own. As they "teach" KVScheduler how to operate with configuration items by providing callbacks to CRUD operations through KVDescriptors, the scheduler has all it needs to determine and execute the set of operation needed to get the state in-sync after a transaction or restart.
 
@@ -53,7 +53,7 @@ Furthermore, KVScheduler enhances the concept of state reconciliation, and defin
 * **Upstream resync**: partial resync, same as Full resync except for the view of SB is assumed to be up-to-date and will not get refreshed - can be used by NB when it is easier to re-calculate the desired state than to determine the (minimal) difference
 * **Downstream resync**: partial resync, same as Full resync except the desired configuration is assumed to be up-to-date and will not be re-read from NB - can be used periodically to resync, even without interacting with NB
 
-## Transactions
+### Transactions
 
 The scheduler allows to group related changes and applies them as transactions. This is not supported, however, by all agent NB interfaces - for example, changes from `etcd` datastore are always received one a time. To leverage the transaction support, localclient (the same process) or GRPC API (remote access) have to be used instead.
 
@@ -99,7 +99,7 @@ x #5                                                                            
 x----------------------------------------------------------------------------------------------------------------------x
 ```
 
-## REST API
+### REST API
 
 KVScheduler exposes the state of the system and the history of operations not only via formatted logs but also through a set of REST APIs:
 * **transaction history**: `GET /scheduler/txn-history`
@@ -136,27 +136,6 @@ KVScheduler exposes the state of the system and the history of operations not on
 
 This page describes how to use the VPP-Agent with the gRPC
 
-# VPP-Agent GRPC
-
-Related article: [GRPC tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial)
-
-The base of the GRPC support in the VPP-Agent is a [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md), which is an infrastructure plugin allowing to handle GRPC requests.
-
-The VPP-Agent GRPC can be used to:
-* Send a VPP configuration
-* Retrieve (dump) a VPP configuration
-* Start notification watcher
-
-Remote procedure calls defined:
-**Get** is used to update existing configuration, or create it if not exists yet.
-**Delete** removes desired configuration.
-**Dump** (retrieve) reads existing configuration from the VPP.
-**Notify** subscribes the GRPC notification service
-
-To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires startup configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)) with endpoint defined.
-
-The communication can be done via endpoint IP address and port, or via unix domain socket file. The TCP network is set as default, but other network types are available (like TCP6 or UNIX)
-
 # GoVPP Mux
 
 The `govppmux` is a core Agent plugin which allows other plugins access the VPP
@@ -167,27 +146,18 @@ to get its own, potentially customized, communication channel to access running 
 Behind the scene, all channels share the same connection created during the plugin
 initialization using `govpp` core.
 
-* [API](#api)
-  - [Connection](#conn)
-  - [Multiplexing](#mux)
-* [Trace](#trace) 
-* [Configuration](#conf)   
-  - [Example](#example)
- 
-## <a name="sa">API</a>
-
-#### <a name="sa">Connection</a>
+### Connection
 
 By default, the GoVPP connects to that instance of VPP which uses the default shared memory segment prefix. 
 The default behaviour assumes that there is only a single VPP running in a sand-boxed environment together with the agent (e.g. through containerization). In case the VPP runs with customized SHM prefix, or there are several VPP instances running side-by-side, the GoVPP needs to know the prefix in order to connect to the desired VPP instance - the prefix has to be put into the govppmux configuration file (govpp.conf) with key `shm-prefix` and value matching the VPP shared memory prefix name.
 
-#### <a name="sa">Multiplexing</a>
+### Multiplexing
 
 The `NewAPIChannel` call returns a new API channel for communication with VPP via the `govpp` core. It uses default buffer sizes for the request and reply Go channels (by default both are 100 messages long).
 
 If it is expected that the VPP may get overloaded at peak loads, for example if the user plugin sends configuration requests in bulks, then it is recommended to use `NewAPIChannelBuffered` and increase the buffer size for requests appropriately. Similarly, `NewAPIChannelBuffered` allows to configure the size of the buffer for responses. This is also useful since the buffer for responses is also used to carry VPP notifications and statistics which may temporarily rapidly grow in size and frequency. By increasing the reply channel size, the probability of dropping messages from VPP decreases at the cost of increased memory footprint.
 
-## <a name="sa">Trace</a>
+### Trace
  
 Duration of the VPP binary api call can be measured using trace feature. These data are logged after every event(any resync, interfaces, bridge domains, fib entries etc.). Enable trace in the govpp.conf: 
  
@@ -195,7 +165,7 @@ Duration of the VPP binary api call can be measured using trace feature. These d
   
 The trace deature is disabled by default (if there is no config available). 
 
-## <a name="sa">Configuration</a>
+**Configuration**
 
 The plugin allows to configure parameters of vpp health-check probe.
 The items that can be configured are:
@@ -210,7 +180,7 @@ elapses, the request fails
 default shared memory prefix
 - *resync-after-reconnect* - allows to run resync after recoonection
 
-#### <a name="sa">Example</a>
+**Example**
 
 The following example shows how to dump VPP interfaces using a multi-response request:
 ```
@@ -255,15 +225,7 @@ This article will often refer to two HTTP plugins which must be distinguished to
 - **The CN-Infra REST (HTTP) plugin** which enables general HTTP functionality and security
 - **The VPP-Agent REST plugin** which is the Agent-specific implementation of the CN-Infra REST plugin  
 
-Content:
-
-- [Basics](#basics)
-  - [Supported URLs](#urls)
-  - [Logging mechanism](#logging)
-- [Security](#security)  
-- [Basic usage](#usage)
-
-# <a name="basics">Basics</a>
+### Basics
 
 The VPP-Agent contains the REST API plugin, which is based on CN-Infra HTTP plugin (HTTPMux). The basic functionality is allowed by default without need of any external configuration file, just add the VPP-Agent REST plugin to the Agent plugin pool. The default HTTP endpoint is opened on socket `0.0.0.0:9191`. There are several ways how to setup different port:
 
@@ -271,7 +233,7 @@ The VPP-Agent contains the REST API plugin, which is based on CN-Infra HTTP plug
 **2. Using environment variable:** set the variable `HTTP_PORT` to desired value
 **3. Using the CN-Infra HTTP plugin config file:** this option allows to change the whole endpoint and also enable other features described in the part HTTP config file
 
-#### <a name="urls">Supported URLs</a>
+### Supported URLs
 
 There is a list of all supported URLs sorted by VPP-Agent plugins. If the retrieve URL is used (currently the only supported), the output is based on proto model structure for given data type together with VPP-specific data which are not a part of the model (like indexes for
 interfaces or ACLs, various internal names, etc.). Those data are in separate section labeled as `<type>_meta`.
@@ -410,11 +372,11 @@ The Tracer plugin exposes data via the REST as follows:
 /vpp/binapitrace
 ```
 
-#### <a name="logging">Logging mechanism</a>
+### Logging mechanism
 
 The REST API request is logged to stdout. The log contains VPP CLI command and VPP CLI response. It is searchable in elastic search using "VPPCLI".
 
-# <a name="httpcf">Security</a>
+### Security
 
 The CN-Infra REST plugin provides option to secure the HTTP communication. The plugin supports HTTPS client/server certificates, HTTP credentials authentication (username and password) and authorization based on tokens.
 
@@ -422,7 +384,7 @@ This feature is disabled by default and if required, must be enabled by the CN-I
 
 More information about security setup and usage, see [security](https://github.com/ligato/cn-infra/blob/master/rpc/rest/README.md#security) for certificates and [tokens](https://github.com/ligato/cn-infra/blob/master/rpc/rest/README.md#token-based-authorization) for token-based authorization.
 
-# <a name="usage">Basic usage</a>
+**Basic usage**
 
 **1. cURL** 
 
@@ -437,16 +399,37 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 
 Choose the `GET` method, provide desired URL and send the request.
 
+# VPP-Agent GRPC
+
+Related article: [GRPC tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial)
+
+The base of the GRPC support in the VPP-Agent is a [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md), which is an infrastructure plugin allowing to handle GRPC requests.
+
+The VPP-Agent GRPC can be used to:
+* Send a VPP configuration
+* Retrieve (dump) a VPP configuration
+* Start notification watcher
+
+Remote procedure calls defined:
+**Get** is used to update existing configuration, or create it if not exists yet.
+**Delete** removes desired configuration.
+**Dump** (retrieve) reads existing configuration from the VPP.
+**Notify** subscribes the GRPC notification service
+
+To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires startup configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)) with endpoint defined.
+
+The communication can be done via endpoint IP address and port, or via unix domain socket file. The TCP network is set as default, but other network types are available (like TCP6 or UNIX)
+
 # Telemetry Plugin
 
 The `telemetry` plugin is a core Agent Plugin for exporting telemetry statistics from the VPP to the Prometheus.
 Statistics are published via registry path `/vpp` on port `9191` and updated every 30 seconds.
 
-#### Exported data
+### Exported data
 
 - VPP runtime (`show runtime`)
 
-    ```
+```bash
                  Name                 State         Calls          Vectors        Suspends         Clocks       Vectors/Call
     acl-plugin-fa-cleaner-process  event wait                0               0               1          4.24e4            0.00
     api-rx-from-ring                any wait                 0               0              18          2.92e5            0.00
@@ -485,144 +468,144 @@ Statistics are published via registry path `/vpp` on port `9191` and updated eve
     vxlan-gpe-ioam-export-process   any wait                 0               0               1          4.04e3            0.00
     wildcard-ip4-arp-publisher-pro event wait                0               0               1          5.49e4            0.00
 
-    ```
+```
 
-    Example:
+Example:
 
-    ```sh
-    # HELP vpp_runtime_calls Number of calls
-    # TYPE vpp_runtime_calls gauge
-    ...
-    vpp_runtime_calls{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 7.65806939e+08
-    ...
-    # HELP vpp_runtime_clocks Number of clocks
-    # TYPE vpp_runtime_clocks gauge
-    ...
-    vpp_runtime_clocks{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 1150
-    ...
-    # HELP vpp_runtime_suspends Number of suspends
-    # TYPE vpp_runtime_suspends gauge
-    ...
-    vpp_runtime_suspends{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
-    ...
-    # HELP vpp_runtime_vectors Number of vectors
-    # TYPE vpp_runtime_vectors gauge
-    ...
-    vpp_runtime_vectors{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
-    ...
-    # HELP vpp_runtime_vectors_per_call Number of vectors per call
-    # TYPE vpp_runtime_vectors_per_call gauge
-    ...
-    vpp_runtime_vectors_per_call{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
-    ...
-    ```
+```bash
+# HELP vpp_runtime_calls Number of calls
+# TYPE vpp_runtime_calls gauge
+...
+vpp_runtime_calls{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 7.65806939e+08
+...
+# HELP vpp_runtime_clocks Number of clocks
+# TYPE vpp_runtime_clocks gauge
+...
+vpp_runtime_clocks{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 1150
+...
+# HELP vpp_runtime_suspends Number of suspends
+# TYPE vpp_runtime_suspends gauge
+...
+vpp_runtime_suspends{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
+...
+# HELP vpp_runtime_vectors Number of vectors
+# TYPE vpp_runtime_vectors gauge
+...
+vpp_runtime_vectors{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
+...
+# HELP vpp_runtime_vectors_per_call Number of vectors per call
+# TYPE vpp_runtime_vectors_per_call gauge
+...
+vpp_runtime_vectors_per_call{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
+...
+```
 
 - VPP buffers (`show buffers`)
 
-    ```
-     Thread             Name                 Index       Size        Alloc       Free       #Alloc       #Free
-          0                       default           0        2048      0           0           0           0
-          0                 lacp-ethernet           1         256      0           0           0           0
-          0               marker-ethernet           2         256      0           0           0           0
-          0                       ip4 arp           3         256      0           0           0           0
-          0        ip6 neighbor discovery           4         256      0           0           0           0
-          0                  cdp-ethernet           5         256      0           0           0           0
-          0                 lldp-ethernet           6         256      0           0           0           0
-          0           replication-recycle           7        1024      0           0           0           0
-          0                       default           8        2048      0           0           0           0
-    ```
+```bash
+ Thread             Name                 Index       Size        Alloc       Free       #Alloc       #Free
+      0                       default           0        2048      0           0           0           0
+      0                 lacp-ethernet           1         256      0           0           0           0
+      0               marker-ethernet           2         256      0           0           0           0
+      0                       ip4 arp           3         256      0           0           0           0
+      0        ip6 neighbor discovery           4         256      0           0           0           0
+      0                  cdp-ethernet           5         256      0           0           0           0
+      0                 lldp-ethernet           6         256      0           0           0           0
+      0           replication-recycle           7        1024      0           0           0           0
+      0                       default           8        2048      0           0           0           0
+```
 
-    Example:
+Example:
 
-    ```sh
-    # HELP vpp_buffers_alloc Allocated
-    # TYPE vpp_buffers_alloc gauge
-    vpp_buffers_alloc{agent="agent1",index="0",item="default",threadID="0"} 0
-    vpp_buffers_alloc{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-    ...
-    # HELP vpp_buffers_free Free
-    # TYPE vpp_buffers_free gauge
-    vpp_buffers_free{agent="agent1",index="0",item="default",threadID="0"} 0
-    vpp_buffers_free{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-    ...
-    # HELP vpp_buffers_num_alloc Number of allocated
-    # TYPE vpp_buffers_num_alloc gauge
-    vpp_buffers_num_alloc{agent="agent1",index="0",item="default",threadID="0"} 0
-    vpp_buffers_num_alloc{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-    ...
-    # HELP vpp_buffers_num_free Number of free
-    # TYPE vpp_buffers_num_free gauge
-    vpp_buffers_num_free{agent="agent1",index="0",item="default",threadID="0"} 0
-    vpp_buffers_num_free{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-    ...
-    # HELP vpp_buffers_size Size of buffer
-    # TYPE vpp_buffers_size gauge
-    vpp_buffers_size{agent="agent1",index="0",item="default",threadID="0"} 2048
-    vpp_buffers_size{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 256
-    ...
-    ...
-    ```
+```bash
+# HELP vpp_buffers_alloc Allocated
+# TYPE vpp_buffers_alloc gauge
+vpp_buffers_alloc{agent="agent1",index="0",item="default",threadID="0"} 0
+vpp_buffers_alloc{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
+...
+# HELP vpp_buffers_free Free
+# TYPE vpp_buffers_free gauge
+vpp_buffers_free{agent="agent1",index="0",item="default",threadID="0"} 0
+vpp_buffers_free{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
+...
+# HELP vpp_buffers_num_alloc Number of allocated
+# TYPE vpp_buffers_num_alloc gauge
+vpp_buffers_num_alloc{agent="agent1",index="0",item="default",threadID="0"} 0
+vpp_buffers_num_alloc{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
+...
+# HELP vpp_buffers_num_free Number of free
+# TYPE vpp_buffers_num_free gauge
+vpp_buffers_num_free{agent="agent1",index="0",item="default",threadID="0"} 0
+vpp_buffers_num_free{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
+...
+# HELP vpp_buffers_size Size of buffer
+# TYPE vpp_buffers_size gauge
+vpp_buffers_size{agent="agent1",index="0",item="default",threadID="0"} 2048
+vpp_buffers_size{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 256
+...
+...
+```
 
 - VPP memory (`show memory`)
 
-    ```
-    Thread 0 vpp_main
-    20071 objects, 14276k of 14771k used, 21k free, 12k reclaimed, 315k overhead, 1048572k capacity
-    ```
+```bash
+Thread 0 vpp_main
+20071 objects, 14276k of 14771k used, 21k free, 12k reclaimed, 315k overhead, 1048572k capacity
+```
 
-    Example:
+Example:
 
-    ```sh
-    # HELP vpp_memory_capacity Capacity
-    # TYPE vpp_memory_capacity gauge
-    vpp_memory_capacity{agent="agent1",thread="vpp_main",threadID="0"} 1.048572e+09
-    # HELP vpp_memory_free Free memory
-    # TYPE vpp_memory_free gauge
-    vpp_memory_free{agent="agent1",thread="vpp_main",threadID="0"} 4000
-    # HELP vpp_memory_objects Number of objects
-    # TYPE vpp_memory_objects gauge
-    vpp_memory_objects{agent="agent1",thread="vpp_main",threadID="0"} 20331
-    # HELP vpp_memory_overhead Overhead
-    # TYPE vpp_memory_overhead gauge
-    vpp_memory_overhead{agent="agent1",thread="vpp_main",threadID="0"} 319000
-    # HELP vpp_memory_reclaimed Reclaimed memory
-    # TYPE vpp_memory_reclaimed gauge
-    vpp_memory_reclaimed{agent="agent1",thread="vpp_main",threadID="0"} 0
-    # HELP vpp_memory_total Total memory
-    # TYPE vpp_memory_total gauge
-    vpp_memory_total{agent="agent1",thread="vpp_main",threadID="0"} 1.471e+07
-    # HELP vpp_memory_used Used memory
-    # TYPE vpp_memory_used gauge
-    vpp_memory_used{agent="agent1",thread="vpp_main",threadID="0"} 1.4227e+07
-    ```
+```bash
+# HELP vpp_memory_capacity Capacity
+# TYPE vpp_memory_capacity gauge
+vpp_memory_capacity{agent="agent1",thread="vpp_main",threadID="0"} 1.048572e+09
+# HELP vpp_memory_free Free memory
+# TYPE vpp_memory_free gauge
+vpp_memory_free{agent="agent1",thread="vpp_main",threadID="0"} 4000
+# HELP vpp_memory_objects Number of objects
+# TYPE vpp_memory_objects gauge
+vpp_memory_objects{agent="agent1",thread="vpp_main",threadID="0"} 20331
+# HELP vpp_memory_overhead Overhead
+# TYPE vpp_memory_overhead gauge
+vpp_memory_overhead{agent="agent1",thread="vpp_main",threadID="0"} 319000
+# HELP vpp_memory_reclaimed Reclaimed memory
+# TYPE vpp_memory_reclaimed gauge
+vpp_memory_reclaimed{agent="agent1",thread="vpp_main",threadID="0"} 0
+# HELP vpp_memory_total Total memory
+# TYPE vpp_memory_total gauge
+vpp_memory_total{agent="agent1",thread="vpp_main",threadID="0"} 1.471e+07
+# HELP vpp_memory_used Used memory
+# TYPE vpp_memory_used gauge
+vpp_memory_used{agent="agent1",thread="vpp_main",threadID="0"} 1.4227e+07
+```
 
 - VPP node counters (`show node counters`)
 
-    ```
-       Count                    Node                  Reason
-        120406            ipsec-output-ip4            IPSec policy protect
-        120406               esp-encrypt              ESP pkts received
-        123692             ipsec-input-ip4            IPSEC pkts received
-          3286             ip4-icmp-input             unknown type
-        120406             ip4-icmp-input             echo replies sent
-            14             ethernet-input             l3 mac mismatch
-           102                arp-input               ARP replies sent
-    ```
+```bash
+Count                    Node                  Reason
+120406            ipsec-output-ip4            IPSec policy protect
+120406               esp-encrypt              ESP pkts received
+123692             ipsec-input-ip4            IPSEC pkts received
+  3286             ip4-icmp-input             unknown type
+120406             ip4-icmp-input             echo replies sent
+    14             ethernet-input             l3 mac mismatch
+   102                arp-input               ARP replies sent
+```
 
-    Example:
+Example:
 
-    ```sh
-    # HELP vpp_node_counter_count Count
-    # TYPE vpp_node_counter_count gauge
-    vpp_node_counter_count{agent="agent1",item="arp-input",reason="ARP replies sent"} 103
-    vpp_node_counter_count{agent="agent1",item="esp-encrypt",reason="ESP pkts received"} 124669
-    vpp_node_counter_count{agent="agent1",item="ethernet-input",reason="l3 mac mismatch"} 14
-    vpp_node_counter_count{agent="agent1",item="ip4-icmp-input",reason="echo replies sent"} 124669
-    vpp_node_counter_count{agent="agent1",item="ip4-icmp-input",reason="unknown type"} 3358
-    vpp_node_counter_count{agent="agent1",item="ipsec-input-ip4",reason="IPSEC pkts received"} 128027
-    vpp_node_counter_count{agent="agent1",item="ipsec-output-ip4",reason="IPSec policy protect"} 124669
-    ```
+```bash
+# HELP vpp_node_counter_count Count
+# TYPE vpp_node_counter_count gauge
+vpp_node_counter_count{agent="agent1",item="arp-input",reason="ARP replies sent"} 103
+vpp_node_counter_count{agent="agent1",item="esp-encrypt",reason="ESP pkts received"} 124669
+vpp_node_counter_count{agent="agent1",item="ethernet-input",reason="l3 mac mismatch"} 14
+vpp_node_counter_count{agent="agent1",item="ip4-icmp-input",reason="echo replies sent"} 124669
+vpp_node_counter_count{agent="agent1",item="ip4-icmp-input",reason="unknown type"} 3358
+vpp_node_counter_count{agent="agent1",item="ipsec-input-ip4",reason="IPSEC pkts received"} 128027
+vpp_node_counter_count{agent="agent1",item="ipsec-output-ip4",reason="IPSec policy protect"} 124669
+```
     
-#### Configuration file
+### Configuration file
 
 The telemetry plugin configuration file allows to change polling interval, or turn the polling off. The `polling-interval` is time in nanoseconds between reads from the VPP. Parameter `disabled` can be set to `true` in order to disable the telemetry plugin.    

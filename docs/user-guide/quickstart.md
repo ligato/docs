@@ -1,6 +1,6 @@
 This page is a quickstart how-to guide for the vpp-agent
 
-# Vpp-agent quickstart guide 1#
+# Vpp-agent quickstart guide
 
 You will learn how to:
 - install the vpp-agent
@@ -8,23 +8,7 @@ You will learn how to:
 - run the vpp-agent container
 - interact with the vpp-agent
 
-Table of content:
-
-- [1. Prerequisites](#prerequisites)
-- [2. Get the agent image from the dockerhub](#image)
-- [3. Prepare the ETCD](#etcd)
-  - [3.1 Get the ETCD image](#etcdget)
-  - [3.2 Install the ETCD client](#etcdclient)
-- [4. Start Kafka](#kafka)  
-- [5. Start the vpp-agent](#startagent)
-- [6. Manage the vpp-agent](#manage)
-  - [6.1 Configure the VPP using the vpp-agent](#manageconf)
-  - [6.2 Read the VPP configuration via the vpp-agent API](#manageread)
-  - [6.3 Read the status provided by the vpp-agent](#managestatus)
-  - [6.4 Connect to the VPP in the container](#managevpp)
-- [Troubleshooting](#troubleshooting)  
-
-### <a name="prerequisites">1. Prerequisites</a>
+### 1. Prerequisites
 
 - **Docker** (docker ce [installation manual](https://docs.docker.com/cs-engine/1.13/))
 - **Postman** or **cURL** tool (postman [installation manual](https://learning.getpostman.com/docs/postman/launching_postman/installation_and_updates/)) 
@@ -35,7 +19,7 @@ Table of content:
 The result of this guide prepares following topology:
 ![quickstart-diagram](https://user-images.githubusercontent.com/15376606/54192164-a5a0e600-44b7-11e9-9a8c-c034bf6b7443.png)
 
-### <a name="image">2. Get the agent image from the dockerhub</a>
+### 2. Get the agent image from the dockerhub
 
 The command will download the vpp-agent image (vpp-agent + compatible vpp) from the [dockerhub](https://hub.docker.com/u/ligato):
 ```bash
@@ -57,9 +41,9 @@ ligato/vpp-agent            latest              17b7db787662        18 hours ago
 
 The `docker ps` should not contain any mention about the vpp-agent in the output, since we did not start the image yet.
 
-### <a name="etcd">3. Prepare the ETCD</a>
+### 3. Prepare the ETCD
 
-#### <a name="etcdget">3.1 Get the ETCD image</a>
+### 3.1 Get the ETCD image
 
 Following command starts the ETCD in a docker container. If you do not have the image, it will be downloaded first:
 
@@ -73,7 +57,7 @@ CONTAINER ID        IMAGE                        COMMAND                  CREATE
 f3db6e6d8975        quay.io/coreos/etcd:v3.1.0   "/usr/local/bin/etcd…"   16 minutes ago      Up 16 minutes       0.0.0.0:2379->2379/tcp, 2380/tcp   etcd
 ```
 
-#### <a name="etcdclient">3.2 Install the ETCD client</a>
+### 3.2 Install the ETCD client
 
 The `etcdctl` is the official ETCD client which can be used to put/delete/read data from the ETCD:
 
@@ -102,7 +86,7 @@ Check the ETCD version (also prints the version of the API):
 ETCDCTL_API=3 etcdctl --version
 ```
 
-### <a name="kafka">4. Start Kafka</a>
+### 4. Start Kafka
 
 Following command starts Kafka in a docker container. If you do not have the image, it will be downloaded first:
 
@@ -118,7 +102,7 @@ dd9bb1a482c5        spotify/kafka       "supervisord -n"    25 seconds ago      
 
 **Note:** the vpp-agent v2.0.0 (not released yet) and later do not need kafka running by default.
 
-### <a name="startagent">5. Start the vpp-agent</a>
+### 5. Start the vpp-agent
 
 The command starts the Ligato vpp-agent together with the compatible version of the VPP in new docker container:
 ```bash
@@ -136,7 +120,7 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 77df69266072        ligato/vpp-agent    "/bin/sh -c 'rm -f /…"   26 seconds ago      Up 25 seconds       0.0.0.0:5002->5002/tcp, 0.0.0.0:9191->9191/tcp   vpp-agent
 ```
 
-### <a name="manage">6. Manage the vpp-agent</a>
+### 6. Manage the vpp-agent
 
 This section is divided into several parts:
 - how to configure the VPP providing data to the vpp-agent
@@ -144,7 +128,7 @@ This section is divided into several parts:
 - how to obtain the status (stored in the ETCD) provided by the vpp-agent
 - how to connect to the VPP cli and verify the configuration 
 
-#### <a name="manageconf">6.1 Configure the VPP using the vpp-agent</a>
+### 6.1 Configure the VPP using the vpp-agent
 
 In this step we configure a simple loopback interface with an IP address putting the key-value data to the ETCD:
 ```bash
@@ -164,7 +148,7 @@ ETCDCTL_API=3 etcdctl get /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 
 The output should return the data configured.
 
-#### <a name="manageread">6.2 Read the VPP configuration via the vpp-agent API</a>
+### 6.2 Read the VPP configuration via the vpp-agent API
 
 This command returns the list of VPP interfaces accessing the vpp-agent REST API:
 ```bash
@@ -183,7 +167,7 @@ URLs can be used to get the same data via postman:
 http://localhost:9191/dump/vpp/v2/interfaces
 http://localhost:9191/dump/vpp/v2/bd
 ```
-#### <a name="managestatus">6.3 Read the status provided by the vpp-agent</a>
+### 6.3 Read the status provided by the vpp-agent
 
 The vpp-agent publishes interface status to the ETCD. Obtain the status for the `loop1` interface (configured in 5.1):
 ```bash
@@ -199,7 +183,7 @@ Notice the `internal_name` assigned by the VPP as well as the `if_index`. The `s
 
 **Note:** state is exposed only for interfaces (including default interfaces).
 
-#### <a name="managevpp">6.4 Connect to the VPP in the container</a>
+### 7. Connect to the VPP in the container
 
 The following command opens vpp-agent container console:
 ```bash
@@ -247,7 +231,7 @@ docker exec -it vpp-agent vppctl -s localhost:5002 sh int addr
 docker exec -it vpp-agent vppctl -s localhost:5002 sh br
 ```
 
-### <a name="troubleshooting">Troubleshooting</a>
+### Troubleshooting
 
 **The vpp-agent container was started and immediately closed.**
 

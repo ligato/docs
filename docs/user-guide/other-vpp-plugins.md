@@ -4,15 +4,7 @@
 
 Access control lists (ACLs) provide a means to filter packets by allowing a user to permit or deny specific IP traffic at defined interfaces. Access lists filter network traffic by controlling whether packets are forwarded or blocked at the router’s interfaces based on the criteria you specified within the access list.
 
-- [Overview](#overview)
-- [Model](#model)
-- [Configuration](#conf)
-
-## <a name="overview">Overview</a>
-
 The VPP-Agent acl plugin uses binary API of the VPP access control list plugin. The version of the VPP ACL plugin is displayed at the Agent startup (currently at 1.3). Every ACL consists from match (rules packet have to fulfill in order to be received) and action (what is done with the matched traffic). The current implementation rules for packet are 'ALLOW', 'DENY' and 'REFLECT'.  
-
-## <a name="model">Model</a>
 
 The ACL is defined in the VPP-Agent northbound API [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/acl/acl.proto). The generated object is defined as the `ACL`.
 
@@ -21,7 +13,7 @@ The IP match (called IP rule) can be specified for variety of protocols, each wi
 The MAC-IP match (MACIP rule) defines IP address + mask and MAC address + mask as filtering rules. 
 Remember, that the IP rules and MACIP rules cannot be combined in the single ACL.
 
-## <a name="conf">Configuration</a>
+**Configuration**
 
 How to configure the access list:
 
@@ -200,20 +192,11 @@ The VPP does not support any CLI commands related to access list. In order to re
 
 **Written for: v2.0-vpp18.10**
 
-The IPSec plugin allows to configure **security policy databases** and **security associations** to the VPP, and also handles relations between the SPD and SA or between SPD and an assigned interface. Note that the IPSec tunnel interfaces are not a part of IPSec plugin (their configuration is handled in [VPP interface plugin](used/VPP-Interface-plugin.md)).
-
-- [Security policy database](#spd)
-  * [Model](#spd-model)
-  * [Configuration](#spd-config)
-- [Security association](#sa)
-  * [Model](#sa-model)
-  * [Configuration](#sa-config)
+The IPSec plugin allows to configure **security policy databases** and **security associations** to the VPP, and also handles relations between the SPD and SA or between SPD and an assigned interface. Note that the IPSec tunnel interfaces are not a part of IPSec plugin (their configuration is handled in [VPP interface plugin](default-vpp-plugins.md#interface-plugin)).
   
-## <a name="spd">Security policy database</a>
+### Security policy database
 
 Security policy database (SPD) specifies policies that determine the disposition of all the inbound or outbound IP traffic from either the host or the security gateway. The SPD is bound to an SPD interface and contains a list of policy entries (security table). Every policy entry points to VPP security association.
-
-### <a name="spd-model">Model</a>
 
 Security policy database is defined in the common IPSec [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/ipsec/ipsec.proto). The generated object is defined as `SecurityPolicyDatabase`. 
 
@@ -231,7 +214,7 @@ Since every security policy database entry is configured independently, vpp-agen
 
 All the binding can be resolved by the vpp-agent. 
 
-### <a name="spd-config">Configuration</a>
+**Configuration**
 
 How to configure the security policy database:
 
@@ -345,11 +328,9 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The VPP cli has a command to show the SPD IPSec configuration: `sh ipsec`
 
-## <a name="sa">Security associations</a>
+### Security associations
 
 The VPP security association (SA) is a set of IPSec specifications negotiated between devices establishing and IPSec relationship. The SA includes preferences for the authentication type, IPSec protocol or encryption used when the IPSec connection is established.
-
-### <a name="sa-model">Model</a>
 
 Security association is defined in the common IPSec [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/ipsec/ipsec.proto). The generated object is defined as `SecurityAssociation`. 
 
@@ -362,7 +343,7 @@ The SA uses the same indexing system as SPD. The index is a user-defined unique 
 
 The SA has no dependencies on other configuration types.
 
-### <a name="sa-config">Configuration</a>
+**Configuration**
 
 How to configure the security association:
 
@@ -451,21 +432,12 @@ Show the IPSec configuration with the VPP cli command: `sh ipsec`
 
 **Written for: v2.0-vpp18.10**
 
-Network address translation, or NAT is a method of remapping IP address space into another IP address space modifying address information in the packet header. The VPP-Agent Network address translation is control plane plugin for the VPP NAT implementation of NAT44. The NAT plugin is dependent on [interface plugin](VPP-Interface-plugin).
-
-- [NAT global config](#global)
-  * [Model](#gmodel)
-  * [Configuration](#gconf)
-- [DNAT44](#dnat44)
-  * [Model](#dnat44model)
-  * [Configuration](#dnat44conf)
+Network address translation, or NAT is a method of remapping IP address space into another IP address space modifying address information in the packet header. The VPP-Agent Network address translation is control plane plugin for the VPP NAT implementation of NAT44. The NAT plugin is dependent on [interface plugin](default-vpp-plugins.md#interface-plugin).
   
-## <a name="global">NAT global config</a>  
+### NAT global config</a>  
 
 The global NAT configuration is a special case of data grouped under single key (it means no unique character is a part of the key, so there is always only one global NAT configuration). The data are used to enable NAT features (like forwarding), enable interfaces for NAT, define NAT IP addresses (address pools) or specify virtual reassembly.  
 Interfaces marked to be enabled for NAT should be present in the VPP but if not, the Scheduler plugin caches the configuration for later use when the incriminated interface is available.
-
-### <a name="gmodel">Model</a>  
 
 The global configuration is divided into several independent parts defining certain VPP NAT features.
 
@@ -477,7 +449,7 @@ The global configuration is divided into several independent parts defining cert
 
 **Virtual reassembly** provides support for datagram fragmentation handling to allow correct recalculation of higher-level checksums.
 
-### <a name="gconf">Configuration</a>  
+**Configuration**  
 
 How to configure the global NAT status:
 
@@ -622,17 +594,15 @@ The VPP cli has following CLI commands to verify configuration:
  - show list of all NAT44 interfaces: `show nat44 interfaces`
  - show list of all NAT44 interface addresses: `show nat44 interface address`
 
-## <a name="dnat44">DNAT44</a>  
+### DNAT44
 
 Destination network address translation (DNAT) allows transparently changing the destination IP address of an packet and performing the inverse function for any replies. Any router situated between two endpoints can perform this transformation of the packet.
 In the VPP-Agent, the DNAT configuration is a list of static and/or identity mappings labelled under single key.
 
-### <a name="dnat44model">Model</a>  
-
 The DNAT44 consists from two main parts - static mappings and identity mappings. The static mapping can be load balanced - if more than one local IP address is defined for single static mapping, the load balancer is automatically allowed for that mapping. 
 THe DNAT44 contains a unique label serving as an identifier. However, the DNAT configuration is not limited, an arbitrary count of static and identity mappings can be listed under single label. 
 
-### <a name="dnat44conf">Configuration</a>  
+**Configuration**  
 
 How to configure the DNAT:
 
@@ -775,22 +745,9 @@ The VPP cli has following CLI commands to verify configuration:
 
 The punt plugin provides several options for how to configure the VPP to allow a specific IP traffic to be punted to the host TCP/IP stack. The plugin supports **punt to the host** (either directly, or **via Unix domain socket**) and registration of **IP punt redirect** rules.
 
-- [Punt to host stack](#pths)
-  * [Model](#pths-model)
-  * [Requirements](#pths-req)
-  * [Configuration](#pths-config)
-  * [Limitations](#pths-limit)
-  * [Known issues](#pths-issues)
-- [IP redirect](#ipr)
-  * [Model](#ipr-model)
-  * [Configuration](#ipr-config)
-  * [Limitations](#ipr-limit)
-
-## <a name="pths">Punt to host stack</a>
+### Punt to host stack
 
 All the incoming traffic matching one of the VPP interface addresses, and also matching defined L3 protocol, L4 protocol, and port - and would be otherwise dropped - will be instead punted to the host. If a Unix domain socket path is defined (optional), traffic will be punted via socket. All the fields which serve as a traffic filter are mandatory.
-
-### <a name="pths-model">Model</a>
 
 The punt plugin defines the following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/punt/punt.proto) which grants support for two main configuration items defined by different northbound keys.
 
@@ -799,8 +756,6 @@ The punt to host is defined as `ToHost` object in the generated proto model.
 L3/L4 protocol in the key is defined as a `string` value, however, the value is transformed to numeric representation in the VPP binary API.
 
 The usage of L3 protocol `ALL` is exclusive for IP punt to host (without socket registration) in the VPP API. If used for the IP punt with socket registration, the vpp-agent calls the binary API twice with the same parameters for both, IPv4 and IPv6.
-
-### <a name="pths-req">Requirements</a>
 
 **Important note:** in order to configure a punt to host via Unix domain socket, a specific VPP startup-config is required. The attempt to set punt without it results in errors in VPP. Startup-config:
 
@@ -812,7 +767,7 @@ punt {
 
 The path has to match with the one in the northbound data. 
 
-### <a name="pths-config">Configuration</a>
+**Configuration**
 
 How to configure punt to host:
 
@@ -886,34 +841,15 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-### <a name="pths-limit">Limitations</a>
-
-Current limitations for a punt to host:
-* The UDP configuration cannot be shown (or even configured) via the VPP cli.
-* The VPP does not provide API to dump configuration, which takes the vpp-agent the opportunity to read existing entries and may case certain issues with resync.
-* Although the vpp-agent supports the TCP protocol as the L4 protocol to filter incoming traffic, the current VPP version don't.
-* Configured punt to host entry cannot be removed since the VPP does not support this option. The attempt to do so exits with an error.
-
-Current limitations for a punt to host via unix domain socket:
-* The configuration cannot be shown (or even configured) in the VPP cli.
-* The vpp-agent cannot read registered entries since the VPP does not provide an API to do so.
-* The VPP startup config punt section requires unix domain socket path defined. The VPP limitation is that only one path can be defined at the same time.
-
-### <a name="pths-issues">Known issues</a>
-
-* VPP issue: if the Unix domain socket path is defined in the startup config, the path has to exist, otherwise the VPP fails to start. The file itself can be created by the VPP.
-
-## <a name="ipr">IP redirect</a>
+### IP redirect
 
 Defined as the IP punt, IP redirect allows a traffic matching given IP protocol to be punted to the defined TX interface and next hop IP address. All those fields have to be defined in the northbound proto-modeled data. Optionally, the RX interface can be also defined as an input filter.  
-
-### <a name="ipr-model">Model</a>
 
 IP redirect is defined as `IpRedirect` object in the generated proto model. L3 protocol is defined as `string` value (transformed to numeric in VPP API call). The table is the same as before.
 
 If L3 protocol is set to `ALL`, the respective API is called for IPv4 and IPv6 separately.
 
-### <a name="ipr-config">Configuration</a>
+**Configuration**
 
 How to configure IP redirect:
 
@@ -987,6 +923,22 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The VPP cli command (for configuration verification) is `show ip punt redirect `.
 
-### <a name="ipr-limit">Limitations</a>
+### Limitations
 
+Current limitations for a punt to host:
+* The UDP configuration cannot be shown (or even configured) via the VPP cli.
+* The VPP does not provide API to dump configuration, which takes the vpp-agent the opportunity to read existing entries and may case certain issues with resync.
+* Although the vpp-agent supports the TCP protocol as the L4 protocol to filter incoming traffic, the current VPP version don't.
+* Configured punt to host entry cannot be removed since the VPP does not support this option. The attempt to do so exits with an error.
+
+Current limitations for a punt to host via unix domain socket:
+* The configuration cannot be shown (or even configured) in the VPP cli.
+* The vpp-agent cannot read registered entries since the VPP does not provide an API to do so.
+* The VPP startup config punt section requires unix domain socket path defined. The VPP limitation is that only one path can be defined at the same time.
+
+Current limitations for IP redirect:
 * The VPP does not provide API calls to dump existing IP redirect entries. It may cause resync not to work properly.
+
+### Known issues
+
+* VPP issue: if the Unix domain socket path is defined in the startup config, the path has to exist, otherwise the VPP fails to start. The file itself can be created by the VPP.

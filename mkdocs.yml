@@ -12,6 +12,7 @@ nav:
   - CNF definition: intro/cnf-definition.md
   - Overview: intro/overview.md
   - CN-Infra: intro/cn-toc-file.md
+  - KV datastore: intro/kv-store.md
 - USER GUIDE:
   - Quickstart guide: user-guide/quickstart.md
   - Learn how to: user-guide/learn-how-to.md

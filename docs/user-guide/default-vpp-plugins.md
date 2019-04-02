@@ -16,24 +16,9 @@ The VPP interface plugin is a base plugin able to setup various types of **VPP i
 
 Other types are specified as undefined for the vpp-agent purpose.
   
-All the interfaces except DPDK (physical) can be created or removed directly in the VPP if all necessary conditions are met (for example an Af-packet interface requires a VEth in the host in order to attach to it ( more in [Interface types](#ifs-model-types) section). The DPDK interfaces (PCI, physical) can be only configured, cannot be added or removed.
+All the interfaces except DPDK (physical) can be created or removed directly in the VPP if all necessary conditions are met (for example an Af-packet interface requires a VEth in the host in order to attach to it. The DPDK interfaces (PCI, physical) can be only configured, cannot be added or removed.
   
-- [Interfaces](#ifs)
-  * [Model](#ifs-model)
-    * [Unnumbered interfaces](#ifs-model-unnumbered)
-    * [Maximum transmission unit](#ifs-model-mtu)
-    * [Interface types](#ifs-model-types)
-  * [Configuration](#ifs-config)
-- [Interface status](#ifstate)
-  * [Model](#ifstate-model)
-  * [Configuration](#ifstate-config)
-  * [Limitations](#ifstate-limit)
-  
-## <a name="ifs">Interfaces</a>
-
 The VPP uses multiple commands and/or binary APIs to create and configure shared boundaries. The vpp-agent is simplifying this processes, providing the single model with specific extensions depending on required interface type. The northbound configuration is translated to a sequence of binary API calls using GOVPP library. All interface types except the DPDK (physical) interface can be directly created or removed in the VPP. Physical interfaces can be only configured. The Af-packet interface is dependent on host-interface of the VEth type, and cannot exist without it. 
-
-### <a name="ifs-model">Model</a>
 
 The interface plugin defines following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto). The model is divided to two parts - the first, which contains fields common for all interface types, and the second, exclusive for given interface type. Note that there are even exceptions in the common part, where not all fields can be defined on every interface type. For example, a physical address cannot be set to Af-packet or to DPDK interface despite the field exists in the definition. If this is done, the value is silently ignored.
 
@@ -49,13 +34,13 @@ vpp/config/v2/config/vpp/v2/interface/<name>
  
 The interface logical name is for the vpp-agent use only. It serves as a reference for other models (bridge domains for instance). The VPP works with indexes, which are generated when the new interface instance is created. The index is a unique integer for identification and future references. In order to parse name and index, the vpp-agent stores a tag to the VPP via binary API - it's a name-to-index entry which helps the vpp-agent to classify interface name and assign the correct index to it. 
 
-#### <a name="ifs-model-unnumbered">Unnumbered interfaces</a>
+### Unnumbered interfaces
 
 Every interface can have assigned one or more IPv4 or IPv6 addresses or their combination. Besides this, the VPP interface can be set as unnumbered; it takes the IP address of another interface and performs as it has the same IP address as the target instance. 
 
 To set an interface as unnumbered, omit `ip_addresses` and set `interface_with_ip`. The target interface has to exist (if not, the unnumbered interface will be postponed and configured later when the required interface appears) and must contain at least one IP address. 
 
-#### <a name="ifs-model-mtu">Maximum transmission unit</a>
+### Maximum transmission unit
 
 The MTU is the size of the largest protocol data unit that can be communicated in a single network layer transaction. The VPP interfaces allow setting custom MTU size. For this purpose, there is a field called `mtu` available in the interface model. If the field is left empty, the VPP uses a default value of the MTU.
 
@@ -63,7 +48,7 @@ The vpp-agent offers an option to automatically set the MTU of specific size to 
 
 **Note:** MTU is not available for VxLan tunnels and IPSec tunnel interfaces.
 
-#### <a name="ifs-model-types">Interface types</a>
+### Interface types
 
 Type-specific interface fields in vpp-agent are defined in special structures called links. Type of the interface's link must match the type of the interface itself. Description of main differences of interface types:
 
@@ -93,7 +78,7 @@ Field `version` sets the desired version (should be set only to 2), `host_if_nam
 
 **Af-packet interface**
 
-The Af-packet is the VPP "host" interface, its main purpose is to connect it to the host via the OS VEth interface. Because of this, the af-packet cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, vpp-agent un-configures and caches related Af-packets. The `AfpacketLink` contains only one field with the name of the host interface (as defined in the [Linux interface plugin](used/Linux-Interface-plugin.md)).
+The Af-packet is the VPP "host" interface, its main purpose is to connect it to the host via the OS VEth interface. Because of this, the af-packet cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, vpp-agent un-configures and caches related Af-packets. The `AfpacketLink` contains only one field with the name of the host interface (as defined in the [Linux interface plugin](linux-plugins.md#linux-interface-plugin)).
 
 **VxLan tunnel**
 
@@ -107,7 +92,7 @@ IPSec virtual tunnel interface (VTI) provides a routable interface type for term
 
 VmxNet3 is a virtual network adapter designed to deliver high performance in virtual environments. VmxNet3 requires VMware tools to be used. Type-specific fields are defined in `VmxNet3Link` structure.
 
-### <a name="ifs-config">Configuration</a>
+**Configuration**
 
 How to configure an interface:
 
@@ -243,7 +228,7 @@ The VPP cli has several CLI commands to verify configuration:
  - show VxLan tunnel details: `show vxlan tunnel`
  - show IPSec tunnel details: `show ipsec`
 
-## <a name="ifstate">Interface status</a>
+### <a name="ifstate">Interface status</a>
 
 The interface status is a collection of interface data and identification (tagged name, internal name, index) which can be stored to an external database or send a notification.
 
@@ -252,8 +237,6 @@ The vpp-agent waits on several types of VPP events, like creation, deletion or c
 The statistics readout is performed every second.
 
 **Important note:** the interface status is disabled by default, since no default publishers are defined. Use vpp-ifplugin config file to define it (see the [example conf file](https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf))   
-
-### <a name="ifstate-model">Model</a>
 
 The interface state [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/state.proto) is represented by two objects: `InterfaceState` with all the status data, and `InterfaceNotification` which is a wrapper around the state with additional information required to send status as a notification.
 
@@ -276,7 +259,7 @@ Data provided by interface status:
     * used duplex 
     * statistics (received, transmitted or dropped packets, bytes, error count, etc)
 
-### <a name="ifstate-config">Usage</a>
+### Interface status usage
 
 To read status data, use any tool with access to a given database (etcdctl for the ETCD, redis-cli for Redis, boltbrowser for BoltDB, etc). 
 
@@ -297,23 +280,11 @@ Do not forget to enable status in the config file, otherwise, the status will no
 
 **Written for: v2.0-vpp18.10**
 
-The VPP L2 plugin is a base plugin which can be used to configure link-layer related configuration items to the VPP, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**. The L2 plugin is strongly dependent on [interface plugin](used/VPP-Interface-plugin.md) since every configuration item has some kind of dependency on it. 
-
-- [Bridge domains](#bds)
-  * [Model](#bdmodel)
-  * [Configuration](#bdconf)
-- [Forwarding tables](#fts)
-  * [Model](#ftmodel)
-  * [Configuration](#ftconf)
-- [Cross connects](#cc)
-  * [Model](#ccmodel)
-  *[Configuration](#ccconf)
+The VPP L2 plugin is a base plugin which can be used to configure link-layer related configuration items to the VPP, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**. The L2 plugin is strongly dependent on [interface plugin](default-vpp-plugins.md#interface-plugin) since every configuration item has some kind of dependency on it. 
   
-## <a name="bds">Bridge domains</a>  
+### Bridge domains
 
 The L2 bridge domain is a set of interfaces which share which share the same flooding or broadcasting characteristics. Every bridge domain contains several attributes (MAC learning, unicast forwarding, flooding, ARP termination table) which can be enabled or disabled. The bridge domain is identified by unique ID, which is managed by the plugin and cannot be defined from outside.   
-
-### <a name="bdmodel">Model</a>  
 
 The L2 plugin defines individual proto definition for every configuration item, so the bridge domain is also defined by its own [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/bridge-domain.proto). The definition consists of common bridge domain fields (forwarding, learning...), list of assigned interfaces and ARP termination table. 
 Bridge domain interfaces are only referenced - the configuration of the interface itself and its configuration (IP address, ...) lays on the interface plugin. Every referenced interface also contains bridge domain-specific fields (BVI and split horizon group). Note that only one BVI interface is allowed per bridge domain.
@@ -324,7 +295,7 @@ In the generated proto model, the bridge domain is referred to the `BridgeDomain
 
 The bridge domain logical name is for the plugin-use and also as a reference in other configuration types dependent on the specific bridge domain. The bridge domain index can be obtained via retrieve, but the value is only informative since it cannot be changed, set or referenced.
 
-### <a name="bdconf">Configuration</a> 
+**Configuration**
 
 How to configure a bridge domain:
 
@@ -453,17 +424,15 @@ The VPP cli has following CLI commands to verify configuration:
  - show list of all configured bridge domains: `show bridge-domain`
  - show details (interfaces, ARP entries, ...) for any bridge domain: `show bridge-domain <index> details`
 
-## <a name="fts">Forwarding tables</a>  
+### <a name="fts">Forwarding tables</a>  
 
 An L2 forwarding information base (FIB) (also known as a forwarding table) can be used in network bridging or routing to find the output interface to which the incoming packet should be forwarded. FIB entries are created also by the VPP itself (like for interfaces within the bridge domain with enabled MAC learning). The Agent allows to configuring static FIB entries for a combination of interface and bridge domain.
-
-### <a name="ftmodel">Model</a>  
 
 A FIB entry is defined in the following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/fib.proto). To successfully configure FIB entry, a MAC address, interface and bridge domain must be provided. Also, the condition that the interface is a part of the bridge domain has to be fulfilled. The interface and the bridge domain are referenced with logical names.  
 Note that the FIB entry will not appear in the VPP until all conditions are met.
 The FIB entry is referred to the `FIBEntry` object in the generated proto. 
 
-### <a name="ftconf">Configuration</a> 
+**Configuration** 
 
 How to configure a FIB:
 
@@ -546,16 +515,14 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 The VPP cli has following CLI command to verify FIB configuration:
  - show list of all configured FIB entries: `show l2fib`
 
-## <a name="cc">Cross connects</a>  
+### Cross connects
 
 The Agent supports L2 cross connect feature, which sets interface pair to cross connect mode. All packets received on the first interface are transmitted to the second interface. This mode is not bidirectional by default, both interfaces have to be set.
-
-### <a name="ccmodel">Model</a>  
 
 The cross-connect mode uses a very simple [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/xconnect.proto) which defines references to transmit and receive interface. Both interfaces are mandatory fields and must exist in order to set the mode successfully. If one or both of them are missing, the configuration is postponed. 
 The cross-connect is referred as `XConnectPair` in generated code. 
 
-### <a name="ccconf">Configuration</a>
+**Configuration**
 
 How to configure cross-connect:
 
@@ -634,32 +601,17 @@ The cross-connect mode can be shown on the VPP with command `show mode`
 
 **Written for: v2.0-vpp18.10**
 
-The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and **IP neighbor** feature. The L3 plugin is dependent on [interface plugin](used/VPP-Interface-plugin.md) in many aspects since several configuration items require the interface to be already present.
-
-- [ARP entries](#arps)
-  * [Model](#arpmodel)
-  * [Configuration](#arpconf)
-- [Proxy ARP](#parp)
-  * [Model](#parpmodel)
-  * [Configuration](#parpconf)
-- [Routes](#routes)
-  * [Model](#routesmodel)
-  * [Configuration](#routesconf)
-- [IP neighbor](#ipneigh)
-  * [Model](#ipneighmodel)
-  * [Configuration](#ipneighconf)
+The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and **IP neighbor** feature. The L3 plugin is dependent on [interface plugin](default-vpp-plugins.md#interface-plugin) in many aspects since several configuration items require the interface to be already present.
   
-## <a name="arps">ARP entries</a>  
+### ARP entries  
 
 The L3 plugin defines descriptor managing the VPP implementation of the address resolution protocol. ARP is a communication protocol for discovering the MAC address associated with a given IP address. In terms of the plugin, the ARP entry is uniquely identified by the interface and IP address.
-
-## <a name="arpmodel">Model</a>  
 
 The northbound plugin API defines ARP in the following [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/arp.proto). Every ARP entry is defined with MAC address, IP address,  and an Interface. The two latter are a part of the key.
 
 In the generated proto model, the ARP is referred to the `ARPEntry` object.
 
-## <a name="arpconf">Configuration</a>  
+**Configuration**
 
 How to configure ARP table entry:
 
@@ -747,17 +699,15 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 The VPP cli has following CLI commands to verify configuration:
  - show list of all configured ARPs: `show ip arp`
 
-## <a name="parp">Proxy ARP</a>  
+### Proxy ARP
 
-Support for the VPP proxy ARP - a technique by which a proxy device an a given network answers the ARP queries for an IP address from a different network. Proxy ARP IP address ranges are defined via the respective binary API call. Besides this, desired interfaces have to be enabled for the proxy ARP feature.   
-
-## <a name="parpmodel">Model</a>  
+Support for the VPP proxy ARP - a technique by which a proxy device an a given network answers the ARP queries for an IP address from a different network. Proxy ARP IP address ranges are defined via the respective binary API call. Besides this, desired interfaces have to be enabled for the proxy ARP feature.    
 
 The Proxy ARP [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/l3.proto) is located in the common L3 model proto file. The model defines a list of IP address ranges and another list of interfaces. Naturally, the interface has to exist in order to be set as enabled for ARP proxy. 
 
 The proxy ARP type is referred to `ProxyARP`.
 
-## <a name="parpconf">Configuration</a>  
+**Configuration**  
 
 How to configure the proxy ARP:
 
@@ -856,11 +806,9 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 To verify ARP configuration, use the same call as for the ordinary ARP:
  - show list of all configured proxy ARPs: `show ip arp`
 
-## <a name="routes">Routes</a>  
+### Routes 
 
-The VPP routing table lists routes to particular network destinations. Routes are grouped in virtual routing and forwarding (VRF) tables, with default table of index 0. A route can be assigned to different VRF table directly in the modeled data. 
-
-## <a name="routesmodel">Model</a>  
+The VPP routing table lists routes to particular network destinations. Routes are grouped in virtual routing and forwarding (VRF) tables, with default table of index 0. A route can be assigned to different VRF table directly in the modeled data.
 
 The VPP route [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/route.proto) defines all the base route fields (destination IP, next hop, interface) and other specifications like weight or preference. The model also distinguishes amidst several route types:
 
@@ -868,7 +816,7 @@ The VPP route [model](https://github.com/ligato/vpp-agent/blob/master/api/models
 **2. Inter-VRF route:** forwarding is being done by a lookup into different VRF routes. This kind of route does not expect outgoing interface being defined. 
 **3. Drop route:** such a route drops network communication designed for IP address specified.
 
-## <a name="routesconf">Configuration</a> 
+**Configuration**
 
 How to configure a VPP route:
 
@@ -968,15 +916,13 @@ The route configuration can be verified with:
  - show all rotes: `show ip fib`
  - show routes from the given VRF table: `show ip fib table <table-ID>` 
  
-## <a name="ipneigh">IP neighbor</a> 
+### IP neighbor
 
 The VPP IP scan-neighbor feature is used to enable or disable periodic IP neighbor scan.
- 
-## <a name="ipneighmodel">Model</a>
 
 The [model](https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/l3.proto) allows to set various scan intervals, timers or delays and can be set to IPv4 mode, IPv6 mode or both of them.
 
-## <a name="ipneighhconf">Configuration</a>  
+**Configuration**  
 
 How to set IP scan neighbor feature:
 

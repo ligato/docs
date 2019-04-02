@@ -181,13 +181,13 @@ The list of plugins provided by the CN-Infra:
 
 The repository also contains tools for building, testing, and troubleshooting of the VPP-Agent.
 
-**VPP-Agent-ctl**
+### VPP-Agent-ctl
 
 More in: [vpp-agent-ctl](../tools/vpp-agent-ctl.md)
 
 The VPP-Agent-ctl is a utility tool whose primary purpose is to test and troubleshoot the VPP-Agent. The tool allows to put pre-defined configuration of any type currently supported in the agent to the ETCD, use custom data specifying key and value (as JSON), or read current ETCD config.
 
-**Docker**
+### Docker
 
 Container-based development environment for the VPP-Agent and for app/extension plugins. Docker image is available for [development](https://hub.docker.com/r/ligato/dev-vpp-agent) and [production](https://hub.docker.com/r/ligato/vpp-agent) version of the VPP-Agent with compatible VPP.
 

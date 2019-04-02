@@ -1,23 +1,13 @@
 This page describes in more detail how to prepare and work with the vpp-agent.
 
-- [Set up your environment](#suye)
-  - [Get the Docker image](#gtdimage)
-  - [Build local image](#blimage)
-  - [Start the image](#startimage)
-  - [Build the Agent and VPP without image](#noimage)
-- [Start the VPP and the Agent](#svppagent)
-  - [Connect Agent to the KVDB](#cakvdb)
-  - [How to use multiple Agents](#htuma)
-- [Make your first configuration](#myfc)
-
-# <a name="suye">Set up your environment</a>
+# Set up your environment
 
 Options are:
  * get pre-prepared docker image from the dockerhub
  * build the image locally 
  * build the VPP-Agent with the VPP locally without the image
 
-## <a name="gtdimage">Get the Docker image</a>
+## Get the Docker image
 
 The image exists in two versions, for production and for development (which can be also used for debugging). Production image is a lightweight version of the development image.
 
@@ -40,7 +30,7 @@ Get from docker hub: `docker pull ligato/vpp-agent`
 
 Get from docker hub: `docker pull ligato/dev-vpp-agent`
 
-### <a name="blimage">Build local image</a>
+### Build local image
 
 1. Clone the Agent repository:
 
@@ -64,7 +54,7 @@ Although, this only builds the image with debug mode support. Use `RUN_VPP_DEBUG
 
 The image can be shrunk with script `./shrink.sh`, which creates a new image with removed installation files (which decreases its size). To execute this procedure successfully, docker version 1.13 or newer is required.
 
-### <a name="startimage">Start the image</a>
+### Start the image
 
 Execution command to start the agent:
 
@@ -72,7 +62,7 @@ Execution command to start the agent:
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
 ```
 
-Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here](https://github.com/ligato/vpp-agent/wiki/Linux-Interface-plugin)).
+Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here](linux-plugins.md#linux-interface-plugin)).
 
 Open another terminal:
 ```
@@ -85,7 +75,7 @@ Image-specific environment variables available (assign with `docker -e` on image
 - `OMIT_AGENT` - do not start the Agent together with the Image
 - `RETAIN_SUPERVISOR` - unexpected Agent or VPP shutdown causes the supervisor to quit. This setting prevents that.
 
-### <a name="noimage">Build the Agent and VPP without image</a>
+### Build the Agent and VPP without image
 
 Another alternative is to build the VPP and the Agent directly (without image). This option is not recommended for anything else but development or testing. Start with getting the Agent code with `git clone https://github.com/ligato/vpp-agent.git` 
 
@@ -112,7 +102,7 @@ Then in the `build-root` directory unpack `*.deb` package files with `dpkg -i`
 
 2. Start the VPP and verify the Agent can connect to it.
 
-# <a name="svppagent">Start the VPP and the Agent</a> 
+# Start the VPP and the Agent
 
 **Note:** The agent will terminate if unable to connect to the VPP, a database or the Kafka message server (if required by the config file). 
 
@@ -161,11 +151,11 @@ To enable certain features (database connection, messaging), Agent requires stat
 
 Read more about the vpp-agent start-up configuration. // TODO add link 
 
-### <a name="cakvdb">Connect Agent to the KVDB<a>
+### Connect Agent to the KVDB
 
 In order to provide configuration from any KVDB (key-value database), the agent needs to know how to connect to the desired instance. The connection information (IP address, port) is provided via the particular .conf file. Every KVDB plugin defines its own config file. 
 
-More information about the KVDB: [KV-Store guide](KV-Store)
+More information about the KVDB: [KV-Store overview](concepts.md#key-value-store-overview)
 
 **Start the ETCD:**
 
@@ -211,7 +201,7 @@ Start the agent with the config flag (default path to .conf file is `/opt/vpp-ag
 vpp-agent --kafka-config=/opt/vpp-agent/dev/kafka.conf
 ```
 
-### <a name="htuma">How to use multiple Agents<a>
+### How to use multiple Agents
 
 **1. Microservice label**
 
@@ -223,18 +213,18 @@ It is possible to use the same label for multiple agents to "broadcast" identica
 
 **2. Shared memory prefix**
 
-Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme](https://github.com/ligato/vpp-agent/blob/master/plugins/govppmux/README.md))
+Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme](framework-plugins.md#govpp-mux))
  
-# <a name="myfc">Make your first configuration<a> 
+# Make your first configuration
 
 **Put the configuration to the KVDB:**
 
 Store value following the given model with the proper key to the KVDB. Depending on the KVDB type, we recommend to use the appropriate tool to put key-value data (e.g. `etcdctl` for the ETCD, or `redis-cli` for the Redis).
-. Information about keys and data structures can be found in the documentation for the respective plugin, which can be found in the [user guide main page](../User-Guide).
+. Information about keys and data structures can be found [here](references.md).
 
 **Use clientv2**
 
-Package [clientv2](https://github.com/ligato/vpp-agent/blob/master/clientv2/README.md) contains API definition for every supported configuration item and can be used to pass data without a external database.
+Package [clientv2](concepts.md#client-v2) contains API definition for every supported configuration item and can be used to pass data without a external database.
 
 
 
