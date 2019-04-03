@@ -37,3 +37,8 @@ a {
     cursor: pointer;
     color: #ffffff;
 }
+
+/* Increase code font size (default is 75%) for better readability */
+code {
+    font-size: 90%;
+}
