@@ -24,6 +24,7 @@ nav:
   - Framework plugins: user-guide/framework-plugins.md
 - DEVELOPER GUIDE:
   - KV Descriptors: developer-guide/implementing-your-own-kvdescriptor.md
+  - Plugin lookup: developer-guide/plugin-lookup.md
   - Go Docs: developer-guide/godocs.md
 - TUTORIALS:
   - Hello World: tutorials/01_hello-world.md
