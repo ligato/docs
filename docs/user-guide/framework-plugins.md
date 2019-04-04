@@ -2,30 +2,53 @@
 
 **Related article:** [Implement your own KV Descriptor](../developer-guide/implementing-your-own-kvdescriptor.md)
 
-A major enhancement that led to the increase of the agent's major version number from 1.x to 2.x, is an introduction of a new framework, called **KVScheduler**, providing transaction-based configuration processing with a generic mechanism for dependency resolution between configuration items, which in effect simplifies and unifies the configurators. KVScheduler is shipped as a separate [plugin], even though it is now a core component around which all the VPP and Linux configurators have been re-build.
+The **KVScheduler** is a major enhancement that warranted increasing the VPP Agent's major version  from 1.x to 2.x. It  provides transaction-based configuration processing based on a generic mechanism for dependency resolution between 
+different configuration items, which in effect simplifies and unifies the configurators. KVScheduler is shipped as a separate [plugin], even though it is now a core component around which all the VPP and Linux configurators have been re-build.
 
 ### Motivation
 
-KVScheduler is a reaction to a series of drawbacks of the original design, which gradually arose with the set of supported configuration items growing:
+The KVScheduler is the answer to a series of problems with the original VPP Agent design, which got gradually worse 
+as the set of supported configuration items kept growing:
+
 * plugins `vpp` and `linux` became bloated and complicated, suffering with race conditions and a lack of visibility
+
 * the `configurators` - i.e. components of `vpp` and `linux` plugins, each processing a specific configuration item type (e.g. interface, route, etc.) - had to be effectively built from scratch, solving the same set of problems again and duplicating lot's of code
+
 * configurators would communicate with each other only through notifications, and react to changes asynchronously to ensure proper operation ordering - i.e. the problem of dependency resolution was effectively distributed across all configurators, making it very difficult to understand, predict and stabilize the system behavior from the developer's global viewpoint
-* a culmination of all the issues above was an unreliable and unpredictable re-synchronization (or resync for short), also known as state reconciliation, between northbound (desired state) and southbound (actual state) - something that was meant to be marketed as the main feature of the VPP-Agent.
+
+* The culmination of all the issues above was an unreliable and unpredictable re-synchronization (or resync for short), 
+  also known as state reconciliation, between NorthBound (the desired state) and SouthBound (the actual state) - something 
+  that was meant to be one of the main VPP-Agent value-adds.
 
 ### Basic concepts and terminology
 
 KVScheduler solves problems common to all configurators through generalization - moving away from specific configuration items and describing the system with abstract terms:
-* **Model** is a description for a single item type, defined as Protobuf Message (for example Bridge Domain model can be found [here][bd-model-example])
+
+* **Model** is a description for a single item type, defined as Protobuf Message (for example Bridge Domain model can be 
+  found [here][bd-model-example])
+
 * **Value** is a run-time instance of a given model
-* **Key** identifies specific value (it is built from key template defined for the model, e.g. [L2 FIB key template][fib-key-template])
-* **Label** can be optionally defined to provide shorter identifier unique only across values of the same type (e.g. interface name)
+
+* **Key** identifies specific value (it is built from key template defined for the model, e.g. 
+  [L2 FIB key template][fib-key-template])
+
+* **Label** can be optionally defined to provide shorter identifier unique only across values of the same type 
+  (e.g. interface name)
+
 * **Metadata** is extra run-time information (of undefined type) assigned to a value, which may be updated after a CRUD operation or an agent restart (for example [sw_if_index][vpp-iface-idx] of every interface is kept in the metadata for its key-value pair)
+
 * **Metadata Map**, also known as index-map, implements mapping between value label and its metadata for a given value type - typically exposed in read-only mode to allow other plugins to read and reference metadata (for example, interface plugin exposes its metadata map [here][vpp-iface-map], which is then used by ARP, route plugin etc. to read sw_if_index of target interfaces).  Metadata maps are automatically created and updated by the scheduler (he is the owner), and exposed to other plugins only in the read-only mode. 
+
 * **[Value origin][value-origin]** defines where the value came from - whether it was received from NB to be configured or whether it was created in the SB plane automatically (e.g. default routes, loop0 interface, etc.)
+
 * Key-value pairs are operated with through CRUD operations, where **Add** is used to denote **Create**, **Dump** is basically Read, Update is denoted by the scheduler as **Modify** and **Delete** is borrowed unchanged
+
 * **Dependency** defined for a value, references another key-value pair that must exist (be created), otherwise the associated value cannot be Added and must remain cached in the state **Pending** - value is allowed to have defined multiple dependencies and all must be satisfied for the value to be considered ready for creation.
+
 * **Derived value**, in future release to be renamed to **attribute** for more clarity, is typically a single field of the original value or its property, manipulated separately - i.e. with possibly its own dependencies (dependency on the source value is implicit), custom implementations for CRUD operations and potentially used as target for dependencies of other key-value pairs - for example, every [interface to be assigned to a bridge domain][bd-interface] is treated as a [separate key-value pair][bd-derived-vals], dependent on the [target interface to be created first][bd-iface-deps], but otherwise not blocking the rest of the bridge domain to be applied
+
 * **Graph** of values is a kvscheduler-internal in-memory storage for all configured and pending key-value pairs, with edges representing inter-value relations, such as "depends-on" and "is-derived-from" - configurators no longer have to implement their own caches for pending values
+
 * **KVDescriptor** assigns implementations of CRUD operations and defines derived values and dependencies to a single value type - this is what configurators basically boil down to - to learn more, please read how to [implement your own KVDescriptor](Implementing-your-own-KVDescriptor)
 
 ### Dependencies
@@ -34,6 +57,7 @@ The idea behind scheduler is based on the Mediator pattern - configurators do no
 
 The values are described for scheduler by registered KVDescriptor-s.
 The scheduler learns two kinds of relations between values that have to be respected by the scheduling algorithm:
+
 1. `A` **depends on** `B`:
    - `A` cannot exist without `B`
    - request to add `A` without `B` existing must be postponed by marking `A` as `pending` (value with unmet dependencies) in the in-memory graph 
@@ -49,6 +73,7 @@ The scheduler learns two kinds of relations between values that have to be respe
 Configurators no longer have to implement resync on their own. As they "teach" KVScheduler how to operate with configuration items by providing callbacks to CRUD operations through KVDescriptors, the scheduler has all it needs to determine and execute the set of operation needed to get the state in-sync after a transaction or restart.
 
 Furthermore, KVScheduler enhances the concept of state reconciliation, and defines three types of the resync:
+
 * **Full resync**: the desired configuration is re-read from NB, the view of SB is refreshed via Dump operations and inconsistencies are resolved via Add/Delete/Modify operations
 * **Upstream resync**: partial resync, same as Full resync except for the view of SB is assumed to be up-to-date and will not get refreshed - can be used by NB when it is easier to re-calculate the desired state than to determine the (minimal) difference
 * **Downstream resync**: partial resync, same as Full resync except the desired configuration is assumed to be up-to-date and will not be re-read from NB - can be used periodically to resync, even without interacting with NB
@@ -58,7 +83,9 @@ Furthermore, KVScheduler enhances the concept of state reconciliation, and defin
 The scheduler allows to group related changes and applies them as transactions. This is not supported, however, by all agent NB interfaces - for example, changes from `etcd` datastore are always received one a time. To leverage the transaction support, localclient (the same process) or GRPC API (remote access) have to be used instead.
 
 Inside the scheduler, transactions are queued and executed synchronously to simplify the algorithm and avoid concurrency issues. The processing of a transaction is split into two stages:
+
 * **Simulation**: the set of operations to execute and their order is determined (so-called *transaction plan*), without actually calling any CRUD callback from descriptors - assuming no failures.
+
 * **Execution**: executing the operations in the right order. If any operation fails, the already applied changes are reverted, unless the so called `BestEffort` mode is enabled, in which case the scheduler tries to apply the maximum possible set of required changes. `BestEffort` is the default for resync.  
 
 Right after simulation, transaction metadata (sequence number printed as `#xxx`, description, values to apply, etc.) are printed, together with transaction plan. This is done before execution, to ensure that the user is informed about the operations that were going to be executed even if any of the operations cause the agent to crash. After the transaction has executed, the set of actually executed operations and potentially some errors are printed to finalize the output for the transaction.
@@ -102,6 +129,7 @@ x-------------------------------------------------------------------------------
 ### REST API
 
 KVScheduler exposes the state of the system and the history of operations not only via formatted logs but also through a set of REST APIs:
+
 * **transaction history**: `GET /scheduler/txn-history`
     - returns the full history of executed transactions or only for a given time window
     - args:
@@ -169,6 +197,7 @@ The trace deature is disabled by default (if there is no config available).
 
 The plugin allows to configure parameters of vpp health-check probe.
 The items that can be configured are:
+
 - *health check probe interval* - time between health check probes
 - *health check reply timeout* - if the reply doesn't arrive until timeout
 elapses probe is considered failed
@@ -222,6 +251,7 @@ If you look for the tutorial how to create custom HTTP plugin, refer to CN-Infra
 The "builtin" REST support (plugin) in the VPP-Agent is currently limited to retrieving existing VPP configuration (called dumping) for core plugins. The Agent also provides simple html template (usable in browser) and optional support for https security, authentication and authorization.
 
 This article will often refer to two HTTP plugins which must be distinguished to understand all concepts:
+
 - **The CN-Infra REST (HTTP) plugin** which enables general HTTP functionality and security
 - **The VPP-Agent REST plugin** which is the Agent-specific implementation of the CN-Infra REST plugin  
 
