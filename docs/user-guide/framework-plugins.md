@@ -1,6 +1,6 @@
 # KV Scheduler
 
-**Related article:** [Implement your own KV Descriptor](../developer-guide/implementing-your-own-kvdescriptor.md)
+**Related article:** [Implement your own KV Descriptor](../developer-guide/kvdescriptor.md)
 
 The **KVScheduler** is a major enhancement that warranted increasing the VPP Agent's major version  from 1.x to 2.x. It  provides transaction-based configuration processing based on a generic mechanism for dependency resolution between 
 different configuration items, which in effect simplifies and unifies the configurators. KVScheduler is shipped as a separate [plugin], even though it is now a core component around which all the VPP and Linux configurators have been re-build.

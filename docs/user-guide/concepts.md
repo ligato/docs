@@ -34,7 +34,7 @@ This section describes supported key-value data bases and how to use them
 The VPP-Agent uses external KV store to keep desired state of the VPP/Linux configuration, eventually to store and export certain VPP statistics. The Agent reacts to data events created by changes within a data-store, in case the change of the data was done under a watched key with proper microservice label.
 It is the microservice label which allows to use single KVDB to serve multiple Agents. Every Agent defines its own label and uses it to distinguish what data were designed for it. 
 
-![KVDB_microservice_label](../img/KVDB_microservice_label.png)
+![KVDB_microservice_label](../img/user-guide/KVDB_microservice_label.png)
 
 Underlying CN-Infra plugin validates key prefix (always in format `/vnf-agent/<microservice-label>`) and if the label matches, KV-pair is passed to VPP-Agent configuration watchers. If the prefix of the rest of the key is registered, KV-pair is sent via channel to particular watcher for processing.
 
