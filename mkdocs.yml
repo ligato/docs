@@ -9,10 +9,8 @@ extra_css:
 
 nav:
 - INTRODUCTION:
-  - Architecture: intro/architecture.md
-  - Design: intro/design.md
+  - VPP-Agent: intro/agent.md
   - CNF definition: intro/cnf-definition.md
-  - Deployment: intro/deployment.md
   - Overview: intro/overview.md
   - CN-Infra: intro/cn-toc-file.md
   - KV datastore: intro/kv-store.md
