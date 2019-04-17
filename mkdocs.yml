@@ -27,10 +27,10 @@ nav:
   - Framework plugins: user-guide/framework-plugins.md
   - ARM64: user-guide/arm64.md
 - DEVELOPER GUIDE:
+  - Plugin lookup: developer-guide/plugin-lookup.md
   - KV Scheduler: developer-guide/kvscheduler.md
   - KV Descriptors: developer-guide/kvdescriptor.md
   - KVS Problem Solving: developer-guide/problem-solving.md
-  - Plugin lookup: developer-guide/plugin-lookup.md
   - Go Docs: developer-guide/godocs.md
 - TUTORIALS:
   - Hello World: tutorials/01_hello-world.md
