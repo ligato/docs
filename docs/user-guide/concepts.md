@@ -98,7 +98,7 @@ Another advantage is that to add support for new KVDB basically means to write a
 
 ### ETCD
 
-More information: [etcd documentation](../intro/kv-store.md#etcd-plugin)
+More information: [etcd documentation](db-plugins.md#etcd-plugin)
 
 The ETCD is a distributed KV store that provides data read-write. The ETCD can be started on local machine in its own container with following command: 
 ```bash
@@ -123,7 +123,7 @@ Recommended tool to manage ETCD database is the official `etcdctl`.
 
 ### Redis
 
-More information: [redis documentation](../intro/kv-store.md#redis)
+More information: [redis documentation](db-plugins.md#redis)
 
 Redis is another type of in-memory data structure store, used as a database, cache or message broker. 
 
@@ -146,7 +146,7 @@ Recommended tool to manage Redis database is the `redis-cli` tool.
 
 ### Consul
 
-More information: [consul documentation](../intro/kv-store.md#consul-plugin)
+More information: [consul documentation](db-plugins.md#consul-plugin)
 
 // TBD
 
@@ -158,7 +158,7 @@ More information: bolt documentation // TODO no readme
 
 ### FileDB
 
-More information: [fileDB documentation](../intro/kv-store.md#filedb)
+More information: [fileDB documentation](db-plugins.md#filedb)
 
 The fileDB is a special case of database, which uses host OS filesystem as a database. The key-value configuration is stored in text files in defined path. The fileDB connector works as any other KVDB connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
 

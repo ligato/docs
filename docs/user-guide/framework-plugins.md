@@ -164,478 +164,344 @@ KVScheduler exposes the state of the system and the history of operations not on
 
 This page describes how to use the VPP-Agent with the gRPC
 
-# GoVPP Mux
+# Status Check
 
-The `govppmux` is a core Agent plugin which allows other plugins access the VPP
-independently at each other by means of connection multiplexing.
+The `statuscheck` infrastructure plugin monitors the overall status of a 
+CN-Infra based app by collecting and aggregating partial statuses
+of agents plugins.
+The status is exposed to external clients via [ETCD - datasync](../../datasync) 
+and [HTTP](../../rpc/rest), as shown in the following diagram:
 
-Any plugin (core or external) that interacts with the VPP can ask `govppmux`
-to get its own, potentially customized, communication channel to access running VPP instance.
-Behind the scene, all channels share the same connection created during the plugin
-initialization using `govpp` core.
+![status check](../img/user-guide/status_check.png)
 
-### Connection
+### Overall Agent Status
 
-By default, the GoVPP connects to that instance of VPP which uses the default shared memory segment prefix. 
-The default behaviour assumes that there is only a single VPP running in a sand-boxed environment together with the agent (e.g. through containerization). In case the VPP runs with customized SHM prefix, or there are several VPP instances running side-by-side, the GoVPP needs to know the prefix in order to connect to the desired VPP instance - the prefix has to be put into the govppmux configuration file (govpp.conf) with key `shm-prefix` and value matching the VPP shared memory prefix name.
+The overall Agent Status is aggregated from all Plugins' Status (logical
+AND for each Plugin Status success/error).
 
-### Multiplexing
+The agent's current overall status can be retrieved from ETCD from the 
+following key: `/vnf-agent/<agent-label>/check/status`
 
-The `NewAPIChannel` call returns a new API channel for communication with VPP via the `govpp` core. It uses default buffer sizes for the request and reply Go channels (by default both are 100 messages long).
+```
+$ etcdctl get /vnf-agent/<agent-label>/check/status/v1/agent
+/vnf-agent/<agent-label>/check/status/v1/agent
+{"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
+```
 
-If it is expected that the VPP may get overloaded at peak loads, for example if the user plugin sends configuration requests in bulks, then it is recommended to use `NewAPIChannelBuffered` and increase the buffer size for requests appropriately. Similarly, `NewAPIChannelBuffered` allows to configure the size of the buffer for responses. This is also useful since the buffer for responses is also used to carry VPP notifications and statistics which may temporarily rapidly grow in size and frequency. By increasing the reply channel size, the probability of dropping messages from VPP decreases at the cost of increased memory footprint.
+To verify the agent status via HTTP (e.g. for Kubernetes 
+[liveness and readiness probes](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/), use the `/liveness` and `/readiness`
+URLs:
+```
+$ curl -X GET http://localhost:9191/liveness
+{"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
+$ curl -X GET http://localhost:9191/readiness
+{"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
+```
 
-### Trace
+To change the HTTP server port (default `9191`), use the `http-port` 
+option of the agent, e.g.:
+```
+$ vpp-agent -http-port 9090
+```
+
+### Plugin Status
+
+Plugin may use `PluginStatusWriter.ReportStateChange` API to **PUSH**
+the status information at any time. For optimum performance,
+'statuscheck' will then propagate the status report further to external
+clients only if it has changed since the last update.
+
+Alternatively, plugin may chose to use the **PULL** based approach and
+define the `probe` function passed to `PluginStatusWriter.Register` API.
+`statuscheck` will then periodically probe the plugin for the current
+status. Once again, the status is propagated further only if it has
+changed since the last enquiry.
+
+It is recommended not to mix the PULL and the PUSH based approach
+within the same plugin.
+
+To retrieve the current status of a plugin from ETCD, use the following
+key template: `/vnf-agent/<agent-label>/check/status/v1/plugin/<PLUGIN_NAME>`
  
-Duration of the VPP binary api call can be measured using trace feature. These data are logged after every event(any resync, interfaces, bridge domains, fib entries etc.). Enable trace in the govpp.conf: 
- 
-`trace-enabled: true` or  `trace-enabled: false`
+For example, to retrieve the status of the GoVPP plugin, use: 
+
+```
+$ etcdctl get /vnf-agent/<agent-label>/check/status/v1/plugin/GOVPP
+/vnf-agent/<agent-label>/check/status/v1/plugin/GOVPP
+{"state":2,"last_change":1496322205,"last_update":1496322361,"error":"VPP disconnected"}
+```
+
+### Push Plugin Status:
+![status check pull](../img/user-guide/status_check_push.png)
+
+### Pull Plugins Status - PROBING:
+![status check push](../img/user-guide/status_check_pull.png)
+
+# Index Map
+
+The idxmap package provides an enhanced mapping structure to help in
+the following use cases:
+* Exposing read-only access to plugin local data for other plugins
+* Secondary indexing
+* Data caching for key-value store (such as etcd)
+
+For more detailed description see the godoc.
+
+### Exposing plugin local information Use Case
+App plugins often need to expose some structured information to other
+plugins inside the agent (see the following diagram).
+
+Structured data stored in idxmap are available for (possibly concurrent)
+read access to other plugins:
+1. either via lookup using primary keys or secondary indices;
+2. or via watching for data changes in the map using channels
+   or callbacks (subscribe for changes and receive notification once
+   an item is added, changed or removed).
+
+TODO: remove "\<\<cache\>\>" string from the image
+
+![idxmap local](../img/user-guide/idxmap_local.png)
+
+### Caching Use Case
+It is useful to have the data from a key-value store cached when
+you need to:
+- minimize the number of lookups into the key-value store
+- execute lookups by secondary indexes for key-value stores that
+  do not necessarily support secondary indexing (e.g. etcd)
+
+**CacheHelper** turns `idxmap` (injected as field
+`IDX`) into an indexed local copy of remotely stored key-value data.
+`CacheHelper` watches the target key-value store for data changes
+and resync events. Received key-value pairs are transformed into
+the name-value (+ secondary indices if defined) pairs and stored into
+the injected idxmap instance.
+For a visual explanation, see the diagram below:
+
+
+![idxmap cache](../img/user-guide/idxmap_cache.png)
+
+Packages that [use index map](https://godoc.org/github.com/ligato/cn-infra/idxmap?importers).
+The constructor that combines `CacheHelper` with `idxmap` to build the cache from the example 
+can be found there as well.
+
+### Examples
+* Isolated and simplified examples can be found here: 
+  * [lookup](https://github.com/ligato/vpp-agent/tree/master/examples/idx_mapping_lookup)
+  * [watch](https://github.com/ligato/vpp-agent/tree/master/examples/idx_mapping_watcher)
   
-The trace deature is disabled by default (if there is no config available). 
+# Log Manager
+
+Log manager plugin allows to view and modify log levels of loggers using REST API.
+
+**API**
+- List all registered loggers:
+
+    ```curl -X GET http://<host>:<port>/log/list```
+- Set log level for a registered logger:
+   ```curl -X PUT http://<host>:<port>/log/<logger-name>/<log-level>```
+ 
+   `<log-level>` is one of `debug`,`info`,`warning`,`error`,`fatal`,`panic`
+   
+`<host>` and `<port>` are determined by configuration of rest.Plugin.
+ 
+**Config file**
+
+- Logger config file is composed of two parts: the default level applied for all plugins, 
+  and a map where every logger can have its own log level defined.
+  
+  **Note:** initial log level can be set using environmental variable `INITIAL_LOGLVL`. The 
+  variable replaces default-level from configuration file. However, loggers (partial definition)
+  replace default value set by environmental variable for specific loggers defined.  
+  
+### Tracer
+
+A simple utility able to log measured time periods various events. To create a new tracer, call:
+
+`t := NewTracer(name string, log logging.Logger)`
+
+Tracer object can store a new entry with `t.LogTime(entity string, start Time)` where `entity` is a string 
+representation of a measured object (name of a function, structure or just simple string) and `start` is a start time. 
+
+Tracer can measure repeating event (in a loop for example). Every event will be stored with the particular index.
+
+Use `t.Get()` to read all measurements. The Trace object contains a list of entries and overall time duration.
+
+Last method is `t.Clear()` which removes all entries from the internal database.  
+
+# Messaging/Kafka
+
+The client package provides single purpose clients for publishing
+synchronous/asynchronous messages and for consuming selected topics.
+
+The mux package uses these clients and allows to share their access to kafka brokers
+among multiple entities. This package also implements the generic messaging API defined in the parent package.
+
+### Requirements
+
+Minimal supported version of kafka is determined by [sarama](https://github.com/Shopify/sarama)
+library - Kafka 0.10 and 0.9, although older releases are still likely to work.
+
+If you don't have kafka installed locally you can use docker image for testing:
+ ```
+sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
+ --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
+```
+
+### Kafka plugin
+
+Kafka plugin provides access to kafka brokers.
+
+**API**
+
+The plugin's API is documented at the end of [doc.go](doc.go).
+
+**Configuration**
+- Location of the Kafka configuration file can be defined either by command line flag `kafka-config` or 
+set via `KAFKA_CONFIG` env variable.
+
+**Status Check**
+
+- Kafka plugin has a mechanism to periodically check a connection status of the Kafka server. 
+
+### Multiplexer
+
+The multiplexer instance has an access to kafka Brokers. To share the access it allows to create connections.
+There are available two connection types one support message of type `[]byte` and the other `proto.Message`.
+Both of them allows to create several SyncPublishers and AsyncPublishers that implements `BytesPublisher` interface
+or `ProtoPubliser` respectively. The connections also provide API for consuming messages implementing `BytesMessage` 
+interface or `ProtoMessage` respectively.
+
+
+```
+   
+    +-----------------+                                  +---------------+
+    |                 |                                  |               |
+    |  Kafka brokers  |        +--------------+     +----| SyncPublisher |
+    |                 |        |              |     |    |               |
+    +--------^--------+    +---| Connection   <-----+    +---------------+
+             |             |   |              |
+   +---------+----------+  |   +--------------+
+   |  Multiplexer       |  |
+   |                    <--+
+   | SyncProducer       <--+   +--------------+
+   | AsyncProducer      |  |   |              |
+   | Consumer           |  |   | Connection   <-----+    +----------------+
+   |                    |  +---|              |     |    |                |
+   |                    |      +--------------+     +----| AsyncPublisher |
+   +--------------------+                                |                | 
+                                                         +----------------+
+
+```
+
+# Process manager
+
+The process manager plugin provides a set of methods to create a plugin-defined processes instance implementing a set
+of methods to manage and monitor them. 
+
+There are several ways how to obtain a process instance via `ProcessManager` API:
+
+**New process with options:** using method `NewProcess(<cmd>, <options>...)` which requires a command 
+and a set of optional parameters. 
+**New process from template:** using method `NewProcessFromTemplate(<tmp>)` which requires template as a parameter
+**Attach to existing process:** using method `AttachProcess(<pid>)`. The process ID is required to order to attach.
+
+### Management
+
+Note: since application (management plugin) is parent of all processes, application termination causes all
+started processes to stop as well. This can be changed with *Detach* option (see process options).
+
+Process management methods:
+
+* `Start()` starts the plugin-defined process, stores the instance and does initial status file read
+* `Restart()` tries to gracefully stop (force stop if fails) the process and starts it again. If the instance 
+is not running, it is started.
+* `Stop()` stops the instance using SIGTERM signal. Process is not guaranteed to be stopped. Note that 
+child processes (not detached) may end up as defunct if stopped this way. 
+* `StopAndWait()` stops the instance using SIGTERM signal and waits until the process completes. 
+* `Kill()` force-stops the process using SIGKILL signal and releases all the resources used.
+* `Wait()` waits until the process completes.
+* `Signal()` allows user to send custom signal to a process. Note that some signals may cause unexpected 
+behavior in process handling.
+
+Process monitor methods:
+
+* `IsAlive()` returns true if process is running
+* `GetNotificationChan()` returns channel where process status notifications will be sent. Useful when a process
+is created via template with 'notify' field set to true. In other cases, the channel is provided by user.
+* `GetName` returns process name as defined in status file
+* `GetPid()` returns process ID
+* `UpdateStatus()` updates internal status of the plugin and returns the actual status file
+* `GetCommand()` returns original process command. Always empty for attached processes.
+* `GetArguments()` returns original arguments the process was run with. Always empty for attached processes.
+* `GetStartTime()` returns time stamp when the process was started for the last time
+* `GetUpTime()` returns process up-time in nanoseconds
+
+### Status watcher
+
+Every process is watched for status changes (it does not matter which way it was crated) despite the process
+is running or not. The watcher uses standard statuses (running, sleeping, idle, etc.). The state is read 
+from process status file and every change is reported. The plugin also defines two plugin-wide statues:
+* **Initial** - only for newly created processes, means that the process command was defined but not started yet
+* **Terminated** - if the process is not running or does not respond
+* **Unavailable** - if the process is running but the status cannot be obtained
+The process status is periodically polled and notifications can be sent to the user defined channel. In case 
+process was crated via template, channel was initialized in the plugin and can be obtained via `GetNotificationChan()`.
+
+### Process options
+
+Following options are available for processes. All options can be defined in the API method as well as in the template.
+All of them are optional.
+
+**Args:** takes string array as parameter, process will be started with given arguments. 
+**Restarts:** takes a number as a parameter, defines count of automatic restarts when the process 
+state becomes terminated.
+**Writer** allows to define custom `stdOut` and `stdErr` values. Note: usability is limited when defined via template (only standard `os.stdout` and `os.stderr` can be used)
+**Detach:** no parameters, started process detaches from the parent application and will be given to current user.
+This setting allows the process to run even after the parent was terminated.
+**EnvVar** can be used to define environment variables (for example `os.Environ` for all)
+**Template:** requires name, and run-on-startup flag. This setup creates a template on process creation.
+The template path has to be set in the plugin.
+**Notify:** allows user to provide a notification channel for status changes.
+
+### Templates
+
+The template is a file which defines process configuration for plugin manager. All templates should be stored 
+in the path defined in the plugin config file. Example can be found [here](pm.conf).
+
+```
+./process-manager-plugin -process-manager-config=<path-to-file>
+```
+
+The template can be either written by hand using 
+[proto model](template/model/process/process.proto), or generated with the *Template* option while creating a new 
+process. 
+
+On the plugin init, all templates are read, and those with *run-on-startup* set to 'true' are also immediately started.
+The template contains several fields defining process name, command, arguments and all the other fields from options.
+
+The plugin API allows to read templates directly with `GetTemplate(<name)` or `GetAllTmplates()`. The template object
+can be used as parameter to start a new process from it. 
+
+# Service Label
+
+The `servicelabel` is a small Core Agent Plugin, which other plugins can use to
+obtain the microservice label, i.e. the string used to identify the particular VNF.
+The label is primarily used to prefix keys in etcd datastore so that the configurations
+of different VNFs do not get mixed up.
+
+**API**
+
+described in [doc.go](doc.go)
 
 **Configuration**
 
-The plugin allows to configure parameters of vpp health-check probe.
-The items that can be configured are:
-
-- *health check probe interval* - time between health check probes
-- *health check reply timeout* - if the reply doesn't arrive until timeout
-elapses probe is considered failed
-- *health check threshold* - number of consequent failed health checks
-until an error is reported
-- *reply timeout* - if the reply from channel doesn't arrive until timeout
-elapses, the request fails
-- *shm-prefix* - used for connection to a VPP instance which is not using 
-default shared memory prefix
-- *resync-after-reconnect* - allows to run resync after recoonection
+- the serviceLabel can be set either by commandline flag `microservice-label` or environment variable `MICROSERVICE_LABEL`
 
 **Example**
 
-The following example shows how to dump VPP interfaces using a multi-response request:
+Example of retrieving and using the microservice label:
 ```
-// Create a new VPP channel with the default configuration.
-plugin.vppCh, err = govppmux.NewAPIChannel()
-if err != nil {
-    // Handle error condition...
-}
-// Close VPP channel.
-defer safeclose.Close(plugin.vppCh)
+plugin.Label = servicelabel.GetAgentLabel()
+dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 
-req := &interfaces.SwInterfaceDump{}
-reqCtx := plugin.vppCh.SendMultiRequest(req)
 
-for {
-    msg := &interfaces.SwInterfaceDetails{}
-    stop, err := reqCtx.ReceiveReply(msg)
-    if err != nil {
-        // Handle error condition...
-    }
-
-    // Break out of the loop in case there are no more messages.
-    if stop {
-        break
-    }
-
-    log.Info("Found interface with sw_if_index=", msg.SwIfIndex)
-    // Process the message...
-}
-
-```
-
-This page describes how to use the VPP-Agent with representational state transfer
-
-If you look for the tutorial how to create custom HTTP plugin, refer to CN-Infra REST wiki and tutorial //TODO add links
-
-# VPP-Agent REST
-
-The "builtin" REST support (plugin) in the VPP-Agent is currently limited to retrieving existing VPP configuration (called dumping) for core plugins. The Agent also provides simple html template (usable in browser) and optional support for https security, authentication and authorization.
-
-This article will often refer to two HTTP plugins which must be distinguished to understand all concepts:
-
-- **The CN-Infra REST (HTTP) plugin** which enables general HTTP functionality and security
-- **The VPP-Agent REST plugin** which is the Agent-specific implementation of the CN-Infra REST plugin  
-
-### Basics
-
-The VPP-Agent contains the REST API plugin, which is based on CN-Infra HTTP plugin (HTTPMux). The basic functionality is allowed by default without need of any external configuration file, just add the VPP-Agent REST plugin to the Agent plugin pool. The default HTTP endpoint is opened on socket `0.0.0.0:9191`. There are several ways how to setup different port:
-
-**1. Using VPP-Agent flag:** the port can be set via flag `-http-port=<port>`
-**2. Using environment variable:** set the variable `HTTP_PORT` to desired value
-**3. Using the CN-Infra HTTP plugin config file:** this option allows to change the whole endpoint and also enable other features described in the part HTTP config file
-
-### Supported URLs
-
-There is a list of all supported URLs sorted by VPP-Agent plugins. If the retrieve URL is used (currently the only supported), the output is based on proto model structure for given data type together with VPP-specific data which are not a part of the model (like indexes for
-interfaces or ACLs, various internal names, etc.). Those data are in separate section labeled as `<type>_meta`.
-
-**Index page**
-
-The REST to get the index page. Configuration items are sorted by type (interface plugin, telemetry, etc.). The index is a root directory.
-```
-/
-```
-
-**Access lists**
-
-URLs to obtain ACL IP/MACIP configuration:
-```
-# ACL IP
-/dump/vpp/v2/acl/ip
-
-# ACL MAC IP
-/dump/vpp/v2/acl/macip
-```
-
-**VPP Interfaces**
-
-The REST plugin exposes configured VPP interfaces, which can be shown all together, or interfaces
-of specific type only:
-```
-# All interfaces
-/dump/vpp/v2/interfaces
-
-# Loopback
-/dump/vpp/v2/interfaces/loopback
-
-# Ethernet
-/dump/vpp/v2/interfaces/ethernet
-
-# Memory interface
-/dump/vpp/v2/interfaces/memif
-
-# Tap
-/dump/vpp/v2/interfaces/tap
-
-# VxLAN tunnel
-/dump/vpp/v2/interfaces/vxlan
-
-# Af-Packet interface
-/dump/vpp/v2/interfaces/afpacket
-```
-
-**Linux Interfaces**
-
-The REST plugin exposes configured Linux interfaces. All configured interfaces are retrieved all together
-with interfaces in the default namespace: 
-```
-/dump/linux/v2/interfaces
-```
-
-**L2 plugin**
-
-The support for bridge domains, FIB entries and cross connects:
-```
-# Bridge domains
-/dump/vpp/v2/bd
-
-# FIB entries
-/dump/vpp/v2/fib
-
-# Cross-connects
-/dump/vpp/v2/xc
-```
-
-**L3 plugin**
-
-ARPs, proxy ARP interfaces/ranges and static routes exposed via REST:
-```
-# Routes
-/dump/vpp/v2/routes
-
-# ARPs
-/dump/vpp/v2/arps
-
-# Proxy ARP interfaces
-dump/vpp/v2/proxyarp/interfaces
-
-# Proxy ARP ranges
-/dump/vpp/v2/proxyarp/ranges
-```
-
-**Linux L3 plugin**
-
-The Linux ARPs and routes exposed via REST:
-```
-# Linux routes
-/dump/linux/v2/routes
-
-# Linux ARPs
-/dump/linux/v2/arps
-```
-
-**NAT plugin**
-
-The REST plugin allows to dump NAT44 global configuration, DNAT configuration or both of them together:
-```
-# REST path of a NAT
-/dump/vpp/v2/nat
-
-# Global NAT config
-/dump/vpp/v2/nat/global
-
-# DNAT configurations
-/dump/vpp/v2/nat/dnat
-```
-
-**CLI command**
-
-Allows to use VPP CLI command via REST. Commands are defined as a map as following:
-```
-/vpp/command -d '{"vppclicommand":"<command>"}'
-```
-
-
-**Telemetry**
-
-The REST allows to get various types of telemetry metrics data, or selective using specific key:
-```
-/vpp/telemetry
-/vpp/telemetry/memory
-/vpp/telemetry/runtime
-/vpp/telemetry/nodecount
-```
-
-**Tracer**
-
-The Tracer plugin exposes data via the REST as follows:
-```
-/vpp/binapitrace
-```
-
-### Logging mechanism
-
-The REST API request is logged to stdout. The log contains VPP CLI command and VPP CLI response. It is searchable in elastic search using "VPPCLI".
-
-### Security
-
-The CN-Infra REST plugin provides option to secure the HTTP communication. The plugin supports HTTPS client/server certificates, HTTP credentials authentication (username and password) and authorization based on tokens.
-
-This feature is disabled by default and if required, must be enabled by the CN-Infra HTTP plugin config file. 
-
-More information about security setup and usage, see [security](https://github.com/ligato/cn-infra/blob/master/rpc/rest/README.md#security) for certificates and [tokens](https://github.com/ligato/cn-infra/blob/master/rpc/rest/README.md#token-based-authorization) for token-based authorization.
-
-**Basic usage**
-
-**1. cURL** 
-
-Specify the VPP-Agent target HTTP IP address and port with link to desired data. All URLs are accessible via the `GET` method.
-
-Example:
-```
-curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
-```
-
-**2. Postman**
-
-Choose the `GET` method, provide desired URL and send the request.
-
-# VPP-Agent GRPC
-
-Related article: [GRPC tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial)
-
-The base of the GRPC support in the VPP-Agent is a [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md), which is an infrastructure plugin allowing to handle GRPC requests.
-
-The VPP-Agent GRPC can be used to:
-* Send a VPP configuration
-* Retrieve (dump) a VPP configuration
-* Start notification watcher
-
-Remote procedure calls defined:
-**Get** is used to update existing configuration, or create it if not exists yet.
-**Delete** removes desired configuration.
-**Dump** (retrieve) reads existing configuration from the VPP.
-**Notify** subscribes the GRPC notification service
-
-To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires startup configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)) with endpoint defined.
-
-The communication can be done via endpoint IP address and port, or via unix domain socket file. The TCP network is set as default, but other network types are available (like TCP6 or UNIX)
-
-# Telemetry Plugin
-
-The `telemetry` plugin is a core Agent Plugin for exporting telemetry statistics from the VPP to the Prometheus.
-Statistics are published via registry path `/vpp` on port `9191` and updated every 30 seconds.
-
-### Exported data
-
-- VPP runtime (`show runtime`)
-
-```bash
-                 Name                 State         Calls          Vectors        Suspends         Clocks       Vectors/Call
-    acl-plugin-fa-cleaner-process  event wait                0               0               1          4.24e4            0.00
-    api-rx-from-ring                any wait                 0               0              18          2.92e5            0.00
-    avf-process                    event wait                0               0               1          1.18e4            0.00
-    bfd-process                    event wait                0               0               1          1.21e4            0.00
-    cdp-process                     any wait                 0               0               1          1.34e5            0.00
-    dhcp-client-process             any wait                 0               0               1          4.88e3            0.00
-    dns-resolver-process            any wait                 0               0               1          5.88e3            0.00
-    fib-walk                        any wait                 0               0               4          1.67e4            0.00
-    flow-report-process             any wait                 0               0               1          3.19e3            0.00
-    flowprobe-timer-process         any wait                 0               0               1          1.40e4            0.00
-    igmp-timer-process             event wait                0               0               1          1.29e4            0.00
-    ikev2-manager-process           any wait                 0               0               7          4.58e3            0.00
-    ioam-export-process             any wait                 0               0               1          3.49e3            0.00
-    ip-route-resolver-process       any wait                 0               0               1          7.07e3            0.00
-    ip4-reassembly-expire-walk      any wait                 0               0               1          3.92e3            0.00
-    ip6-icmp-neighbor-discovery-ev  any wait                 0               0               7          4.78e3            0.00
-    ip6-reassembly-expire-walk      any wait                 0               0               1          5.16e3            0.00
-    l2fib-mac-age-scanner-process  event wait                0               0               1          4.57e3            0.00
-    lacp-process                   event wait                0               0               1          2.46e5            0.00
-    lisp-retry-service              any wait                 0               0               4          1.05e4            0.00
-    lldp-process                   event wait                0               0               1          6.79e4            0.00
-    memif-process                  event wait                0               0               1          1.94e4            0.00
-    nat-det-expire-walk               done                   1               0               0          5.68e3            0.00
-    nat64-expire-walk              event wait                0               0               1          5.01e7            0.00
-    rd-cp-process                   any wait                 0               0          174857          4.04e2            0.00
-    send-rs-process                 any wait                 0               0               1          3.22e3            0.00
-    startup-config-process            done                   1               0               1          4.99e3            0.00
-    udp-ping-process                any wait                 0               0               1          2.65e4            0.00
-    unix-cli-127.0.0.1:38288         active                  0               0               9          4.62e8            0.00
-    unix-epoll-input                 polling          12735239               0               0          1.14e3            0.00
-    vhost-user-process              any wait                 0               0               1          5.66e3            0.00
-    vhost-user-send-interrupt-proc  any wait                 0               0               1          1.95e3            0.00
-    vpe-link-state-process         event wait                0               0               1          2.27e3            0.00
-    vpe-oam-process                 any wait                 0               0               4          1.11e4            0.00
-    vxlan-gpe-ioam-export-process   any wait                 0               0               1          4.04e3            0.00
-    wildcard-ip4-arp-publisher-pro event wait                0               0               1          5.49e4            0.00
-
-```
-
-Example:
-
-```bash
-# HELP vpp_runtime_calls Number of calls
-# TYPE vpp_runtime_calls gauge
-...
-vpp_runtime_calls{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 7.65806939e+08
-...
-# HELP vpp_runtime_clocks Number of clocks
-# TYPE vpp_runtime_clocks gauge
-...
-vpp_runtime_clocks{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 1150
-...
-# HELP vpp_runtime_suspends Number of suspends
-# TYPE vpp_runtime_suspends gauge
-...
-vpp_runtime_suspends{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
-...
-# HELP vpp_runtime_vectors Number of vectors
-# TYPE vpp_runtime_vectors gauge
-...
-vpp_runtime_vectors{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
-...
-# HELP vpp_runtime_vectors_per_call Number of vectors per call
-# TYPE vpp_runtime_vectors_per_call gauge
-...
-vpp_runtime_vectors_per_call{agent="agent1",item="unix-epoll-input",thread="",threadID="0"} 0
-...
-```
-
-- VPP buffers (`show buffers`)
-
-```bash
- Thread             Name                 Index       Size        Alloc       Free       #Alloc       #Free
-      0                       default           0        2048      0           0           0           0
-      0                 lacp-ethernet           1         256      0           0           0           0
-      0               marker-ethernet           2         256      0           0           0           0
-      0                       ip4 arp           3         256      0           0           0           0
-      0        ip6 neighbor discovery           4         256      0           0           0           0
-      0                  cdp-ethernet           5         256      0           0           0           0
-      0                 lldp-ethernet           6         256      0           0           0           0
-      0           replication-recycle           7        1024      0           0           0           0
-      0                       default           8        2048      0           0           0           0
-```
-
-Example:
-
-```bash
-# HELP vpp_buffers_alloc Allocated
-# TYPE vpp_buffers_alloc gauge
-vpp_buffers_alloc{agent="agent1",index="0",item="default",threadID="0"} 0
-vpp_buffers_alloc{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-...
-# HELP vpp_buffers_free Free
-# TYPE vpp_buffers_free gauge
-vpp_buffers_free{agent="agent1",index="0",item="default",threadID="0"} 0
-vpp_buffers_free{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-...
-# HELP vpp_buffers_num_alloc Number of allocated
-# TYPE vpp_buffers_num_alloc gauge
-vpp_buffers_num_alloc{agent="agent1",index="0",item="default",threadID="0"} 0
-vpp_buffers_num_alloc{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-...
-# HELP vpp_buffers_num_free Number of free
-# TYPE vpp_buffers_num_free gauge
-vpp_buffers_num_free{agent="agent1",index="0",item="default",threadID="0"} 0
-vpp_buffers_num_free{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 0
-...
-# HELP vpp_buffers_size Size of buffer
-# TYPE vpp_buffers_size gauge
-vpp_buffers_size{agent="agent1",index="0",item="default",threadID="0"} 2048
-vpp_buffers_size{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 256
-...
-...
-```
-
-- VPP memory (`show memory`)
-
-```bash
-Thread 0 vpp_main
-20071 objects, 14276k of 14771k used, 21k free, 12k reclaimed, 315k overhead, 1048572k capacity
-```
-
-Example:
-
-```bash
-# HELP vpp_memory_capacity Capacity
-# TYPE vpp_memory_capacity gauge
-vpp_memory_capacity{agent="agent1",thread="vpp_main",threadID="0"} 1.048572e+09
-# HELP vpp_memory_free Free memory
-# TYPE vpp_memory_free gauge
-vpp_memory_free{agent="agent1",thread="vpp_main",threadID="0"} 4000
-# HELP vpp_memory_objects Number of objects
-# TYPE vpp_memory_objects gauge
-vpp_memory_objects{agent="agent1",thread="vpp_main",threadID="0"} 20331
-# HELP vpp_memory_overhead Overhead
-# TYPE vpp_memory_overhead gauge
-vpp_memory_overhead{agent="agent1",thread="vpp_main",threadID="0"} 319000
-# HELP vpp_memory_reclaimed Reclaimed memory
-# TYPE vpp_memory_reclaimed gauge
-vpp_memory_reclaimed{agent="agent1",thread="vpp_main",threadID="0"} 0
-# HELP vpp_memory_total Total memory
-# TYPE vpp_memory_total gauge
-vpp_memory_total{agent="agent1",thread="vpp_main",threadID="0"} 1.471e+07
-# HELP vpp_memory_used Used memory
-# TYPE vpp_memory_used gauge
-vpp_memory_used{agent="agent1",thread="vpp_main",threadID="0"} 1.4227e+07
-```
-
-- VPP node counters (`show node counters`)
-
-```bash
-Count                    Node                  Reason
-120406            ipsec-output-ip4            IPSec policy protect
-120406               esp-encrypt              ESP pkts received
-123692             ipsec-input-ip4            IPSEC pkts received
-  3286             ip4-icmp-input             unknown type
-120406             ip4-icmp-input             echo replies sent
-    14             ethernet-input             l3 mac mismatch
-   102                arp-input               ARP replies sent
-```
-
-Example:
-
-```bash
-# HELP vpp_node_counter_count Count
-# TYPE vpp_node_counter_count gauge
-vpp_node_counter_count{agent="agent1",item="arp-input",reason="ARP replies sent"} 103
-vpp_node_counter_count{agent="agent1",item="esp-encrypt",reason="ESP pkts received"} 124669
-vpp_node_counter_count{agent="agent1",item="ethernet-input",reason="l3 mac mismatch"} 14
-vpp_node_counter_count{agent="agent1",item="ip4-icmp-input",reason="echo replies sent"} 124669
-vpp_node_counter_count{agent="agent1",item="ip4-icmp-input",reason="unknown type"} 3358
-vpp_node_counter_count{agent="agent1",item="ipsec-input-ip4",reason="IPSEC pkts received"} 128027
-vpp_node_counter_count{agent="agent1",item="ipsec-output-ip4",reason="IPSec policy protect"} 124669
-```
-    
-### Configuration file
-
-The telemetry plugin configuration file allows to change polling interval, or turn the polling off. The `polling-interval` is time in nanoseconds between reads from the VPP. Parameter `disabled` can be set to `true` in order to disable the telemetry plugin.    

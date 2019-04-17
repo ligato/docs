@@ -1,3 +1,101 @@
+# Datasync plugin
+
+Package datasync defines the interfaces for the abstraction 
+of a data synchronization between app plugins and different backend data
+sources (such as data stores, message buses, or RPC-connected clients).
+
+In this context, data synchronization is about multiple data sets 
+that need to be synchronized whenever a particular event is published. 
+The event can be published by:
+- database (when particular data was changed); 
+- by message bus (such as consuming messages from Kafka topics); 
+- or by RPC clients (when GRPC or REST service call ).
+
+The data synchronization APIs are centered around watching 
+and publishing data change events. These events are processed
+asynchronously.
+
+The data handled by one plugin can have references to the data
+of another plugin. Therefore, a proper time/order of data
+resynchronization between plugins needs to be maintained. The datasync
+plugin initiates a full data resync in the same order as the other
+plugins have been registered in Init().
+  
+### Watch data API
+
+Watch data API is used by app plugin to:
+1. Subscribe channels for data changes using `Watch()`, while being
+   abstracted from a particular message source (data store, message bus
+   or RPC)
+2. Process full Data RESYNC (startup & fault recovery scenarios).
+   Feedback is given back to the user of this API (e.g. successful
+   configuration or an error) via callback.
+3. Process Incremental Data CHANGE. This is an optimized variant
+   of RESYNC, where only the minimal set of changes (deltas) needed
+   to get in-sync gets propagated to plugins.
+   Again, feedback to the user of the API (e.g. successful configuration
+   or an error) is returned via callback.
+
+![datasync](../img/user-guide/datasync_watch.png)
+
+This APIs define two types of events that a plugin must be able
+to process:
+1. Full Data RESYNC (resynchronization) event is defined to trigger
+   resynchronization of the whole configuration. This event is used
+   after agent start/restart, or for a fault recovery scenario
+   (e.g. when agent's connectivity to an external data source is lost
+   and restored).
+2. Incremental Data CHANGE event is defined to trigger incremental
+   processing of configuration changes. Each data change event contains
+   both the previous and the new/current value. The Data synchronization
+   is switched to this optimized mode only after successful Full Data
+   RESYNC.
+
+### Publish data API
+
+Publish data API is used by app plugins to asynchronously publish events 
+with particular data change values and still remain abstracted from
+the target data store, message bus, local/RPC client.
+
+![datasync publish](../img/user-guide/datasync_pub.png)
+
+# Data Broker 
+
+The CN-Infra Data Broker abstraction (see the diagram below) is based on
+two APIs: 
+* **The Broker API** - used by app plugins to PULL (i.e. retrieve) data
+  from a data store or PUSH (i.e. write) data into the data store.  Data
+  can be retrieved for a specific key or by running a query. Data can be 
+  written for a specific key. Multiple writes can be executed in a 
+  transaction.
+* **The Watcher API** - used by app plugins to WATCH data on a specified 
+  key. Watching means to monitor for data changes and be notified as soon
+  as a change occurs.
+
+![db](../img/user-guide/db.png)
+
+The Broker & Watcher APIs abstract common database operations implemented 
+by different databases (ETCD, Redis, Cassandra). Still, there are major 
+differences between [keyval](keyval)-based & [sql](sql)-based databases.
+Therefore the Broker & Watcher Go interfaces are defined in each package 
+separately; while the method names for a given operation are the same, 
+the method arguments are different.
+
+### Key-value datastore
+
+The `keyval` package defines the client API to access a key-value data 
+store. It comprises two sub-APIs: the `Broker` interface supports reading 
+and manipulation of key-value pairs; the `Watcher` API provides functions 
+for monitoring of changes in a data store. Both interfaces are available
+with arguments of type `[]bytes` (raw data) and `proto.Message` (protobuf
+formatted data).
+
+The `keyval` package also provides a skeleton for a key-value plugin.
+A particular data store is selected in the `NewSkeleton` constructor
+using an argument of type `CoreBrokerWatcher`. The skeleton handles
+the plugin's life-cycle and provides unified access to datastore
+implementing the `KvPlugin` interface.
+
 # Etcd plugin
 
 The Etcd plugin provides access to an etcd key-value data store.
