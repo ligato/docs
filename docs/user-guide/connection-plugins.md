@@ -185,41 +185,48 @@ Choose the `GET` method, provide desired URL and send the request.
 
 Related article: [GRPC tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial)
 
-The base of the GRPC support in the VPP-Agent is a [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md), which is an infrastructure plugin allowing to handle GRPC requests.
+GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md) that implements handling of GRPC requests.
 
-The VPP-Agent GRPC can be used to:
-* Send a VPP configuration
-* Retrieve (dump) a VPP configuration
-* Start notification watcher
+The VPP-Agent GRPC plugin can be used to:
 
-Remote procedure calls defined:
-**Get** is used to update existing configuration, or create it if not exists yet.
-**Delete** removes desired configuration.
-**Dump** (retrieve) reads existing configuration from the VPP.
-**Notify** subscribes the GRPC notification service
+* Send configuration to VPP
+* Retrieve (dump) configuration from VPP
+* Start a notification watcher
 
-To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires startup configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)) with endpoint defined.
+The following remote procedure calls are defined:
 
-The communication can be done via endpoint IP address and port, or via unix domain socket file. The TCP network is set as default, but other network types are available (like TCP6 or UNIX)
+* **Get** creates new configuration or updates existing configuration.
+* **Delete** removes specified (existing) configuration.
+* **Dump** (Retrieve) reads existing configuration from the VPP.
+* **Notify** subscribes GRPC to the notification service
 
-### GRPC plugin
+To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently
+the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires a startup
+configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)),
+where the endpoint is defined.
 
-The `GRPC Plugin` is a infrastructure Plugin which allows app plugins 
-to handle GRPC requests (see the diagram below) in this sequence:
-1. GRPC Plugin starts the GRPC server + net listener in its own goroutine
-2. Plugins register their handlers with `GRPC Plugin`.
+Clients with the GRPC Server via an endpoint IP address and port or via a unix domain socket file. The TCP network is
+set as default, but other network types are also available (like TCP6 or UNIX).
+
+### GRPC Plugin
+
+The `GRPC Plugin` is a infrastructure Plugin which allows app plugins to handle GRPC requests (see the diagram below)
+as follows:
+
+1. The GRPC Plugin starts the GRPC server + net listener in its own goroutine
+2. Plugins register their handlers with the `GRPC Plugin`.
    To service GRPC requests, a plugin must first implement a handler
    function and register it at a given URL path using
    the `RegisterService` method. `GRPC Plugin` uses an GRPC request
-   multiplexer from the `grpc/Server`.
-3. GRPC server routes GRPC requests to their respective registered handlers
+   multiplexer from `grpc/Server`.
+3. The GRPC Server routes GRPC requests to their respective registered handlers
    using the `grpc/Server`.
 
 ![grpc](../img/user-guide/grpc.png)
 
 **Configuration**
 
-- the server's port can be defined using commandline flag `grpc-port` or 
+- The GRPC Server's port can be defined using the commandline flag `grpc-port` or 
   via the environment variable GRPC_PORT.
 
 **Example**
@@ -230,5 +237,5 @@ demonstrates the usage of the `GRPC Plugin` plugin API GetServer():
 // Register our GRPC request handler/service using generated RegisterGreeterServer:
 RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
 ```
-Once the handler is registered with `GRPC Plugin` and the agent is running, 
-you can use grpc client to call the service (see [example](../../examples/grpc-plugin/grpc-client))
+Once the handler is registered with the `GRPC Plugin` and the agent is running, 
+you can use a grpc client to call the service (see [example](../../examples/grpc-plugin/grpc-client))
