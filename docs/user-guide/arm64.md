@@ -1,7 +1,6 @@
 # Quickstart
 
-For a quick start with the VPP Agent, you can use pre-built Docker images with
-the Agent and VPP on [Dockerhub](https://hub.docker.com/r/ligato/vpp-agent-arm64/).
+For a quick start with the VPP Agent, you can use pre-built Docker images with the Agent and VPP on [Dockerhub](https://hub.docker.com/r/ligato/vpp-agent-arm64/).
 
 1. Start the ETCD (and optionally Kafka) on your host (see below). 
 Note: **The Agent in the pre-built Docker image will not start if it can't connect to both ETCD and Kafka, if used**.
@@ -39,12 +38,10 @@ $ docker pull docker.io/ligato/dev-vpp-agent-arm64
 $ docker pull docker.io/ligato/dev-vpp-agent-arm64:pantheon-dev	# 
 ```
 
-List of all available docker image tags for development image can 
-be found [here for ARM64](https://hub.docker.com/r/ligato/dev-vpp-agent-arm64/tags/).
+List of all available docker image tags for development image can be found [here for ARM64](https://hub.docker.com/r/ligato/dev-vpp-agent-arm64/tags/).
 
 ### Production images
-For a quick start with the VPP Agent, you can use pre-build Docker images with
-the Agent and VPP on Dockerhub:
+For a quick start with the VPP Agent, you can use pre-build Docker images with the Agent and VPP on Dockerhub:
 the [official image for ARM64 platform](https://hub.docker.com/r/ligato/vpp-agent-arm64/).
 ```
 docker pull ligato/vpp-agent-arm64

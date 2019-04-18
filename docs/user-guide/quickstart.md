@@ -47,8 +47,7 @@ The `docker ps` should not mention `vpp-agent` in the output, since we did not s
 
 ### 3.1 Get the ETCD image
 
-The following command starts the ETCD in a docker container. If the image is not present on your local machine, 
-docker will download it first:
+The following command starts the ETCD in a docker container. If the image is not present on your local machine, docker will download it first:
 
 ```bash
 docker run -p 2379:2379 --name etcd --rm quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
@@ -91,8 +90,7 @@ ETCDCTL_API=3 etcdctl --version
 
 ### 4. Start Kafka
 
-The following command starts Kafka in a docker container. If the image is not present on your local machine, 
-docker will download it first::
+The following command starts Kafka in a docker container. If the image is not present on your local machine, docker will download it first::
 
 ```bash
 docker run -p 2181:2181 -p 9092:9092 --name kafka --rm --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka

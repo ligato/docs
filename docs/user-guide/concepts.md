@@ -2,9 +2,7 @@ This page contains information about Ligato vpp-agent and cn-infra concepts.
 
 # What is a Model?
 
-The model represents a northbound API data model defined together with specific protobuf message. 
-It is used to allow generating keys prefix and name of model instance using its value data. 
-The key (prefix + name) is used for storing model in a key-value database.
+The model represents a northbound API data model defined together with specific protobuf message. It is used to allow generating keys prefix and name of model instance using its value data. The key (prefix + name) is used for storing model in a key-value database.
 
 ### Model components
 
@@ -15,6 +13,7 @@ The key (prefix + name) is used for storing model in a key-value database.
 Single protobuf message can only be represented by one model.
 
 ### Model Specification
+
 Model spec (specification) describes particular model using module, version and type fields:
   - `module` - defines module, which groups models (vpp, linux..)
   - `version` - describes version of value data (e.g. v1)
@@ -414,7 +413,7 @@ The output:
 Notice that the first performed operation was removal of the FIB entry, but the value was not discarded by the vpp-agent since it still exists in the ETCD. The vpp-agent put the value back to the cache. This is important step since the FIB entry is removed before the bridge domain, so it will not get mis-configured and stuck in the VPP. The value no longer exists on the VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any action required from outside.
 The second step means that the interface `if1` was removed from the bridge domain, before its removal in the last step of the transaction.
 
-The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here](other-vpp-plugins.md).
+The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here](telemetry-plugin.md).
 
 # VPP multi-version support
 
@@ -483,21 +482,12 @@ How the configuration is transported between APIs and the plugins
 is fully abstracted from the user.
 
 The API calls can be split into two groups:
- - **resync** applies a given (full) configuration. An existing
-   configuration, if present, is replaced. The name is an abbreviation
-   of *resynchronization*. It is used initially and after any system
-   event that may leave the configuration out-of-sync while the set
-   of outdated configuration options is impossible to determine locally
-   (e.g. temporarily lost connection to data store).
- - **data change** allows to deliver incremental changes
-   of a configuration.
+ - **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. The name is an abbreviation of *resynchronization*. It is used initially and after any system event that may leave the configuration out-of-sync while the set of outdated configuration options is impossible to determine locally (e.g. temporarily lost connection to data store).
+ - **data change** allows to deliver incremental changes of a configuration.
 
 There are two implementations:
- - **local client** runs inside the same process as the agent
-   and delivers configuration through go channels directly
-   to the plugins.
- - **remote client** stores the configuration using the given
-   `keyval.broker`.
+ - **local client** runs inside the same process as the agent and delivers configuration through go channels directly to the plugins.
+ - **remote client** stores the configuration using the given `keyval.broker`.
    
 # Plugin configuration files
 

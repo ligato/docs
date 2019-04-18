@@ -1,4 +1,4 @@
-# VPP-Agent REST
+# REST plugin
 
 The "builtin" REST support (plugin) in the VPP-Agent is currently limited to retrieving existing VPP configuration (called dumping) for core plugins. The Agent also provides simple html template (usable in browser) and optional support for https security, authentication and authorization.
 
@@ -17,8 +17,7 @@ The VPP-Agent contains the REST API plugin, which is based on CN-Infra HTTP plug
 
 ### Supported URLs
 
-There is a list of all supported URLs sorted by VPP-Agent plugins. If the retrieve URL is used (currently the only supported), the output is based on proto model structure for given data type together with VPP-specific data which are not a part of the model (like indexes for
-interfaces or ACLs, various internal names, etc.). Those data are in separate section labeled as `<type>_meta`.
+There is a list of all supported URLs sorted by VPP-Agent plugins. If the retrieve URL is used (currently the only supported), the output is based on proto model structure for given data type together with VPP-specific data which are not a part of the model (like indexes for interfaces or ACLs, various internal names, etc.). Those data are in separate section labeled as `<type>_meta`.
 
 **Index page**
 
@@ -40,8 +39,7 @@ URLs to obtain ACL IP/MACIP configuration:
 
 **VPP Interfaces**
 
-The REST plugin exposes configured VPP interfaces, which can be shown all together, or interfaces
-of specific type only:
+The REST plugin exposes configured VPP interfaces, which can be shown all together, or interfaces of specific type only:
 ```
 # All interfaces
 /dump/vpp/v2/interfaces
@@ -67,8 +65,7 @@ of specific type only:
 
 **Linux Interfaces**
 
-The REST plugin exposes configured Linux interfaces. All configured interfaces are retrieved all together
-with interfaces in the default namespace: 
+The REST plugin exposes configured Linux interfaces. All configured interfaces are retrieved all together with interfaces in the default namespace: 
 ```
 /dump/linux/v2/interfaces
 ```
@@ -154,19 +151,154 @@ The Tracer plugin exposes data via the REST as follows:
 /vpp/binapitrace
 ```
 
-### Logging mechanism
+## Security
 
-The REST API request is logged to stdout. The log contains VPP CLI command and VPP CLI response. It is searchable in elastic search using "VPPCLI".
+REST plugin allows to optionally configure following security features:
+- server certificate (HTTPS)
+- Basic HTTP Authentication - username & password
+- client certificates
+- token based authorization
 
-### Security
+All of them are disabled by default and can be enabled by config file:
 
-The CN-Infra REST plugin provides option to secure the HTTP communication. The plugin supports HTTPS client/server certificates, HTTP credentials authentication (username and password) and authorization based on tokens.
+```yaml
+endpoint: 127.0.0.1:9292
+server-cert-file: server.crt
+server-key-file: server.key
+client-cert-files:
+  - "ca.crt"
+client-basic-auth:
+  - "user:pass"
+  - "foo:bar"
+```
 
-This feature is disabled by default and if required, must be enabled by the CN-Infra HTTP plugin config file. 
+If `server-cert-file` and `server-key-file` are defined the server requires HTTPS instead of HTTP for all its endpoints.
 
-More information about security setup and usage, see [security](https://github.com/ligato/cn-infra/blob/master/rpc/rest/README.md#security) for certificates and [tokens](https://github.com/ligato/cn-infra/blob/master/rpc/rest/README.md#token-based-authorization) for token-based authorization.
+`client-cert-files` the list of the root certificate authorities that server uses to validate client certificates. If the list is not empty only client who provide a valid certificate is allowed to access the server.
 
-**Basic usage**
+`client-basic-auth` allows to define user password pairs that are allowed to access the server. The config option defines a static list of allowed user. If the list is not empty default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin (e.g.: if you want to read credentials from ETCD).
+
+
+***Example***
+
+In order to generated self-signed certificates you can use the following commands:
+
+```bash
+#generate key for "Our Certificate Authority"
+openssl genrsa -out ca.key 2048
+
+#generate certificate for CA
+openssl req -new -nodes -x509 -key ca.key -out ca.crt  -subj '/CN=CA'
+
+#generate certificate for the server assume that server will be accessed by 127.0.0.1
+openssl genrsa -out server.key 2048
+openssl req -new -key server.key -out server.csr -subj '/CN=127.0.0.1'
+openssl x509 -req -extensions client_server_ssl -extfile openssl_ext.conf -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt
+
+#generate client certificate
+openssl genrsa -out client.key 2048
+openssl req -new -key client.key -out client.csr -subj '/CN=client'
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 360
+
+```
+
+Once the security features are enabled, the endpoint can be accessed by the following commands:
+
+- **HTTPS**
+where `ca.pem` is a certificate authority where server certificate should be validated (in case of self-signed certificates)
+  ```
+  curl --cacert ca.crt  https://127.0.0.1:9292/log/list
+  ```
+
+- **HTTPS + client cert** where `client.crt` is a valid client certificate.
+  ```
+  curl --cacert ca.crt  --cert client.crt --key client.key  https://127.0.0.1:9292/log/list
+  ```
+
+- **HTTPS + basic auth** where `user:pass` is a valid username password pair.
+  ```
+  curl --cacert ca.crt  -u user:pass  https://127.0.0.1:9292/log/list
+  ```
+
+- **HTTPS + client cert + basic auth**
+  ```
+  curl --cacert ca.crt  --cert client.crt --key client.key -u user:pass  https://127.0.0.1:9292/log/list
+  ```
+  
+### Token-based authorization
+
+REST plugin supports authorization based on tokens. To enable the feature, use `http.conf` file:
+
+```
+enable-token-auth: true
+```
+
+Authorization restricts access to every registered permission group URLs. The user receives token after login, which grants him access to all permitted sites. The token is valid until the user is logged in, or until it expires.
+
+The expiration time is a token claim, set in the config file:
+
+```
+token-expiration: 600000000000  
+```
+
+Note that time is in nanoseconds. If no time is provided, the default value of 1 hour is set.
+
+Token uses by default pre-defined signature string as the key to sign it. This can be also changed via config file:
+
+```
+token-signature: <string>
+```
+
+After login, the token is required in authentication header in the format `Bearer <token>`, so it can be validated. If REST interface is accessed via a browser, the token is written to cookie file.
+
+### Users and permission groups
+
+Users have to be pre-defined in `http.conf` file. User definition consists of name, hashed password and permission groups.
+
+**Name** defines username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and password "ligato123"
+
+**Password** has to be hashed. It is possible to use [password-hasher utility][password-hasher] to help with it. Password also has to be hashed with the same cost value, as defined in the configuration file:
+
+```
+password-hash-cost: <number>
+```
+
+Minimal hash cost is 4, maximal value is 31. The higher the cost, the more CPU time memory is required to hash the password.
+
+**Permission Groups** define a list of permissions; allowed URLs and methods. Every user needs at least one permission group defined, otherwise it will not have access to anything. Permission group is described in [proto model][access-security-model]. 
+
+To add permission group, use rest plugin API:
+
+```
+RegisterPermissionGroup(group ...*access.PermissionGroup)
+```
+
+Every permission group has a name and a list o permissions. Permission defines URL and a list of methods which may be performed. 
+
+To add permission group to the user, put its name to the config file under user's field `permissions`. 
+
+### Login and logout
+
+To log in a user, follow the URL `http://localhost:9191/login`. The site is enabled for two methods. It is possible to use a `POST` to directly provide credentials in the format:
+
+```
+{
+	"username": "<name>",
+	"password": "<pass>"
+}
+```
+
+The site returns access token as plain text. If URL is accessed with `GET`, it shows the login page where the credentials are supposed to be put. After successful submit, it redirects to the index.
+
+To log out, post username to `http://localhost:9191/logout`.
+
+```
+{
+	"username": "<name>"
+}
+```
+
+### Basic usage
 
 **1. cURL** 
 
@@ -185,10 +317,8 @@ Choose the `GET` method, provide desired URL and send the request.
 
 Related articles: 
 
-* [GRPC client tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial) shows how to create a client for the 
-  off-the-shelf VPP Agent's GRPC Server
-* [GRPC server tutorial](https://github.com/ligato/cn-infra/tree/dev/examples/grpc-plugin/grpc-server) shows how to 
-  create your own GRPC Server using the [CN-Infra GRPC Plugin](https://github.com/ligato/cn-infra/tree/dev/rpc/grpc).
+* [GRPC client tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial) shows how to create a client for the off-the-shelf VPP Agent's GRPC Server
+* [GRPC server tutorial](https://github.com/ligato/cn-infra/tree/dev/examples/grpc-plugin/grpc-server) shows how to create your own GRPC Server using the [CN-Infra GRPC Plugin](https://github.com/ligato/cn-infra/tree/dev/rpc/grpc).
 
 GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md) that implements handling of GRPC requests.
 
@@ -205,42 +335,34 @@ The following remote procedure calls are defined:
 * **Dump** (Retrieve) reads existing configuration from the VPP.
 * **Notify** subscribes GRPC to the notification service
 
-To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently
-the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires a startup
-configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)),
-where the endpoint is defined.
+To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)), where the endpoint is defined.
 
-Clients with the GRPC Server via an endpoint IP address and port or via a unix domain socket file. The TCP network is
-set as default, but other network types are also available (like TCP6 or UNIX).
+Clients with the GRPC Server via an endpoint IP address and port or via a unix domain socket file. The TCP network is set as default, but other network types are also available (like TCP6 or UNIX).
 
 ### GRPC Plugin
 
-The `GRPC Plugin` is a infrastructure Plugin which allows app plugins to handle GRPC requests (see the diagram below)
-as follows:
+The `GRPC Plugin` is a infrastructure Plugin which allows app plugins to handle GRPC requests (see the diagram below) as follows:
 
 1. The GRPC Plugin starts the GRPC server + net listener in its own goroutine
-2. Plugins register their handlers with the `GRPC Plugin`.
-   To service GRPC requests, a plugin must first implement a handler
-   function and register it at a given URL path using
-   the `RegisterService` method. `GRPC Plugin` uses an GRPC request
-   multiplexer from `grpc/Server`.
-3. The GRPC Server routes GRPC requests to their respective registered handlers
-   using the `grpc/Server`.
+2. Plugins register their handlers with the `GRPC Plugin`. To service GRPC requests, a plugin must first implement a handler function and register it at a given URL path using the `RegisterService` method. `GRPC Plugin` uses an GRPC request multiplexer from `grpc/Server`.
+3. The GRPC Server routes GRPC requests to their respective registered handlers using the `grpc/Server`.
 
-![grpc](../img/user-guide/grpc.png)
+![grpc][grpc-image]
 
 **Configuration**
 
-- The GRPC Server's port can be defined using the commandline flag `grpc-port` or 
-  via the environment variable GRPC_PORT.
+- The GRPC Server's port can be defined using the commandline flag `grpc-port` or via the environment variable GRPC_PORT.
 
 **Example**
 
-The [grpc-server greeter example]*(../../examples/grpc-plugin/grpc-server)
-demonstrates the usage of the `GRPC Plugin` plugin API GetServer():
+The [grpc-server greeter example]*(../../examples/grpc-plugin/grpc-server) demonstrates the usage of the `GRPC Plugin` plugin API GetServer():
 ```
 // Register our GRPC request handler/service using generated RegisterGreeterServer:
 RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
 ```
-Once the handler is registered with the `GRPC Plugin` and the agent is running, 
-you can use a grpc client to call the service (see [example](../../examples/grpc-plugin/grpc-client))
+Once the handler is registered with the `GRPC Plugin` and the agent is running, you can use a grpc client to call the service .
+
+[access-security-model]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/model/access-security/accesssecurity.proto
+[grpc-image]: ../img/user-guide/grpc.png
+[grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
+[password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md

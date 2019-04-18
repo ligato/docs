@@ -62,7 +62,7 @@ Execution command to start the agent:
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
 ```
 
-Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here](linux-plugins.md#linux-interface-plugin)).
+Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here](linux-interface-plugin.md)).
 
 Open another terminal:
 ```

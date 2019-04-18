@@ -44,7 +44,7 @@ The main cause it that some plugin hanged during the initialization phase. Check
 The agent tried to load two plugins with the same `PluginName`, mostly because two instances of any `DefaultPlugin` were used at once. If you need to specify multiple instances of the same plugin (e.g. two KVDB connections or HTTP servers), define it with `UseDeps()` option and define a custom name for each of them. //TODO link to some example
 
 **The vpp-agent failed to start with the message "mount --make-shared failed: permission denied"**
-A similar error is thrown during an attempt to manipulate a Linux namespace (create, read, ...) in non-privileged docker container, since this operation requires superuser privileges in the target host. The solution is to run the docker image with `--privileged` parameter. If it is not applicable in a given solution, the Linux plugin can be turned off ([see how to do it](../user-guide/linux-plugins.md#linux-interface-plugin)).   
+A similar error is thrown during an attempt to manipulate a Linux namespace (create, read, ...) in non-privileged docker container, since this operation requires superuser privileges in the target host. The solution is to run the docker image with `--privileged` parameter. If it is not applicable in a given solution, the Linux plugin can be turned off ([see how to do it](../user-guide/linux-interface-plugin.md)).   
 
 ### Configuration (plugin issues)
 
