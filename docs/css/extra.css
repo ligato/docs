@@ -1,7 +1,21 @@
+img.ligato-logo {
+	padding: 0;
+	border-radius: 0;
+	background-color: transparent;
+	display: inline;
+	margin: -10px 0 0;
+}
+
+span.ligato-title {
+	margin-left: 10px;
+	font-size: 180%;
+	font-weight: normal;
+	text-shadow: 1px 1px 3px #333;
+}
+
 /* Search bar */
 .wy-side-nav-search {
-    background-color: #65BF53;
-    text-align: left;
+    background-color: #3E6D29;
 }
 
 /* Menu title format */
@@ -13,6 +27,11 @@
 /* Second level menu alignment */
 .wy-menu-vertical a, .wy-menu-vertical .subnav a {
     margin-left: -12px;
+}
+
+/* Menu */
+li.toctree-l1 {
+	margin-bottom: 10px;
 }
 
 /* Drop-down menu */

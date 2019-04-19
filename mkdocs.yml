@@ -7,10 +7,11 @@ repo_url: https://github.com/ligato/docs
 
 theme:
   name: readthedocs
+  custom_dir: custom/
   highlightjs: true
   hljs_languages:
     - go
-    - yaml  
+    - yaml
 
 extra_css:
   - css/extra.css
