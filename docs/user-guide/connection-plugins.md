@@ -183,7 +183,11 @@ Choose the `GET` method, provide desired URL and send the request.
 
 # VPP-Agent GRPC
 
-Related article: [GRPC tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial)
+Related articles: 
+* [GRPC client tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial) shows how to create a client for the 
+  off-the-shelf VPP Agent's GRPC Server
+* [GRPC server tutorial](https://github.com/ligato/cn-infra/tree/dev/examples/grpc-plugin/grpc-server) shows how to 
+  create your own GRPC Server using the [CN-Infra GRPC Plugin](https://github.com/ligato/cn-infra/tree/dev/rpc/grpc).
 
 GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md) that implements handling of GRPC requests.
 
