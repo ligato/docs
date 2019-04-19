@@ -1,44 +1,40 @@
-# Ligato VPP-Agent documentation page
+# Ligato Docs
 
-Site: [ligato.readthedocs.io](https://ligato.readthedocs.io/en/latest/) (will be moved to ligato.io soon)
+The Ligato Docs repository contains main source of documentation for Ligato. It's available at: [ligato.readthedocs.io](https://ligato.readthedocs.io/) (will be soon accessible from [docs.ligato.io](https://docs.ligato.io/) as well)
 
-The documentation is build, versioned and hosted with the help of [ReadTheDoc](https://readthedocs.org/) and currently uses static site generator [MkDocs](https://www.mkdocs.org/). In the future, we plan to transfer to [Sphinx](http://www.sphinx-doc.org/en/master/).
+The documentation is build, versioned and hosted with the help of [ReadTheDoc](https://readthedocs.org/) and currently uses static site generator [MkDocs](https://www.mkdocs.org/). In the future, we might migrate to use [Sphinx](http://www.sphinx-doc.org/en/master/).
 
-### How to update the documentation
+## Updating Documentation
 
 Every change in the repository will be reflected on the main page after a while since there si a build process which must be completed first. The build can be watched on [ReadTheDocs Ligato builds](https://readthedocs.org/projects/ligato/builds/) and should only take 1-2 minutes. If the build fails for some reason, the changes will not appear on the site.
 
+## Running Locally
+
 It can be a good thing to check changes locally before pushing to the main repository to ensure that everything looks like required. It may prevent broken links or any other formatting issues which may become live. To do so, you need to install `mkdocs` locally.
 
-**1. Install MkDocs**
+### 1. Install MkDocs
 
 This site should help: [install mkdocs](https://www.mkdocs.org/#installation)
 
 Please make sure to install version 1.0.4, otherwise some elements may not be formatted properly.
+
 ```bash
 $ mkdocs --version
 mkdocs, version 1.0.4 from /usr/local/lib/python3.6/dist-packages/mkdocs (Python 3.6)
 ```
 
-**2. Get the docs.ligato.io repository**
+### 2. Clone Repository
 
 ```bash
-git clone https://github.com/ligato/docs.ligato.io
+$ git clone https://github.com/ligato/docs
 ``` 
 
-**3. Start the MkDocs server**
+### 3. Start Server
 
-In the `docs.ligato.io` directory:
+To start server, run following command in the root directory:
 
 ```bash
-mkdocs serve
+$ mkdocs serve
 ```
 
-The documentation site can be accessed at `http://localhost:8000/`. The server also watches all changes which can be immediately seen in the browser.
-
-
-
-
-
-
-
+The documentation site should be accessible at: http://localhost:8000/. The server also watches all changes which can be immediately seen in the browser.
