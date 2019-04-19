@@ -2,11 +2,11 @@
 
 The Ligato Docs repository contains main source of documentation for Ligato. It's available at: [ligato.readthedocs.io](https://ligato.readthedocs.io/) (will be soon accessible from [docs.ligato.io](https://docs.ligato.io/) as well)
 
-The documentation is build, versioned and hosted with the help of [ReadTheDoc](https://readthedocs.org/) and currently uses static site generator [MkDocs](https://www.mkdocs.org/). In the future, we might migrate to use [Sphinx](http://www.sphinx-doc.org/en/master/).
+The documentation is build, versioned and hosted with the help of [ReadTheDocs.org](https://readthedocs.org/) and currently uses static site generator [MkDocs](https://www.mkdocs.org/). In the future, we might migrate to use [Sphinx](http://www.sphinx-doc.org/en/master/).
 
 ## Updating Documentation
 
-Every change in the repository will be reflected on the main page after a while since there si a build process which must be completed first. The build can be watched on [ReadTheDocs Ligato builds](https://readthedocs.org/projects/ligato/builds/) and should only take 1-2 minutes. If the build fails for some reason, the changes will not appear on the site.
+Every change in the repository will be reflected on the main page after a while since there si a build process which must be completed first. The build can be watched on [ReadTheDocs Ligato Builds](https://readthedocs.org/projects/ligato/builds/) and should only take 1-2 minutes. If the build fails for some reason, the changes will not appear on the site.
 
 ## Running Locally
 
