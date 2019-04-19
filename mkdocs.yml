@@ -1,8 +1,16 @@
-site_name: Ligato Documentation
+site_name: Ligato Docs
+site_url: https://docs.ligato.io/
 site_description: Ligato documentation
-repo_url: https://github.com/ligato/docs.ligato.io
+site_author: Ligato Team
 
-theme: readthedocs
+repo_url: https://github.com/ligato/docs
+
+theme:
+  name: readthedocs
+  highlightjs: true
+  hljs_languages:
+    - go
+    - yaml  
 
 extra_css:
   - css/extra.css
@@ -50,5 +58,10 @@ nav:
   - FAQ: troubleshooting/faq.md
 
 markdown_extensions:
+  - extra
+  - admonition
+  - smarty
+  - codehilite
+  - def_list
   - toc:
       permalink: 
