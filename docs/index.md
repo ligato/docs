@@ -2,7 +2,8 @@
 
 Welcome to the Ligato Docs, a collection of documentation for [Ligato projects](https://github.com/ligato).
 
-## Releases
+
+## Project Releases
 
 |Project|Latest Release|Release date|
 |---|:---:|---|
@@ -11,7 +12,7 @@ Welcome to the Ligato Docs, a collection of documentation for [Ligato projects](
 
 Have a look at the [release notes](https://github.com/ligato/vpp-agent/blob/master/CHANGELOG.md) for a complete list of changes.
 
-## Images
+### Available Images
 
 |Image|Info|
 |---|---|
@@ -19,3 +20,4 @@ Have a look at the [release notes](https://github.com/ligato/vpp-agent/blob/mast
 |![ligato/dev-vpp-agent](https://img.shields.io/badge/image-ligato/dev--vpp--agent-blue.svg?logo=docker&logoColor=white)|image prepared for developers|
 
 The image tag `latest` is built from **master branch** and `dev` tag is built from **dev branch**.
+
