@@ -44,7 +44,7 @@ The main cause it that some plugin hanged during the initialization phase. Check
 The agent tried to load two plugins with the same `PluginName`, mostly because two instances of any `DefaultPlugin` were used at once. If you need to specify multiple instances of the same plugin (e.g. two KVDB connections or HTTP servers), define it with `UseDeps()` option and define a custom name for each of them. //TODO link to some example
 
 **The vpp-agent failed to start with the message "mount --make-shared failed: permission denied"**
-A similar error is thrown during an attempt to manipulate a Linux namespace (create, read, ...) in non-privileged docker container, since this operation requires superuser privileges in the target host. The solution is to run the docker image with `--privileged` parameter. If it is not applicable in a given solution, the Linux plugin can be turned off ([see how to do it](../user-guide/linux-interface-plugin.md)).   
+A similar error is thrown during an attempt to manipulate a Linux namespace (create, read, ...) in non-privileged docker container, since this operation requires superuser privileges in the target host. The solution is to run the docker image with `--privileged` parameter. If it is not applicable in a given solution, the Linux plugin can be turned off ([see how to do it](../plugins/linux-plugins.md#interface-plugin)).   
 
 ### Configuration (plugin issues)
 
@@ -65,18 +65,18 @@ Make sure that:
 * The VPP-Agent is connected to given KVDB
 * The plugin configuring given data type is loaded (watcher to the key type was started)
 * The microservice label is defined correctly in the key inside KVDB, and in the Agent
-* The key is in the correct format (please refer to the [supported keys](../user-guide/references.md) and find appropriate plugin documentation)
+* The key is in the correct format (please refer to the [supported keys](../features/references.md) and find appropriate plugin documentation)
 * If the Redis database is used, make sure the event notifications are allowed (they are usually disabled by default). If not, enable it with command `config SET notify-keyspace-events KA` (use for example `redis-cli`), and try again
 
 ### GRPC
 
 **I want to create a GRPC client application**
-Start with the [GRPC user guide](../user-guide/framework-plugins.md#vpp-agent-grpc) and then proceed to the [tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial).
+Start with the [GRPC user guide](../plugins/connection-plugins.md#grpc-plugin) and then proceed to the [tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial).
 
 ### REST
 
 **I want to use the REST API to communicate with the vpp-agent**
-See the list of available URLs with the REST guide [here](../user-guide/framework-plugins.md#rest-api).
+See the list of available URLs with the REST guide [here](../plugins/framework-plugins.md#rest-api).
 
 ### The issue I have is not listed here
 

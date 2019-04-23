@@ -3,25 +3,29 @@ This page describes in more detail how to prepare and work with the vpp-agent.
 # Set up your environment
 
 Options are:
+
  * get pre-prepared docker image from the dockerhub
  * build the image locally 
  * build the VPP-Agent with the VPP locally without the image
 
-## Get the Docker image
+### Get the Docker image
 
 The image exists in two versions, for production and for development (which can be also used for debugging). Production image is a lightweight version of the development image.
 
 Supported architectures:
+
 * AMD64 (a.k.a. x86_64)
 * ARM64 (a.k.a. aarch64) - [see documentation for ARM](https://github.com/ligato/vpp-agent/blob/master/docs/arm64/README.md)
 
 **What is included in the production image:**
+
 - binaries for the VPP-Agent with default config files and the VPP-Agent-ctl
 - installation of the compatible VPP
 
 Get from docker hub: `docker pull ligato/vpp-agent`
 
 **What is included in the development image:**
+
 - VPP-Agent with default config files including source code
 - compatible VPP installation including source code and build artifacts
 - development environment with all requirements to build the VPP-Agent and the VPP
@@ -62,7 +66,7 @@ Execution command to start the agent:
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
 ```
 
-Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here](linux-interface-plugin.md)).
+Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here](../plugins/linux-plugins.md#interface-plugin)).
 
 Open another terminal:
 ```
@@ -155,7 +159,7 @@ Read more about the vpp-agent start-up configuration. // TODO add link
 
 In order to provide configuration from any KVDB (key-value database), the agent needs to know how to connect to the desired instance. The connection information (IP address, port) is provided via the particular .conf file. Every KVDB plugin defines its own config file. 
 
-More information about the KVDB: [KV-Store overview](concepts.md#key-value-store-overview)
+More information about the KVDB: [KV-Store overview](../features/concepts.md#key-value-store-overview)
 
 **Start the ETCD:**
 
@@ -213,18 +217,18 @@ It is possible to use the same label for multiple agents to "broadcast" identica
 
 **2. Shared memory prefix**
 
-Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme](framework-plugins.md#govpp-mux))
+Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme](../plugins/framework-plugins.md#govpp-mux))
  
 # Make your first configuration
 
 **Put the configuration to the KVDB:**
 
 Store value following the given model with the proper key to the KVDB. Depending on the KVDB type, we recommend to use the appropriate tool to put key-value data (e.g. `etcdctl` for the ETCD, or `redis-cli` for the Redis).
-. Information about keys and data structures can be found [here](references.md).
+. Information about keys and data structures can be found [here](../features/references.md).
 
 **Use clientv2**
 
-Package [clientv2](concepts.md#client-v2) contains API definition for every supported configuration item and can be used to pass data without a external database.
+Package [clientv2](../features/concepts.md#client-v2) contains API definition for every supported configuration item and can be used to pass data without a external database.
 
 
 

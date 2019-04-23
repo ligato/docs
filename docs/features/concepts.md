@@ -97,7 +97,7 @@ Another advantage is that to add support for new KVDB basically means to write a
 
 ### ETCD
 
-More information: [etcd documentation](db-plugins.md#etcd-plugin)
+More information: [etcd documentation](../plugins/db-plugins.md#etcd-plugin)
 
 The ETCD is a distributed KV store that provides data read-write. The ETCD can be started on local machine in its own container with following command: 
 ```bash
@@ -122,7 +122,7 @@ Recommended tool to manage ETCD database is the official `etcdctl`.
 
 ### Redis
 
-More information: [redis documentation](db-plugins.md#redis)
+More information: [redis documentation](../plugins/db-plugins.md#redis)
 
 Redis is another type of in-memory data structure store, used as a database, cache or message broker. 
 
@@ -145,7 +145,7 @@ Recommended tool to manage Redis database is the `redis-cli` tool.
 
 ### Consul
 
-More information: [consul documentation](db-plugins.md#consul-plugin)
+More information: [consul documentation](../plugins/db-plugins.md#consul-plugin)
 
 // TBD
 
@@ -157,7 +157,7 @@ More information: bolt documentation // TODO no readme
 
 ### FileDB
 
-More information: [fileDB documentation](db-plugins.md#filedb)
+More information: [fileDB documentation](../plugins/db-plugins.md#filedb)
 
 The fileDB is a special case of database, which uses host OS filesystem as a database. The key-value configuration is stored in text files in defined path. The fileDB connector works as any other KVDB connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
 
@@ -337,7 +337,7 @@ So we ended up with the configuration which cannot be removed (until the bridge 
 
 The vpp-agent uses northbound API definition of every supported configuration item, while the single proto-modelled dataset may call multiple binary API calls to the VPP. For example NB interface configuration creates the interface itself, sets its state, MAC address, IP addresses and other. However, the vpp-agent goes even further - it allows to "configure" VPP items with not-yet-existing references. Such an item is not really configured (since it cannot be), but the agent "remembers" it and puts to the VPP when possible, without any other intervention, thus removing strict VPP ordering.
 
-**Note:** if you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide](quickstart.md).
+**Note:** if you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide](../getting-started/quickstart.md).
 
 1. Let's start from the end and put configuration for the FIB entry:
 ```bash
@@ -413,7 +413,7 @@ The output:
 Notice that the first performed operation was removal of the FIB entry, but the value was not discarded by the vpp-agent since it still exists in the ETCD. The vpp-agent put the value back to the cache. This is important step since the FIB entry is removed before the bridge domain, so it will not get mis-configured and stuck in the VPP. The value no longer exists on the VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any action required from outside.
 The second step means that the interface `if1` was removed from the bridge domain, before its removal in the last step of the transaction.
 
-The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here](telemetry-plugin.md).
+The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here](../plugins/other-vpp-plugins.md#telemetry).
 
 # VPP multi-version support
 

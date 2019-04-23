@@ -1,6 +1,6 @@
-# VPP default plugins
+# Core VPP plugins
 
-VPP-Agent default VPP plugins (e.g. plugins which are always required when working with the VPP). Plugin list:
+VPP-Agent core VPP plugins (e.g. plugins which are always required when working with the VPP). Plugin list:
 
 - GoVPP Multiplexer
 - Interface plugin
@@ -254,32 +254,32 @@ More in: [Service Label plugin][service-label]
 
 The service label is a small Core Agent Plugin, which other plugins can use to obtain the microservice label, i.e. the string used to identify the particular VNF. 
 
-[acl-plugin]: acl-plugin.md#access-control-lists-plugin
+[acl-plugin]: other-vpp-plugins.md#access-control-lists-plugin
 [consul-plugin]: db-plugins.md#consul-plugin
 [data-broker-plugin]: db-plugins.md#data-broker
 [datasync-plugin]: db-plugins.md#datasync-plugin
 [etcd-plugin]: db-plugins.md#etcd-plugin
 [file-db-plugin]: db-plugins.md#filedb
 [govpp-readme]: https://github.com/FDio/govpp/blob/master/README.md
-[govppmux-plugin]: govpp-multiplexer-plugin.md
+[govppmux-plugin]: core-vpp-plugins.md#govppmux-plugin
 [grpc-plugin]: connection-plugins.md#grpc-plugin
 [index-map]: framework-plugins.md#index-map
-[interface-plugin]: vpp-interface-plugin.md
-[interface-plugin-guide]: vpp-interface-plugin.md
-[ipsec-plugin]: ipsec-plugin.md
+[interface-plugin]: core-vpp-plugins.md#interface-plugin
+[interface-plugin-guide]: core-vpp-plugins.md#interface-plugin
+[ipsec-plugin]: other-vpp-plugins.md#ipsec-plugin
 [kvscheduler]: framework-plugins.md#kv-scheduler
-[l2-plugin]: l2-plugin.md
-[l3-plugin]: vpp-l3-plugin.md
-[linux-interface-pluign]: linux-interface-plugin.md
-[linux-l3-plugin]: linux-l3-plugin.md
-[linux-namespace-pluign]: linux-namespace-plugin.md
+[l2-plugin]: core-vpp-plugins.md#l2-plugin
+[l3-plugin]: core-vpp-plugins.md#l3-plugin
+[linux-interface-pluign]: linux-plugins.md#interface-plugin
+[linux-l3-plugin]: linux-plugins.md#l3-plugin
+[linux-namespace-pluign]: linux-plugins.md#namespace-plugin
 [log-manager]: framework-plugins.md#log-manager
 [messaging-kafka]: framework-plugins.md#messagingkafka
-[nat-plugin]: nat-plugin.md
+[nat-plugin]: other-vpp-plugins.md#nat-plugin
 [process-manager]: framework-plugins.md#process-manager
-[punt-plugin]: punt-plugin.md
+[punt-plugin]: other-vpp-plugins.md#punt-plugin
 [redis-plugin]: db-plugins.md#redis
 [rest-plugin]: connection-plugins.md#rest-plugin
 [service-label]: framework-plugins.md#status-check
 [status-check]: framework-plugins.md#status-check
-[telemetry-plugin]: telemetry-plugin.md
+[telemetry-plugin]: other-vpp-plugins.md#telemetry

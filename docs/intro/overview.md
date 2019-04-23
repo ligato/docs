@@ -73,7 +73,7 @@ Container-based development environment for the VPP-Agent and for app/extension 
 
 # What to do next?
 
-Already familiar with the VPP-Agent basics? [Learn more about the concepts](../user-guide/concepts.md), try some of our [examples](https://github.com/ligato/vpp-agent/blob/master/examples/README.md), read more in other user-guide articles or try to make your own plugin with the help of the developer guide. 
+Already familiar with the VPP-Agent basics? [Learn more about the concepts](../features/concepts.md), try some of our [examples](https://github.com/ligato/vpp-agent/blob/master/examples/README.md), read more in other user-guide articles or try to make your own plugin with the help of the developer guide. 
 
 
    

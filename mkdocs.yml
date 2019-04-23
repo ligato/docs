@@ -22,29 +22,21 @@ nav:
   - CNF definition: intro/cnf-definition.md
   - Overview: intro/overview.md
   - CN-Infra: intro/cn-toc-file.md
-- USER GUIDE:
-  - Quickstart guide: user-guide/quickstart.md
-  - Learn how to: user-guide/learn-how-to.md
-  - Concepts: user-guide/concepts.md
-  - References: user-guide/references.md
-  - Plugin overview: user-guide/plugin-overview.md
-  - GoVPP Multiplexer: user-guide/govpp-multiplexer-plugin.md
-  - VPP Interface plugin: user-guide/vpp-interface-plugin.md
-  - VPP L2 plugin: user-guide/l2-plugin.md
-  - VPP L3 plugin: user-guide/vpp-l3-plugin.md
-  - Telemetry plugin: user-guide/telemetry-plugin.md
-  - ACL plugin: user-guide/acl-plugin.md
-  - IPSec plugin: user-guide/ipsec-plugin.md
-  - NAT plugin: user-guide/nat-plugin.md
-  - Punt plugin: user-guide/punt-plugin.md
-  - Telemetry: user-guide/telemetry-plugin.md
-  - Linux Interface plugin: user-guide/linux-interface-plugin.md
-  - Linux L3 plugin: user-guide/linux-l3-plugin.md
-  - Linux Namespaces: user-guide/linux-namespace-plugin.md
-  - Connection plugins: user-guide/connection-plugins.md
-  - Database plugins: user-guide/db-plugins.md
-  - Framework plugins: user-guide/framework-plugins.md
-  - ARM64: user-guide/arm64.md
+- GETTING STARTED:
+  - Get VPP-Agent: getting-started/get-vpp-agent.md
+  - Quickstart guide: getting-started/quickstart.md
+- FEATURES:
+    - Concepts: features/concepts.md
+    - References: features/references.md
+    - ARM64: features/arm64.md
+- PLUGINS:
+  - Overview: plugins/plugin-overview.md
+  - Core VPP plugins: plugins/core-vpp-plugins.md
+  - Other VPP plugins: plugins/other-vpp-plugins.md
+  - Linux plugins: plugins/linux-plugins.md
+  - Connection plugins: plugins/connection-plugins.md
+  - Database plugins: plugins/db-plugins.md
+  - Framework plugins: plugins/framework-plugins.md
 - DEVELOPER GUIDE:
   - Agent: developer-guide/agent.md
   - Plugin lookup: developer-guide/plugin-lookup.md

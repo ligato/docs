@@ -1,8 +1,8 @@
 # KV Descriptor 
 
-**Related article:** [KV Scheduler](../user-guide/framework-plugins.md#kv-scheduler)
+**Related article:** [KV Scheduler](../plugins/framework-plugins.md#kv-scheduler)
 
-KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler](../user-guide/framework-plugins.md#kv-scheduler) is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
+KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler](../plugins/framework-plugins.md#kv-scheduler) is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
 
 In VPP-Agent v2, all the VPP and Linux plugins were re-written (and decoupled from each other), in a way that every supported configuration item is now described by its own descriptor inside the corresponding plugin, i.e. there is a descriptor for [Linux interfaces][linux-interface-descr], [VPP interfaces][vpp-interface-descr], [VPP routes][vpp-route-descr], etc. The full list of existing descriptors can be found [here][existing-descriptors].
 
