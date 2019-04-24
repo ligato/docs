@@ -1,7 +1,5 @@
 This page is a quickstart how-to guide for the Vpp-Agent
 
-# Vpp-Agent quickstart guide
-
 You will learn how to:
 
 - Install Vpp-Agent

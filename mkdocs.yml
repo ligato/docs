@@ -19,29 +19,28 @@ extra_css:
 nav:
 - INTRODUCTION:
   - VPP-Agent: intro/agent.md
-  - CNF definition: intro/cnf-definition.md
+  - CNF Definition: intro/cnf-definition.md
   - Overview: intro/overview.md
 - GETTING STARTED:
   - Get VPP-Agent: getting-started/get-vpp-agent.md
-  - Quickstart guide: getting-started/quickstart.md
+  - Quickstart Guide: getting-started/quickstart.md
 - FEATURES:
-    - Concepts: features/concepts.md
-    - References: features/references.md
-    - ARM64: features/arm64.md
+  - Concepts: features/concepts.md
+  - References: features/references.md
+  - ARM64: features/arm64.md
 - PLUGINS:
   - Overview: plugins/plugin-overview.md
-  - Core VPP plugins: plugins/core-vpp-plugins.md
-  - Other VPP plugins: plugins/other-vpp-plugins.md
-  - Linux plugins: plugins/linux-plugins.md
-  - Connection plugins: plugins/connection-plugins.md
-  - Database plugins: plugins/db-plugins.md
-  - Infra plugins: plugins/infra-plugins.md
+  - Core VPP Plugins: plugins/core-vpp-plugins.md
+  - Other VPP Plugins: plugins/other-vpp-plugins.md
+  - Linux Plugins: plugins/linux-plugins.md
+  - Connection Plugins: plugins/connection-plugins.md
+  - Database Plugins: plugins/db-plugins.md
+  - Infra Plugins: plugins/infra-plugins.md
 - DEVELOPER GUIDE:
   - Agent: developer-guide/agent.md
-  - Plugin lookup: developer-guide/plugin-lookup.md
+  - Plugin Lookup: developer-guide/plugin-lookup.md
   - KV Scheduler: developer-guide/kvscheduler.md
   - KV Descriptors: developer-guide/kvdescriptor.md
-  - KVS Problem Solving: developer-guide/problem-solving.md
   - Go Docs: developer-guide/godocs.md
 - TUTORIALS:
   - Hello World: tutorials/01_hello-world.md
@@ -53,12 +52,13 @@ nav:
   - VPP Connection: tutorials/07_vpp-connection.md
   - GRPC Handler: tutorials/08_grpc-tutorial.md
 - TESTING:
-  - CSIT tests locally: testing/tests-locally.md
-  - Robot framework guide: testing/robot-framework-guide.md
+  - CSIT Tests Locally: testing/tests-locally.md
+  - Robot Framework Guide: testing/robot-framework-guide.md
 - TOOLS:
-    - VPP-Agent-Ctl: tools/vpp-agent-ctl.md
+  - VPP-Agent-Ctl: tools/vpp-agent-ctl.md
 - TROUBLESHOOTING:
-  - FAQ: troubleshooting/faq.md
+  - General FAQ: troubleshooting/faq.md
+  - KVS Troubleshooting: troubleshooting/kvs-troubleshooting.md
 
 markdown_extensions:
   - extra

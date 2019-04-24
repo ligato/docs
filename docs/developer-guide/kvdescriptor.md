@@ -1,4 +1,4 @@
-# KV Descriptor 
+# Introduction
 
 **Related article:** [KV Scheduler](../plugins/infra-plugins.md#kv-scheduler)
 

@@ -1,8 +1,4 @@
-This page contains information about integration tests for VPP Agent.
-
-# How to run tests locally
-
-The following text describes how to run robot test suites (locally or in any other environment).
+This page contains information about integration tests for VPP Agent. The following text describes how to run robot test suites (locally or in any other environment).
 
 ### VM(s) -ubuntu:
   - required: python, robotframework, docker
