@@ -33,13 +33,13 @@ This section describes supported key-value data bases and how to use them
 The VPP-Agent uses external KV store to keep desired state of the VPP/Linux configuration, eventually to store and export certain VPP statistics. The Agent reacts to data events created by changes within a data-store, in case the change of the data was done under a watched key with proper microservice label.
 It is the microservice label which allows to use single KVDB to serve multiple Agents. Every Agent defines its own label and uses it to distinguish what data were designed for it. 
 
-![KVDB_microservice_label](../img/user-guide/KVDB_microservice_label.png)
+![KVDB_microservice_label][kvdb-ms-label-img]
 
 Underlying CN-Infra plugin validates key prefix (always in format `/vnf-agent/<microservice-label>`) and if the label matches, KV-pair is passed to VPP-Agent configuration watchers. If the prefix of the rest of the key is registered, KV-pair is sent via channel to particular watcher for processing.
 
-The Agent can also connect to multiple different KVDB stores - the plugin called Orchestrator(//TODO add link) safely collects the data from multiple sources and provides it to underlying configuration plugins.
+The Agent can also connect to multiple different KVDB stores - the plugin called Orchestrator safely collects the data from multiple sources and provides it to underlying configuration plugins.
 
-However it is not inevitable to use the Agent with any KVDB store - it can perfectly work without it, obtaining configuration via GRPC (REST in the future) or via local or remote Clientv2(//TODO add link) API (if the Agent is used as library). The KVDB offers very convenient way how to store and manage configuration data.
+However it is not inevitable to use the Agent with any KVDB store - it can perfectly work without it, obtaining configuration via GRPC (REST in the future) or via local or remote [Clientv2][client-v2] API (if the Agent is used as library). The KVDB offers very convenient way how to store and manage configuration data.
 
 ### What KV store can I use?
 
@@ -97,7 +97,7 @@ Another advantage is that to add support for new KVDB basically means to write a
 
 ### ETCD
 
-More information: [etcd documentation](../plugins/db-plugins.md#etcd-plugin)
+More information: [etcd documentation][etcd-plugin]
 
 The ETCD is a distributed KV store that provides data read-write. The ETCD can be started on local machine in its own container with following command: 
 ```bash
@@ -107,14 +107,14 @@ sudo docker run -p 2379:2379 --name etcd --rm \
     -listen-client-urls http://0.0.0.0:2379
 ``` 
 
-The Agent must start with the KVDB sync plugin using ETCD as a connector (to know how to do this, see code above or code inside [this example](https://github.com/VladoLavor/cn-infra/tree/master/examples/datasync-plugin)). Information where the ETCD is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
+The Agent must start with the KVDB sync plugin using ETCD as a connector (to know how to do this, see code above or code inside [this example][datasync-example]). Information where the ETCD is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
 
 The minimal content of the file may look as follows:
 ```
 endpoints:
   - "172.17.0.1:2379"
 ```
-The config file is passed to the Agent via flag `--etcd-confg=<path>`. The file contains more fields where ETCD-specific parameters can be set (dial timeout, certification, compaction, etc.). See guide to config files(//TODO add link) for more details.
+The config file is passed to the Agent via flag `--etcd-confg=<path>`. The file contains more fields where ETCD-specific parameters can be set (dial timeout, certification, compaction, etc.). See [guide to config files][list-of-supported] for more details.
 
 Note that if the config file is not provided, the connector plugin will not be started and no connection will be established. If the ETCD is not reachable at the address provided, the Agent may not start at all.
 
@@ -122,20 +122,20 @@ Recommended tool to manage ETCD database is the official `etcdctl`.
 
 ### Redis
 
-More information: [redis documentation](../plugins/db-plugins.md#redis)
+More information: [redis documentation][redis-plugin]
 
 Redis is another type of in-memory data structure store, used as a database, cache or message broker. 
 
-Follow [this guide](https://redis.io/topics/quickstart) to learn how to install `redis-server` on any machine.
+Follow [this guide][redis-quickstart] to learn how to install `redis-server` on any machine.
 
-The Agent must start with the KVDB sync plugin using Redis as a connector (to know how to do this, see code above or code inside [this example](https://github.com/VladoLavor/cn-infra/tree/master/examples/datasync-plugin)). Information where the Redis is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
+The Agent must start with the KVDB sync plugin using Redis as a connector (to know how to do this, see code above or code inside [this example][datasync-example]). Information where the Redis is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
 
 The content of the .yaml configuration file:
 ```yaml
 endpoint: localhost:6379
 ```
 
-The config file is provided to the Agent via the flag `--redis-config=<path>`. See guide to config files(//TODO add link) to learn more about redis configuration.
+The config file is provided to the Agent via the flag `--redis-config=<path>`. See [guide to config files][list-of-supported] to learn more about redis configuration.
 
 Note that if the redis config file is not provided, the particular connector plugin will not be started and no connection will be established. If the Redis is not reachable at the provided address, the Agent may not start at all.
 
@@ -145,19 +145,17 @@ Recommended tool to manage Redis database is the `redis-cli` tool.
 
 ### Consul
 
-More information: [consul documentation](../plugins/db-plugins.md#consul-plugin)
+More information: [consul documentation][consul-plugin]
 
-// TBD
+Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a consul key-value data store. Location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
 
 ### Bolt
   
-More information: bolt documentation // TODO no readme
-  
-// TBD
+Bolt is low-level, simple and fast key-value data store. The Bolt plugin provides an API to access the Bolt server.
 
 ### FileDB
 
-More information: [fileDB documentation](../plugins/db-plugins.md#filedb)
+More information: [fileDB documentation][filedb-plugin]
 
 The fileDB is a special case of database, which uses host OS filesystem as a database. The key-value configuration is stored in text files in defined path. The fileDB connector works as any other KVDB connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
 
@@ -337,7 +335,7 @@ So we ended up with the configuration which cannot be removed (until the bridge 
 
 The vpp-agent uses northbound API definition of every supported configuration item, while the single proto-modelled dataset may call multiple binary API calls to the VPP. For example NB interface configuration creates the interface itself, sets its state, MAC address, IP addresses and other. However, the vpp-agent goes even further - it allows to "configure" VPP items with not-yet-existing references. Such an item is not really configured (since it cannot be), but the agent "remembers" it and puts to the VPP when possible, without any other intervention, thus removing strict VPP ordering.
 
-**Note:** if you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide](../getting-started/quickstart.md).
+**Note:** if you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide][quickstart-guide].
 
 1. Let's start from the end and put configuration for the FIB entry:
 ```bash
@@ -413,7 +411,7 @@ The output:
 Notice that the first performed operation was removal of the FIB entry, but the value was not discarded by the vpp-agent since it still exists in the ETCD. The vpp-agent put the value back to the cache. This is important step since the FIB entry is removed before the bridge domain, so it will not get mis-configured and stuck in the VPP. The value no longer exists on the VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any action required from outside.
 The second step means that the interface `if1` was removed from the bridge domain, before its removal in the last step of the transaction.
 
-The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here](../plugins/other-vpp-plugins.md#telemetry).
+The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here][telemetry-plugin].
 
 # VPP multi-version support
 
@@ -557,3 +555,15 @@ Provides all fields required for Consul plugin:
 **ETCD plugin:**
 
  // TBD
+ 
+ [client-v2]: ../features/concepts.md#client-v2
+ [consul-plugin]: ../plugins/db-plugins.md#consul-plugin
+ [datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
+ [etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
+ [filedb-plugin]: ../plugins/db-plugins.md#filedb
+ [kvdb-ms-label-img]: ../img/user-guide/KVDB_microservice_label.png
+ [list-of-supported]: concepts.md#list-of-supported-flags
+ [redis-plugin]: ../plugins/db-plugins.md#redis
+ [redis-quickstart]: https://redis.io/topics/quickstart
+ [telemetry-plugin]: ../plugins/other-vpp-plugins.md#telemetry
+ [quickstart-guide]: ../getting-started/quickstart.md
