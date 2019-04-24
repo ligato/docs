@@ -76,7 +76,7 @@ Start with the [GRPC user guide](../plugins/connection-plugins.md#grpc-plugin) a
 ### REST
 
 **I want to use the REST API to communicate with the vpp-agent**
-See the list of available URLs with the REST guide [here](../plugins/framework-plugins.md#rest-api).
+See the list of available URLs with the REST guide [here](../plugins/infra-plugins.md#rest-api).
 
 ### The issue I have is not listed here
 

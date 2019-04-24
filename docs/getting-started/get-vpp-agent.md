@@ -217,7 +217,7 @@ It is possible to use the same label for multiple agents to "broadcast" identica
 
 **2. Shared memory prefix**
 
-Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme](../plugins/framework-plugins.md#govpp-mux))
+Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme](../plugins/infra-plugins.md#govpp-mux))
  
 # Make your first configuration
 
