@@ -190,9 +190,9 @@ More in: [FileDB plugin][file-db-plugin]
 
 The fileDB plugin allows to use the file system of a operating system as a key-value data store.
 
-# Framework plugins
+# Infra plugins
 
-User guide for VPP-Agent framework plugins.
+User guide for VPP-Agent infra plugins.
 
 - KV Scheduler
 - Configurator
@@ -263,23 +263,23 @@ The service label is a small Core Agent Plugin, which other plugins can use to o
 [govpp-readme]: https://github.com/FDio/govpp/blob/master/README.md
 [govppmux-plugin]: core-vpp-plugins.md#govppmux-plugin
 [grpc-plugin]: connection-plugins.md#grpc-plugin
-[index-map]: framework-plugins.md#index-map
+[index-map]: infra-plugins.md#index-map
 [interface-plugin]: core-vpp-plugins.md#interface-plugin
 [interface-plugin-guide]: core-vpp-plugins.md#interface-plugin
 [ipsec-plugin]: other-vpp-plugins.md#ipsec-plugin
-[kvscheduler]: framework-plugins.md#kv-scheduler
+[kvscheduler]: infra-plugins.md#kv-scheduler
 [l2-plugin]: core-vpp-plugins.md#l2-plugin
 [l3-plugin]: core-vpp-plugins.md#l3-plugin
 [linux-interface-pluign]: linux-plugins.md#interface-plugin
 [linux-l3-plugin]: linux-plugins.md#l3-plugin
 [linux-namespace-pluign]: linux-plugins.md#namespace-plugin
-[log-manager]: framework-plugins.md#log-manager
-[messaging-kafka]: framework-plugins.md#messagingkafka
+[log-manager]: infra-plugins.md#log-manager
+[messaging-kafka]: infra-plugins.md#messagingkafka
 [nat-plugin]: other-vpp-plugins.md#nat-plugin
-[process-manager]: framework-plugins.md#process-manager
+[process-manager]: infra-plugins.md#process-manager
 [punt-plugin]: other-vpp-plugins.md#punt-plugin
 [redis-plugin]: db-plugins.md#redis
 [rest-plugin]: connection-plugins.md#rest-plugin
-[service-label]: framework-plugins.md#status-check
-[status-check]: framework-plugins.md#status-check
+[service-label]: infra-plugins.md#status-check
+[status-check]: infra-plugins.md#status-check
 [telemetry-plugin]: other-vpp-plugins.md#telemetry

@@ -35,7 +35,7 @@ nav:
   - Linux plugins: plugins/linux-plugins.md
   - Connection plugins: plugins/connection-plugins.md
   - Database plugins: plugins/db-plugins.md
-  - Framework plugins: plugins/framework-plugins.md
+  - Infra plugins: plugins/infra-plugins.md
 - DEVELOPER GUIDE:
   - Agent: developer-guide/agent.md
   - Plugin lookup: developer-guide/plugin-lookup.md
