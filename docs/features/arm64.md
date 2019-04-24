@@ -1,6 +1,6 @@
 # Quickstart
 
-For a quick start with the VPP Agent, you can use pre-built Docker images with the Agent and VPP on [Dockerhub](https://hub.docker.com/r/ligato/vpp-agent-arm64/).
+For a quick start with the VPP Agent, you can use pre-built Docker images with the Agent and VPP on [Dockerhub][dockerhub].
 
 1. Start the ETCD (and optionally Kafka) on your host (see below). 
 Note: **The Agent in the pre-built Docker image will not start if it can't connect to both ETCD and Kafka, if used**.
@@ -28,7 +28,7 @@ The VPP Agent can be successfully built also for the ARM64 platform.
 
 ### Development images
 
-For a quick start with the development image, you can download the [official image for ARM64 platform](https://hub.docker.com/r/ligato/dev-vpp-agent-arm64/) from **DockerHub**.
+For a quick start with the development image, you can download the [official image for ARM64 platform][ligato-arm64-image] from **DockerHub**.
 
 ```sh
 // latest release (stable)
@@ -38,11 +38,11 @@ $ docker pull docker.io/ligato/dev-vpp-agent-arm64
 $ docker pull docker.io/ligato/dev-vpp-agent-arm64:pantheon-dev	# 
 ```
 
-List of all available docker image tags for development image can be found [here for ARM64](https://hub.docker.com/r/ligato/dev-vpp-agent-arm64/tags/).
+List of all available docker image tags for development image can be found [here for ARM64][ligato-arm64-image-tags].
 
 ### Production images
 For a quick start with the VPP Agent, you can use pre-build Docker images with the Agent and VPP on Dockerhub:
-the [official image for ARM64 platform](https://hub.docker.com/r/ligato/vpp-agent-arm64/).
+the [official image for ARM64 platform][ligato-arm64-image].
 ```
 docker pull ligato/vpp-agent-arm64
 ```
@@ -72,11 +72,11 @@ vpp-agent-ctl /opt/vpp-agent/dev/etcd.conf -tapd
 
 **Note for ARM64:**
 
-Check for proper etcd ARM64 docker image in the [official repository](https://quay.io/repository/coreos/etcd?tag=latest&tab=tags). Currently you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
+Check for proper etcd ARM64 docker image in the [official repository][etcd]. Currently you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
 
 ### ARM64 and Kafka
 
-There is no official spotify/kafka image for ARM64 platform. You can build an image following steps at the [repository](https://github.com/spotify/docker-kafka#build-from-source). However you need to modify the kafka/Dockerfile before building like this:
+There is no official spotify/kafka image for ARM64 platform. You can build an image following steps at the [repository][kafka]. However you need to modify the kafka/Dockerfile before building like this:
 ```
 //FROM java:openjdk-8-jre
 FROM openjdk:8-jre
@@ -100,3 +100,9 @@ Then you can start Kafka in a separate container:
 sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
  --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 kafka-arm64
 ```
+
+[dockerhub]: https://hub.docker.com/r/ligato/vpp-agent-arm64/
+[etcd]: https://quay.io/repository/coreos/etcd?tag=latest&tab=tags
+[kafka]: https://github.com/spotify/docker-kafka#build-from-source
+[ligato-arm64-image]: https://hub.docker.com/r/ligato/dev-vpp-agent-arm64/
+[ligato-arm64-image-tags]: https://hub.docker.com/r/ligato/dev-vpp-agent-arm64/tags/
