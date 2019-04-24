@@ -1,6 +1,4 @@
 
-# Agent Plugin Lookup
-
 Under the term **Agent** is meant a set of plugins, which are started and initialized in the correct order according to relations between them.
 
 ### Quick Start Guide
