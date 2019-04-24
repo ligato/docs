@@ -21,7 +21,6 @@ nav:
   - VPP-Agent: intro/agent.md
   - CNF definition: intro/cnf-definition.md
   - Overview: intro/overview.md
-  - CN-Infra: intro/cn-toc-file.md
 - GETTING STARTED:
   - Get VPP-Agent: getting-started/get-vpp-agent.md
   - Quickstart guide: getting-started/quickstart.md
