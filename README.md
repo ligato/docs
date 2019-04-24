@@ -1,6 +1,6 @@
 # Ligato Docs
 
-The Ligato Docs repository contains main source of documentation for Ligato. It's available at: [ligato.readthedocs.io](https://ligato.readthedocs.io/) (will be soon accessible from [docs.ligato.io](https://docs.ligato.io/) as well)
+The Ligato Docs repository contains main source of documentation for Ligato. It's available at: [docs.ligato.io](https://docs.ligato.io/).
 
 The documentation is build, versioned and hosted with the help of [ReadTheDocs.org](https://readthedocs.org/) and currently uses static site generator [MkDocs](https://www.mkdocs.org/). In the future, we might migrate to use [Sphinx](http://www.sphinx-doc.org/en/master/).
 
