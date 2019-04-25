@@ -239,12 +239,6 @@ For a visual explanation, see the diagram below:
 ![idxmap cache][idx-map-cache-image]
 
 The constructor that combines `CacheHelper` with `idxmap` to build the cache from the example can be found there as well.
-
-### Examples
-
-* Isolated and simplified examples can be found here: 
-  * [lookup][idx-map-lookup-example]
-  * [watch][idx-map-watcher-example]
   
 # Log Manager
 
@@ -425,14 +419,12 @@ dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 ```
 
 [bd-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/bridge-domain.proto
-[bd-interface]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/model/l2/bd.proto#L14
-[bd-derived-vals]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/l2plugin/descriptor/bridgedomain.go#L225
-[bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/l2plugin/descriptor/bd_interface.go#L128
+[bd-interface]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/bridge-domain.proto#L19
+[bd-derived-vals]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l2plugin/descriptor/bridgedomain.go
+[bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l2plugin/descriptor/bd_interface.go
 [datasync-plugin]: db-plugins.md#datasync-plugin
 [idx-map-cache-image]: ../img/user-guide/idxmap_cache.png
 [idx-map-local-image]: ../img/user-guide/idxmap_local.png
-[idx-map-lookup-example]: https://github.com/ligato/vpp-agent/tree/master/examples/idx_mapping_lookup
-[idx-map-watcher-example]: https://github.com/ligato/vpp-agent/tree/master/examples/idx_mapping_watcher
 [kubernetes-probes]: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
 [kvdescriptor-dev-guide]: ../developer-guide/kvdescriptor.md
 [rest-plugin]: connection-plugins.md#vpp-agent-rest
@@ -440,6 +432,6 @@ dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 [status-check-image]: ../img/user-guide/status_check.png
 [status-check-push-image]: ../img/user-guide/status_check_push.png
 [status-check-pull-image]: ../img/user-guide/status_check_pull.png
-[vpp-iface-idx]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/ifplugin/ifaceidx/ifaceidx.go#L62
-[vpp-iface-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/ifplugin/ifplugin_api.go#L26
+[vpp-iface-idx]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifaceidx/ifaceidx.goL62
+[vpp-iface-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin_api.go#L26
 [value-origin]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_descriptor_api.go#L53
