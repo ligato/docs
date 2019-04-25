@@ -24,11 +24,6 @@ span.ligato-title {
     font-weight: bold;
 }
 
-/* Second level menu alignment */
-.wy-menu-vertical a, .wy-menu-vertical .subnav a {
-    margin-left: -12px;
-}
-
 /* Menu */
 li.toctree-l1 {
 	margin-bottom: 10px;
@@ -39,7 +34,7 @@ li.toctree-l3 > a:link,
 li.toctree-l3 > a:visited {
     font-weight: bold;
     color: #696969;
-    margin-left: -24px;
+    margin-left: -12px;
 }
 
 /* Hyperlink setup */
@@ -61,3 +56,4 @@ a {
 code {
     font-size: 90%;
 }
+
