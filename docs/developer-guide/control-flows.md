@@ -251,5 +251,5 @@ key representing the interface among the dependencies for the route.
 [cfd-route-waiting]: ../img/control-flow-diagram/add_route_before_interface.svg?sanitize=true
 [cfd-transaction-revert]: ../img/control-flow-diagram/interface_and_route_with_revert.svg?sanitize=true
 [cfd-unnumbered]: ../img/control-flow-diagram/unnumbered_interface.svg?sanitize=true
-[retry-failed]: control-flow.md#example-retry-of-failed-operation
-[vpp-interface]: control-flow.md#scenario-create-vpp-interface-via-kvdb
+[retry-failed]: control-flows.md#example-retry-of-failed-operation
+[vpp-interface]: control-flows.md#scenario-create-vpp-interface-via-kvdb
