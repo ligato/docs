@@ -8,7 +8,7 @@ repo_url: https://github.com/ligato/docs
 theme:
   name: rtd-dropdown
   custom_dir: custom/
-  favicon: img/favicon.ico
+  favicon: ./img/favicon.ico
   highlightjs: true
   hljs_languages:
     - go
