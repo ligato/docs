@@ -233,12 +233,12 @@ Store value following the given model with the proper key to the KVDB. Depending
 Package [clientv2][clientv2] contains API definition for every supported configuration item and can be used to pass data without a external database.
 
 [arm-doc]: https://github.com/ligato/vpp-agent/blob/master/docs/arm64/README.md
-[clientv2]: ../features/concepts.md#client-v2
+[clientv2]: ../user-guide/concepts.md#client-v2
 [docker]: https://github.com/ligato/vpp-agent/tree/master/docker
 [govppmux-plugin]: ../plugins/core-vpp-plugins.md#govppmux-plugin
 [interface-plugin]: ../plugins/linux-plugins.md#interface-plugin
-[kv-overview]: ../features/concepts.md#key-value-store-overview
-[references]: ../features/references.md
+[kv-overview]: ../user-guide/concepts.md#key-value-store-overview
+[references]: ../user-guide/reference.md
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env   
 
 

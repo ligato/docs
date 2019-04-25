@@ -5,6 +5,7 @@ The tutorial shows how to read and write data to/from the data store and how to
 watch for changes. 
 
 Requirements:
+
 * Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
 * Complete and understand the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
 

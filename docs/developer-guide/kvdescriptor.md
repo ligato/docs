@@ -216,7 +216,7 @@ implementing your own.
 [descriptor-api]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_descriptor_api.go#L99
 [descriptor-adapter]: https://github.com/ligato/vpp-agent/tree/dev/plugins/kvscheduler/descriptor-adapter
 [dump-deps-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linux/l3plugin/descriptor/route.go
-[existing-descriptors]: https://github.com/ligato/vpp-agent/wiki/KVDescriptors
+[existing-descriptors]: ../developer-guide/kvdescriptor.md
 [get-metadata-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_scheduler_api.go
 [get-metadata-map-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin.go
 [kv-scheduler]: ../plugins/infra-plugins.md#kv-scheduler

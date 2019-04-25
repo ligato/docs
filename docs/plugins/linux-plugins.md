@@ -364,7 +364,7 @@ configured item is pushed. The agent will postpone interface (re)configuration u
 pending interfaces are moved to its namespace.
 
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
-[key-reference]: ../features/references.md
+[key-reference]: ../user-guide/reference.md
 [linux-arp-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/l3/arp.proto
 [linux-interface-guide]: linux-plugins.md#interface-plugin
 [linux-interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/interfaces/interface.proto

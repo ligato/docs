@@ -1,12 +1,13 @@
 # Tutorial: Using the KV Scheduler in your plugin
 
 This tutorial shows how to use the ['KV Scheduler'][5] in our hello world plugin that was created in the 
-[previous tutorials](https://ligato.io/cn-infra/tutorials/01_hello-world). You will learn how to prepare
+[previous tutorials](../tutorials/01_hello-world). You will learn how to prepare
 a descriptor, generate the adapter and "wire" the plugin with the KV Scheduler. 
 
 Requirements:
-* Complete and understand the ['Hello World Agent'](https://ligato.io/cn-infra/tutorials/01_hello-world) tutorial
-* Complete and understand the ['Plugin Dependencies'](https://ligato.io/cn-infra/tutorials/02_plugin-deps) tutorial
+
+* Complete and understand the ['Hello World Agent'](../tutorials/01_hello-world) tutorial
+* Complete and understand the ['Plugin Dependencies'](../tutorials/02_plugin-deps) tutorial
 
 For simplicity, this tutorial does not use ETCD or any other northbound kv store. Instead, NB events are created 
 programmatically in the example, using the KV Scheduler API.

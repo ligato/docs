@@ -1028,5 +1028,5 @@ The telemetry plugin configuration file allows to change polling interval, or tu
 [acl-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/acl/acl.proto
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [ipsec-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/ipsec/ipsec.proto
-[key-reference]: ../features/references.md
+[key-reference]: ../user-guide/reference.md
 [punt-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/punt/punt.proto
