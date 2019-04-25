@@ -6,7 +6,7 @@ site_author: Ligato Team
 repo_url: https://github.com/ligato/docs
 
 theme:
-  name: readthedocs
+  name: rtd-dropdown
   custom_dir: custom/
   highlightjs: true
   hljs_languages:
@@ -17,6 +17,7 @@ extra_css:
   - css/extra.css
 
 nav:
+- Ligato Docs: index.md
 - INTRODUCTION:
   - VPP-Agent: intro/agent.md
   - CNF Definition: intro/cnf-definition.md
@@ -69,3 +70,4 @@ markdown_extensions:
   - def_list
   - toc:
       permalink: 
+

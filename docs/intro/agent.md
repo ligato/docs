@@ -1,4 +1,10 @@
-# Architecture
+# VPP-Agent
+
+Introduction to the VPP-Agent.
+
+---
+
+## Architecture
 
 The VPP Agent is basically a set of VPP-specific plugins that use the CN-Infra framework to interact with other services/microservices in the cloud (e.g. a KV data store, messaging, log warehouse, etc.). The VPP Agent
 exposes VPP functionality to client apps via a higher-level model-driven API. Clients that consume this API may be either external (connecting to the VPP Agent via REST, gRPC API, Etcd or message bus transport), or local Apps and/or Extension plugins running on the same CN-Infra framework in the same Linux process. 
@@ -13,7 +19,7 @@ The following figure shows the VPP Agent in context of a cloud-native VNF, where
 
 ![context][context]
 
-# Design
+## Design
 
 ![VPP agent 10.000 feet][vpp-agent-10k]
 
@@ -91,7 +97,7 @@ Several bottlenecks that can be optimized have been identified:
 - minimize context switching
 - replace blocking calls to non-blocking (asynchronous) calls
 
-# Deployment
+## Deployment
 
 VPP Agent can run on any server where VPP is installed. It can run on a bare metal, in a VM, or in a container.
  
