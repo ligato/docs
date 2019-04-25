@@ -1,4 +1,6 @@
-# Datasync plugin
+# DB plugins
+
+## Datasync plugin
 
 Package datasync defines the interfaces for the abstraction of a data synchronization between app plugins and different backend data sources (such as data stores, message buses, or RPC-connected clients).
 
@@ -32,7 +34,7 @@ Publish data API is used by app plugins to asynchronously publish events with pa
 
 ![datasync publish][datasync-publish-image]
 
-# Data Broker 
+## Data Broker 
 
 The CN-Infra Data Broker abstraction (see the diagram below) is based on two APIs: 
 
@@ -50,7 +52,7 @@ The `keyval` package defines the client API to access a key-value data store. It
 
 The `keyval` package also provides a skeleton for a key-value plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to datastore implementing the `KvPlugin` interface.
 
-# Etcd plugin
+## Etcd plugin
 
 The Etcd plugin provides access to an etcd key-value data store.
 
@@ -83,17 +85,17 @@ Redis is the implementation of the key-value Data Broker client API for the Redi
    +-----+    <-- (KeyValProtoWatcher)  +------------------------+  <--  events    +-------+
 ```
 
-# Redis
+## Redis
 
 The code snippets below provide examples to help you get started. For simplicity, error handling is omitted.
 
 ### Need to import following dependencies
 
 ```
-    import "github.com/ligato/cn-infra/db/keyval/kvproto"
-    import "github.com/ligato/cn-infra/db/keyval/redis"
-    import "github.com/ligato/cn-infra/utils/config"
-    import "github.com/ligato/cn-infra/logging/logrus"
+import "github.com/ligato/cn-infra/db/keyval/kvproto"
+import "github.com/ligato/cn-infra/db/keyval/redis"
+import "github.com/ligato/cn-infra/utils/config"
+import "github.com/ligato/cn-infra/logging/logrus"
 ```
 
 ### Define client configuration based on your Redis installation.
@@ -107,105 +109,105 @@ var cfg redis.ClusterConfig
 
 You can initialize any of the above configuration instances in memory, or load the settings from file using 
 ```
-   err = config.ParseConfigFromYamlFile(configFile, &cfg)
+err = config.ParseConfigFromYamlFile(configFile, &cfg)
 ```
 You can also load any of the three configuration files using
 ```
-   var cfg interface{}
-   cfg, err := redis.LoadConfig(configFile)
+var cfg interface{}
+cfg, err := redis.LoadConfig(configFile)
 ```
 
 ### Create connection from configuration
 
 ```
-   client, err := redis.CreateClient(cfg)
-   db, err := redis.NewBytesConnection(client, logrus.DefaultLogger())
+client, err := redis.CreateClient(cfg)
+db, err := redis.NewBytesConnection(client, logrus.DefaultLogger())
 ```
 
 ### Create Brokers / Watchers from connection
 
 ```
-   //create broker/watcher that share the same connection pools.
-   bytesBroker := db.NewBroker("some-prefix")
-   bytesWatcher := db.NewWatcher("some-prefix")
+//create broker/watcher that share the same connection pools.
+bytesBroker := db.NewBroker("some-prefix")
+bytesWatcher := db.NewWatcher("some-prefix")
 
-   // create broker/watcher that share the same connection pools,
-   // capable of processing protocol-buffer generated data.
-   wrapper := kvproto.NewProtoWrapper(db)
-   protoBroker := wrapper.NewBroker("some-prefix")
-   protoWatcher := wrapper.NewWatcher("some-prefix")
+// create broker/watcher that share the same connection pools,
+// capable of processing protocol-buffer generated data.
+wrapper := kvproto.NewProtoWrapper(db)
+protoBroker := wrapper.NewBroker("some-prefix")
+protoWatcher := wrapper.NewWatcher("some-prefix")
 ```
 
 ### Perform CRUD operations
 
 ```
-   // put
-   err = db.Put("some-key", []byte("some-value"))
-   err = db.Put("some-temp-key", []byte("valid for 20 seconds"),
-                 datasync.WithTTL(20*time.Second))
+// put
+err = db.Put("some-key", []byte("some-value"))
+err = db.Put("some-temp-key", []byte("valid for 20 seconds"),
+             datasync.WithTTL(20*time.Second))
 
-   // get
-   value, found, revision, err := db.GetValue("some-key")
-   if found {
-       ...
+// get
+value, found, revision, err := db.GetValue("some-key")
+if found {
+   ...
+}
+
+// Note: flight.Info implements proto.Message.
+f := flight.Info{
+       Airline:  "UA",
+       Number:   1573,
+       Priority: 1,
+    }
+err = protoBroker.Put("some-key-prefix", &f)
+f2 := flight.Info{}
+found, revision, err = protoBroker.GetValue("some-key-prefix", &f2)
+
+// list
+keyPrefix := "some"
+kv, err := db.ListValues(keyPrefix)
+for {
+   kv, done := kv.GetNext()
+   if done {
+       break
    }
+    key := kv.GetKey()
+   value := kv.GetValue()
+}
 
-   // Note: flight.Info implements proto.Message.
-   f := flight.Info{
-           Airline:  "UA",
-           Number:   1573,
-           Priority: 1,
-        }
-   err = protoBroker.Put("some-key-prefix", &f)
-   f2 := flight.Info{}
-   found, revision, err = protoBroker.GetValue("some-key-prefix", &f2)
+// delete
+found, err := db.Delete("some-key")
+// or, delete all keys matching the prefix "some-key".
+found, err := db.Delete("some-key", datasync.WithPrefix())
 
-   // list
-   keyPrefix := "some"
-   kv, err := db.ListValues(keyPrefix)
-   for {
-       kv, done := kv.GetNext()
-       if done {
-           break
-       }
-        key := kv.GetKey()
-       value := kv.GetValue()
-   }
-
-   // delete
-   found, err := db.Delete("some-key")
-   // or, delete all keys matching the prefix "some-key".
-   found, err := db.Delete("some-key", datasync.WithPrefix())
-
-   // transaction
-   var txn keyval.BytesTxn = db.NewTxn()
-   txn.Put("key101", []byte("val 101")).Put("key102", []byte("val 102"))
-   txn.Put("key103", []byte("val 103")).Put("key104", []byte("val 104"))
-   err := txn.Commit()
+// transaction
+var txn keyval.BytesTxn = db.NewTxn()
+txn.Put("key101", []byte("val 101")).Put("key102", []byte("val 102"))
+txn.Put("key103", []byte("val 103")).Put("key104", []byte("val 104"))
+err := txn.Commit()
 ```
 
 ### Subscribe to key space events
 
 ```
-   watchChan := make(chan keyval.BytesWatchResp, 10)
-   err = db.Watch(watchChan, "some-key")
-   for {
-       select {
-        case r := <-watchChan:
-           switch r.GetChangeType() {
-           case datasync.Put:
-               log.Infof("KeyValProtoWatcher received %v: %s=%s", r.GetChangeType(),
-                         r.GetKey(), string(r.GetValue()))
-           case datasync.Delete:
-               ...
-           }
-       ...
+watchChan := make(chan keyval.BytesWatchResp, 10)
+err = db.Watch(watchChan, "some-key")
+for {
+   select {
+    case r := <-watchChan:
+       switch r.GetChangeType() {
+       case datasync.Put:
+           log.Infof("KeyValProtoWatcher received %v: %s=%s", r.GetChangeType(),
+                     r.GetKey(), string(r.GetValue()))
+       case datasync.Delete:
+           ...
        }
-  }
+   ...
+   }
+}
 ```
  NOTE: You must configure Redis for it to publish key space events.
 ```
-   config SET notify-keyspace-events KA
+config SET notify-keyspace-events KA
 ```
 
 ### Resiliency
@@ -223,7 +225,7 @@ $ docker-compose ps
 |dockerredissentinel_sentinel_2 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
 |dockerredissentinel_sentinel_3 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
 
-# Consul plugin
+## Consul plugin
 
 The Consul plugin provides access to a consul key-value data store.
 
@@ -239,7 +241,7 @@ The Consul plugin provides access to a consul key-value data store.
 
 - If connection to the Consul is interrupted, resync can be automatically called after re-connection. This option is disabled by default and has to be allowed in the etcd.conf file. Set `resync-after-reconnect` to `true` to enable the feature.
 
-# FileDB
+## FileDB
 
 The fileDB plugin allows to use the file system of a operating system as a key-value data store. The filesystem plugin watches for pre-defined files or directories, reads a configuration and sends response events according to changes.
 
@@ -284,7 +286,6 @@ Plugin currently supports only JSON and YAML-formatted data. The format of the f
 For YAML:
 
 ```
-
 ---
 data:
     -

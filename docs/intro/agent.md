@@ -1,6 +1,5 @@
-# VPP-Agent
+# Agent
 
-Introduction to the VPP-Agent.
 
 ---
 

@@ -1,4 +1,8 @@
-# KV Scheduler
+# Infra plugins
+
+---
+
+## KV Scheduler
 
 The **KVScheduler** is a major enhancement that warranted increasing the VPP Agent's major version  from 1.x to 2.x. It provides transaction-based configuration processing based on a generic mechanism for dependency resolution between different configuration items, which in effect simplifies and unifies the configurators. KVScheduler is shipped as a 
 separate plugin, even though it is now a core component around which all the VPP and Linux configurators have been re-build.
@@ -150,7 +154,7 @@ KVScheduler exposes the state of the system and the history of operations not on
 
 This page describes how to use the VPP-Agent with the gRPC
 
-# Status Check
+## Status Check
 
 The `statuscheck` infrastructure plugin monitors the overall status of a CN-Infra based app by collecting and aggregating partial statuses of agents plugins. The status is exposed to external clients via [ETCD - datasync][datasync-plugin] and [HTTP][rest-plugin], as shown in the following diagram:
 
@@ -207,7 +211,7 @@ Push Plugin Status:
 Pull Plugins Status - PROBING:
 ![status check push][status-check-push-image]
 
-# Index Map
+## Index Map
 
 The idxmap package provides an enhanced mapping structure to help in the following use cases:
 
@@ -240,7 +244,7 @@ For a visual explanation, see the diagram below:
 
 The constructor that combines `CacheHelper` with `idxmap` to build the cache from the example can be found there as well.
   
-# Log Manager
+## Log Manager
 
 Log manager plugin allows to view and modify log levels of loggers using REST API.
 
@@ -273,7 +277,7 @@ Use `t.Get()` to read all measurements. The Trace object contains a list of entr
 
 Last method is `t.Clear()` which removes all entries from the internal database.  
 
-# Messaging/Kafka
+## Messaging/Kafka
 
 The client package provides single purpose clients for publishing synchronous/asynchronous messages and for consuming selected topics.
 
@@ -327,7 +331,7 @@ respectively. The connections also provide API for consuming messages implementi
 
 ```
 
-# Process manager
+## Process manager
 
 The process manager plugin provides a set of methods to create a plugin-defined processes instance implementing a set of methods to manage and monitor them. There are several ways how to obtain a process instance via `ProcessManager` 
 API:
@@ -402,7 +406,7 @@ On the plugin init, all templates are read, and those with *run-on-startup* set 
 
 The plugin API allows to read templates directly with `GetTemplate(<name)` or `GetAllTmplates()`. The template object can be used as parameter to start a new process from it. 
 
-# Service Label
+## Service Label
 
 The `servicelabel` is a small Core Agent Plugin, which other plugins can use to obtain the microservice label, i.e. the string used to identify the particular VNF. The label is primarily used to prefix keys in ETCD data store so that the configurations of different VNFs do not get mixed up.
 

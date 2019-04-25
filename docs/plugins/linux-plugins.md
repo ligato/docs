@@ -1,4 +1,8 @@
-# Interface plugin
+# Linux plugins
+
+---
+
+## Interface plugin
 
 The Linux interface plugin is a base plugin managing unix-based host OS interfaces. Currently it only supports interfaces of type vETH and TAP, since these interface types mostly serve as counterparts to VPP interfaces. 
 
@@ -11,7 +15,7 @@ The vpp-agent uses external library to fetch data about OS interfaces and manage
 The Linux interface model defines following [model][linux-interface-model] describing model with the first part common for all interface types, and the second part specific for every interface type. The interface have an optional namespace field. The interface name is required, and the host name can be specified as well. If not, the host name will 
 be the same as the logical name.
 
-### Veth
+### VETH
 
 The VETH (virtual Ethernet) device is a local Ethernet tunnel. Devices are created in pairs. Packets transmitted on one device in the pair are immediately received on the other device. When either device is down, the link state of the pair is down. The VETH configuration when namespaces need to communicate to the main host namespace or between each other.
 
@@ -178,7 +182,7 @@ The linux plugin namespace management requires docker ran in the privileged mode
 
 Use the Linux config file for interfaces and for l3 plugin and set `disabled` na `true` (both of them must be disabled).
 
-# L3 plugin
+## L3 plugin
 
 The Linux L3 plugin is capable of configuring **Linux ARP** entries and **Linux routes**. The Linux L3 plugin is dependent on [Linux interface plugin][linux-interface-guide] since both configuration items are dependent on the Linux interface managed by it. L3 configuration items support Linux namespace in the same manner as the Linux interfaces.  
 
@@ -336,7 +340,7 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-# Namespace plugin
+## Namespace plugin
 
 The namespace plugin is an auxiliary plugin used mainly by other Linux plugins to handle namespaces and microservices.
 

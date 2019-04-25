@@ -3,7 +3,7 @@
 Welcome to the Ligato Docs, a collection of documentation for [Ligato projects](https://github.com/ligato).
 
 
-## Project Releases
+**Project Releases**
 
 |Project|Latest Release|Release date|
 |---|:---:|---|
@@ -12,7 +12,7 @@ Welcome to the Ligato Docs, a collection of documentation for [Ligato projects](
 
 Have a look at the [release notes](https://github.com/ligato/vpp-agent/blob/master/CHANGELOG.md) for a complete list of changes.
 
-### Available Images
+**Available Images**
 
 |Image|Info|
 |---|---|

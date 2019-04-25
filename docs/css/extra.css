@@ -55,8 +55,18 @@ a {
     background-color: #A7D877;
 }
 
-/* Increase code font size (default is 75%) for better readability */
-code {
-    font-size: 90%;
+/*
+    Fix fenced code block rendered in single line
+*/
+.hljs {
+    overflow-x: auto !important;
+    padding: 0.5em !important;
+    color: #333 !important;
+    background: #f8f8f8 !important;
 }
 
+code {
+    white-space: pre !important;
+    word-wrap: normal !important;
+    font-size: 12px !important;
+}

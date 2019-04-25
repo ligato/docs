@@ -1,6 +1,10 @@
+# Robot Framework Guide
+
 This page contains a how-to guide for writing custom integration tests using the VPP Agent's libraries for the Robot framework.
 
-# Robot Test setup
+---
+
+## Robot Test setup
 
 The following text describes how to write robot test suites (locally or in any other environment).
 
@@ -176,7 +180,8 @@ Show Interfaces And Other Objects After Setup
     Execute In Container    agent_vpp_1    ip a
 ```
 
-# Reference guide
+## Reference guide
+
 In this part are examples of keywords, short descriptions and libraries witch you can use for tests.
 
 ### Docker container keywords
@@ -237,7 +242,7 @@ https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/vxlan.robo
 Wait Until Keyword Succeeds   ${WAIT_TIMEOUT}   ${SYNC_SLEEP}    ...
 ```
 
-# Test examples
+## Test examples
 
 Tests example directory- vpp-agent/tests/robot/examples/.
 

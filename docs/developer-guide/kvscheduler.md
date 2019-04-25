@@ -1,4 +1,8 @@
-# Introduction
+# KV Scheduler
+
+---
+
+### Introduction
 
 A major enhancement that led to the increase of the agent's major version number
 from 1.x to 2.x, is an introduction of a new framework, called **KVScheduler**.

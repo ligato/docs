@@ -1,4 +1,8 @@
-# Troubleshooting
+# KVS Troubleshooting
+
+This page contains troubleshooting information for KVScheduler.
+
+---
 
 ### Value entered via NB was not configured in SB
 
@@ -17,24 +21,24 @@ to configure the value:
     - for NB KVDB make sure the key under which the value was put is correct
        - could be a bad key prefix (bad suffix would make the value `UNIMPLEMENTED`, but otherwise included in the transaction input)
     - [debug logs][debug-logs] of the Orchestrator (NB of KVScheduler), can also be used to learn the set of key-values received with each event from NB - following are examples for RESYNC and CHANGE events:
-  ```
-    DEBU[0005] => received RESYNC event (1 prefixes)         loc="orchestrator/orchestrator.go(150)" logger=orchestrator.dispatcher
-    DEBU[0005]  -- key: config/mock/v1/interfaces/tap1       loc="orchestrator/orchestrator.go(168)" logger=orchestrator.dispatcher
-    DEBU[0005]  -- key: config/mock/v1/interfaces/loopback1  loc="orchestrator/orchestrator.go(168)" logger=orchestrator.dispatcher
-    DEBU[0005] - "config/mock/v1/interfaces/" (2 items)      loc="orchestrator/orchestrator.go(173)" logger=orchestrator.dispatcher
-    DEBU[0005] 	 - "config/mock/v1/interfaces/tap1": (rev: 0)  loc="orchestrator/orchestrator.go(178)" logger=orchestrator.dispatcher
-    DEBU[0005] 	 - "config/mock/v1/interfaces/loopback1": (rev: 0)  loc="orchestrator/orchestrator.go(178)" logger=orchestrator.dispatcher
-    DEBU[0005] Resync with 2 items                           loc="orchestrator/orchestrator.go(181)" logger=orchestrator.dispatcher
-    DEBU[0005] Pushing data with 2 KV pairs (source: watcher)  loc="orchestrator/dispatcher.go(67)" logger=orchestrator.dispatcher
-    DEBU[0005]  - PUT: "config/mock/v1/interfaces/tap1"      loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
-    DEBU[0005]  - PUT: "config/mock/v1/interfaces/loopback1"   loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
-  ```
+```
+DEBU[0005] => received RESYNC event (1 prefixes)         loc="orchestrator/orchestrator.go(150)" logger=orchestrator.dispatcher
+DEBU[0005]  -- key: config/mock/v1/interfaces/tap1       loc="orchestrator/orchestrator.go(168)" logger=orchestrator.dispatcher
+DEBU[0005]  -- key: config/mock/v1/interfaces/loopback1  loc="orchestrator/orchestrator.go(168)" logger=orchestrator.dispatcher
+DEBU[0005] - "config/mock/v1/interfaces/" (2 items)      loc="orchestrator/orchestrator.go(173)" logger=orchestrator.dispatcher
+DEBU[0005] 	 - "config/mock/v1/interfaces/tap1": (rev: 0)  loc="orchestrator/orchestrator.go(178)" logger=orchestrator.dispatcher
+DEBU[0005] 	 - "config/mock/v1/interfaces/loopback1": (rev: 0)  loc="orchestrator/orchestrator.go(178)" logger=orchestrator.dispatcher
+DEBU[0005] Resync with 2 items                           loc="orchestrator/orchestrator.go(181)" logger=orchestrator.dispatcher
+DEBU[0005] Pushing data with 2 KV pairs (source: watcher)  loc="orchestrator/dispatcher.go(67)" logger=orchestrator.dispatcher
+DEBU[0005]  - PUT: "config/mock/v1/interfaces/tap1"      loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
+DEBU[0005]  - PUT: "config/mock/v1/interfaces/loopback1"   loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
+```
 
-  ```
-    DEBU[0012] => received CHANGE event (1 changes)          loc="orchestrator/orchestrator.go(121)" logger=orchestrator.dispatcher
-    DEBU[0012] Pushing data with 1 KV pairs (source: watcher)  loc="orchestrator/dispatcher.go(67)" logger=orchestrator.dispatcher
-    DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispatcher.go(93)" logger=orchestrator.dispatcher
-  ```
+```
+DEBU[0012] => received CHANGE event (1 changes)          loc="orchestrator/orchestrator.go(121)" logger=orchestrator.dispatcher
+DEBU[0012] Pushing data with 1 KV pairs (source: watcher)  loc="orchestrator/dispatcher.go(67)" logger=orchestrator.dispatcher
+DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispatcher.go(93)" logger=orchestrator.dispatcher
+```
 
 2. **transaction containing the value was triggered**, yet the value is not configured in SB - the issue could be one of the following:
 * the value is *pending*
@@ -237,7 +241,7 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
       - the KVScheduler is the owner of metadata maps, making sure they are always up-to-date - this is why custom metadata maps are not created by descriptors, but instead given to the scheduler in the form of factories (`KVDescriptor.MetadataMapFactory`)
       - maps retrieved from the scheduler using `KVScheduler.GetMetadataMap()` should remain read-only and exposed to other plugins as such
 
-# Debugging
+## Debugging
 
 You can change the agent's log level globally or individually per logger via the configuration file `logging.conf`, the environment variable `INITIAL_LOGLVL=<level>`
 or during run-time through the Agent's REST API: `POST /log/<logger-name>/<log-level>`. Detailed info about setting log levels in the Agent can be found in the [documentation for the logmanager plugin][logmanager-readme].

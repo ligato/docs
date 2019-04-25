@@ -1,6 +1,10 @@
+# Concepts
+
 This page contains information about Ligato vpp-agent and cn-infra concepts.
 
-# What is a Model?
+---
+
+## What is a Model?
 
 The model represents a northbound API data model defined together with specific protobuf message. It is used to allow generating keys prefix and name of model instance using its value data. The key (prefix + name) is used for storing model in a key-value database.
 
@@ -15,16 +19,17 @@ Single protobuf message can only be represented by one model.
 ### Model Specification
 
 Model spec (specification) describes particular model using module, version and type fields:
-  - `module` - defines module, which groups models (vpp, linux..)
-  - `version` - describes version of value data (e.g. v1)
-  - `type` - describes type of model for humans (unique in module)
+
+- `module` - defines module, which groups models (vpp, linux..)
+- `version` - describes version of value data (e.g. v1)
+- `type` - describes type of model for humans (unique in module)
 
 These three parts are used for generating model prefix. The model prefix uses following format:
 ```
 config/<module>/<version>/<type>/
 ```
 
-# Key-value store overview
+## Key-value store overview
 
 This section describes supported key-value data bases and how to use them
 
@@ -49,7 +54,7 @@ Let's have a look at the example:
 ```go
 import (
 	"github.com/ligato/cn-infra/db/keyval/etcd"
-	...
+	// ...
 )
 
 func New() *VPPAgent {
@@ -166,6 +171,7 @@ The file with configuration has requisite format and can be kept as `.json` or `
 As any other KVDB plugin, fileDB also requires config file to load, provided via flag `--filedb-config=<path>`. 
 
 Example config file:
+
 ```
 configuration-paths: [/path/to/directory/or/file.txt]
 ```
@@ -177,6 +183,7 @@ The file with configuration can be edited with any text editor, like `vim`.
 ### How to use it in a plugin
 
 In the plugin which intends to use KVDB connection for publishing or watching, define similar fields of the type:
+
 ```go 
 import (
     "github.com/ligato/cn-infra/datasync"
@@ -194,6 +201,7 @@ type Plugin struct {
 ```
 
 Prepare the connector in he application plugin definition and set it to the example plugin:
+
 ```go
 func New() *VPPAgent {
 	// Prepare KVDB connector writer and watcher
@@ -248,7 +256,7 @@ It is a good practice to start event watcher before the watcher registration.
 
 Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows to store key-value pair to the data store. No 'Delete()' method is defined, objects are removed sending nil data under the key intended to remove.
 
-# VPP configuration order
+## VPP configuration order
 
 One of the VPP biggest drawbacks is that the dependency relations of various configuration items are very strict, and ability of the VPP to manage it is limited, or not present at all. There are two problems to be solved:
 1. A configuration item dependent on any other configuration item cannot be created "in advance", the dependency must be fulfilled first
@@ -413,7 +421,7 @@ The second step means that the interface `if1` was removed from the bridge domai
 
 The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here][telemetry-plugin].
 
-# VPP multi-version support
+## VPP multi-version support
 
 The vpp-agent is highly dependent on the version of the VPP binary API used to send and receive various types of configuration messages. The VPP API is changing over time, adding new binary calls or modifying or removing existing ones. The latter is the most crucial from the vpp-agent perspective since it introduces incompatibilities between vpp-agent and the VPP.
 For that reason the vpp-agent does a compatibility check in the GoVPP multiplex plugin (an adapter of the GoVPP - the GoVPP component provides API for communication with the VPP). The compatibility check attempts to read an ID of the provided message. If just one message ID is not found (validation if the cyclic redundancy code), the VPP is considered incompatible and the vpp-agent will not connect. The message validation is essential for successful connection. Now it is clear that the vpp-agent is tightly bound to the version of the VPP (for that reason the vpp-agent image is shipped together with compatible VPP version to make it easier for users).
@@ -472,7 +480,7 @@ Every `vppcalls` handler registers itself with the VPP version intended to suppo
 
 The little drawback of this solution is a lot of duplicated code across `vppcalls`, since there is not much of significant API changes between versions.
 
-# Client v2
+## Client v2
 
 Client v2 (i.e. the second version) defines an API that allows to manage
 configuration of VPP and Linux plugins.
@@ -480,14 +488,16 @@ How the configuration is transported between APIs and the plugins
 is fully abstracted from the user.
 
 The API calls can be split into two groups:
- - **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. The name is an abbreviation of *resynchronization*. It is used initially and after any system event that may leave the configuration out-of-sync while the set of outdated configuration options is impossible to determine locally (e.g. temporarily lost connection to data store).
- - **data change** allows to deliver incremental changes of a configuration.
+
+- **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. The name is an abbreviation of *resynchronization*. It is used initially and after any system event that may leave the configuration out-of-sync while the set of outdated configuration options is impossible to determine locally (e.g. temporarily lost connection to data store).
+- **data change** allows to deliver incremental changes of a configuration.
 
 There are two implementations:
- - **local client** runs inside the same process as the agent and delivers configuration through go channels directly to the plugins.
- - **remote client** stores the configuration using the given `keyval.broker`.
+
+- **local client** runs inside the same process as the agent and delivers configuration through go channels directly to the plugins.
+- **remote client** stores the configuration using the given `keyval.broker`.
    
-# Plugin configuration files
+## Plugin configuration files
 
 Some plugins may require an external information in order to set proper behavior. The good example are database connector plugins like ETCD. By default, the plugin tries default IP address and port to connect to the running database instance. If we want to connect to a different IP address or some custom port, we need to pass this information to the plugin. For that purpose, the vpp-agent plugins support configuration files. 
 The plugin configuration file (or just config-file) is a short file with fields (every plugin can define its own set of fields), which can statically modify the initial plugin setup and change some aspects of its behavior. 
@@ -549,6 +559,7 @@ Flag reserved for configurator plugin, currently not in use.
 ```
 
 Provides all fields required for Consul plugin:
+
 - `address`: IP Address of the consul server 
 - `resync-after-reconnect`: this field runs resync procedure for all registered plugins in case the plugin losts connection to the database and then reconnects back 
 
@@ -556,14 +567,14 @@ Provides all fields required for Consul plugin:
 
  // TBD
  
- [client-v2]: ../features/concepts.md#client-v2
- [consul-plugin]: ../plugins/db-plugins.md#consul-plugin
- [datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
- [etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
- [filedb-plugin]: ../plugins/db-plugins.md#filedb
- [kvdb-ms-label-img]: ../img/user-guide/KVDB_microservice_label.png
- [list-of-supported]: concepts.md#list-of-supported-flags
- [redis-plugin]: ../plugins/db-plugins.md#redis
- [redis-quickstart]: https://redis.io/topics/quickstart
- [telemetry-plugin]: ../plugins/other-vpp-plugins.md#telemetry
- [quickstart-guide]: ../getting-started/quickstart.md
+[client-v2]: ../features/concepts.md#client-v2
+[consul-plugin]: ../plugins/db-plugins.md#consul-plugin
+[datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
+[etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
+[filedb-plugin]: ../plugins/db-plugins.md#filedb
+[kvdb-ms-label-img]: ../img/user-guide/KVDB_microservice_label.png
+[list-of-supported]: concepts.md#list-of-supported-flags
+[redis-plugin]: ../plugins/db-plugins.md#redis
+[redis-quickstart]: https://redis.io/topics/quickstart
+[telemetry-plugin]: ../plugins/other-vpp-plugins.md#telemetry
+[quickstart-guide]: ../getting-started/quickstart.md
