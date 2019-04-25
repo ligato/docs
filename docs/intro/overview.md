@@ -2,7 +2,7 @@ This page is an overview for the VPP-Agent
  
 # VPP-Agent overview
 
-The VPP Agent (or just Agent) is a Go implementation of the control/management plane for the VPP based cloud-native virtual network functions (VNFs). The Agent is built on the cloud-native infrastructure platform ([CN-Infra](https://github.com/ligato/cn-infra/wiki)).
+The VPP Agent (or just Agent) is a Go implementation of the control/management plane for the VPP based cloud-native virtual network functions (VNFs). The Agent is built on the cloud-native infrastructure platform.
 
 ### What can it do?
 
@@ -63,20 +63,20 @@ The repository also contains tools for building, testing, and troubleshooting of
 
 ### VPP-Agent-ctl
 
-More in: [vpp-agent-ctl](../tools/vpp-agent-ctl.md)
+More in: [vpp-agent-ctl][vpp-agent-ctl]
 
 The VPP-Agent-ctl is a utility tool whose primary purpose is to test and troubleshoot the VPP-Agent. The tool allows to put pre-defined configuration of any type currently supported in the agent to the ETCD, use custom data specifying key and value (as JSON), or read current ETCD config.
 
 ### Docker
 
-Container-based development environment for the VPP-Agent and for app/extension plugins. Docker image is available for [development](https://hub.docker.com/r/ligato/dev-vpp-agent) and [production](https://hub.docker.com/r/ligato/vpp-agent) version of the VPP-Agent with compatible VPP.
+Container-based development environment for the VPP-Agent and for app/extension plugins. Docker image is available for [development][development] and [production][production] version of the VPP-Agent with compatible VPP.
 
 # What to do next?
 
-Already familiar with the VPP-Agent basics? [Learn more about the concepts](../features/concepts.md), try some of our [examples](https://github.com/ligato/vpp-agent/blob/master/examples/README.md), read more in other user-guide articles or try to make your own plugin with the help of the developer guide. 
+Already familiar with the VPP-Agent basics? [Learn more about the concepts][concepts], try some of our [examples][examples], read more in other user-guide articles or try to make your own plugin with the help of the developer guide. 
 
-
-   
-
-
-
+[concepts]: ../features/concepts.md
+[development]: https://hub.docker.com/r/ligato/dev-vpp-agent
+[examples]: https://github.com/ligato/vpp-agent/blob/master/examples/README.md
+[production]: https://hub.docker.com/r/ligato/vpp-agent
+[vpp-agent-ctl]: ../tools/vpp-agent-ctl.md
