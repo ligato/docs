@@ -289,7 +289,7 @@ of the [plugin][plugin]. The interfaces that constitute the KVScheduler API are 
 in multiple files:
  * `errors.go`: definitions of errors that can be returned from within the KVScheduler;
    additionally the `InvalidValueError` error wrapper is defined to allow plugins to 
-   further specify the reason for a [validation error][kvdescriptor-validate], which is
+   further specify the reason for a validation error, which is
    then exposed through the [value status][value-states].
 
  * `kv_scheduler_api.go`: the KVScheduler API that can be used by:
@@ -369,6 +369,7 @@ only via formatted logs but also through a set of REST APIs:
         - `verbose=< 1/true | 0/false >`: print graph after refresh (Retrieve)
 
 [plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler
+[bd-cfd]: control-flows.md#example-bridge-domain
 [bd-model-example]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/api/models/vpp/l2/keys.go#L27-L31
 [vpp-iface-idx]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/ifplugin/ifaceidx/ifaceidx.go#L62
 [vpp-iface-map]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/ifplugin/ifplugin_api.go#L27
@@ -376,7 +377,6 @@ only via formatted logs but also through a set of REST APIs:
 [bd-interface]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/api/models/vpp/l2/bridge-domain.proto#L19-L24
 [bd-derived-vals]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/l2plugin/descriptor/bridgedomain.go#L242-L251
 [bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/l2plugin/descriptor/bd_interface.go#L120-L127
-[bd-cfd]: articles/bridge_domain.md
 [contiv-vpp]: https://github.com/contiv/vpp/
 [graph-example]: ../img/developer-guide/large-graph-example.svg
 [clientv2]: https://github.com/ligato/vpp-agent/tree/master/clientv2
@@ -384,5 +384,4 @@ only via formatted logs but also through a set of REST APIs:
 [value-states-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L233-L239
 [kvscheduler-api-dir]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/api
 [kvdescriptor-guide]: kvdescriptor.md
-[kvdescriptor-validate]: kvdescriptor.md#Validate
 [get-history-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L241-L244
