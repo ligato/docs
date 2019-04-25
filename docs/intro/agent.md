@@ -104,7 +104,7 @@ Benefits of putting a VPP-based VNF (basically just a combination of VPP and the
 
 The following diagram shows VPP deployement in:
 - Data Plane vSwitch
-- Control Plane vSwitch (TBD [Contiv][contiv] integration)
+- Control Plane vSwitch ([Contiv][contiv] integration)
 - VPP VNF Container
 - Non-VPP Container
 
@@ -126,7 +126,6 @@ VPP + Agent can be deployed in different environments. Several deployment altern
 The Control Plane using remote client writes (north-bound) configuration to the Data Store (tested with ETCD, Redis). VPP Agent watches dedicated key prefixes in Data Store using dbsync package.
 
 ![deployment with data store][deployment-with-ds]
-TBD links to the code
 
 ### GRPC for NB (north-bound)
 
