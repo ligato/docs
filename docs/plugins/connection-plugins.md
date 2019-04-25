@@ -367,9 +367,9 @@ RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
 Once the handler is registered with the `GRPC Plugin` and the agent is running, you can use a grpc client to call the service .
 
 [access-security-model]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/model/access-security/accesssecurity.proto
-[grpc-client-tutorial]: https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial
-[grpc-server-tutorial]: https://github.com/ligato/cn-infra/tree/dev/examples/grpc-plugin/grpc-server
+[grpc-client-tutorial]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-client
+[grpc-server-tutorial]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-server
 [grpc-image]: ../img/user-guide/grpc.png
-[grpc-plugin]: https://github.com/ligato/cn-infra/tree/dev/rpc/grpc
+[grpc-plugin]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md

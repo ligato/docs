@@ -567,7 +567,7 @@ Provides all fields required for Consul plugin:
 
  // TBD
  
-[client-v2]: ../features/concepts.md#client-v2
+[client-v2]: ../user-guide/concepts.md#client-v2
 [consul-plugin]: ../plugins/db-plugins.md#consul-plugin
 [datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
 [etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
@@ -577,4 +577,4 @@ Provides all fields required for Consul plugin:
 [redis-plugin]: ../plugins/db-plugins.md#redis
 [redis-quickstart]: https://redis.io/topics/quickstart
 [telemetry-plugin]: ../plugins/other-vpp-plugins.md#telemetry
-[quickstart-guide]: ../getting-started/quickstart.md
+[quickstart-guide]: ../user-guide/quickstart.md

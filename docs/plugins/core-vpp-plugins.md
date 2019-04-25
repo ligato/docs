@@ -970,7 +970,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 [interface-config-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
 [interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
 [interface-state-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/state.proto
-[key-reference]: ../features/references.md
+[key-reference]: ../user-guide/reference.md
 [l3-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/l3.proto
 [linux-interface-plugin-guide]: linux-plugins.md#interface-plugin
 [route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/route.proto

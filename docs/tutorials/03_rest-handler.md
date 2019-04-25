@@ -6,6 +6,7 @@ that wish to expose a REST API to external clients. The HTTP Server is provided
 by the [REST plugin](https://github.com/ligato/cn-infra/tree/master/rpc/rest).
 
 Requirements:
+
 * Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
 * Complete and understand the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
 

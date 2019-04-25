@@ -3,8 +3,9 @@
 This tutorial will illustrate how to utilize the [GoVPPMux plugin][1] in our hello world plugin to connect to the VPP and how to perform a synchronous, asynchronous and multi-request call in order to put configuration items.
 
 Requirements:
-* Complete and understand the ['Hello World Agent'](https://ligato.io/cn-infra/tutorials/01_hello-world) tutorial
-* Complete and understand the ['Plugin Dependencies'](https://ligato.io/cn-infra/tutorials/02_plugin-deps) tutorial
+
+* Complete and understand the ['Hello World Agent'](../tutorials/01_hello-world.md) tutorial
+* Complete and understand the ['Plugin Dependencies'](../tutorials/02_plugin-deps.md) tutorial
 * Installed VPP, or VPP binary file of the supported version
 
 The main task of this tutorial is to show how to use GoVPPMux to create VPP connection (southbound) and use various procedures to put or read its data. Because the main intent is to show how to work with the vpp, we do not use any northbound database to keep the example as simple as possible. 
@@ -387,5 +388,5 @@ func main() {
 
 The output of this call will be shown in the log as a repeated message that the VPP interface with a given index was received. In the multi-request, the reply message usually contains several fields where some of them are VPP specific (like interface admin status, default MTU, internal names, etc.).
 
-[1]: https://github.com/ligato/vpp-agent/wiki/Govppmux
+[1]: ../plugins/core-vpp-plugins.md#govppmux-plugin
 [2]: https://wiki.fd.io/view/GoVPP

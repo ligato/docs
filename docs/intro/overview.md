@@ -77,7 +77,7 @@ Container-based development environment for the VPP-Agent and for app/extension 
 
 Already familiar with the VPP-Agent basics? [Learn more about the concepts][concepts], try some of our [examples][examples], read more in other user-guide articles or try to make your own plugin with the help of the developer guide. 
 
-[concepts]: ../features/concepts.md
+[concepts]: ../user-guide/concepts.md
 [development]: https://hub.docker.com/r/ligato/dev-vpp-agent
 [examples]: https://github.com/ligato/vpp-agent/blob/master/examples/README.md
 [production]: https://hub.docker.com/r/ligato/vpp-agent

@@ -7,6 +7,7 @@ adapters, message bus adapters, loggers or health monitors. This tutorial shows
 how to add dependencies to your plugins.
 
 Requirements:
+
 * Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
 
 The Ligato infrastructure uses the **dependency injection** design pattern to

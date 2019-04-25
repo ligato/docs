@@ -106,9 +106,9 @@ Then contact Ligato developers. We will solve the issue as fast as possible. Tha
 
 [docker-hub]: https://hub.docker.com/r/ligato/vpp-agent
 [grpc-plugin]: ../plugins/connection-plugins.md#grpc-plugin
-[grpc-tutorial]: https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial
-[key-reference]: ../features/references.md
-[kvs-faq]: kvs-troubleshooting.md
+[grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
+[key-reference]: ../user-guide/reference.md
+[kvs-faq]: ../troubleshooting/kvs-troubleshooting.md
 [linux-interface-plugin]: ../plugins/linux-plugins.md#interface-plugin
 [not-listed-issue]: faq.md#the-issue-i-have-is-not-listed-here
 [rest-api]: ../plugins/infra-plugins.md#rest-api

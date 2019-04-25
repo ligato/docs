@@ -29,6 +29,7 @@ nav:
     - Concepts: user-guide/concepts.md
     - ARM64: user-guide/arm64.md
     - FAQ: user-guide/faq.md
+    - VPP CLI: user-guide/vpp-cli.md
   - TUTORIALS:
     - Hello World: tutorials/01_hello-world.md
     - Plugin Dependencies: tutorials/02_plugin-deps.md
