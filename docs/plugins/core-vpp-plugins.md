@@ -1,4 +1,8 @@
-# GoVPPMux plugin
+# Core VPP plugins
+
+---
+
+## GoVPPMux plugin
 
 The `govppmux` is a core Agent plugin which **allows other plugins to access the VPP** independently at each other by means of connection multiplexing.
 
@@ -40,7 +44,7 @@ The plugin allows to configure parameters of the VPP health-check probe. Possibl
   - `shm-prefix`: used for connection to a VPP instance which is not using default shared memory prefix
   - `resync-after-reconnect`: allows to run resync after the VPP reconnection
   
-# Interface plugin
+## Interface plugin
 
 The VPP interface plugin is a base plugin able to setup various types of **VPP interfaces** and also manages **the 
 interface status** (state data, optionally published back to the database) and **interface and DHCP lease 
@@ -326,7 +330,7 @@ etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/memif1
 
 Do not forget to enable status in the config file, otherwise, the status will not be published to the database.
 
-# L2 plugin
+## L2 plugin
 
 The VPP L2 plugin is a base plugin which can be used to configure link-layer related configuration items to the VPP, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**. The L2 plugin is strongly dependent on [interface plugin][interface-plugin-guide] since every configuration item has some kind of dependency on it. 
 
@@ -606,7 +610,7 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-# L3 plugin
+## L3 plugin
 
 The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and **IP neighbor** feature. The L3 plugin is dependent on the [interface plugin][interface-plugin-guide] in many aspects since several configuration items require the interface to be already present.
 

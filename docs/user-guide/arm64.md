@@ -1,4 +1,8 @@
-# Quickstart
+# ARM64
+
+---
+
+## Quick start
 
 For a quick start with the VPP Agent, you can use pre-built Docker images with the Agent and VPP on [Dockerhub][dockerhub].
 
@@ -22,7 +26,7 @@ docker exec -it vpp agentctl -e 172.17.0.1:2379 show
 docker exec -it vpp vppctl -s localhost:5002
 ```
 
-# AMD64 Image
+## AMD64 Images
 
 The VPP Agent can be successfully built also for the ARM64 platform.
 
@@ -45,13 +49,6 @@ For a quick start with the VPP Agent, you can use pre-build Docker images with t
 the [official image for ARM64 platform][ligato-arm64-image].
 ```
 docker pull ligato/vpp-agent-arm64
-```
-
-### Quick start command for arm64 docker image
-
-```
-docker pull ligato/vpp-agent-arm64
-docker run -it --name vpp --rm ligato/vpp-agent-arm64
 ```
 
 ### ARM64 and ETCD Server

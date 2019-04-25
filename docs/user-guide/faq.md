@@ -1,4 +1,8 @@
+# FAQ
+
 The list of frequently asked questions (feel free to make any other suggestions).
+
+---
 
 Any issue or something is not clear? Try to find a quick solution here. 
 
@@ -86,7 +90,10 @@ Start with the [GRPC user guide][grpc-plugin] and then proceed to the [tutorial]
 **I want to use the REST API to communicate with the vpp-agent**
 See the list of available URLs with the REST guide [here][rest-api]. Note that the rest plugin has to be loaded, otherwise REST handlers are not started.
 
-### The issue I have is not listed here or cannot be solved by myself
+
+### Other issues
+
+**The issue I have is not listed here or cannot be solved by myself**
 
 If the VPP-Agent or the VPP crashed or the behavior is different as expected, please collect as much info as possible, especially:
 * VPP-Agent version/commit ID

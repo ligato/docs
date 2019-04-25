@@ -1,4 +1,8 @@
-# REST plugin
+# Connection plugins
+
+---
+
+## REST plugin
 
 The "builtin" REST support (plugin) in the VPP-Agent is currently limited to retrieving existing VPP configuration (called dumping) for core plugins. The Agent also provides simple html template (usable in browser) and optional support for https security, authentication and authorization.
 
@@ -313,7 +317,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 
 Choose the `GET` method, provide desired URL and send the request.
 
-# VPP-Agent GRPC
+## VPP-Agent GRPC
 
 Related articles: 
 

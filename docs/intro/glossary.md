@@ -1,4 +1,12 @@
-# Cloud-Native Virtual Network Functions (CNFs)
+# Glossary
+
+This page documents various definitions used in Ligato.
+
+---
+
+## CNF
+
+**Cloud-Native Virtual Network Functions**
 
 So what is a *cloud-native* virtual network function? 
 

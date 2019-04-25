@@ -1,4 +1,8 @@
-# Access Control Lists plugin
+# Other VPP plugins
+
+---
+
+## Access Control Lists plugin
 
 Access control lists (ACLs) provide a means to filter packets by allowing a user to permit or deny specific IP traffic at defined interfaces. Access lists filter network traffic by controlling whether packets are forwarded or blocked at the router’s interfaces based on the criteria you specified within the access list.
 
@@ -169,7 +173,7 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-# IPSec plugin
+## IPSec plugin
 
 The IPSec plugin allows to configure **security policy databases** and **security associations** to the VPP, and also handles relations between the SPD and SA or between SPD and an assigned interface. Note that the IPSec tunnel interfaces are not a part of IPSec plugin (their configuration is handled in the [VPP interface plugin][interface-plugin-guide]).
 
@@ -372,7 +376,7 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-# NAT plugin
+## NAT plugin
 
 Network address translation, or NAT is a method of remapping IP address space into another IP address space modifying address information in the packet header. The VPP-Agent Network address translation is control plane plugin for the VPP NAT implementation of NAT44. The NAT plugin is dependent on [interface plugin][interface-plugin-guide].
 
@@ -588,39 +592,39 @@ curl -X GET http://localhost:9191/dump/vpp/v2/nat/dnat
 Prepare the DNAT data:
 ```go
 dNat := &nat.DNat44{
-		Label: "dnat1",
-		StMappings: []*nat.DNat44_StaticMapping{
-			{
-				ExternalInterface: "if1",
-				ExternalIp:        "192.168.0.1",
-				ExternalPort:      8989,
-				LocalIps: []*nat.DNat44_StaticMapping_LocalIP{
-					{
-						VrfId:       0,
-						LocalIp:     "172.124.0.2",
-						LocalPort:   6500,
-						Probability: 40,
-					},
-					{
-						VrfId:       0,
-						LocalIp:     "172.125.10.5",
-						LocalPort:   2300,
-						Probability: 40,
-					},
-				},
-				Protocol: 1,
-				TwiceNat: nat.DNat44_StaticMapping_ENABLED,
-			},
-		},
-		IdMappings: []*nat.DNat44_IdentityMapping{
-			{
-				VrfId:     0,
-				IpAddress: "10.10.0.1",
-				Port:      2525,
-				Protocol:  0,
-			},
-		},
-	}
+    Label: "dnat1",
+    StMappings: []*nat.DNat44_StaticMapping{
+        {
+            ExternalInterface: "if1",
+            ExternalIp:        "192.168.0.1",
+            ExternalPort:      8989,
+            LocalIps: []*nat.DNat44_StaticMapping_LocalIP{
+                {
+                    VrfId:       0,
+                    LocalIp:     "172.124.0.2",
+                    LocalPort:   6500,
+                    Probability: 40,
+                },
+                {
+                    VrfId:       0,
+                    LocalIp:     "172.125.10.5",
+                    LocalPort:   2300,
+                    Probability: 40,
+                },
+            },
+            Protocol: 1,
+            TwiceNat: nat.DNat44_StaticMapping_ENABLED,
+        },
+    },
+    IdMappings: []*nat.DNat44_IdentityMapping{
+        {
+            VrfId:     0,
+            IpAddress: "10.10.0.1",
+            Port:      2525,
+            Protocol:  0,
+        },
+    },
+}
 ```
 
 Prepare the GRPC config data:
@@ -631,13 +635,13 @@ import (
 )
 
 config := &configurator.Config{
-		VppConfig: &vpp.ConfigData{
-			Dnat44S: []*nat.DNat44 {
-				natGlobal,
-			},
-			
-		}
-	}
+    VppConfig: &vpp.ConfigData{
+        Dnat44S: []*nat.DNat44 {
+            natGlobal,
+        },
+        
+    }
+}
 ```
 
 The config data can be combined with any other VPP or Linux configuration.
@@ -651,7 +655,7 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-# Punt plugin
+## Punt plugin
 
 The punt plugin provides several options for how to configure the VPP to allow a specific IP traffic to be punted to the host TCP/IP stack. The plugin supports **punt to the host** (either directly, or **via Unix domain socket**) and registration of **IP punt redirect** rules.
 
@@ -705,11 +709,11 @@ import (
 )
 
 punt := &punt.ToHost{
-		L3Protocol: punt.L3Protocol_IPv4,
-		L4Protocol: punt.L4Protocol_UDP,
-		Port:       9000,
-		SocketPath: "/tmp/socket/path",
-	}
+    L3Protocol: punt.L3Protocol_IPv4,
+    L4Protocol: punt.L4Protocol_UDP,
+    Port:       9000,
+    SocketPath: "/tmp/socket/path",
+}
 ```
 
 Prepare the GRPC config data:
@@ -720,12 +724,12 @@ import (
 )
 
 config := &configurator.Config{
-		VppConfig: &vpp.ConfigData{
-			PuntTohosts: []*punt.ToHost {
-				punt,
-			},	
-		}
-	}
+    VppConfig: &vpp.ConfigData{
+        PuntTohosts: []*punt.ToHost {
+            punt,
+        },	
+    }
+}
 ```
 
 The config data can be combined with any other VPP or Linux configuration.
@@ -779,10 +783,10 @@ import (
 )
 
 punt := &punt.IPRedirect{
-		L3Protocol:  punt.L3Protocol_IPv4,
-		TxInterface: "if1",
-		NextHop:     "192.168.0.1",
-	}
+    L3Protocol:  punt.L3Protocol_IPv4,
+    TxInterface: "if1",
+    NextHop:     "192.168.0.1",
+}
 ```
 
 Prepare the GRPC config data:
@@ -793,12 +797,12 @@ import (
 )
 
 config := &configurator.Config{
-		VppConfig: &vpp.ConfigData{
-			PuntTohosts: []*punt.ToHost {
-				punt,
-			},	
-		}
-	}
+    VppConfig: &vpp.ConfigData{
+        PuntTohosts: []*punt.ToHost {
+            punt,
+        },	
+    }
+}
 ```
 
 The config data can be combined with any other VPP or Linux configuration.
@@ -832,7 +836,7 @@ Current limitations for IP redirect:
 
 * VPP issue: if the Unix domain socket path is defined in the startup config, the path has to exist, otherwise the VPP fails to start. The file itself can be created by the VPP.
 
-# Telemetry
+## Telemetry
 
 The `telemetry` plugin is a core Agent Plugin for exporting telemetry statistics from the VPP to the Prometheus. Statistics are published via registry path `/vpp` on port `9191` and updated every 30 seconds.
 

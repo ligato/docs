@@ -1,4 +1,8 @@
-# Introduction
+# KV Descriptors
+
+---
+
+## Introduction
 
 KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler][kv-scheduler] is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
 
@@ -165,7 +169,7 @@ While it is not mandatory, we recommend to follow the same directory layout used
 
 Directory `model` is where you would put all your proto models and the code generated from it. `descriptor` directory is a place for all the descriptors implemented by your plugin, optionally adapted for a specific protobuf type with generated adapters nested further in the sub-directory `adapter` (adapters are quite hidden since they should never need to be looked at and definitely not edited manually). If you define custom metadata map, put the implementation into a separate plugin's top-level directory, called for example `<model>idx`. <your-plugin.go> is where you would implement the Plugin interface (`Init`, `AfterInit`, `Close` methods) and register all the descriptors inside the `Init` phase. It is a non-written rule to put plugin constructor and some default options and default dependency injections into the file <options.go> (example [option.go][options-example] for VPP ifplugin).
 
-# Descriptor examples
+## Descriptor examples
 
 ### Descriptor skeletons
 

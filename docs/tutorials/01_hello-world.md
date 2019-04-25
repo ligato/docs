@@ -5,6 +5,7 @@ contains a single `Helloworld` plugin that prints "Hello World" to the log.
 
 We start with the plugin. Every plugin must implement the `Plugin` interface
 defined in the `github.com/ligato/cn-infra/infra` package:
+
 ```go
 type Plugin interface {
 	// Init is called in the agent`s startup phase.

@@ -1,6 +1,10 @@
+# Get Agent
+
 This page describes in more detail how to prepare and work with the vpp-agent.
 
-# Set up your environment
+---
+
+## Set up your environment
 
 Options are:
 
@@ -106,7 +110,7 @@ Then in the `build-root` directory unpack `*.deb` package files with `dpkg -i`
 
 2. Start the VPP and verify the Agent can connect to it.
 
-# Start the VPP and the Agent
+## Start the VPP and the Agent
 
 **Note:** The agent will terminate if unable to connect to the VPP, a database or the Kafka message server (if required by the config file). 
 
@@ -217,7 +221,7 @@ It is possible to use the same label for multiple agents to "broadcast" identica
 
 Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme][govppmux-plugin])
  
-# Make your first configuration
+## Make your first configuration
 
 **Put the configuration to the KVDB:**
 

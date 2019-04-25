@@ -19,19 +19,14 @@ span.ligato-title {
 }
 
 /* Menu title format */
-.wy-menu-vertical span {
+.wy-menu-vertical p.caption {
     color: #65BF53;
     font-weight: bold;
 }
 
-/* Second level menu alignment */
-.wy-menu-vertical a, .wy-menu-vertical .subnav a {
-    margin-left: -12px;
-}
-
 /* Menu */
 li.toctree-l1 {
-	margin-bottom: 10px;
+	/*margin-bottom: 10px;*/
 }
 
 /* Drop-down menu */
@@ -39,7 +34,7 @@ li.toctree-l3 > a:link,
 li.toctree-l3 > a:visited {
     font-weight: bold;
     color: #696969;
-    margin-left: -24px;
+    /*margin-left: -12px;*/
 }
 
 /* Hyperlink setup */
@@ -51,13 +46,27 @@ a {
 }
 
 /* Menu highlight */
-.wy-menu-vertical a:active {
+/*.wy-menu-vertical a:active {
     background-color: #65BF53;
     cursor: pointer;
     color: #ffffff;
+}*/
+.wy-menu-vertical li.toctree-l2.current.navtree > a {
+    background-color: #A7D877;
 }
 
-/* Increase code font size (default is 75%) for better readability */
+/*
+    Fix fenced code block rendered in single line
+*/
+.hljs {
+    overflow-x: auto !important;
+    padding: 0.5em !important;
+    color: #333 !important;
+    background: #f8f8f8 !important;
+}
+
 code {
-    font-size: 90%;
+    white-space: pre !important;
+    word-wrap: normal !important;
+    font-size: 12px !important;
 }

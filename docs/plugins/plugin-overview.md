@@ -1,4 +1,8 @@
-# Core VPP plugins
+# Plugin Overview
+
+---
+
+## Core VPP plugins
 
 VPP-Agent core VPP plugins (e.g. plugins which are always required when working with the VPP). Plugin list:
 
@@ -33,7 +37,7 @@ More in: [l3-plugin][l3-plugin]
 
 The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and **IP neighbor** feature. The L3 plugin is dependent on the [interface plugin][interface-plugin-guide] in many aspects since several configuration items require the interface to be already present.
 
-# Other VPP plugins
+## Other VPP plugins
 
 VPP-Agent supplementary VPP plugins which are in most cases dependent on default plugins in some way. Plugin list:
 
@@ -83,7 +87,7 @@ The telemetry plugin collects telemetry statistics from the VPP which are then e
 
 The implementation of the control plane for the VPP STN (Steal the NIC)
 
-# Linux plugins
+## Linux plugins
 
 This page contains the user guide for VPP-Agent Linux plugins which configure host OS. These plugins can be used as they are, or together with the VPP plugins.
 
@@ -114,7 +118,7 @@ More in: [Namespace plugin][linux-namespace-pluign]
 
 The namespace plugin is a helper plugin tied with the Linux interface/l3 plugins. It manages namespaces in terms of Linux (named namespace) or as a microservice in the container-based environment. 
 
-# Connection plugins
+## Connection plugins
 
 Connection plugins are VPP-Agent plugins allowing data read or write from outside without data store.
 
@@ -133,7 +137,7 @@ More in: [GRPC plugin][grpc-plugin]
 
 The base of the GRPC support in the VPP-Agent is a GRPC plugin, which is an infrastructure plugin allowing to handle GRPC requests.
 
-# Database plugins
+## Database plugins
 
 User guide for VPP-Agent database plugins.
 
@@ -190,7 +194,7 @@ More in: [FileDB plugin][file-db-plugin]
 
 The fileDB plugin allows to use the file system of a operating system as a key-value data store.
 
-# Infra plugins
+## Infra plugins
 
 User guide for VPP-Agent infra plugins.
 
