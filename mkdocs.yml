@@ -1,5 +1,6 @@
 site_name: Ligato Docs
 site_url: https://docs.ligato.io/
+site_favicon: img/favicon.ico
 site_description: Ligato documentation
 site_author: Ligato Team
 
@@ -8,7 +9,6 @@ repo_url: https://github.com/ligato/docs
 theme:
   name: rtd-dropdown
   custom_dir: custom/
-  favicon: ./img/favicon.ico
   highlightjs: true
   hljs_languages:
     - go
