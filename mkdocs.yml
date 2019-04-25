@@ -41,6 +41,7 @@ nav:
   - Plugin Lookup: developer-guide/plugin-lookup.md
   - KV Scheduler: developer-guide/kvscheduler.md
   - KV Descriptors: developer-guide/kvdescriptor.md
+  - Control Flows: developer-guide/control-flows.md
   - Go Docs: developer-guide/godocs.md
 - TUTORIALS:
   - Hello World: tutorials/01_hello-world.md

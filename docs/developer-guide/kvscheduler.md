@@ -289,7 +289,7 @@ of the [plugin][plugin]. The interfaces that constitute the KVScheduler API are 
 in multiple files:
  * `errors.go`: definitions of errors that can be returned from within the KVScheduler;
    additionally the `InvalidValueError` error wrapper is defined to allow plugins to 
-   further specify the reason for a [validation error][kvdescriptor-validate], which is
+   further specify the reason for a validation error, which is
    then exposed through the [value status][value-states].
 
  * `kv_scheduler_api.go`: the KVScheduler API that can be used by:
@@ -368,67 +368,8 @@ only via formatted logs but also through a set of REST APIs:
           during resync
         - `verbose=< 1/true | 0/false >`: print graph after refresh (Retrieve)
 
-# Control Flow Diagrams
-
-This guide aims to explain the key-value scheduling algorithm using examples
-with UML control-flow diagrams, each covering a specific scenario using real
-configuration items from vpp and linux plugins of the agent. The control-flow
-diagrams are structured to describe all the interactions between KVScheduler, NB
-plane and KVDescriptor-s during transactions. To improve readability, the examples
-use shortened keys (without prefixes) or even alternative and more descriptive
-aliases as object identifiers. For example, `my-route` is used as a placeholder
-for user-defined route, which otherwise would be identified by key composed
-of destination network, outgoing interface and next hop address. Moreover, most
-of the configuration items that are automatically pre-created in the SB plane
-(i.e. `OBTAINED`), normally retrieved from VPP and Linux during the first resync
-(e.g. default routes, physical interfaces, etc.), are omitted from the diagrams
-since they do not play any role in the presented scenarios.
-
-The UML diagrams are plotted as SVG images, also containing links to images
-presenting the state of the graph with values at the end of every transaction.
-But to be able to access these links, the UML diagrams have to be clicked at
-to open them as standalone inside another web browser tab. From within github
-web-UI the links are not directly accessible.
-
-### Index
-
-* [Create single interface (KVDB NB)][create-interface-kvdb]
-  - the most basic (and also verbose) example, outlining all the interactions
-    between KVScheduler, descriptors, models and NB (KVDB) needed to create
-    a single value (VPP interface in this case) with a derived value but without
-    any dependencies
-* [Create single interface (GRPC NB)][create-interface-grpc]
-  - variant of the example above, where NB is GRPC instead of KVDB
-  - the transaction control-flow is collapsed, however, since there are actually
-    no differences (for KVScheduler it is irrelevant how the desired
-    configuration gets conveyed to the agent)
-* [Interface with L3 route][interface-and-route]
-  - this example shows how route, received from KVDB before the associated
-    interface, gets delayed and stays in the `PENDING` state until the interface
-    configuration is received and applied
-* [Bridge domain][bridge-domain]
-  - using bridge domain it is demonstrated how derived values can be used to
-    "break" item into multiple parts with their own CRUD operations and
-    dependencies
-  - control flow diagram shows how and when the derived values get processed
-* [Unnumbered interface][unnumbered-interface]
-  - with unnumbered interface it is shown that derived values themselves can be
-    a target of dependencies
-* [Interface re-creation][recreate-interface]
-  - the example outlines the control-flow of item re-creation (update which
-    cannot be applied incrementally, but requires the target item to be removed
-    first and then created with the new configuration)
-* [Retry of failed operation][retry-failed-ops]
-  - example of a failed (best-effort) transaction, fixed by a subsequent Retry
-* [Revert of failed transaction][revert-failed-txn]
-  - example of a failed transaction, with already executed changes fully reverted
-    to leave no visible effects
-* [AF-Packet interface][af-packet-interface]
-  - this example describes control-flow of creating an AF-Packet interface
-    depended on a host interface, presence of which is announced to KVScheduler
-    via notifications
-
 [plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler
+[bd-cfd]: control-flows.md#example-bridge-domain
 [bd-model-example]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/api/models/vpp/l2/keys.go#L27-L31
 [vpp-iface-idx]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/ifplugin/ifaceidx/ifaceidx.go#L62
 [vpp-iface-map]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/ifplugin/ifplugin_api.go#L27
@@ -436,7 +377,6 @@ web-UI the links are not directly accessible.
 [bd-interface]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/api/models/vpp/l2/bridge-domain.proto#L19-L24
 [bd-derived-vals]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/l2plugin/descriptor/bridgedomain.go#L242-L251
 [bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/l2plugin/descriptor/bd_interface.go#L120-L127
-[bd-cfd]: articles/bridge_domain.md
 [contiv-vpp]: https://github.com/contiv/vpp/
 [graph-example]: ../img/developer-guide/large-graph-example.svg
 [clientv2]: https://github.com/ligato/vpp-agent/tree/master/clientv2
@@ -444,14 +384,4 @@ web-UI the links are not directly accessible.
 [value-states-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L233-L239
 [kvscheduler-api-dir]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/api
 [kvdescriptor-guide]: kvdescriptor.md
-[kvdescriptor-validate]: kvdescriptor.md#Validate
 [get-history-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L241-L244
-[create-interface-kvdb]: articles/vpp_interface.md
-[create-interface-grpc]: articles/vpp_interface_via_grpc.md
-[interface-and-route]: articles/vpp_ip_route.md
-[bridge-domain]: articles/bridge_domain.md
-[unnumbered-interface]: articles/unnumbered_interface.md
-[recreate-interface]: articles/recreate_interface.md
-[retry-failed-ops]: articles/retry_failed_operation.md
-[revert-failed-txn]: articles/revert_failed_txn.md
-[af-packet-interface]: articles/af_packet_interface.md

@@ -1,8 +1,6 @@
 # Introduction
 
-**Related article:** [KV Scheduler](../plugins/infra-plugins.md#kv-scheduler)
-
-KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler](../plugins/infra-plugins.md#kv-scheduler) is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
+KVDescriptor implements CRUD operations and defines derived values and dependencies for a single value type. With these "descriptions", the [KVScheduler][kv-scheduler] is then able to manipulate with key-value pairs generically, without having to understand what they actually represent. The scheduler uses the learned dependencies, reads the SB state using provided Dumps, and applies Add, Delete and Modify operations as needed to keep NB in-sync with SB.
 
 In VPP-Agent v2, all the VPP and Linux plugins were re-written (and decoupled from each other), in a way that every supported configuration item is now described by its own descriptor inside the corresponding plugin, i.e. there is a descriptor for [Linux interfaces][linux-interface-descr], [VPP interfaces][vpp-interface-descr], [VPP routes][vpp-route-descr], etc. The full list of existing descriptors can be found [here][existing-descriptors].
 
@@ -19,7 +17,7 @@ What follows is a list of all descriptor attributes, each with detailed explanat
     - it should be unique across all registered descriptors from all initialized plugins
 * **KeySelector** (callback, mandatory)
     - provide a callback that will return true for keys identifying values described by your descriptor (i.e. check that the key matches the key template of your model)
-* **ValueTypeName** (string, mandatory for [non-derived values](#derived-vals))
+* **ValueTypeName** (string, mandatory for non-derived values)
     - provide name of the protobuf message which defines your model
     - [here is an example][value-type-name] how the proto message name can be obtained from the generated type
 * **KeyLabel** (callback, optional)
@@ -87,7 +85,7 @@ Running `go generate <your-plugin-path>` will generate the adapter for your desc
 ### Registering Descriptor
 
 Once you have adapter generated and CRUD callbacks prepared, you can initialize and register your descriptor.
-First, import adapter into the go file with the descriptor ([assuming recommended directory layout](kvdescriptor.md#plugin-directory-layout):
+First, import adapter into the go file with the descriptor ([assuming recommended directory layout][kvd-dir-layout]:
 ```
 import "github.com/<your-organization>/<your-agent>/plugins/<your-plugin>/descriptor/adapter"
 ```
@@ -208,27 +206,29 @@ These descriptors cover most of the features and should help you to get started
 implementing your own.
 
 [afpacket-dep]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/ifplugin/descriptor/interface.go#L421-L426
-[existing-descriptors]: https://github.com/ligato/vpp-agent/wiki/KVDescriptors
-[linux-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linuxv2/ifplugin/descriptor/interface.go
-[linux-iface-watcher]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/ifplugin/descriptor/watcher.go
-[vpp-bd-descr]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/l2plugin/descriptor/bridgedomain.go
-[vpp-arp-descr]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/l3plugin/descriptor/arp_entry.go
-[vpp-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/ifplugin/descriptor/interface.go
-[vpp-bd-iface-descr]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/l2plugin/descriptor/bd_interface.go
-[vpp-route-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/l3plugin/descriptor/static_route.go
+[bd-derived-vals]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l2plugin/descriptor/bridgedomain.go
+[bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l2plugin/descriptor/bd_interface.go
+[bd-interface]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/model/l2/bd.proto#L14
 [descriptor-api]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_descriptor_api.go#L99
-[options-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/ifplugin/options.go
-[value-type-name]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linuxv2/ifplugin/descriptor/interface.go#L144
-[named-mapping]: https://github.com/ligato/cn-infra/blob/dev/idxmap/mem/inmemory_name_mapping.go
-[bd-interface]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/model/l2/bd.proto#L14
-[bd-derived-vals]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/l2plugin/descriptor/bridgedomain.go#L225
-[bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/l2plugin/descriptor/bd_interface.go#L128
-[dump-deps-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linuxv2/l3plugin/descriptor/route.go#L121
 [descriptor-adapter]: https://github.com/ligato/vpp-agent/tree/dev/plugins/kvscheduler/descriptor-adapter
-[vpp-iface-adapter]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/ifplugin/ifplugin.go#L15
-[register-kvdescriptor]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_scheduler_api.go#L206
-[get-metadata-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_scheduler_api.go#L247
-[get-metadata-map-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vppv2/ifplugin/ifplugin.go#L167-L173
+[dump-deps-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linux/l3plugin/descriptor/route.go
+[existing-descriptors]: https://github.com/ligato/vpp-agent/wiki/KVDescriptors
+[get-metadata-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_scheduler_api.go
+[get-metadata-map-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin.go
+[kv-scheduler]: ../plugins/infra-plugins.md#kv-scheduler
+[kvd-dir-layout]: kvdescriptor.md#plugin-directory-layout
+[linux-iface-watcher]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/ifplugin/descriptor/watcher.go
+[linux-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linux/ifplugin/descriptor/interface.go
+[mock-plugins-example]: https://github.com/ligato/vpp-agent/blob/master/examples/kvscheduler/mock_plugins/README.md
+[named-mapping]: https://github.com/ligato/cn-infra/blob/dev/idxmap/mem/inmemory_name_mapping.go
+[options-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/options.go
 [plugin-skeleton-withmeta]: https://github.com/ligato/vpp-agent/blob/master/examples/kvscheduler/plugin_skeleton/with_metadata/plugin.go
 [plugin-skeleton-withoutmeta]: https://github.com/ligato/vpp-agent/blob/master/examples/kvscheduler/plugin_skeleton/without_metadata/plugin.go
-[mock-plugins-example]: https://github.com/ligato/vpp-agent/blob/master/examples/kvscheduler/mock_plugins/README.md
+[register-kvdescriptor]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_scheduler_api.go#L206
+[value-type-name]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linux/ifplugin/descriptor/interface.go#L144
+[vpp-arp-descr]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/l3plugin/descriptor/arp_entry.go
+[vpp-bd-iface-descr]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/l2plugin/descriptor/bd_interface.go
+[vpp-bd-descr]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/l2plugin/descriptor/bridgedomain.go
+[vpp-iface-adapter]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin.go
+[vpp-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/descriptor/interface.go
+[vpp-route-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l3plugin/descriptor/static_route.go

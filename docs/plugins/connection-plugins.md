@@ -317,10 +317,10 @@ Choose the `GET` method, provide desired URL and send the request.
 
 Related articles: 
 
-* [GRPC client tutorial](https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial) shows how to create a client for the off-the-shelf VPP Agent's GRPC Server
-* [GRPC server tutorial](https://github.com/ligato/cn-infra/tree/dev/examples/grpc-plugin/grpc-server) shows how to create your own GRPC Server using the [CN-Infra GRPC Plugin](https://github.com/ligato/cn-infra/tree/dev/rpc/grpc).
+* [GRPC client tutorial][grpc-client-tutorial] shows how to create a client for the off-the-shelf VPP Agent's GRPC Server
+* [GRPC server tutorial][grpc-server-tutorial] shows how to create your own GRPC Server using the [CN-Infra GRPC Plugin][grpc-plugin].
 
-GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md) that implements handling of GRPC requests.
+GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
 
 The VPP-Agent GRPC plugin can be used to:
 
@@ -335,7 +335,7 @@ The following remote procedure calls are defined:
 * **Dump** (Retrieve) reads existing configuration from the VPP.
 * **Notify** subscribes GRPC to the notification service
 
-To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/README.md)), where the endpoint is defined.
+To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a part of the Configurator plugin dependencies //TODO add link). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
 
 Clients with the GRPC Server via an endpoint IP address and port or via a unix domain socket file. The TCP network is set as default, but other network types are also available (like TCP6 or UNIX).
 
@@ -363,6 +363,9 @@ RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
 Once the handler is registered with the `GRPC Plugin` and the agent is running, you can use a grpc client to call the service .
 
 [access-security-model]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/model/access-security/accesssecurity.proto
+[grpc-client-tutorial]: https://github.com/ligato/vpp-agent/wiki/GRPC-tutorial
+[grpc-server-tutorial]: https://github.com/ligato/cn-infra/tree/dev/examples/grpc-plugin/grpc-server
 [grpc-image]: ../img/user-guide/grpc.png
+[grpc-plugin]: https://github.com/ligato/cn-infra/tree/dev/rpc/grpc
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md

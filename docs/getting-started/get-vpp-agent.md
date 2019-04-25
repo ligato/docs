@@ -15,7 +15,7 @@ The image exists in two versions, for production and for development (which can 
 Supported architectures:
 
 * AMD64 (a.k.a. x86_64)
-* ARM64 (a.k.a. aarch64) - [see documentation for ARM](https://github.com/ligato/vpp-agent/blob/master/docs/arm64/README.md)
+* ARM64 (a.k.a. aarch64) - [see documentation for ARM][arm-doc]
 
 **What is included in the production image:**
 
@@ -42,9 +42,9 @@ Get from docker hub: `docker pull ligato/dev-vpp-agent`
 git clone https://github.com/ligato/vpp-agent.git
 ```
 
-2. Navigate to the [docker](https://github.com/ligato/vpp-agent/tree/master/docker) directory. Inside, choose whether the production or the development image should be built. Both directories contain `build.sh` script with the automatic build process. The development image builds an image using `dev_vpp-agent` image, production image is built with files taken from the `vpp-agent` image.
+2. Navigate to the [docker][docker] directory. Inside, choose whether the production or the development image should be built. Both directories contain `build.sh` script with the automatic build process. The development image builds an image using `dev_vpp-agent` image, production image is built with files taken from the `vpp-agent` image.
 
-The script also recognizes architecture. The correct VPP code source and commit ID is taken from the [vpp.env](https://github.com/ligato/vpp-agent/blob/master/vpp.env) file (inside the Agent repository).
+The script also recognizes architecture. The correct VPP code source and commit ID is taken from the [vpp.env][vpp-env] file (inside the Agent repository).
 
 **Image in debug mode**
 
@@ -66,7 +66,7 @@ Execution command to start the agent:
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
 ```
 
-Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here](../plugins/linux-plugins.md#interface-plugin)).
+Note that the Agent is executed in `privileged` mode. Several Agent operations (like Linux namespace handling) require permissions on target host instance. Running in non-privileged mode may cause Agent to fail to start ([more information here][interface-plugin]).
 
 Open another terminal:
 ```
@@ -153,13 +153,11 @@ vpp-agent
 
 To enable certain features (database connection, messaging), Agent requires static configuration files, referred to as `.conf`. Majority of plugins support .conf files. While some plugins cannot be loaded without it even if defined as part of the agent plugin set(for example Kafka), some of them use the default value, thus .conf files can be used to modify certain plugin behavior.
 
-Read more about the vpp-agent start-up configuration. // TODO add link 
-
 ### Connect Agent to the KVDB
 
 In order to provide configuration from any KVDB (key-value database), the agent needs to know how to connect to the desired instance. The connection information (IP address, port) is provided via the particular .conf file. Every KVDB plugin defines its own config file. 
 
-More information about the KVDB: [KV-Store overview](../features/concepts.md#key-value-store-overview)
+More information about the KVDB: [KV-Store overview][kv-overview]
 
 **Start the ETCD:**
 
@@ -217,22 +215,27 @@ It is possible to use the same label for multiple agents to "broadcast" identica
 
 **2. Shared memory prefix**
 
-Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme](../plugins/infra-plugins.md#govpp-mux))
+Running multiple VPPs on the same host requires different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the Agent to the VPP with a custom socket, correct SHM has to be provided to the GoVPP mux plugin (see [plugin's readme][govppmux-plugin])
  
 # Make your first configuration
 
 **Put the configuration to the KVDB:**
 
 Store value following the given model with the proper key to the KVDB. Depending on the KVDB type, we recommend to use the appropriate tool to put key-value data (e.g. `etcdctl` for the ETCD, or `redis-cli` for the Redis).
-. Information about keys and data structures can be found [here](../features/references.md).
+. Information about keys and data structures can be found [here][references].
 
 **Use clientv2**
 
-Package [clientv2](../features/concepts.md#client-v2) contains API definition for every supported configuration item and can be used to pass data without a external database.
+Package [clientv2][clientv2] contains API definition for every supported configuration item and can be used to pass data without a external database.
 
-
-
-   
+[arm-doc]: https://github.com/ligato/vpp-agent/blob/master/docs/arm64/README.md
+[clientv2]: ../features/concepts.md#client-v2
+[docker]: https://github.com/ligato/vpp-agent/tree/master/docker
+[govppmux-plugin]: ../plugins/core-vpp-plugins.md#govppmux-plugin
+[interface-plugin]: ../plugins/linux-plugins.md#interface-plugin
+[kv-overview]: ../features/concepts.md#key-value-store-overview
+[references]: ../features/references.md
+[vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env   
 
 
 

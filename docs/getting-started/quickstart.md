@@ -9,19 +9,19 @@ You will learn how to:
 
 ### 1. Prerequisites
 
-- **Docker** (docker ce [installation manual](https://docs.docker.com/cs-engine/1.13/))
-- **Postman** or **cURL** tool (postman [installation manual](https://learning.getpostman.com/docs/postman/launching_postman/installation_and_updates/)) 
+- **Docker** (docker ce [installation manual][docker-install]:)
+- **Postman** or **cURL** tool (postman [installation manual][postman-install]) 
 - **ETCD** 
 - **Kafka**
 
 
 The result of this guide prepares following topology:
 
-![quickstart-diagram](https://user-images.githubusercontent.com/15376606/54192164-a5a0e600-44b7-11e9-9a8c-c034bf6b7443.png)
+![quickstart-diagram][quickstart-img]
 
 ### 2. Get the agent image from the dockerhub
 
-The command will download the Vpp-Agent image (Vpp-Agent + compatible vpp) from the [dockerhub](https://hub.docker.com/u/ligato):
+The command will download the Vpp-Agent image (Vpp-Agent + compatible vpp) from the [dockerhub][dockerhub]:
 ```bash
 docker pull ligato/vpp-agent
 ```
@@ -249,3 +249,8 @@ The command starting the VPP-Agent docker container exports port 9191 to allow a
 **The cURL or Postman command to access VPP-cli does not work (connection refused).**
 
 The command starting the VPP-Agent docker container exports port 5002 (the VPP default port) to allow access from the host. Make sure that the Vpp-Agent docker container is started with parameter `-p 5002:5002`.  
+
+[docker-install]: https://docs.docker.com/cs-engine/1.13/
+[dockerhub]: https://hub.docker.com/u/ligato
+[postman-install]: https://learning.getpostman.com/docs/postman/launching_postman/installation_and_updates/
+[quickstart-img]: https://user-images.githubusercontent.com/15376606/54192164-a5a0e600-44b7-11e9-9a8c-c034bf6b7443.png
