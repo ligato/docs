@@ -60,7 +60,8 @@ The values are described for scheduler by registered KVDescriptor-s. The schedul
    - `A` cannot exist without `B`
    - request to add `A` without `B` existing must be postponed by marking `A` as `pending` (value with unmet dependencies) in the in-memory graph 
    - if `B` is to be removed and `A` exists, `A` must be removed first and set to `pending` state in case `B` is restored in the future
-   - Note: values pushed from SB are not checked for dependencies
+!!! note  
+    Values pushed from SB are not checked for dependencies
 2. `B` **is derived from** `A`:
    - value `B` is not added directly (by NB or SB) but gets derived from base value `A` (using the DerivedValues() method of the base value's descriptor)
    - a derived value exists only as long as its base does and gets removed (immediately, not pending) once the base value goes away
@@ -262,8 +263,9 @@ Log manager plugin allows to view and modify log levels of loggers using REST AP
 **Config file**
 
 - Logger config file is composed of two parts: the default level applied for all plugins, and a map where every logger can have its own log level defined.
-  
-**Note:** initial log level can be set using environmental variable `INITIAL_LOGLVL`. The variable replaces default-level from configuration file. However, loggers (partial definition) replace default value set by environmental variable for specific loggers defined.  
+ 
+!!! note    
+    Initial log level can be set using environmental variable `INITIAL_LOGLVL`. The variable replaces default-level from configuration file. However, loggers (partial definition) replace default value set by environmental variable for specific loggers defined.  
   
 ### Tracer
 
@@ -342,7 +344,8 @@ API:
 
 ### Management
 
-Note: since application (management plugin) is parent of all processes, application termination causes all started processes to stop as well. This can be changed with *Detach* option (see process options).
+!!! note
+    Since application (management plugin) is parent of all processes, application termination causes all started processes to stop as well. This can be changed with *Detach* option (see process options).
 
 Process management methods:
 
@@ -382,7 +385,9 @@ Following options are available for processes. All options can be defined in the
 
 **Restarts:** takes a number as a parameter, defines count of automatic restarts when the process state becomes terminated.
 
-**Writer** allows to define custom `stdOut` and `stdErr` values. Note: usability is limited when defined via template (only standard `os.stdout` and `os.stderr` can be used)
+**Writer** allows to define custom `stdOut` and `stdErr` values. 
+!!! note  
+    Usability is limited when defined via template (only standard `os.stdout` and `os.stderr` can be used)
 
 **Detach:** no parameters, started process detaches from the parent application and will be given to current user. This setting allows the process to run even after the parent was terminated.
 

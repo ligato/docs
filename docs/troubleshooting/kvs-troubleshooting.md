@@ -13,14 +13,15 @@ to configure the value:
 1. **transaction is not triggered** (not found in the logs) or the **value is
    missing** in the transaction input
    - make sure the model is registered
-     - note: not using model is considered a programming error
-     (**TODO**: link model documentation once it exists)
-    - [check if the plugin implementing the value is loaded][debug-plugin-lookup]
-    - [check if the descriptor associated with the value is registered][how-to-descriptors]
-    - [check if the key prefix is being watched][how-to-descriptors]
-    - for NB KVDB make sure the key under which the value was put is correct
-       - could be a bad key prefix (bad suffix would make the value `UNIMPLEMENTED`, but otherwise included in the transaction input)
-    - [debug logs][debug-logs] of the Orchestrator (NB of KVScheduler), can also be used to learn the set of key-values received with each event from NB - following are examples for RESYNC and CHANGE events:
+!!! danger "Important"
+    Not using model is considered a programming error
+    
+- [check if the plugin implementing the value is loaded][debug-plugin-lookup]
+- [check if the descriptor associated with the value is registered][how-to-descriptors]
+- [check if the key prefix is being watched][how-to-descriptors]
+- for NB KVDB make sure the key under which the value was put is correct
+   - could be a bad key prefix (bad suffix would make the value `UNIMPLEMENTED`, but otherwise included in the transaction input)
+- [debug logs][debug-logs] of the Orchestrator (NB of KVScheduler), can also be used to learn the set of key-values received with each event from NB - following are examples for RESYNC and CHANGE events:
 ```
 DEBU[0005] => received RESYNC event (1 prefixes)         loc="orchestrator/orchestrator.go(150)" logger=orchestrator.dispatcher
 DEBU[0005]  -- key: config/mock/v1/interfaces/tap1       loc="orchestrator/orchestrator.go(168)" logger=orchestrator.dispatcher
@@ -334,7 +335,8 @@ The graph-based representation of the system state, as used internally by the KV
 ```
 http://<host>:9191/scheduler/graph
 ```
-*Note:* 9191 is the default port number for the REST API, but it can be changed in the configuration file for the [REST plugin][rest-plugin-readme].
+!!! note  
+    9191 is the default port number for the REST API, but it can be changed in the configuration file for the [REST plugin][rest-plugin-readme].
 
 The requirement is to have the `dot` renderer from graphviz installed on the host which is running the agent. The renderer is shipped with the `graphviz` package, which for Ubuntu can be installed with:
 ```

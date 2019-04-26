@@ -77,7 +77,8 @@ etcdctl version: 3.3.8
 API version: 3.3
 ```
 
-> Note: according to the ETCD documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. However we do not need to explicitly set it because we defined it when starting the etcd container.
+!!! note
+    According to the ETCD documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. However we do not need to explicitly set it because we defined it when starting the etcd container.
 
 With the following command you can list all key-value pairs related to the vpp-agent:
 
@@ -87,7 +88,8 @@ $ docker exec etcd etcdctl get --prefix /vnf-agent/
 
 ## 4. Start Kafka
 
-**Note:** Since vpp-agent v2.0.0, running Kafka is not required by default.
+!!! note
+    Since vpp-agent v2.0.0, running Kafka is not required by default.
 
 Following command starts Kafka in a docker container:
 
@@ -178,7 +180,8 @@ The output should look like this:
 
 Notice the `internal_name` assigned by the VPP as well as the `if_index`. The `statistics` section contain traffic data (received/transmitted packets, bytes, ...). Since there is no traffic at the VPP, statistics are empty.
 
-**Note:** state is exposed only for interfaces (including default interfaces).
+!!! note
+    State is exposed only for interfaces (including default interfaces).
 
 ### 6.4 Connect to the VPP in the container
 
