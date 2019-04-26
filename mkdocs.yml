@@ -65,7 +65,9 @@ markdown_extensions:
   - extra
   - admonition
   - smarty
-#  - codehilite Note: disabled for now since it breaks code fences, will be re-enabled later
+  - codehilite:
+      linenums: true
+      use_pygments: false
   - def_list
   - toc:
       permalink: 
