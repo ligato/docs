@@ -27,6 +27,7 @@ nav:
     - Quickstart Guide: user-guide/quickstart.md
     - Reference: user-guide/reference.md
     - Concepts: user-guide/concepts.md
+    - Configuration files: user-guide/config-files.md
     - ARM64: user-guide/arm64.md
     - FAQ: user-guide/faq.md
     - VPP CLI: user-guide/vpp-cli.md
