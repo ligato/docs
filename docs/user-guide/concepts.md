@@ -535,42 +535,10 @@ type Config struct {
 
 As you can see, the config file can contain multiple fields of various types together with the json struct tag. Lists and maps are also allowed. Notice that not all fields must be defined in the file itself - empty fields are set to default values or handled as not set. 
 
-### List of supported flags
+List of supported configuration files can be found [here][config-files]
 
-Description of all flags currently supported in the vpp-agent:
-
-**Common configuration directory:**
-
-```bash
--config-dir= 
-```
-
-Can be used to set the common location for all configuration files.
-
-**Configurator:**
-
-```bash
--configurator-config=
-```
-
-Flag reserved for configurator plugin, currently not in use.
-
-**Consul plugin:**
-
-```bash
--consul-config=
-```
-
-Provides all fields required for Consul plugin:
-
-- `address`: IP Address of the consul server 
-- `resync-after-reconnect`: this field runs resync procedure for all registered plugins in case the plugin losts connection to the database and then reconnects back 
-
-**ETCD plugin:**
-
- // TBD
- 
 [client-v2]: ../user-guide/concepts.md#client-v2
+[config-files]: config-files.md
 [consul-plugin]: ../plugins/db-plugins.md#consul-plugin
 [datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
 [etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
