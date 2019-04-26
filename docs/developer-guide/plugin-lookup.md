@@ -46,7 +46,7 @@ The available [options](https://godoc.org/github.com/ligato/cn-infra/agent#Optio
   
 **Plugin** is an object that implements the `Plugin` interface, which defines methods required for plugin lifecycle management. At program startup, a list of plugins is read from options - at this point plugins are already sorted for initialization (either manually or via plugin lookup). Agent initialization is then performed in two steps:
 * The startup procedure calls the `Init()` method for every plugin, one-by-one in a single thread in the order in which they are sorted for initialization.
-* The startup procedure calls the `AfterInit()` method for each plugin one-by-one, in a single thread in the order in which they are sorted for initialization. This two-step procedure ensures that certain initialization tasks are only performed after all plugins in the agent were pre-initialized (TODO: give an example). Note that you may leave the `AfterInit()` method empty if you do not need the second initialization phase.
+* The startup procedure calls the `AfterInit()` method for each plugin one-by-one, in a single thread in the order in which they are sorted for initialization. This two-step procedure ensures that certain initialization tasks are only performed after all plugins in the agent were pre-initialized (See [this tutorial][hw-tutorial] for more details). Note that you may leave the `AfterInit()` method empty if you do not need the second initialization phase.
 
 ### Plugin Lifecycle
 
@@ -440,3 +440,5 @@ func NewApp() *MyApp {
 ```
 
 Only `MyApp` (top-level plugin) needs to be set to `agent.AllPlugins()`. The plugin lookup figures out which plugins should be started and also their order. 
+
+[hw-tutorial]: ../tutorials/01_hello-world.md

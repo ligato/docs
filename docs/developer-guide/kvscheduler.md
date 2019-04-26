@@ -28,7 +28,7 @@ KVDescriptors are based on the Mediator pattern, where plugins are decoupled and
 
 The graph-based system representation uses new terminology to abstract from concrete objects:
 
-* <a name="model"></a> **Model** builds a representation for a single item type (e.g. interface, route, bridge domain, etc.); it uses a Protobuf Message to structure and serialize configuration data, further coupled with meta-specification used to categorize the item type and to build/parse keys for/of item instances (for example, the Bridge Domain model can be found [here][bd-model-example]).
+* **Model** builds a representation for a single item type (e.g. interface, route, bridge domain, etc.); it uses a Protobuf Message to structure and serialize configuration data, further coupled with meta-specification used to categorize the item type and to build/parse keys for/of item instances (for example, the Bridge Domain model can be found [here][bd-model-example]). More details about the model registration can be found [here][model-registration].
   
 * **Value** (`proto.Message`) is a run-time instance of a given model.
 
@@ -213,6 +213,7 @@ KVScheduler exposes the state of the system and the history of operations not on
 [bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/l2plugin/descriptor/bd_interface.go#L120-L127
 [contiv-vpp]: https://github.com/contiv/vpp/
 [graph-example]: ../img/developer-guide/large-graph-example.svg
+[model-registration]: model-registration.md
 [clientv2]: https://github.com/ligato/vpp-agent/tree/master/clientv2
 [value-states]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/value_status.proto
 [value-states-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L233-L239
