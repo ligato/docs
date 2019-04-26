@@ -270,7 +270,7 @@ The base kind of the VPP configuration are interfaces. After the interface creat
 
 Example:
 
-1. Start with the empty VPP and configure an interface:
+*tart with the empty VPP and configure an interface:
 ```bash
 vpp# create loopback interface 
 loop0
@@ -279,7 +279,7 @@ vpp#
 
 The interface `loop0` was added and interface index (and also name) was generated for it. The index can be shown by `show interfaces`. 
 
-2. Set the interface up:
+Set the interface up:
 ```bash
 vpp# set interface state loop0 up
 vpp#
@@ -287,14 +287,14 @@ vpp#
 
 The CLI command requires interface name to know which interface should be set to UP state. 
 
-3. Now let's create the bridge domain:
+Now let's create the bridge domain:
 ```bash
 vpp# create bridge-domain 1 learn 1 forward 1 uu-flood 1 flood 1 arp-term 1   
 bridge-domain 1
 vpp# 
 ```
 
-4. The bridge domain is currently empty, so let's assign our interface to it:
+The bridge domain is currently empty, so let's assign our interface to it:
 ```bash
 vpp# set interface l2 bridge loop0 1 
 vpp#
@@ -302,7 +302,7 @@ vpp#
 
 We set `loop0` to bridge domain with index 1. Again, we cannot use non-existing interface (since the names are generated) but we also cannot use non-existing bridge domain.
 
-5. At last, let's configure the FIB table entry:
+At last, let's configure the FIB table entry:
 ```bash
 vpp# l2fib add 52:54:00:53:18:57 1 loop0
 vpp#
@@ -310,7 +310,7 @@ vpp#
 
 The call contains dependencies on the `loop0` interface and on our bridge domain with ID=1. From the example steps above, we see that the order of CLI commands must follow in this way (with some exceptions like the bridge domain creation (third step) which can be called earlier).
 
-6. Now remove the interface:
+Now remove the interface:
 ```bash
 vpp# delete loopback interface intfc loop0
 vpp#
@@ -318,7 +318,7 @@ vpp#
 
 If we check the FIB table now with `show l2fib details`, we can see that the interface name was changed from `loop0` to `Stale`.
 
-7. Remove bridge domain. The command is:
+Remove bridge domain. The command is:
 ```bash
 vpp# create bridge-domain 1 del
 vpp#
@@ -348,7 +348,7 @@ The vpp-agent uses northbound API definition of every supported configuration it
 !!! note
     If you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide][quickstart-guide].
 
-1. Let's start from the end and put configuration for the FIB entry:
+Let's start from the end and put configuration for the FIB entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C '{"phys_address":"62:89:C6:A3:6D:5C","bridge_domain":"bd1","outgoing_interface":"if1","action":"FORWARD"}'
 ```
@@ -362,7 +362,7 @@ Have a look at the vpp-agent output of `planned operations`:
 
 There is one `CREATE` transaction planned - our FIB entry with interface `if1` and bridge domain `bd1`. None of these exists, so the transaction was postponed, highlighting it as `[NOOP IS-PENDING]`.
 
-2. Configure the bridge domain:
+Configure the bridge domain:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1 '{"name":"bd1","interfaces":[{"name":"if1"}]}'
 ```
@@ -379,7 +379,7 @@ We have created a simple bridge domain with interface. Let's break down the outp
 
 Now there are two planned operations - the first is the bridge domain `bd1` which can be created since there are no restrictions. The second operation contains following highlight: `[DERIVED NOOP IS-PENDING]`. 'DERIVED' means that this item was processed as separate key within the vpp-agent (it is internal functionality so let's not to bother with it now). The rest of the flag is the same as before, meaning that the value `if1` is not present yet.
 
-3. Next step is to add incriminated interface:
+Next step is to add incriminated interface:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/tap1 '{"name":"tap1","type":"TAP","enabled":true}
 ```
@@ -401,7 +401,7 @@ There are three `planned operations` present. The first one is the interface its
 The second operation is marked as `DERIVED` (the same meaning, not important here) and `WAS-PENDING` which means the cached value could be finally resolved. This operation means that the interface was added to the bridge domain, as defined in the bridge domain configuration.
 The last statement is marked `WAS-PENDING` as well and represents our FIB entry, cached until now. Since all dependencies were fulfilled (the bridge domain and the interface as a part of it), the FIB was configured.
 
-4. Now let's try to remove the bridge domain as before:
+Now let's try to remove the bridge domain as before:
 ```bash
 etcdctl del /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 ```
