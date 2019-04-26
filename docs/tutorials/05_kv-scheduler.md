@@ -52,8 +52,20 @@ components - a **descriptor** and an **adapter** for every proto-defined type (p
  
 Let's start with adapters. The purpose of an adapter is to define conversion methods between our proto-defined type and
 a bare `proto.Message` that the KV Scheduler works with. Since this is a boilerplate code, there is a tooling to auto-generate
-it. The code generator is called `descriptor-adapter` and it can be found [inside the KVScheduler plugin][2]. Build the 
-binary file from the go files inside, and use it to generate the adapters for the `Interface` and `Route` proto messages:
+it. The code generator is called `descriptor-adapter` and it can be found [inside the KVScheduler plugin][2]. You can install it manually as follows:
+
+```bash
+go install github.com/ligato/vpp-agent/plugins/kvscheduler/descriptor-adapter
+```
+
+Alternatively, you can put the following target into your project Makefile (assuming you have dependency on VPP Agent in your vendor directory):
+
+```
+get-generators:
+    @go install ./vendor/github.com/ligato/vpp-agent/plugins/kvscheduler/descriptor-adapter
+```
+
+Build the binary file from the go files inside, and use it to generate the adapters for the `Interface` and `Route` proto messages:
  
 ```
 descriptor-adapter --descriptor-name Interface --value-type *model.Interface --import "github.com/ligato/vpp-agent/examples/tutorials/05_kv-scheduler/model" --output-dir "descriptor"
