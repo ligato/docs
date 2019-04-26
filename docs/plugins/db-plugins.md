@@ -205,7 +205,8 @@ for {
    }
 }
 ```
- NOTE: You must configure Redis for it to publish key space events.
+!!! note
+    You must configure Redis for it to publish key space events.
 ```
 config SET notify-keyspace-events KA
 ```
@@ -247,7 +248,8 @@ The fileDB plugin allows to use the file system of a operating system as a key-v
 
 All the configuration is resynced in the beginning (as for standard key-value data store). Configuration files then can be added, updated, moved, renamed or removed, plugin makes all the necessary changes.
 
-Important note: fileDB as datastore is read-only from the plugin perspective, changes from within the plugin are not allowed.
+!!! danger "Important"
+    FileDB as datastore is read-only from the plugin perspective, changes from within the plugin are not allowed.
 
 ### Configuration
 

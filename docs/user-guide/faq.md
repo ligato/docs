@@ -110,7 +110,7 @@ Then contact Ligato developers. We will solve the issue as fast as possible. Tha
 [key-reference]: ../user-guide/reference.md
 [kvs-faq]: ../troubleshooting/kvs-troubleshooting.md
 [linux-interface-plugin]: ../plugins/linux-plugins.md#interface-plugin
-[not-listed-issue]: faq.md#the-issue-i-have-is-not-listed-here
+[not-listed-issue]: faq.md#other-issues
 [rest-api]: ../plugins/infra-plugins.md#rest-api
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env
 

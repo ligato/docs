@@ -59,10 +59,10 @@ of  its operations (Get, List, Put, Delete). In this example we will use `/myplu
 broker := p.KVStore.NewBroker("/myplugin/")
 ```
 
-Note: The Etcd plugin must be configured with the address of the Etcd server. This
-is typically done through the etcd config file. In most cases, the etcd config 
-file must be in the same folder where the agent executable is started. If the etcd
-config file is not found, the Etcd plugin will be disabled, and you will see 
+!!! note
+    The Etcd plugin must be configured with the address of the Etcd server. This is typically done through the etcd config file. In most cases, the etcd config file must be in the same folder where the agent executable is started. 
+
+If the etcd config file is not found, the Etcd plugin will be disabled, and you will see 
 and error log like this:
 ```
 level=error msg="KV store is disabled" loc="04_kv-store/main.go(41)" logger=defaultLogger
@@ -78,8 +78,8 @@ message Greetings {
     string greeting = 1;
 }
 ```
-Note: it is a good practice to put all Protobuf definitions for a plugin in a 
-`model` directory.
+!!! note
+    It is a good practice to put all Protobuf definitions for a plugin in a `model` directory.
 
 Next, we need to generate Go code from our model. We will use the generated Go 
 structures as parameters in calls to the broker. The code generation is controlled

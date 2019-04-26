@@ -94,7 +94,8 @@ return nil
 
 The `HelloWorld` plugin verifies that the `HelloUniverse` plugin already exists, otherwise it panics. And if we try to run the agent now, it is exactly what happens. The reason is that our order of plugin initialization is not as it should be, but reversed (remember, `agent.Plugins(p1, p2)`). So what options do we have? 
 
-**Note:** at this point you can follow one or more of options below, but to continue with the tutorial, the third option will be required. 
+!!! note
+    At this point you can follow one or more of options below, but to continue with the tutorial, the third option will be required. 
 
 ### 1: Use the second layer of initialization - AfterInit()
 
@@ -199,7 +200,8 @@ The agent can be now successfully started. This approach may look like a big ove
 
 **Cross dependencies**
 
-Note: Continuation of the tutorial requires the third option of dependency solving (above) completed.
+!!! note
+    Continuation of the tutorial requires the third option of dependency solving (above) completed.
 
 Now we have two plugins, one dependent on another, and third top-level starter plugin in `main.go`. Our `HelloWorld` plugin calls a simple method `IsCreated` checking whether the universe exists. However this method is not useful at all, so let's turn it to something more practical. Following changes are done in the `HelloUniverse` plugin.
 

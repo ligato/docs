@@ -112,7 +112,8 @@ Then in the `build-root` directory unpack `*.deb` package files with `dpkg -i`
 
 ## Start the VPP and the Agent
 
-**Note:** The agent will terminate if unable to connect to the VPP, a database or the Kafka message server (if required by the config file). 
+!!! note
+    The agent will terminate if unable to connect to the VPP, a database or the Kafka message server (if required by the config file). 
 
 **Start the VPP**:  
 ```

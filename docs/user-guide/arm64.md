@@ -7,7 +7,8 @@
 For a quick start with the VPP Agent, you can use pre-built Docker images with the Agent and VPP on [Dockerhub][dockerhub].
 
 1. Start the ETCD (and optionally Kafka) on your host (see below). 
-Note: **The Agent in the pre-built Docker image will not start if it can't connect to both ETCD and Kafka, if used**.
+!!! note
+    The Agent in the pre-built Docker image will not start if it can't connect to both ETCD and Kafka, if used.
 
 2. Run VPP + VPP Agent in the Docker image:
 ```
@@ -67,9 +68,8 @@ vpp-agent-ctl /opt/vpp-agent/dev/etcd.conf -tap
 vpp-agent-ctl /opt/vpp-agent/dev/etcd.conf -tapd
 ```
 
-**Note for ARM64:**
-
-Check for proper etcd ARM64 docker image in the [official repository][etcd]. Currently you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
+!!! note
+    For ARM64: Check for proper etcd ARM64 docker image in the [official repository][etcd]. Currently you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
 
 ### ARM64 and Kafka
 

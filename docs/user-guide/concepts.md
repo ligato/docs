@@ -146,7 +146,8 @@ Note that if the redis config file is not provided, the particular connector plu
 
 Recommended tool to manage Redis database is the `redis-cli` tool.
 
-**Important note:** the Redis server is by default started with keyspace event notifications disabled. It means, no data change events are forwarded to the Agent watcher. To enable it, use `config SET notify-keyspace-events KA` command directly in the `redis-cli`, or change the settings in the Redis server startup config.
+!!! note "Important" 
+    The Redis server is by default started with keyspace event notifications disabled. It means, no data change events are forwarded to the Agent watcher. To enable it, use `config SET notify-keyspace-events KA` command directly in the `redis-cli`, or change the settings in the Redis server startup config.
 
 ### Consul
 
@@ -343,7 +344,8 @@ So we ended up with the configuration which cannot be removed (until the bridge 
 
 The vpp-agent uses northbound API definition of every supported configuration item, while the single proto-modelled dataset may call multiple binary API calls to the VPP. For example NB interface configuration creates the interface itself, sets its state, MAC address, IP addresses and other. However, the vpp-agent goes even further - it allows to "configure" VPP items with not-yet-existing references. Such an item is not really configured (since it cannot be), but the agent "remembers" it and puts to the VPP when possible, without any other intervention, thus removing strict VPP ordering.
 
-**Note:** if you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide][quickstart-guide].
+!!! note
+    If you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide][quickstart-guide].
 
 1. Let's start from the end and put configuration for the FIB entry:
 ```bash

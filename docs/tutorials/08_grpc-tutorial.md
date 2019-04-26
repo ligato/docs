@@ -451,7 +451,8 @@ func (p *GRPCClient) Init() (err error) {
 	return nil
 }
 ```
-**Note:** this approach is only for testing purposes, beacause it creates a race condition, since we cannot tell whether the `watchNotif` or the `configure` will run first. But in this scenario, it is not harmful since notifications are read from the server cache (theoretically it could be a problem if the client would configure >100 interfaces before the watcher starts, so some notifications would be lost but that is not a case here).
+!!! danger "Important"
+    This approach is only for testing purposes, because it creates a race condition, since we cannot tell whether the `watchNotif` or the `configure` will run first. But in this scenario, it is not harmful since notifications are read from the server cache (theoretically it could be a problem if the client would configure >100 interfaces before the watcher starts, so some notifications would be lost but that is not a case here).
 
 After starting the client, the GRPC plugin sends the interface configuration (as before) which is received in the VPP-Agent server and configured to the VPP. After that, the server sends notification back to the client. For illustration, here is the output log from the client application (it's somehow self-explaining):
 ```bash

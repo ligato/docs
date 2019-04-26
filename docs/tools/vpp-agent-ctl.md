@@ -10,7 +10,7 @@ The vpp-agent-ctl does not maintain ETCD connectivity, the link is established b
 
 All those commands can be shown either calling binary without parameter, or with invalid parameter.
 
-_PUT:_ allows to store data in the ETCD. Put requires two parameters, key and value. The value is represented by .json file. Example json files are stored inside vpp-agent-ctl ([link to directory](json))
+_PUT:_ allows to store data in the ETCD. Put requires two parameters, key and value. The value is represented by .json file. Example json files are currently stored inside vpp-agent-ctl ([link to directory][json-dir])
 
 ```
 vpp-agent-ctl -put <key> <data>
@@ -44,7 +44,7 @@ vpp-agent-ctl -list
 
 For the quick testing or as a configuration example, the vpp-agent-ctl provides special commands for every available configuration type. Commands can be shown running `vpp-agent-ctl` without parameters. They are sorted per vpp-agent plugin always in pairs; one command to crate a configuration, the second one to remove it. 
 
-Data put using command can be edited - all of them are available in [data package](https://github.com/ligato/vpp-agent/tree/master/cmd/vpp-agent-ctl/data) separated in files according to plugins, with interface at the top so the desired configuration item can be easily found. Then, just edit the field(s) needed and `go build` the main file. Then, calling respective command will put the changed data.
+Data put using command can be edited - all of them are available in [data package][data-dir] separated in files according to plugins, with interface at the top so the desired configuration item can be easily found. Then, just edit the field(s) needed and `go build` the main file. Then, calling respective command will put the changed data.
 
 Example commands:
 
@@ -67,3 +67,6 @@ vpp-agent-ctl -tapd
 ```
 
 All the 'delete' cases are by default set to match with creating data (so every delete removes the data created by associated create command).
+
+[json-dir]: https://github.com/ligato/vpp-agent/tree/master/cmd/vpp-agent-ctl/json
+[data-dir]: https://github.com/ligato/vpp-agent/tree/master/cmd/vpp-agent-ctl/data

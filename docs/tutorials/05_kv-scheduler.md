@@ -34,11 +34,12 @@ First, we define a simple northbound [proto model][1] that we will use in our ex
 simple messages - an  `Interface` and a `Route` that depends on some interface. The model demonstrates a simple 
 dependency between configuration  items (basically, we need an interface to configure a route).  
  
-**Important note:** The vpp-agent uses the Orchestrator component, which is responsible for collecting northbound
+!!! danger "Important" 
+    The vpp-agent uses the Orchestrator component, which is responsible for collecting northbound
 data from multiple sources (mainly a KV Store and GRPC clients). To marshall/unmarshall proto messages defined in
-northbound proto models, the Orchestrator needs message names to be present in the messages. To generate code where
-message names are present in proto messages we must use the following special protobuf option (together with its
-import):
+northbound proto models, the Orchestrator needs message names to be present in the messages. 
+
+To generate code where message names are present in proto messages we must use the following special protobuf option (together with its import):
 ```proto
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 option (gogoproto.messagename_all) = true;
@@ -85,8 +86,8 @@ func NewIfDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 }
 ```
 
-**Note:** descriptors in this example are all in a single file since they are short, but the preferred way is to put
-each descriptor in its own `.go` file. 
+!!! note
+    Descriptors in this example are all in a single file since they are short, but the preferred way is to put each descriptor in its own `.go` file. 
 
 `NewIfDescriptor` is a constructor function that returns a type-safe descriptor object. All potential descriptor 
 dependencies (logger, various mappings, etc.) are provided via constructor parameters.  

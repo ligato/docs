@@ -666,15 +666,8 @@ All the incoming traffic matching one of the VPP interface addresses, and also m
 The punt plugin defines the following [model][punt-model] which grants support for two main configuration items defined by different northbound keys. L3/L4 protocol in the key is defined as a `string` value, however, the value is transformed to numeric representation in the VPP binary API. The usage of L3 protocol `ALL` is exclusive for IP punt to 
 host (without socket registration) in the VPP API. If used for the IP punt with socket registration, the vpp-agent calls the binary API twice with the same parameters for both, IPv4 and IPv6.
 
-**Important note:** in order to configure a punt to host via Unix domain socket, a specific VPP startup-config is required. The attempt to set punt without it results in errors in VPP. Startup-config:
-
-```
-punt {
-  socket /tmp/socket/punt
-}
-```
-
-The path has to match with the one in the northbound data. 
+!!! danger "Important"
+    In order to configure a punt to host via Unix domain socket, a specific VPP startup-config is required. The attempt to set punt without it results in errors in VPP. Example tartup-config `punt { socket /tmp/socket/punt }`. The path has to match with the one in the northbound data. 
 
 **Configuration example**
 

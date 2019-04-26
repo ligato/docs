@@ -62,7 +62,8 @@ Later, we use the channel to send or receive data, but at first, we need to prep
 
 #### 1. Binary API
 
-Note: this step is only explanatory and can be skipped
+!!! note
+    This step is only explanatory and can be skipped
 
 The GoVPP is in general a toolset for the VPP management, providing high-level API for communication with GoVPP core and sending and receiving messages to/from the VPP via adapter - a component between GoVPP and the VPP, responsible for sending and receiving binary-encoded data via the VPP socket client (by default, but the VPP shared memory is also available when needed). It also provides a bindings generator for VPP JSON binary API definitions - the **binapi-generator**.
  
