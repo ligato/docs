@@ -270,7 +270,7 @@ The base kind of the VPP configuration are interfaces. After the interface creat
 
 Example:
 
-*tart with the empty VPP and configure an interface:
+Start with the empty VPP and configure an interface:
 ```bash
 vpp# create loopback interface 
 loop0
