@@ -260,6 +260,7 @@ Nothing special is required for the publisher. The `KeyProtoValWriter` object de
 ## VPP configuration order
 
 One of the VPP biggest drawbacks is that the dependency relations of various configuration items are very strict, and ability of the VPP to manage it is limited, or not present at all. There are two problems to be solved:
+
 1. A configuration item dependent on any other configuration item cannot be created "in advance", the dependency must be fulfilled first
 2. If the dependency item is removed, the VPP behavior is not consistent here. Sometimes, also the dependent item is removed as expected but there are cases where it becomes unmanageable or in any other kind of invalid state where it cannot be directly handled.
 
