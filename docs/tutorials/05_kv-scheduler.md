@@ -9,7 +9,7 @@ Requirements:
 * Complete and understand the ['Hello World Agent'](../tutorials/01_hello-world) tutorial
 * Complete and understand the ['Plugin Dependencies'](../tutorials/02_plugin-deps) tutorial
 
-For simplicity, this tutorial does not use ETCD or any other northbound kv store. Instead, NB events are created 
+For simplicity, this tutorial does not use the ETCD or any other northbound KV store. Instead, NB events are created 
 programmatically in the example, using the KV Scheduler API.
 
 The vpp-agent uses VPP binary API calls to configure the VPP. Each VPP binary API call is designed to create
@@ -36,8 +36,8 @@ dependency between configuration  items (basically, we need an interface to conf
  
 !!! danger "Important" 
     The vpp-agent uses the Orchestrator component, which is responsible for collecting northbound
-data from multiple sources (mainly a KV Store and GRPC clients). To marshall/unmarshall proto messages defined in
-northbound proto models, the Orchestrator needs message names to be present in the messages. 
+    data from multiple sources (mainly a KV Store and GRPC clients). To marshall/unmarshall proto messages defined in
+    northbound proto models, the Orchestrator needs message names to be present in the messages. 
 
 To generate code where message names are present in proto messages we must use the following special protobuf option (together with its import):
 ```proto
@@ -50,8 +50,8 @@ components - a **descriptor** and an **adapter** for every proto-defined type (p
  
 #### 1. Adapters
  
-Let's start with adapters. The purpose of an adapter is to define conversion methods between uour proto-defined type and
-a bare `proto.Message` that the KV Scheduler works with. Since this is boilerplate code, the is tooling to auto-generate
+Let's start with adapters. The purpose of an adapter is to define conversion methods between our proto-defined type and
+a bare `proto.Message` that the KV Scheduler works with. Since this is a boilerplate code, there is a tooling to auto-generate
 it. The code generator is called `descriptor-adapter` and it can be found [inside the KVScheduler plugin][2]. Build the 
 binary file from the go files inside, and use it to generate the adapters for the `Interface` and `Route` proto messages:
  
@@ -389,10 +389,10 @@ The route comes first, but it is postponed (cached) since the dependent interfac
 
 The second transaction introduced the expected interface. The scheduler recognized it as a dependency for the cached route, sorted items to correct order and called the appropriate configuration method. The previously cached route is marked as `[WAS-PENDING]`, highlighting that this item was postponed.
 
- [1]: /examples/tutorials/05_kv-scheduler/model/model.proto
+ [1]: /https://github.com/ligato/vpp-agent/blob/master/examples/tutorials/05_kv-scheduler/model/model.proto
  [2]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/descriptor-adapter
- [3]: /plugins/kvscheduler/api/kv_descriptor_api.go
- [4]: /examples/tutorials/05_kv-scheduler
+ [3]: /https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/kv_descriptor_api.go
+ [4]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/05_kv-scheduler
  [5]: https://github.com/ligato/vpp-agent/blob/master/docs/kvscheduler/README.md
  
  
