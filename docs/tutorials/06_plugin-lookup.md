@@ -112,7 +112,8 @@ Our plugin can be started now without panicking. But remember, **in this case th
 
 ### 2: Manually order plugins
 
-* If you followed the first approach, please move `IsCreated()` back to `Init()`.
+!!! note
+    If you followed the first approach, please move `IsCreated()` back to `Init()`.
 
 The simplest option in our scenario is to just to manually switch plugins. In the `main()`, switch this code:
 ```go
@@ -125,16 +126,17 @@ to:
 a := agent.NewAgent(agent.Plugins(p2, p1))
 ```
 
-This ensures that the `HelloUniverse` will be started before the `HelloWorld`, so the dependency plugin will be initialized first (and close second). While this approach is useful for small agents, the disadvantage is that it becomes difficult to manage if there are several plugins with multi-level dependencies. Especially when some change in dependency was introduced, the plugin order can be very hard to update. Because of this, the CN-Infra provides an automatic process which manages and re-orders dependencies itself, called plugin lookup.
+This ensures that the `HelloUniverse` will be started before the `HelloWorld`, so the dependency plugin will be initialized first (and closed second). While this approach is useful for small agents, the disadvantage is that it becomes difficult to manage if there are several plugins with multi-level dependencies. Especially when some change in dependency was introduced, the plugin order can be very hard to update. Because of this, the CN-Infra provides an automatic process which manages and re-orders dependencies itself, called plugin lookup.
 
 ### 3: Order dependencies using plugin lookup
 
-* If you followed the first approach, please move `IsCreated()` back to `Init()`.
-* If you followed the second approach, please set plugin order back to `agent.Plugins(p1, p2)`.
+!!! note
+    - If you followed the first approach, please move `IsCreated()` back to `Init()`.
+    - If you followed the second approach, please set plugin order back to `agent.Plugins(p1, p2)`.
 
 The plugin lookup is an automatic process sorting plugins according to their dependencies. More theoretical information about the plugin lookup can be read [here](https://github.com/ligato/cn-infra/wiki/Agent-Plugin-Lookup).
 
-In our plugin, we replace the `agent.Plugins()` method with the `agent.AllPlugins()` in order to use the plugin lookup feature. However, **only one plugin is recommended to be listed in the method**. Since all dependencies are found automatically, the method needs the only top-level plugin to initialize the whole agent (but setting more than one is not forbidden).
+In our plugin, we replace the `agent.Plugins()` method with the `agent.AllPlugins()` in order to use the plugin lookup feature. However, **only one plugin is recommended to be listed in the method**. Since all dependencies are found automatically, the method needs the top-level plugin only to initialize the whole agent (but setting more than one is not forbidden).
 
 The best practice is to specify another helper plugin which defines all other plugins (otherwise listed in `agent.Plugins()`) as dependencies. This top-level plugin (we will call it `Agent`) will not specify any inner fields, only external dependencies and plugin methods `Init()` and `Close` will be empty. Let's create it in the `main.go` (where the `HelloWorld` plugin was before):
 ```go
