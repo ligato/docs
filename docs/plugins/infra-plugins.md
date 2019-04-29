@@ -79,7 +79,7 @@ Furthermore, KVScheduler enhances the concept of state reconciliation, and defin
 
 ### Transactions
 
-The scheduler allows to group related changes and applies them as transactions. This is not supported, however, by all agent NB interfaces - for example, changes from `etcd` datastore are always received one a time. To leverage the transaction support, localclient (the same process) or GRPC API (remote access) have to be used instead.
+The scheduler allows to group related changes and applies them as transactions. This is not supported, however, by all agent NB interfaces - for example, changes from `ETCD` datastore are always received one a time. To leverage the transaction support, localclient (the same process) or GRPC API (remote access) have to be used instead.
 
 Inside the scheduler, transactions are queued and executed synchronously to simplify the algorithm and avoid concurrency issues. The processing of a transaction is split into two stages:
 
@@ -218,7 +218,7 @@ The idxmap package provides an enhanced mapping structure to help in the followi
 
 * Exposing read-only access to plugin local data for other plugins
 * Secondary indexing
-* Data caching for key-value store (such as etcd)
+* Data caching for key-value store (such as ETCD)
 
 For more detailed description see the godoc.
 
@@ -236,7 +236,7 @@ App plugins often need to expose some structured information to other plugins in
 It is useful to have the data from a key-value store cached when you need to:
 
 - minimize the number of lookups into the key-value store
-- execute lookups by secondary indexes for key-value stores that do not necessarily support secondary indexing (e.g. etcd)
+- execute lookups by secondary indexes for key-value stores that do not necessarily support secondary indexing (e.g. ETCD)
 
 **CacheHelper** turns `idxmap` (injected as field `IDX`) into an indexed local copy of remotely stored key-value data. `CacheHelper` watches the target key-value store for data changes and resync events. Received key-value pairs are transformed into the name-value (+ secondary indices if defined) pairs and stored into the injected idxmap instance. 
 For a visual explanation, see the diagram below:
@@ -283,13 +283,13 @@ Last method is `t.Clear()` which removes all entries from the internal database.
 
 The client package provides single purpose clients for publishing synchronous/asynchronous messages and for consuming selected topics.
 
-The mux package uses these clients and allows to share their access to kafka brokers among multiple entities. This package also implements the generic messaging API defined in the parent package.
+The mux package uses these clients and allows to share their access to Kafka brokers among multiple entities. This package also implements the generic messaging API defined in the parent package.
 
 ### Requirements
 
-Minimal supported version of kafka is determined by [sarama][sarama] library - Kafka 0.10 and 0.9, although older releases are still likely to work.
+Minimal supported version of Kafka is determined by [sarama][sarama] library - Kafka 0.10 and 0.9, although older releases are still likely to work.
 
-If you don't have kafka installed locally you can use docker image for testing:
+If you don't have Kafka installed locally you can use docker image for testing:
 ```
 sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
  --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
@@ -297,7 +297,7 @@ sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
 
 ### Kafka plugin
 
-Kafka plugin provides access to kafka brokers.
+Kafka plugin provides access to Kafka brokers.
 
 **Configuration**
 
@@ -309,7 +309,7 @@ Kafka plugin provides access to kafka brokers.
 
 ### Multiplexer
 
-The multiplexer instance has an access to kafka Brokers. To share the access it allows to create connections. There are available two connection types one support message of type `[]byte` and the other `proto.Message`. Both of them allows to create several SyncPublishers and AsyncPublishers that implements `BytesPublisher` interface or `ProtoPubliser` 
+The multiplexer instance has an access to Kafka brokers. To share the access it allows to create connections. There are available two connection types one support message of type `[]byte` and the other `proto.Message`. Both of them allows to create several SyncPublishers and AsyncPublishers that implements `BytesPublisher` interface or `ProtoPubliser` 
 respectively. The connections also provide API for consuming messages implementing `BytesMessage` interface or `ProtoMessage` respectively.
 
 ```

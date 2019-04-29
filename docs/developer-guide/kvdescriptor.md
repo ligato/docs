@@ -146,7 +146,7 @@ In order to obtain and expose the metadata map (if used), call [KVScheduler.GetM
 
 ### Plugin Directory Layout
 
-While it is not mandatory, we recommend to follow the same directory layout used for all VPP-agent plugins:
+While it is not mandatory, we recommend to follow the same directory layout used for all VPP-Agent plugins:
 ```
 <your-plugin>/
 ├── model/  // + generated code

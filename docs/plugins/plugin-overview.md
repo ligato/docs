@@ -166,7 +166,7 @@ The VPP-Agent data broker abstraction.
 
 More in: [ETCD plugin][etcd-plugin]
 
-The Etcd plugin provides access to an ETCD key-value data store.
+The ETCD plugin provides access to an ETCD key-value data store.
 
 ### Redis
 

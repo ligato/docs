@@ -99,7 +99,7 @@ Startup-config for the ETCD plugin:
 -govpp-config=
 ```
 
-Initial configuration of the GoVpp multiplexer.
+Initial configuration of the GoVPP multiplexer.
 
 - `trace-enabled`: Enable or disable feature to measure binary API call duration. Measured time is shown directly in the log (info level). Measurement is taken also for certain procedures, like resync of plugin startup. Turned off by default
 - `binapi-socket-path`: Path to a Unix-domain socket through which configuration requests are sent to VPP. Used if connect-via-shm is set to false and env. variable `GOVPPMUX_NOSOCK` is not defined. Defaults to "/run/vpp-api.sock"

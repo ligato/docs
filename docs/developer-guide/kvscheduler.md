@@ -95,7 +95,7 @@ The KVScheduler further enhances the concept of state reconciliation. Three resy
 
 ### Transactions
 
-The KVScheduler allows to group related changes and apply them as a transaction. This is not supported, however, by all agent NB interfaces - for example, changes from `etcd` datastore are always received one a time. To leverage the transaction support, localclient (the same process) or GRPC API (remote access) have to be used instead (both defined [here][clientv2]).
+The KVScheduler allows to group related changes and apply them as a transaction. This is not supported, however, by all agent NB interfaces - for example, changes from `ETCD` datastore are always received one a time. To leverage the transaction support, localclient (the same process) or GRPC API (remote access) have to be used instead (both defined [here][clientv2]).
 
 Inside the KVScheduler, transactions are queued and executed synchronously to simplify the algorithm and avoid concurrency issues. The processing of a transaction is split into two stages:
 

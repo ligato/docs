@@ -1,6 +1,6 @@
 # Concepts
 
-This page contains information about Ligato vpp-agent and cn-infra concepts.
+This page contains information about Ligato vpp-agent and CN-Infra concepts.
 
 ---
 
@@ -75,7 +75,7 @@ func New() *VPPAgent {
 
 The code above prepares KVDB sync plugin (KVDB abstraction) with ETCD plugin as connector. The KVDB sync can be then provided as watcher to other plugins (or writer if passed as `KVProtoWriters` object).
 
-Switch to redis:
+Switch to Redis:
 ```go
 import (
 	"github.com/ligato/cn-infra/db/keyval/redis"
@@ -96,13 +96,13 @@ func New() *VPPAgent {
 }
 ```
  
-The orchestrator now connects to redis data base.
+The orchestrator now connects to Redis data base.
 
 Another advantage is that to add support for new KVDB basically means to write a plugin able to establish connection to the desired database and wire it with the KVDB sync, which is significantly easier and faster.
 
 ### ETCD
 
-More information: [etcd documentation][etcd-plugin]
+More information: [ETCD documentation][etcd-plugin]
 
 The ETCD is a distributed KV store that provides data read-write. The ETCD can be started on local machine in its own container with following command: 
 ```bash
@@ -127,7 +127,7 @@ Recommended tool to manage ETCD database is the official `etcdctl`.
 
 ### Redis
 
-More information: [redis documentation][redis-plugin]
+More information: [Redis documentation][redis-plugin]
 
 Redis is another type of in-memory data structure store, used as a database, cache or message broker. 
 
@@ -140,9 +140,9 @@ The content of the .yaml configuration file:
 endpoint: localhost:6379
 ```
 
-The config file is provided to the Agent via the flag `--redis-config=<path>`. See [guide to config files][list-of-supported] to learn more about redis configuration.
+The config file is provided to the Agent via the flag `--redis-config=<path>`. See [guide to config files][list-of-supported] to learn more about Redis configuration.
 
-Note that if the redis config file is not provided, the particular connector plugin will not be started and no connection will be established. If the Redis is not reachable at the provided address, the Agent may not start at all.
+Note that if the Redis config file is not provided, the particular connector plugin will not be started and no connection will be established. If the Redis is not reachable at the provided address, the Agent may not start at all.
 
 Recommended tool to manage Redis database is the `redis-cli` tool.
 

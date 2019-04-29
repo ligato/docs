@@ -172,7 +172,7 @@ The ETCD server is started in its own container on a local host. The command is 
 docker run -p 2379:2379 --name etcd --rm quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
 
-The etcd docker image is downloaded (if does not exist already) and started, ready to serve requests. In the default docker environment, the ETCD server will be available on the IP `172.17.0.1` on port `2379`. The command above can be edited to get different version that `3.1.0`, or change the listen/advertise address. 
+The ETCD docker image is downloaded (if does not exist already) and started, ready to serve requests. In the default docker environment, the ETCD server will be available on the IP `172.17.0.1` on port `2379`. The command above can be edited to get different version that `3.1.0`, or change the listen/advertise address. 
 
 The vpp-agent defines flag for the ETCD plugin `--etcd-config` which can be used to provide static config (most importantly what is the IP address of an ETCD enpodint(s)). The example configuration (and the default one):
 
@@ -190,13 +190,13 @@ vpp-agent --etcd-config=/opt/vpp-agent/dev/etcd.conf
 
 **Example with Kafka (optional):**
 
-Kafka server is started in the separate contained. The command fetches the kafka container (if missing) and starts the Kafka server:
+Kafka server is started in the separate contained. The command fetches the Kafka container (if missing) and starts the Kafka server:
 
 ```
 docker run -p 2181:2181 -p 9092:9092 --name kafka --rm --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
 ```
 
-The vpp-agent needs to know the IP address and port of the kafka server. This information is set via the config file, which is provided with flag `--kafka-conf`. The example config:
+The vpp-agent needs to know the IP address and port of the Kafka server. This information is set via the config file, which is provided with flag `--kafka-conf`. The example config:
 
 ```
 addrs:
