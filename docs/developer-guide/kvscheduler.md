@@ -18,7 +18,7 @@ KVScheduler is a reaction to a series of drawbacks of the original design, which
 
 ### Basic concepts
 
-KVScheduler uses graph theory concepts to manage dependencies between configuration items and therir respective proper operation ordering. A level of abstraction is build on top of configurators (from now on just "plugins"), where the state of the system is modeled as a graph; configuration items are represented as vertices and relations between them are represented as edges. The graph is then walked through to generate transaction plans, refresh the state, execute state reconciliation, etc.
+KVScheduler uses graph theory concepts to manage dependencies between configuration items and their respective proper operation ordering. A level of abstraction is build on top of configurators (from now on just "plugins"), where the state of the system is modeled as a graph; configuration items are represented as vertices and relations between them are represented as edges. The graph is then walked through to generate transaction plans, refresh the state, execute state reconciliation, etc.
 
 The transaction plan that is prepared using the graph representation consists of a series of CRUD operations to be executed on some of the graph vertices. To abstract from specific configuration items and details on how to manipulate them, graph vertices are "described" to KVScheduler in a unified way via [KVDescriptors][kvdescriptor-guide]. KVDescriptors are basically handlers, each assigned to a distinct subset of graph vertices, providing the scheduler with pointers to callbacks that, among other things, implement CRUD operations.
 
@@ -220,3 +220,6 @@ KVScheduler exposes the state of the system and the history of operations not on
 [kvscheduler-api-dir]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/api
 [kvdescriptor-guide]: kvdescriptor.md
 [get-history-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L241-L244
+
+*[REST]: Representational State Transfer
+*[VPP]: Vector Packet Processing

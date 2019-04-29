@@ -236,3 +236,6 @@ implementing your own.
 [vpp-iface-adapter]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin.go
 [vpp-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/descriptor/interface.go
 [vpp-route-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l3plugin/descriptor/static_route.go
+
+*[MTU]: Maximum Transmission Unit
+*[VPP]: Vector Packet Processing

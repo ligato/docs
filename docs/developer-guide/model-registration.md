@@ -67,6 +67,8 @@ The result:
 <key-prefix>/<config/status>/<module-path>/<version>/<type>/<index>/tag/<tag>
 ```
 
+*[SPD]: Security Policy Database
+*[VPP]: Vector Packet Processing
 
 
 

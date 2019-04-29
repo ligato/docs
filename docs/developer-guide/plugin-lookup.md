@@ -442,3 +442,6 @@ func NewApp() *MyApp {
 Only `MyApp` (top-level plugin) needs to be set to `agent.AllPlugins()`. The plugin lookup figures out which plugins should be started and also their order. 
 
 [hw-tutorial]: ../tutorials/01_hello-world.md
+
+*[REST]: Representational State Transfer
+*[VPP]: Vector Packet Processing
