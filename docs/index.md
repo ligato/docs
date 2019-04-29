@@ -1,23 +1,27 @@
 #![logo](img/ligato/ligato-dark.png) <span >Ligato Docs</span>
 
-Welcome to the Ligato Docs, a collection of documentation for [Ligato projects](https://github.com/ligato).
+Welcome to the Ligato Docs, a collection of information about the [Ligato projects](https://github.com/ligato).
 
+---
 
-**Project Releases**
+## About Ligato
 
-|Project|Latest Release|Release date|
-|---|:---:|---|
-|VPP-Agent|[![stable](https://img.shields.io/github/release/ligato/vpp-agent.svg?label=release&logo=github)](https://github.com/ligato/vpp-agent/releases/latest)|![Release date](https://img.shields.io/github/release-date/ligato/vpp-agent.svg?label=)|
-|CN-Infra|[![stable](https://img.shields.io/github/release/ligato/cn-infra.svg?label=release&logo=github)](https://github.com/ligato/cn-infra/releases/latest)|![Release date](https://img.shields.io/github/release-date/ligato/cn-infra.svg?label=)|
+- [Overview](intro/overview.md) gives overview for Ligato projects.
+- [Releases](https://github.com/ligato/vpp-agent/releases) contains list of Agent releases.
 
-Have a look at the [release notes](https://github.com/ligato/vpp-agent/blob/master/CHANGELOG.md) for a complete list of changes.
+## Using Ligato Agent
 
-**Available Images**
+- [Quickstart](user-guide/quickstart.md) is the best place to start for users.
+- [Concepts](user-guide/concepts.md) will teach you about some Ligato concepts.
+- [FAQ](user-guide/faq.md) provides answers to common questions.
 
-|Image|Info|
-|---|---|
-|[![ligato/vpp-agent](https://img.shields.io/badge/image-ligato/vpp--agent-blue.svg?logo=docker&logoColor=white)](https://cloud.docker.com/u/ligato/repository/docker/ligato/vpp-agent)|minimal image for production|
-|![ligato/dev-vpp-agent](https://img.shields.io/badge/image-ligato/dev--vpp--agent-blue.svg?logo=docker&logoColor=white)|image prepared for developers|
+See **User Guide** section to get more information for users.
 
-The image tag `latest` is built from **master branch** and `dev` tag is built from **dev branch**.
+## Developing with Ligato
+
+- [Hello World](tutorials/01_hello-world.md) is the first tutorial that will help you start developing with Ligato.
+- [KVScheduler](development-guide/kvscheduler.md) and [KVDescriptors](development-guide/kvdescriptor.md) will teach you about the KVScheduler and its components.
+- [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) provides documentation for code.
+
+See **Developer Guide** section to get more information for developers.
 
