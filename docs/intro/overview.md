@@ -55,10 +55,12 @@ The VPP-Agent is management plane - it provides configuring and monitoring servi
 
 ### What to do next?
 
+Wnat to learn more about Ligato?
+
 * Read about the [concepts][concepts] used in Ligato.
 * Learn how to use Ligato in **User Guide** section.
 
-Want to develop with Ligato?
+Want to start developing with Ligato?
 
 * Go through tutorials in **Tutorial** section for guided development.
 * Try to make your own plugin with the help of the **Developer Guide**
