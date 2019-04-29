@@ -9,7 +9,7 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 - [Overview](intro/overview.md) gives overview for Ligato projects.
 - [Releases](https://github.com/ligato/vpp-agent/releases) contains list of Agent releases.
 
-## Using Ligato Agent
+## Using Ligato
 
 - [Quickstart](user-guide/quickstart.md) is the best place to start for users.
 - [Concepts](user-guide/concepts.md) will teach you about some Ligato concepts.
