@@ -20,7 +20,7 @@ See **User Guide** section to get more information for users.
 ## Developing with Ligato
 
 - [Hello World](tutorials/01_hello-world.md) is the first tutorial that will help you start developing with Ligato.
-- [KVScheduler](development-guide/kvscheduler.md) and [KVDescriptors](development-guide/kvdescriptor.md) will teach you about the KVScheduler and its components.
+- [KVScheduler](developer-guide/kvscheduler.md) and [KVDescriptors](developer-guide/kvdescriptor.md) will teach you about the KVScheduler and its components.
 - [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) provides documentation for code.
 
 See **Developer Guide** section to get more information for developers.
