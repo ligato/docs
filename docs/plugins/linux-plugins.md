@@ -10,7 +10,7 @@ The plugin also watches interface changes but only supported types are considere
 
 Namespaces are also supported, however they are handled by a different plugin. Interfaces in namespaces other than default remain unknown if not listed in the NB configuration (they are not registered during resync).
 
-The vpp-agent uses external library to fetch data about OS interfaces and manage them.  
+The VPP-Agent uses external library to fetch data about OS interfaces and manage them.  
 
 The Linux interface model defines following [model][linux-interface-model] describing model with the first part common for all interface types, and the second part specific for every interface type. The interface have an optional namespace field. The interface name is required, and the host name can be specified as well. If not, the host name will 
 be the same as the logical name.
@@ -19,13 +19,13 @@ be the same as the logical name.
 
 The VETH (virtual Ethernet) device is a local Ethernet tunnel. Devices are created in pairs. Packets transmitted on one device in the pair are immediately received on the other device. When either device is down, the link state of the pair is down. The VETH configuration when namespaces need to communicate to the main host namespace or between each other.
 
-The VETH interfaces are created after both ends are defined and known to the agent. The single VTEP can be put to the vpp-agent, but it is cached until its counterpart config appears. 
+The VETH interfaces are created after both ends are defined and known to the agent. The single VTEP can be put to the VPP-Agent, but it is cached until its counterpart config appears. 
 
-The type-specific configuration is of type `VethLink` and contains a mandatory field `peer_if_name` which is the name of the adjacent VETH end. Optionally, the checksum offloading of the received and transmitted packets can be defined. The VETH interface is in the vpp-agent used as an target for the VPP af-packet interface. 
+The type-specific configuration is of type `VethLink` and contains a mandatory field `peer_if_name` which is the name of the adjacent VETH end. Optionally, the checksum offloading of the received and transmitted packets can be defined. The VETH interface is in the VPP-Agent used as an target for the VPP af-packet interface. 
 
 ### TAP
 
-The TAP interface is a virtual network kernel interface which simulates a link-layer device. TAP interfaces are not directly created by the vpp-agent - they are automatically put to the host OD default namespace by the VPP after the VPP TAP interface is created. The [VPP interface plugin model][vpp-interface-model] for TAPs defines a special field used to define the host name of the Linux TAP interface created.
+The TAP interface is a virtual network kernel interface which simulates a link-layer device. TAP interfaces are not directly created by the VPP-Agent - they are automatically put to the host OD default namespace by the VPP after the VPP TAP interface is created. The [VPP interface plugin model][vpp-interface-model] for TAPs defines a special field used to define the host name of the Linux TAP interface created.
  
 After that, the Linux interface can be modified by the linux plugin - IP or MAC address can be set, or the interface can be moved to different namespace.
  
@@ -176,7 +176,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Limitations
 
-The linux plugin namespace management requires docker ran in the privileged mode (with the `--privileged`) parameter. Otherwise, the vpp-agent can fail to start. 
+The linux plugin namespace management requires docker ran in the privileged mode (with the `--privileged`) parameter. Otherwise, the VPP-Agentcan fail to start. 
 
 ### Disable the Linux interface plugin
 

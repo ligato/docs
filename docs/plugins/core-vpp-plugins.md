@@ -21,7 +21,7 @@ instance**. The prefix has to be put into the GoVPPMux configuration file (calle
 
 ### Multiplexing
 
-The `NewAPIChannel` call returns a new API channel for communication with VPP via the `govpp` core. It uses default buffer sizes for the request and reply go channels (by default both are 100 messages long).
+The `NewAPIChannel` call returns a new API channel for communication with VPP via the `GoVPP` core. It uses default buffer sizes for the request and reply go channels (by default both are 100 messages long).
 
 If it is expected that the VPP may get overloaded at peak loads (for example if the user plugin sends configuration requests in bulks) then it is recommended to use `NewAPIChannelBuffered` and increase the buffer size for requests appropriately. Similarly, `NewAPIChannelBuffered` allows to configure the size of the buffer for responses. This is also useful since the buffer for responses is also used to carry VPP notifications and statistics which may temporarily rapidly grow in size and frequency. By increasing the reply channel size, the probability of dropping messages from VPP decreases at the cost of increased memory footprint.
 
@@ -48,7 +48,7 @@ The plugin allows to configure parameters of the VPP health-check probe. Possibl
 
 The VPP interface plugin is a base plugin able to setup various types of **VPP interfaces** and also manages **the 
 interface status** (state data, optionally published back to the database) and **interface and DHCP lease 
-notifications**. The VPP provides multiple interface types, following are supported in the VPP-agent:
+notifications**. The VPP provides multiple interface types, following are supported in the VPP-Agent:
 
   - Sub-interface
   - Software loopback
@@ -128,7 +128,7 @@ supports various modes and load balancing techniques.
 **Software loopback** interface type does not have any special fields.
 
 **DPDK interface** or the physical interface cannot be created or removed directly by the VPP-Agent. The PCI interface 
-has to be connected to the VPP - they should be configured for use by the Linux kernel and shut down. Vpp-agent can set 
+has to be connected to the VPP - they should be configured for use by the Linux kernel and shut down. VPP-Agent can set 
 the interface IP, MAC or set it as enabled. No special configuration fields are defined.
 
 **Memory interface** or shared memory packet interface ( or simply memif) provides high-performance packet transmit and 

@@ -12,8 +12,7 @@ Requirements:
 For simplicity, this tutorial does not use the ETCD or any other northbound KV store. Instead, NB events are created 
 programmatically in the example, using the KV Scheduler API.
 
-The vpp-agent uses VPP binary API calls to configure the VPP. Each VPP binary API call is designed to create
-a configuration item in the VPP or to add or modify one or more configuration parameters. In practice, these
+The VPP-Agenton item in the VPP or to add or modify one or more configuration parameters. In practice, these
 actions can be dependent on each other. For example, an IP address can be assigned to an interface only if 
 the interface is already present in the VPP. Another example is an L2 FIB entry, which can be added only if
 the required interface and a bridge domain exist and the interface is also assigned to the bridge domain, 
@@ -35,7 +34,7 @@ simple messages - an  `Interface` and a `Route` that depends on some interface. 
 dependency between configuration  items (basically, we need an interface to configure a route).  
  
 !!! danger "Important" 
-    The vpp-agent uses the Orchestrator component, which is responsible for collecting northbound
+    The VPP-Agent uses the Orchestrator component, which is responsible for collecting northbound
     data from multiple sources (mainly a KV Store and GRPC clients). To marshall/unmarshall proto messages defined in
     northbound proto models, the Orchestrator needs message names to be present in the messages. 
 

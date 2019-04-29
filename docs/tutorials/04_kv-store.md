@@ -9,7 +9,7 @@ Requirements:
 * Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
 * Complete and understand the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
 
-We will be using [Etcd][1] as the KV data store, but the Ligato infrastructure 
+We will be using [ETCD][1] as the KV data store, but the Ligato infrastructure 
 support several other key-value data stores: [Consul][2], [BoltDB][3], [FileDB][4], 
 [Redis][5].
 
@@ -26,11 +26,11 @@ type KvProtoPlugin interface {
 }
 ```
 
-To use the Etcd as our KV data store plugin we simply define a field for the 
-`KvProtoPlugin` interface in our plugin and initialize it with an Etcd plugin 
-instance in our plugin's constructor. Note that we use the default Etcd plugin
+To use the ETCD as our KV data store plugin we simply define a field for the 
+`KvProtoPlugin` interface in our plugin and initialize it with an ETCD plugin 
+instance in our plugin's constructor. Note that we use the default ETCD plugin
 (`etcd.DefaultPlugin`). In other words, we basically create a dependency on
-the KV data store in our plugin and satisfy it with the default Etcd KV data
+the KV data store in our plugin and satisfy it with the default ETCD KV data
 store implementation:
 
 ```go
@@ -60,9 +60,9 @@ broker := p.KVStore.NewBroker("/myplugin/")
 ```
 
 !!! note
-    The Etcd plugin must be configured with the address of the Etcd server. This is typically done through the etcd config file. In most cases, the etcd config file must be in the same folder where the agent executable is started. 
+    The Etcd plugin must be configured with the address of the ETCD server. This is typically done through the etcd config file. In most cases, the etcd config file must be in the same folder where the agent executable is started. 
 
-If the etcd config file is not found, the Etcd plugin will be disabled, and you will see 
+If the etcd config file is not found, the ETCD plugin will be disabled, and you will see 
 and error log like this:
 ```
 level=error msg="KV store is disabled" loc="04_kv-store/main.go(41)" logger=defaultLogger

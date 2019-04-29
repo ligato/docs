@@ -98,7 +98,7 @@ The correct initialization order for the example above is **[P2, P3, P1]** or **
 
 ### Plugin Options
 
-Since the dependency management is complicated, and it's not an easy task to make it reliable, easy to use and not overwhelming, every plugin comes with a simple helper file called `options.go` (this name is the convention used in the cn-infra, the name of the struct file can by anything).
+Since the dependency management is complicated, and it's not an easy task to make it reliable, easy to use and not overwhelming, every plugin comes with a simple helper file called `options.go` (this name is the convention used in the CN-Infra, the name of the struct file can by anything).
 
 Let's start with a template:
 
@@ -149,7 +149,7 @@ func UseDep3(d3 dep3.SomePlugin) Option {
 }
 ```
 
-Almost all of the cn-infra plugins use the global variable `DefaultPlugin`. It constructs a new instance of the plugin with pre-defined dependency fields. A good practice is to keep default plugin instance perfectly usable and able to init without any customization.
+Almost all of the CN-Infra plugins use the global variable `DefaultPlugin`. It constructs a new instance of the plugin with pre-defined dependency fields. A good practice is to keep default plugin instance perfectly usable and able to init without any customization.
 
 The `NewPlugin()` is a base constructor. If used without any options (parameters), it returns the default instance. Notice that some dependencies are set to default instances of other plugins. This method should be used only if we want to somehow customize plugin dependencies. The example uses three options:
 * `UseDeps(cb func(*Deps))` is a convenient way if many or all dependencies should be customized. It replaces the whole `Dep` with all fields. 
@@ -442,3 +442,6 @@ func NewApp() *MyApp {
 Only `MyApp` (top-level plugin) needs to be set to `agent.AllPlugins()`. The plugin lookup figures out which plugins should be started and also their order. 
 
 [hw-tutorial]: ../tutorials/01_hello-world.md
+
+*[REST]: Representational State Transfer
+*[VPP]: Vector Packet Processing

@@ -146,7 +146,7 @@ In order to obtain and expose the metadata map (if used), call [KVScheduler.GetM
 
 ### Plugin Directory Layout
 
-While it is not mandatory, we recommend to follow the same directory layout used for all VPP-agent plugins:
+While it is not mandatory, we recommend to follow the same directory layout used for all VPP-Agent plugins:
 ```
 <your-plugin>/
 ├── model/  // + generated code
@@ -236,3 +236,6 @@ implementing your own.
 [vpp-iface-adapter]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin.go
 [vpp-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/descriptor/interface.go
 [vpp-route-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l3plugin/descriptor/static_route.go
+
+*[MTU]: Maximum Transmission Unit
+*[VPP]: Vector Packet Processing

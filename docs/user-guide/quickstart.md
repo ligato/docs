@@ -78,7 +78,7 @@ API version: 3.3
 ```
 
 !!! note
-    According to the ETCD documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. However we do not need to explicitly set it because we defined it when starting the etcd container.
+    According to the ETCD documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. However we do not need to explicitly set it because we defined it when starting the ETCD container.
 
 With the following command you can list all key-value pairs related to the vpp-agent:
 

@@ -52,25 +52,25 @@ The `keyval` package defines the client API to access a key-value data store. It
 
 The `keyval` package also provides a skeleton for a key-value plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to datastore implementing the `KvPlugin` interface.
 
-## Etcd plugin
+## ETCD plugin
 
-The Etcd plugin provides access to an etcd key-value data store.
+The ETCD plugin provides access to an ETCD key-value data store.
 
 ### Configuration
 
-- Location of the Etcd configuration file can be defined either by the command line flag `etcd-config` or set via the `ETCD_CONFIG` environment variable.
+- Location of the ETCD configuration file can be defined either by the command line flag `etcd-config` or set via the `ETCD_CONFIG` environment variable.
 
 ### Status Check
 
-- If injected, Etcd plugin will use StatusCheck plugin to periodically issue a minimalistic GET request to check for the status of the connection. The etcd connection state affects the global status of the agent. If agent cannot establish connection with etcd, both the readiness and the liveness probe from the probe plugin will return a negative 
+- If injected, ETCD plugin will use StatusCheck plugin to periodically issue a minimalistic GET request to check for the status of the connection. The ETCD connection state affects the global status of the agent. If agent cannot establish connection with ETCD, both the readiness and the liveness probe from the probe plugin will return a negative 
 result (accessible only via REST API in such case).
 
 ### Compacting
 
-You can compact Etcd using two ways.
+You can compact ETCD using two ways.
 
 - using API by calling `plugin.Compact()` which will compact the database to the current revision.
-- using config file by setting `auto-compact` option to the duration of period that you want the Etcd to be compacted.
+- using config file by setting `auto-compact` option to the duration of period that you want the ETCD to be compacted.
 
 ### Reconnect resynchronization
 

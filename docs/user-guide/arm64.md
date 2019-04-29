@@ -69,11 +69,11 @@ vpp-agent-ctl /opt/vpp-agent/dev/etcd.conf -tapd
 ```
 
 !!! note
-    For ARM64: Check for proper etcd ARM64 docker image in the [official repository][etcd]. Currently you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
+    For ARM64: Check for proper ETCD ARM64 docker image in the [official repository][etcd]. Currently you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
 
 ### ARM64 and Kafka
 
-There is no official spotify/kafka image for ARM64 platform. You can build an image following steps at the [repository][kafka]. However you need to modify the kafka/Dockerfile before building like this:
+There is no official spotify/kafka image for ARM64 platform. You can build an image following steps at the [repository][kafka]. However you need to modify the Kafka/Dockerfile before building like this:
 ```
 //FROM java:openjdk-8-jre
 FROM openjdk:8-jre

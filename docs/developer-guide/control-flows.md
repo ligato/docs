@@ -257,3 +257,6 @@ key representing the interface among the dependencies for the route.
 [cfd-unnumbered]: ../img/control-flow-diagram/unnumbered_interface.svg?sanitize=true
 [retry-failed]: control-flows.md#example-retry-of-failed-operation
 [vpp-interface]: control-flows.md#scenario-create-vpp-interface-via-kvdb
+
+*[KVDB]: Key-Value Database
+*[VPP]: Vector Packet Processing
