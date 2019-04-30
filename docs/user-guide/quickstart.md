@@ -225,5 +225,5 @@ $ docker exec -it vpp-agent vppctl -s localhost:5002 show bridge-domain
 [dockerhub]: https://hub.docker.com/u/ligato
 [postman-install]: https://learning.getpostman.com/docs/postman/launching_postman/installation_and_updates/
 
-*[CLI]: Command Language Interpreter
+*[CLI]: Command-Line Interface
 *[REST]: Representational State Transfer

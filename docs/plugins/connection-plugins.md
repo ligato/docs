@@ -377,7 +377,7 @@ Once the handler is registered with the `GRPC Plugin` and the agent is running, 
 
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol
-*[CLI]: Command Language Interpreter
+*[CLI]: Command-Line Interface
 *[FIB]: Forwarding Information Base
 *[HTTP]: Hypertext Transfer Protocol
 *[HTTPS]: Hypertext Transfer Protocol Secure

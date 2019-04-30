@@ -550,7 +550,7 @@ List of supported configuration files can be found [here][config-files]
 [quickstart-guide]: ../user-guide/quickstart.md
 
 *[ARP]: Address Resolution Protocol
-*[CLI]: Command Language Interpreter
+*[CLI]: Command-Line Interface
 *[KVDB]: Key-Value Database
 *[FIB]: Forwarding Information Base
 *[REST]: Representational State Transfer
