@@ -9,7 +9,7 @@ In this guide you will learn how to:
 
 The result of this guide prepares following topology:
 
-![quickstart-diagram][quickstart-img]
+[![quickstart-topology](../img/user-guide/quickstart-topology.png)](https://www.draw.io/?lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=quickstart-topology.xml#Uhttps%3A%2F%2Fraw.githubusercontent.com%2Fligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fquickstart-topology.xml)
 
 ---
 
@@ -224,4 +224,3 @@ $ docker exec -it vpp-agent vppctl -s localhost:5002 show bridge-domain
 [docker-install]: https://docs.docker.com/cs-engine/1.13/
 [dockerhub]: https://hub.docker.com/u/ligato
 [postman-install]: https://learning.getpostman.com/docs/postman/launching_postman/installation_and_updates/
-[quickstart-img]: ../img/user-guide/quickstart-topology.png
