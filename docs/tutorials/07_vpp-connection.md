@@ -67,14 +67,14 @@ Later, we use the channel to send or receive data, but at first, we need to prep
 
 The GoVPP is in general a toolset for the VPP management, providing high-level API for communication with GoVPP core and sending and receiving messages to/from the VPP via adapter - a component between GoVPP and the VPP, responsible for sending and receiving binary-encoded data via the VPP socket client (by default, but the VPP shared memory is also available when needed). It also provides a bindings generator for VPP JSON binary API definitions - the **binapi-generator**.
  
-Bindings are by default present in the path `/usr/share/vpp/api/` and divided into multiple logical files. Any of the JSON API files can be transformed into the `.go` file using binapi-generator. Generated API calls or messages can be then directly referenced in the go code. The vpp-agent stores generated binary API files in the [binapi directory](/plugins/vpp/binapi) (the tutorial example uses interface bindings from this directory as well)
+Bindings are by default present in the path `/usr/share/vpp/api/` and divided into multiple logical files. Any of the JSON API files can be transformed into the `.go` file using binapi-generator. Generated API calls or messages can be then directly referenced in the go code. The vpp-agent stores generated binary API files in the [binapi directory](https://github.com/ligato/vpp-agent/tree/master/plugins/vpp/binapi) (the tutorial example uses interface bindings from this directory as well)
 
 The binapi-generator uses following format:
 ```bash
 binapi-generator --input-file=/usr/share/vpp/api/<name>.api.json --output-dir=<path>
 ```
 
-Remember that the `*.api.json` files are present only when the VPP is installed in the system. This step needs to be done only once, and files must be re-generated only when new VPP with changes in the API was introduced. In the tutorial this step is not needed since all required messages are already generated, only the correct VPP version is mandatory (see [vpp.env](/vpp.env) file for currently supported VPP versions).
+Remember that the `*.api.json` files are present only when the VPP is installed in the system. This step needs to be done only once, and files must be re-generated only when new VPP with changes in the API was introduced. In the tutorial this step is not needed since all required messages are already generated, only the correct VPP version is mandatory (see [vpp.env](https://github.com/ligato/vpp-agent/blob/master/vpp.env) file for currently supported VPP versions).
 
 Read more about the [GoVPP project](https://wiki.fd.io/view/GoVPP).
 
@@ -389,7 +389,7 @@ func main() {
 
 The output of this call will be shown in the log as a repeated message that the VPP interface with a given index was received. In the multi-request, the reply message usually contains several fields where some of them are VPP specific (like interface admin status, default MTU, internal names, etc.).
 
-[1]: ../plugins/core-vpp-plugins.md#govppmux-plugin
+[1]: ../plugins/vpp-plugins.md#govppmux-plugin
 [2]: https://wiki.fd.io/view/GoVPP
 
 *[CLI]: Command Language Interpreter

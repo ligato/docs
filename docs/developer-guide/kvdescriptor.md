@@ -212,14 +212,14 @@ implementing your own.
 [afpacket-dep]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/ifplugin/descriptor/interface.go#L421-L426
 [bd-derived-vals]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l2plugin/descriptor/bridgedomain.go
 [bd-iface-deps]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l2plugin/descriptor/bd_interface.go
-[bd-interface]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/model/l2/bd.proto#L14
+[bd-interface]: https://github.com/ligato/vpp-agent/blob/dev/api/models/vpp/l2/bridge-domain.proto
 [descriptor-api]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_descriptor_api.go#L99
 [descriptor-adapter]: https://github.com/ligato/vpp-agent/tree/dev/plugins/kvscheduler/descriptor-adapter
 [dump-deps-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linux/l3plugin/descriptor/route.go
 [existing-descriptors]: ../developer-guide/kvdescriptor.md
 [get-metadata-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_scheduler_api.go
 [get-metadata-map-example]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin.go
-[kv-scheduler]: ../plugins/infra-plugins.md#kv-scheduler
+[kv-scheduler]: ../plugins/kvs-plugin.md
 [kvd-dir-layout]: kvdescriptor.md#plugin-directory-layout
 [linux-iface-watcher]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/ifplugin/descriptor/watcher.go
 [linux-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/linux/ifplugin/descriptor/interface.go
@@ -235,7 +235,7 @@ implementing your own.
 [vpp-bd-descr]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/l2plugin/descriptor/bridgedomain.go
 [vpp-iface-adapter]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin.go
 [vpp-interface-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/descriptor/interface.go
-[vpp-route-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l3plugin/descriptor/static_route.go
+[vpp-route-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l3plugin/descriptor/route.go
 
 *[MTU]: Maximum Transmission Unit
 *[REST]: Representational State Transfer

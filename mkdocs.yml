@@ -42,8 +42,8 @@ nav:
     - GRPC Handler: tutorials/08_grpc-tutorial.md
   - PLUGINS:
     - Plugin Overview: plugins/plugin-overview.md
-    - Core VPP Plugins: plugins/core-vpp-plugins.md
-    - Other VPP Plugins: plugins/other-vpp-plugins.md
+    - KV Scheduler: plugins/kvs-plugin.md
+    - VPP Plugins: plugins/vpp-plugins.md
     - Linux Plugins: plugins/linux-plugins.md
     - Connection Plugins: plugins/connection-plugins.md
     - Database Plugins: plugins/db-plugins.md

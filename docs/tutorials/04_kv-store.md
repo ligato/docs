@@ -168,5 +168,5 @@ Complete working example can be found at [examples/tutorials/04_kv-store](https:
 [3]: https://github.com/ligato/cn-infra/tree/master/db/keyval/bolt
 [4]: https://github.com/ligato/cn-infra/tree/master/db/keyval/filedb
 [5]: https://github.com/ligato/cn-infra/tree/master/db/keyval/redis
-[6]: /examples/tutorials/04_kv-store/model/model.proto
+[6]: https://github.com/ligato/cn-infra/blob/master/examples/tutorials/04_kv-store/model/model.proto
 [7]: https://github.com/ligato/cn-infra/blob/master/db/keyval/plugin_api_keyval.go

@@ -258,35 +258,35 @@ More in: [Service Label plugin][service-label]
 
 The service label is a small Core Agent Plugin, which other plugins can use to obtain the microservice label, i.e. the string used to identify the particular VNF. 
 
-[acl-plugin]: other-vpp-plugins.md#access-control-lists-plugin
+[acl-plugin]: vpp-plugins.md#access-control-lists-plugin
 [consul-plugin]: db-plugins.md#consul-plugin
 [data-broker-plugin]: db-plugins.md#data-broker
 [datasync-plugin]: db-plugins.md#datasync-plugin
 [etcd-plugin]: db-plugins.md#etcd-plugin
 [file-db-plugin]: db-plugins.md#filedb
 [govpp-readme]: https://github.com/FDio/govpp/blob/master/README.md
-[govppmux-plugin]: core-vpp-plugins.md#govppmux-plugin
+[govppmux-plugin]: vpp-plugins.md#govppmux-plugin
 [grpc-plugin]: connection-plugins.md#grpc-plugin
 [index-map]: infra-plugins.md#index-map
-[interface-plugin]: core-vpp-plugins.md#interface-plugin
-[interface-plugin-guide]: core-vpp-plugins.md#interface-plugin
-[ipsec-plugin]: other-vpp-plugins.md#ipsec-plugin
-[kvscheduler]: infra-plugins.md#kv-scheduler
-[l2-plugin]: core-vpp-plugins.md#l2-plugin
-[l3-plugin]: core-vpp-plugins.md#l3-plugin
+[interface-plugin]: vpp-plugins.md#interface-plugin
+[interface-plugin-guide]: vpp-plugins.md#interface-plugin
+[ipsec-plugin]: vpp-plugins.md#ipsec-plugin
+[kvscheduler]: kvs-plugin.md
+[l2-plugin]: vpp-plugins.md#l2-plugin
+[l3-plugin]: vpp-plugins.md#l3-plugin
 [linux-interface-pluign]: linux-plugins.md#interface-plugin
 [linux-l3-plugin]: linux-plugins.md#l3-plugin
 [linux-namespace-pluign]: linux-plugins.md#namespace-plugin
 [log-manager]: infra-plugins.md#log-manager
 [messaging-kafka]: infra-plugins.md#messagingkafka
-[nat-plugin]: other-vpp-plugins.md#nat-plugin
+[nat-plugin]: vpp-plugins.md#nat-plugin
 [process-manager]: infra-plugins.md#process-manager
-[punt-plugin]: other-vpp-plugins.md#punt-plugin
+[punt-plugin]: vpp-plugins.md#punt-plugin
 [redis-plugin]: db-plugins.md#redis
 [rest-plugin]: connection-plugins.md#rest-plugin
 [service-label]: infra-plugins.md#status-check
 [status-check]: infra-plugins.md#status-check
-[telemetry-plugin]: other-vpp-plugins.md#telemetry
+[telemetry-plugin]: vpp-plugins.md#telemetry
 
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol
