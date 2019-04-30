@@ -508,3 +508,8 @@ Example verbose log of transaction processing as printed by the scheduler to std
 [txn-update-img]: ../img/developer-guide/txn-update.png
 [understand-transaction-logs]: kvs-troubleshooting.md#understanding-the-kvscheduler-transaction-log
 [verification-error]: https://github.com/ligato/vpp-agent/blob/de1a2254298d61c5712b8e4d6a4b24648b229f04/plugins/kvscheduler/api/errors.go#L162-L213
+
+*[KVDB]: Key-Value Database
+*[REST]: Representational State Transfer
+*[URL]: Uniform Resource Locator
+*[VPP]: Vector Packet Processing

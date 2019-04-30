@@ -548,3 +548,9 @@ List of supported configuration files can be found [here][config-files]
 [redis-quickstart]: https://redis.io/topics/quickstart
 [telemetry-plugin]: ../plugins/other-vpp-plugins.md#telemetry
 [quickstart-guide]: ../user-guide/quickstart.md
+
+*[ARP]: Address Resolution Protocol
+*[CLI]: Command Language Interpreter
+*[KVDB]: Key-Value Database
+*[FIB]: Forwarding Information Base
+*[REST]: Representational State Transfer

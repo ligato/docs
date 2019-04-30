@@ -307,3 +307,6 @@ Data will not be propagated if target path directory.
 [datasync-image]: ../img/user-guide/datasync_watch.png
 [datasync-publish-image]: ../img/user-guide/datasync_pub.png
 [db-image]: ../img/user-guide/db.png
+```
+
+*[REST]: Representational State Transfer

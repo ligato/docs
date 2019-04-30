@@ -391,3 +391,5 @@ The output of this call will be shown in the log as a repeated message that the 
 
 [1]: ../plugins/core-vpp-plugins.md#govppmux-plugin
 [2]: https://wiki.fd.io/view/GoVPP
+
+*[CLI]: Command Language Interpreter

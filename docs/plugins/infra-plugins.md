@@ -444,3 +444,10 @@ dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 [vpp-iface-idx]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifaceidx/ifaceidx.goL62
 [vpp-iface-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin_api.go#L26
 [value-origin]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_descriptor_api.go#L53
+
+*[ARP]: Address Resolution Protocol
+*[FIB]: Forwarding Information Base
+*[HTTP]: Hypertext Transfer Protocol
+*[REST]: Representational State Transfer
+*[VNF]: Virtual Network Function
+*[VPP]: Vector Packet Processing

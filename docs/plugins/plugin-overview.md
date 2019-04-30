@@ -287,3 +287,13 @@ The service label is a small Core Agent Plugin, which other plugins can use to o
 [service-label]: infra-plugins.md#status-check
 [status-check]: infra-plugins.md#status-check
 [telemetry-plugin]: other-vpp-plugins.md#telemetry
+
+*[ACL]: Access Control List
+*[ARP]: Address Resolution Protocol
+*[DPDK]: Data Plane Development Kit
+*[NAT]: Network Address Translation
+*[SA]: Security Association
+*[SPD]: Security Policy Database
+*[REST]: Representational State Transfer
+*[VNF]: Virtual Network Function
+*[VPP]: Vector Packet Processing

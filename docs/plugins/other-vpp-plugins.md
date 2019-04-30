@@ -1023,3 +1023,10 @@ The telemetry plugin configuration file allows to change polling interval, or tu
 [ipsec-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/ipsec/ipsec.proto
 [key-reference]: ../user-guide/reference.md
 [punt-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/punt/punt.proto
+
+*[ACL]: Access Control List
+*[NAT]: Network Address Translation
+*[REST]: Representational State Transfer
+*[SA]: Security Association
+*[SPD]: Security Policy Database
+*[VPP]: Vector Packet Processing

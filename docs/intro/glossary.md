@@ -17,3 +17,11 @@ A *cloud-native VNF* is a VNF designed for the emerging cloud environment - it r
 
 [l2-factor-app]: https://12factor.net
 [vpp]: https://fd.io
+
+*[CLI]: Command Language Interpreter
+*[NFV]: Network Functions Virtualization
+*[REST]: Representational State Transfer
+*[SDN]: Software-Defined Networking
+*[SNMP]: Simple Network Management Protocol
+*[VNF]: Virtual Network Function
+*[VPP]: Vector Packet Processing

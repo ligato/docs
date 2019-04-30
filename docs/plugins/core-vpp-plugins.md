@@ -69,7 +69,7 @@ met (for example an Af-packet interface requires a VEth as a host in order to at
   
 The VPP uses multiple commands and/or binary APIs to create and configure shared boundaries. The vpp-agent is 
 simplifying this processes, providing the single model with specific extensions depending on required interface type. 
-The northbound configuration is translated to a sequence of binary API calls using GOVPP library. All interface types 
+The northbound configuration is translated to a sequence of binary API calls using GoVPP library. All interface types 
 except the DPDK (physical) interface can be directly created or removed in the VPP. Physical interfaces can be only 
 configured. The Af-packet interface is dependent on host-interface of the VEth type, and cannot exist without it.
 
@@ -978,3 +978,9 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 [linux-interface-plugin-guide]: linux-plugins.md#interface-plugin
 [route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/route.proto
 [xc-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/xconnect.proto
+
+*[ARP]: Address Resolution Protocol
+*[DHCP]: Dynamic Host Configuration Protocol
+*[DPDK]: Data Plane Development Kit
+*[FIB]: Forwarding Information Base
+*[REST]: Representational State Transfer

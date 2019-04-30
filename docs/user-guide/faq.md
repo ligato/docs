@@ -114,7 +114,10 @@ Then contact Ligato developers. We will solve the issue as fast as possible. Tha
 [rest-api]: ../plugins/infra-plugins.md#rest-api
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env
 
-
+*[FIB]: Forwarding Information Base
+*[HTTP]: Hypertext Transfer Protocol
+*[KVDB]: Key-Value Database
+*[REST]: Representational State Transfer
 
 
 

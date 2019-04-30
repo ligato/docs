@@ -221,5 +221,6 @@ KVScheduler exposes the state of the system and the history of operations not on
 [kvdescriptor-guide]: kvdescriptor.md
 [get-history-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L241-L244
 
+*[ARP]: Address Resolution Protocol
 *[REST]: Representational State Transfer
 *[VPP]: Vector Packet Processing

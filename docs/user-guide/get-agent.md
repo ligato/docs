@@ -242,6 +242,9 @@ Package [clientv2][clientv2] contains API definition for every supported configu
 [references]: ../user-guide/reference.md
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env   
 
+*[DPDK]: Data Plane Development Kit
+*[KVDB]: Key-Value Database
+*[NAT]: Network Address Translation
 
 
 

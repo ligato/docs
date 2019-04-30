@@ -406,4 +406,5 @@ The second transaction introduced the expected interface. The scheduler recogniz
  [4]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/05_kv-scheduler
  [5]: https://github.com/ligato/vpp-agent/blob/master/docs/kvscheduler/README.md
  
+ *[FIB]: Forwarding Information Base
  

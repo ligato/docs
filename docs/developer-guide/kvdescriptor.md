@@ -238,4 +238,5 @@ implementing your own.
 [vpp-route-descr]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/l3plugin/descriptor/static_route.go
 
 *[MTU]: Maximum Transmission Unit
+*[REST]: Representational State Transfer
 *[VPP]: Vector Packet Processing

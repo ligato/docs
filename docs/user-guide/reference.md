@@ -152,3 +152,6 @@ Key (dst_network is with mask in format <ip>/<mask>):
 /vnf-agent/vpp1/config/linux/l3/v2/route/<dst_network>/<outgoing_interface>
 ```
 
+*[ARP]: Address Resolution Protocol
+*[NAT]: Network Address Translation
+

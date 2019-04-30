@@ -277,3 +277,7 @@ Flag to set the microservice label for a given agent.
 
 - `mtu`: Default maximum transmission unit. The value is used if an interface without MTU is created (i.e. MTU in interface configuration is preferred)
 - `status-publishers`: VPP agent allows to send status data back to ETCD. To allow it, add desired status publishers. Currently supported for **etcd** and **redis** (both options can be chosen together)
+
+*[ACL]: Access Control List
+*[HTTP]: Hypertext Transfer Protocol
+*[REST]: Representational State Transfer
