@@ -4,8 +4,8 @@ The tutorial shows how to use CN-Infra/VPP-Agent plugins in order to implement G
 
 Requirements:
 
-* Complete and understand the ['Hello World Agent'](../tutorials/01_hello-world) tutorial
-* Complete and understand the ['Plugin Dependencies'](../tutorials/02_plugin-deps) tutorial
+* Complete and understand the ['Hello World Agent'](../tutorials/01_hello-world.md) tutorial
+* Complete and understand the ['Plugin Dependencies'](../tutorials/02_plugin-deps.md) tutorial
 * Installed VPP, or VPP binary file of the supported version
 
 In the first part, we create a generic GRPC plugin providing a client object which allows to send the configuration to the VPP-Agent and also can act as notification watcher which can listen on the VPP-Agent notifications. Next part shows how the plugin works with some example data for both scenarios. 

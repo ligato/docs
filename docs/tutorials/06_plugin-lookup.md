@@ -334,3 +334,6 @@ type Agent struct {
 ``` 
 
 The agent will end up with an error since according to the resolution key above, the automatic lookup puts `HelloWorld` to the first place which is not correct. The ultimate rule in the cross dependencies is that the plugin which should be started first is placed below all dependent plugins.
+
+*[HTTP]: Hypertext Transfer Protocol
+*[KVDB]: Key-Value Database

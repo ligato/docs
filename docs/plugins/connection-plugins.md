@@ -374,3 +374,13 @@ Once the handler is registered with the `GRPC Plugin` and the agent is running, 
 [grpc-plugin]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md
+
+*[ACL]: Access Control List
+*[ARP]: Address Resolution Protocol
+*[CLI]: Command-Line Interface
+*[FIB]: Forwarding Information Base
+*[HTTP]: Hypertext Transfer Protocol
+*[HTTPS]: Hypertext Transfer Protocol Secure
+*[NAT]: Network Address Translation
+*[REST]: Representational State Transfer
+*[URL]: Uniform Resource Locator

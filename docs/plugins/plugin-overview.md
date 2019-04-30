@@ -2,7 +2,13 @@
 
 ---
 
-## Core VPP plugins
+## KV Scheduler plugin
+
+More in: [KVScheduler plugin][kvscheduler]
+
+The KV Scheduler is the first step in any VPP or Linux related data processing. It validates the existence of the configuration item dependencies, handles local caching and performs retries if possible or allowed by the underlying plugin. The KV Scheduler does not operate with data directly (does not call any VPP binary API), only determines what operations are needed to achieve the desired result. Data are processed into low-level objects in adjacent VPP/Linux plugins.
+
+## VPP plugins
 
 VPP-Agent core VPP plugins (e.g. plugins which are always required when working with the VPP). Plugin list:
 
@@ -10,6 +16,13 @@ VPP-Agent core VPP plugins (e.g. plugins which are always required when working 
 - Interface plugin
 - L2 plugin
 - L3 plugin
+- Access Control List (ACL)
+- ACL-based forwarding (ABD)
+- IPSec plugin
+- NAT plugin
+- Punt plugin
+- STN plugin 
+- Telemetry plugin
 
 ### GoVPPMux plugin
 
@@ -36,18 +49,6 @@ The VPP L2 plugin is a base plugin which can be used to configure link-layer rel
 More in: [l3-plugin][l3-plugin]
 
 The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and **IP neighbor** feature. The L3 plugin is dependent on the [interface plugin][interface-plugin-guide] in many aspects since several configuration items require the interface to be already present.
-
-## Other VPP plugins
-
-VPP-Agent supplementary VPP plugins which are in most cases dependent on default plugins in some way. Plugin list:
-
-- Access Control List (ACL)
-- ACL-based forwarding (ABD)
-- IPSec plugin
-- NAT plugin
-- Punt plugin
-- STN plugin 
-- Telemetry plugin
 
 ### ACL plugin
 
@@ -198,7 +199,6 @@ The fileDB plugin allows to use the file system of a operating system as a key-v
 
 User guide for VPP-Agent infra plugins.
 
-- KV Scheduler
 - Configurator
 - Orchestrator
 - Status Check 
@@ -207,12 +207,6 @@ User guide for VPP-Agent infra plugins.
 - Messaging/Kafka
 - Process Manager
 - Service Label plugin
-
-### KV Scheduler
-
-More in: [KVScheduler plugin][kvscheduler]
-
-The KV Scheduler is the first step in any VPP or Linux related data processing. It validates the existence of the configuration item dependencies, handles local caching and performs retries if possible or allowed by the underlying plugin. The KV Scheduler does not operate with data directly (does not call any VPP binary API), only determines what operations are needed to achieve the desired result. Data are processed into low-level objects in adjacent VPP/Linux plugins.
 
 ### Configurator
 
@@ -258,32 +252,42 @@ More in: [Service Label plugin][service-label]
 
 The service label is a small Core Agent Plugin, which other plugins can use to obtain the microservice label, i.e. the string used to identify the particular VNF. 
 
-[acl-plugin]: other-vpp-plugins.md#access-control-lists-plugin
+[acl-plugin]: vpp-plugins.md#access-control-lists-plugin
 [consul-plugin]: db-plugins.md#consul-plugin
 [data-broker-plugin]: db-plugins.md#data-broker
 [datasync-plugin]: db-plugins.md#datasync-plugin
 [etcd-plugin]: db-plugins.md#etcd-plugin
 [file-db-plugin]: db-plugins.md#filedb
 [govpp-readme]: https://github.com/FDio/govpp/blob/master/README.md
-[govppmux-plugin]: core-vpp-plugins.md#govppmux-plugin
+[govppmux-plugin]: vpp-plugins.md#govppmux-plugin
 [grpc-plugin]: connection-plugins.md#grpc-plugin
 [index-map]: infra-plugins.md#index-map
-[interface-plugin]: core-vpp-plugins.md#interface-plugin
-[interface-plugin-guide]: core-vpp-plugins.md#interface-plugin
-[ipsec-plugin]: other-vpp-plugins.md#ipsec-plugin
-[kvscheduler]: infra-plugins.md#kv-scheduler
-[l2-plugin]: core-vpp-plugins.md#l2-plugin
-[l3-plugin]: core-vpp-plugins.md#l3-plugin
+[interface-plugin]: vpp-plugins.md#interface-plugin
+[interface-plugin-guide]: vpp-plugins.md#interface-plugin
+[ipsec-plugin]: vpp-plugins.md#ipsec-plugin
+[kvscheduler]: kvs-plugin.md
+[l2-plugin]: vpp-plugins.md#l2-plugin
+[l3-plugin]: vpp-plugins.md#l3-plugin
 [linux-interface-pluign]: linux-plugins.md#interface-plugin
 [linux-l3-plugin]: linux-plugins.md#l3-plugin
 [linux-namespace-pluign]: linux-plugins.md#namespace-plugin
 [log-manager]: infra-plugins.md#log-manager
 [messaging-kafka]: infra-plugins.md#messagingkafka
-[nat-plugin]: other-vpp-plugins.md#nat-plugin
+[nat-plugin]: vpp-plugins.md#nat-plugin
 [process-manager]: infra-plugins.md#process-manager
-[punt-plugin]: other-vpp-plugins.md#punt-plugin
+[punt-plugin]: vpp-plugins.md#punt-plugin
 [redis-plugin]: db-plugins.md#redis
 [rest-plugin]: connection-plugins.md#rest-plugin
 [service-label]: infra-plugins.md#status-check
 [status-check]: infra-plugins.md#status-check
-[telemetry-plugin]: other-vpp-plugins.md#telemetry
+[telemetry-plugin]: vpp-plugins.md#telemetry
+
+*[ACL]: Access Control List
+*[ARP]: Address Resolution Protocol
+*[DPDK]: Data Plane Development Kit
+*[NAT]: Network Address Translation
+*[SA]: Security Association
+*[SPD]: Security Policy Database
+*[REST]: Representational State Transfer
+*[VNF]: Virtual Network Function
+*[VPP]: Vector Packet Processing

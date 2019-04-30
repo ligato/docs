@@ -76,3 +76,5 @@ pybot --loglevel TRACE -v VARIABLES:jozo_local loopback_crud.robot
         - .../vpp-agent/tests/robot/suites/crud/
       - logs: vpp-agent, etcd, ...:
         - .../vpp-agent/tests/robot/suites/crud/results
+
+*[VPP]: Vector Packet Processing

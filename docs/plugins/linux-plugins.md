@@ -371,3 +371,5 @@ pending interfaces are moved to its namespace.
 [linux-namespace-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/namespace/namespace.proto
 [linux-route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/l3/route.proto
 [vpp-interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
+
+*[ARP]: Address Resolution Protocol

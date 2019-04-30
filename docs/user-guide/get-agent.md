@@ -236,12 +236,15 @@ Package [clientv2][clientv2] contains API definition for every supported configu
 [arm-doc]: https://github.com/ligato/vpp-agent/blob/master/docs/arm64/README.md
 [clientv2]: ../user-guide/concepts.md#client-v2
 [docker]: https://github.com/ligato/vpp-agent/tree/master/docker
-[govppmux-plugin]: ../plugins/core-vpp-plugins.md#govppmux-plugin
+[govppmux-plugin]: ../plugins/vpp-plugins.md#govppmux-plugin
 [interface-plugin]: ../plugins/linux-plugins.md#interface-plugin
 [kv-overview]: ../user-guide/concepts.md#key-value-store-overview
 [references]: ../user-guide/reference.md
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env   
 
+*[DPDK]: Data Plane Development Kit
+*[KVDB]: Key-Value Database
+*[NAT]: Network Address Translation
 
 
 

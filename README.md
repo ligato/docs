@@ -37,4 +37,4 @@ To start server, run following command in the root directory:
 $ mkdocs serve
 ```
 
-The documentation site should be accessible at: http://localhost:8000/. The server also watches all changes which can be immediately seen in the browser.
+The documentation site should be accessible at: `http://localhost:8000/`. The server also watches all changes which can be immediately seen in the browser.

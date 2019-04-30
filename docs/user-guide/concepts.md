@@ -543,8 +543,14 @@ List of supported configuration files can be found [here][config-files]
 [datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
 [etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
 [filedb-plugin]: ../plugins/db-plugins.md#filedb
-[list-of-supported]: concepts.md#list-of-supported-flags
+[list-of-supported]: config-files.md
 [redis-plugin]: ../plugins/db-plugins.md#redis
 [redis-quickstart]: https://redis.io/topics/quickstart
-[telemetry-plugin]: ../plugins/other-vpp-plugins.md#telemetry
+[telemetry-plugin]: ../plugins/vpp-plugins.md#telemetry
 [quickstart-guide]: ../user-guide/quickstart.md
+
+*[ARP]: Address Resolution Protocol
+*[CLI]: Command-Line Interface
+*[KVDB]: Key-Value Database
+*[FIB]: Forwarding Information Base
+*[REST]: Representational State Transfer

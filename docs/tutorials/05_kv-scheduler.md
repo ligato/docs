@@ -1,13 +1,13 @@
 # Tutorial: Using the KV Scheduler in your plugin
 
 This tutorial shows how to use the ['KV Scheduler'][5] in our hello world plugin that was created in the 
-[previous tutorials](../tutorials/01_hello-world). You will learn how to prepare
+[previous tutorials](../tutorials/01_hello-world.md). You will learn how to prepare
 a descriptor, generate the adapter and "wire" the plugin with the KV Scheduler. 
 
 Requirements:
 
-* Complete and understand the ['Hello World Agent'](../tutorials/01_hello-world) tutorial
-* Complete and understand the ['Plugin Dependencies'](../tutorials/02_plugin-deps) tutorial
+* Complete and understand the ['Hello World Agent'](../tutorials/01_hello-world.md) tutorial
+* Complete and understand the ['Plugin Dependencies'](../tutorials/02_plugin-deps.md) tutorial
 
 For simplicity, this tutorial does not use the ETCD or any other northbound KV store. Instead, NB events are created 
 programmatically in the example, using the KV Scheduler API.
@@ -400,10 +400,11 @@ The route comes first, but it is postponed (cached) since the dependent interfac
 
 The second transaction introduced the expected interface. The scheduler recognized it as a dependency for the cached route, sorted items to correct order and called the appropriate configuration method. The previously cached route is marked as `[WAS-PENDING]`, highlighting that this item was postponed.
 
- [1]: /https://github.com/ligato/vpp-agent/blob/master/examples/tutorials/05_kv-scheduler/model/model.proto
+ [1]: https://github.com/ligato/vpp-agent/blob/master/examples/tutorials/05_kv-scheduler/model/model.proto
  [2]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/descriptor-adapter
- [3]: /https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/kv_descriptor_api.go
+ [3]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/kv_descriptor_api.go
  [4]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/05_kv-scheduler
  [5]: https://github.com/ligato/vpp-agent/blob/master/docs/kvscheduler/README.md
  
+ *[FIB]: Forwarding Information Base
  

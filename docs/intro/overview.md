@@ -67,3 +67,5 @@ Want to start developing with Ligato?
 
 [concepts]: ../user-guide/concepts.md
 
+*[CLI]: Command-Line Interface
+*[FIB]: Forwarding Information Base
