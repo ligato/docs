@@ -243,4 +243,4 @@ $ docker exec -it vpp-agent vppctl -s localhost:5002 show bridge-domain
 [docker-install]: https://docs.docker.com/cs-engine/1.13/
 [dockerhub]: https://hub.docker.com/u/ligato
 [postman-install]: https://learning.getpostman.com/docs/postman/launching_postman/installation_and_updates/
-[quickstart-img]: https://user-images.githubusercontent.com/15376606/54192164-a5a0e600-44b7-11e9-9a8c-c034bf6b7443.png
+[quickstart-img]: ../img/user-guide/quickstart-topology.png
