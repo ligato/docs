@@ -543,7 +543,7 @@ List of supported configuration files can be found [here][config-files]
 [datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
 [etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
 [filedb-plugin]: ../plugins/db-plugins.md#filedb
-[kvdb-ms-label-img]: ../img/user-guide/KVDB_microservice_label.png
+[kvdb-ms-label-img]: ../img/user-guide/kvdb-microservice-label.png
 [list-of-supported]: concepts.md#list-of-supported-flags
 [redis-plugin]: ../plugins/db-plugins.md#redis
 [redis-quickstart]: https://redis.io/topics/quickstart
