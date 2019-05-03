@@ -60,6 +60,7 @@ nav:
     - Robot Framework Guide: testing/robot-framework-guide.md
   - TOOLS:
     - VPP-Agent-Ctl: tools/vpp-agent-ctl.md
+    - AgentCTL: tools/agentctl.md
   - TROUBLESHOOTING:
     - KVS Troubleshooting: troubleshooting/kvs-troubleshooting.md
 
