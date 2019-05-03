@@ -1,4 +1,4 @@
-agentctl
+# AgentCTL
 
 ---
 
