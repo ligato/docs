@@ -1,4 +1,8 @@
-# Getting Started: The 'Hello World' Agent
+# Hello World
+
+---
+
+Link to code: [getting started: the 'Hello World' agent][code-link]
 
 In this tutorial we will create a simple Ligato control plane agent that 
 contains a single `Helloworld` plugin that prints "Hello World" to the log.
@@ -85,3 +89,5 @@ When the interrupt comes from the user (for example. when the user hits `ctrl-c`
 the `Close` methods will be called on all agent's plugins and the agent will exit.
 
 The complete working example can be found at [examples/tutorials/01_hello-world](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/01_hello-world).
+
+[code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/01_hello-world

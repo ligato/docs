@@ -1,4 +1,8 @@
-# Tutorial: Using the KV Scheduler in your plugin
+# KV Scheduler
+
+---
+
+Link to code: [Using the KV Scheduler in your plugin][code-link]
 
 This tutorial shows how to use the ['KV Scheduler'][5] in our hello world plugin that was created in the 
 [previous tutorials](../tutorials/01_hello-world.md). You will learn how to prepare
@@ -405,6 +409,7 @@ The second transaction introduced the expected interface. The scheduler recogniz
  [3]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/kv_descriptor_api.go
  [4]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/05_kv-scheduler
  [5]: https://github.com/ligato/vpp-agent/blob/master/docs/kvscheduler/README.md
+ [code-link]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/05_kv-scheduler
  
  *[FIB]: Forwarding Information Base
  

@@ -1,4 +1,8 @@
-# Tutorial: Working with KV Data Stores
+# KV Datastore
+
+---
+
+Link to code: [Working with KV Data Stores][code-link]
 
 In this tutorial we will learn how to use an external key-value (KV) data store.
 The tutorial shows how to read and write data to/from the data store and how to 
@@ -170,3 +174,4 @@ Complete working example can be found at [examples/tutorials/04_kv-store](https:
 [5]: https://github.com/ligato/cn-infra/tree/master/db/keyval/redis
 [6]: https://github.com/ligato/cn-infra/blob/master/examples/tutorials/04_kv-store/model/model.proto
 [7]: https://github.com/ligato/cn-infra/blob/master/db/keyval/plugin_api_keyval.go
+[code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/04_kv-store

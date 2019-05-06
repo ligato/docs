@@ -1,4 +1,8 @@
-# Tutorial: Adding Dependencies to Your Plugin
+# Plugin Dependencies
+
+---
+
+Link to code: [Adding dependencies to your plugin][code-link]
 
 Your control plane agent will typically consist of one or more plugins that
 contain the application logic and a bunch of Ligato plugins and other components
@@ -96,3 +100,5 @@ If the config file is not found, the `LoadValue` will return false. If the confi
 cannot be parsed, the function will return an error.
 
 The complete working example can be found at [examples/tutorials/02_plugin-deps](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/02_plugin-deps).
+
+[code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/02_plugin-deps
