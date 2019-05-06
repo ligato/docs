@@ -44,7 +44,7 @@ The `docker ps` should not contain any mention about the vpp-agent in the output
 The following command starts the ETCD in a docker container. If the image is not present on your local machine, docker will download it first:
 
 ```
-$ docker run --rm --name etcd -p 2379:2379 quay.io/coreos/etcd -e ETCDCTL_API=3 /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
+$ docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
 
 Verify the ETCD container is running:
