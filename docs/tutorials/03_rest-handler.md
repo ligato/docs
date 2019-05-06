@@ -1,4 +1,8 @@
-# Tutorial: Adding a REST API to your Plugin
+# REST Handler
+
+---
+
+Link to code: [Adding a REST API to your Plugin][code-link]
 
 In this tutorial we will learn how to add a REST API to your plugin. 
 The Ligato infrastructure provides an HTTP server that is used by all plugins
@@ -82,6 +86,8 @@ curl -X POST -d 'John' -H "Content-Type: application/json" http://localhost:9191
 ```
 
 Complete working example can be found at [examples/tutorials/03_rest-handler](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/03_rest-handler).
+
+[code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/03_rest-handler
 
 *[HTTP]: Hypertext Transfer Protocol
 *[REST]: Representational State Transfer

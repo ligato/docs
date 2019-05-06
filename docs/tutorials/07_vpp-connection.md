@@ -1,4 +1,8 @@
-# Tutorial: Connect the plugin to the VPP
+# VPP Connection
+
+---
+
+Link to code: [Connect the plugin to the VPP][code-link]
 
 This tutorial will illustrate how to utilize the [GoVPPMux plugin][1] in our hello world plugin to connect to the VPP and how to perform a synchronous, asynchronous and multi-request call in order to put configuration items.
 
@@ -391,5 +395,6 @@ The output of this call will be shown in the log as a repeated message that the 
 
 [1]: ../plugins/vpp-plugins.md#govppmux-plugin
 [2]: https://wiki.fd.io/view/GoVPP
+[code-link]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/07_vpp-connection
 
 *[CLI]: Command-Line Interface

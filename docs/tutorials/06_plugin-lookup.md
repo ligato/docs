@@ -1,4 +1,8 @@
-# Tutorial: Managing plugin dependencies with plugin lookup
+# Plugin Lookup
+
+---
+
+Link to code: [Managing plugin dependencies with plugin lookup][code-link]
 
 In this tutorial, we learn how to resolve dependencies between multiple plugins in various scenarios. 
 
@@ -334,6 +338,8 @@ type Agent struct {
 ``` 
 
 The agent will end up with an error since according to the resolution key above, the automatic lookup puts `HelloWorld` to the first place which is not correct. The ultimate rule in the cross dependencies is that the plugin which should be started first is placed below all dependent plugins.
+
+[code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/06_plugin_lookup
 
 *[HTTP]: Hypertext Transfer Protocol
 *[KVDB]: Key-Value Database

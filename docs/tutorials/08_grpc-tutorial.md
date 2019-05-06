@@ -1,4 +1,8 @@
-# Tutorial: GRPC
+# GRPC Handler
+
+---
+
+Link to code: [GRPC][code-link]
 
 The tutorial shows how to use CN-Infra/VPP-Agent plugins in order to implement GRPC CRUD client or notification watcher. The main advantage of this solution is that the implementation is easy and short (in terms of LoC). 
 
@@ -38,7 +42,7 @@ In this section is described the procedure of creating the generic GRPC plugin.
 package grpc
 
 // The GRPC client plugin structure
-type GRPCClient struct {
+type Client struct {
 	Deps // external dependencies	
 }
 
@@ -48,17 +52,17 @@ type Deps struct {
 }
 
 // The initialization function, called when the agent in started
-func (p *GRPCClient) Init() (err error) {
+func (p *Client) Init() (err error) {
 	return nil
 }
 
 // THe close function, called on the shutdown  
-func (p *GRPCClient) Close() (err error) {
+func (p *Client) Close() (err error) {
 	return nil
 }
 
 // The GRPC plugin string representation
-func (p *GRPCClient) String() string {
+func (p *Client) String() string {
 	return "GRPC-client"
 }
 ```
@@ -72,11 +76,11 @@ import (
 )
 
 ...
-type GRPCClient struct {
+type Client struct {
 	Deps
 	
 	connection *grpc.ClientConn
-    client     *configurator.ConfiguratorClient
+    client     configurator.ConfiguratorClient
 }
 
 
@@ -98,12 +102,12 @@ import (
 
 ...
 
-func (p *GRPCClient) Init() (err error) {
+func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
 		// Or any other transport security
 		grpc.WithInsecure(),
 	    // Hardcoded TCP socket type, IP address and dial timeout (2s)
-        grpc.WithDialer(net.DialTimeout("tcp", "0.0.0.0:9111", time.Second*2)),
+        grpc.WithDialer(dialer("tcp", "0.0.0.0:9111", time.Second*2)),
     )
     if err != nil {
         return err
@@ -127,7 +131,7 @@ func dialer(socket, address string, timeoutVal time.Duration) func(string, time.
 
 4. **Prepare the GRPC client** able to send northbound configuration to the GRPC server (VPP-Agent) or watch notifications from it. The client object implements the configurator client interface generated from the [configurator proto file](https://github.com/ligato/vpp-agent/blob/master/api/configurator/configurator.proto).
 ```go
-func (p *GRPCClient) Init() (err error) {
+func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
 		grpc.WithDialer(dialer("tcp", "0.0.0.0:9111", time.Second*2)),
 	)
@@ -150,14 +154,14 @@ package grpc
 
 import (
 	"github.com/ligato/cn-infra/infra"
-	"github.com/ligato/vpp-agent/api/configurator"
-	"google.golang.org/grpc"
-	"net"
-	"time"
+    "github.com/ligato/vpp-agent/api/configurator"
+    "google.golang.org/grpc"
+    "net"
+    "time"
 )
 
 // The GRPC client plugin structure
-type GRPCClient struct {
+type Client struct {
 	connection *grpc.ClientConn
 	client     configurator.ConfiguratorClient
 
@@ -170,7 +174,7 @@ type Deps struct {
 }
 
 // Initialization function, called when the agent in started
-func (p *GRPCClient) Init() (err error) {
+func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
 		grpc.WithDialer(dialer("tcp", "0.0.0.0:9111", time.Second*2)),
 	)
@@ -186,12 +190,12 @@ func (p *GRPCClient) Init() (err error) {
 }
 
 // Close function, called on shutdown
-func (p *GRPCClient) Close() (err error) {
+func (p *Client) Close() (err error) {
 	return p.connection.Close()
 }
 
 // Plugin string representation
-func (p *GRPCClient) String() string {
+func (p *Client) String() string {
 	return "GRPC-client"
 }
 
@@ -219,8 +223,8 @@ package grpc
 var DefaultPlugin = *NewPlugin()
 
 // Method to retrieve plugin instance with options (if defined)
-func NewPlugin(opts ...Option) *GRPCClient {
-	p := &GRPCClient{}
+func NewPlugin(opts ...Option) *Client {
+	p := &Client{}
 
     // Unique plugin identification
 	p.PluginName = "GRPC-client"
@@ -236,19 +240,15 @@ func NewPlugin(opts ...Option) *GRPCClient {
 	return p
 }
 
-type Option func(*GRPCClient)
+type Option func(*Client)
 ```
 
 **2. Define the App as a top-level plugin** - prepare the structure in the `/grpc/cmd/client/main.go` with all methods required to implement the plugin interface (as before). For simplicity, the structure defines only our GRPC plugin.
 ```go
 package main
 
-import (
-	"grpc/plugins/grpc"
-)
-
 type App struct {
-	GRPC *grpc.GRPCClient
+	GRPC *grpc.Client
 	
 	// Other plugins
 }
@@ -299,7 +299,7 @@ func main() {
 }
 
 type App struct {
-	GRPC *grpc.GRPCClient
+	GRPC *grpc.Client
 }
 
 func New() *App {
@@ -325,7 +325,7 @@ func (App) String() string {
 
 The client is designated to communicate with the VPP-Agent acting as a server. Start the VPP-Agent with the `-grpc-config` flag and set the endpoint and the network in the GRPC config file to the same value as in our GRPC client application (currently hardcoded values), so they can communicate with each other. 
 
-# Plugin usage
+### Plugin usage
 
 The GRPC client application can connect to the Ligato-based GRPC server and offers a client object to communicate. In this part we show how to use the client to put GRPC configuration and how to watch on notifications.
 
@@ -336,7 +336,7 @@ For the tutorial purpose, we simulate configuration provisioning from the client
 1. example setup in `configure()` method
 
 ```go
-func (p *GRPCClient) configure() {
+func (p *Client) configure() {
 	time.Sleep(2*time.Second)
 	_, err := p.client.Update(context.Background(), &configurator.UpdateRequest{
 		Update: &configurator.Config{
@@ -363,7 +363,7 @@ func (p *GRPCClient) configure() {
 
 2. Update the `Init()`, run `configure` in the go routine when the plugin is initialized. Make sure the example configuration is sent AFTER the client object is initialized.
 ```go
-func (p *GRPCClient) Init() (err error) {
+func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
 		grpc.WithInsecure(),
 		grpc.WithDialer(dialer("tcp", "0.0.0.0:9111", time.Second*2)),
@@ -391,7 +391,7 @@ The GRPC client can be also used to receive automatic notifications from the VPP
 
 1. Add a `watchNotif()` method to the `grpc_client.go` code. Note that the notifications are polled periodically. Notifications are indexed on the server side (up to 100 notifications to the history), so the request is provided with the next index which is incremented after every iteration. This allows to read previous notifications when needed.
 ```go
-func (p *GRPCClient) watchNotif() {
+func (p *Client) watchNotif() {
 	p.Log.Info("Notification watcher started")
 	var nextIdx uint32
 	for {
@@ -432,7 +432,7 @@ func (p *GRPCClient) watchNotif() {
 2. Start the watcher in new go routine inside `Init()`:
 ```go
 // Initialization function, called when the agent in started
-func (p *GRPCClient) Init() (err error) {
+func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
 		grpc.WithInsecure(),
 		grpc.WithDialer(dialer("tcp", "0.0.0.0:9111", time.Second*2)),
@@ -465,3 +465,5 @@ INFO[0004] GRPC data sent                                loc="grpc/grpc_client.g
 INFO[0006] Notification[0]: vpp_notification:<interface:<type:UPDOWN state:<name:"interface1" internal_name:"loop0" if_index:1 admin_status:UP oper_status:UP last_change:1550673364 phys_address:"de:ad:00:00:00:00" mtu:9216 statistics:<> > > >   loc="grpc/grpc_client.go(116)" logger=GRPC-client
 INFO[0006] 1 new notifications received                  loc="grpc/grpc_client.go(107)" logger=GRPC-client
 ```
+
+[code-link]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/08_grpc
