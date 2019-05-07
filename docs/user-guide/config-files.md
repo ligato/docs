@@ -1,9 +1,22 @@
-# List of supported flags
+# Config Files
 
-This page contains information about Ligato vpp-agent configuration flags.
+This page provides documentation for configuration files and flags.
 
 ---
 
+## Config Directory
+
+```bash
+-config-dir=".": Location of the config files; can also be set via 'CONFIG_DIR' env variable.
+```
+
+This flag is used to define directory for loading configuration files for plugins.
+Using `-<plugin>-config` for specific plugin will override this flag.  
+
+## Plugin Configs
+---
+
+<!--
 ### ACL plugin
 
 ```bash
@@ -11,21 +24,26 @@ This page contains information about Ligato vpp-agent configuration flags.
 ```
 
 Flag reserved for the ACL plugin, currently not in use.
+-->
 
-### Bolt plugin
+### Bolt
 
 ```bash
--bolt-conf= 
+-bolt-config= 
 ```
 
-- `db-path`: Path to Bolt DB file
-- `file-mode`: File's mode and permission bits in decimal format ... 432 = --rw-rw----
-- `lock-timeout`: Timeout is the amount of time (in nanoseconds) to wait to obtain a file lock When setting to zero it will wait indefinitely
+**Config**
 
-### Cassandra config
+| Option | Type | Default | Description |
+|---|---|---|---|
+| **db-path** | _string_ | | Path to Bolt DB file |
+| **file-mode** | _os.FileMode_ | | File's mode and permission bits in decimal format |
+| **lock-timeout** | _time.Duration_ | | Timeout duration for waiting to obtain file lock, set to zero to wait indefinitely. |
+
+### Cassandra
 
 ```bash
--cassandra-conf= 
+-cassandra-config= 
 ```
 
 - `endpoints`: A list of host IP addresses of Cassandra cluster nodes
@@ -36,14 +54,9 @@ Flag reserved for the ACL plugin, currently not in use.
 - `protocol_version`: ProtoVersion sets the version of the native protocol to use, this will enable features in the driver for specific protocol versions, generally this should be set to a known version (2,3,4) for the cluster being connected to. If it is 0 or unset (the default) then the driver will attempt to discover the highest supported protocol for the cluster. In clusters with nodes of different versions the protocol selected is not defined (ie, it can be any of the supported in the cluster).
 - `tls`: Transport Layer Security setup
 
-### Common configuration directory
-
-```bash
--config-dir= 
-```
-
 Can be used to set the common location for all configuration files.
 
+<!--
 ### Configurator
 
 ```bash
@@ -51,8 +64,9 @@ Can be used to set the common location for all configuration files.
 ```
 
 Flag reserved for configurator plugin, currently not in use.
+-->
 
-### Consul plugin
+### Consul
 
 ```bash
 -consul-config=
@@ -63,7 +77,7 @@ Provides all fields required for Consul plugin:
 - `address`: IP Address of the consul server 
 - `resync-after-reconnect`: this field runs resync procedure for all registered plugins in case the plugin loses connection to the database and then reconnects back 
 
-### ETCD plugin
+### ETCD
 
 ```bash
 -etcd-config=
@@ -84,7 +98,7 @@ Startup-config for the ETCD plugin:
 - `allow-delayed-start`: Allows starting without connected ETCD database. The plugin will try to connect and if successful, overall resync will be called
 - `reconnect-interval`: Interval between ETCD reconnect attempts in <ns>. The default value is 2 seconds. Has no use if `delayed start` is turned off
 
-### FileDB plugin
+### FileDB
 
 ```bash
 -filedb-config=
@@ -93,7 +107,7 @@ Startup-config for the ETCD plugin:
 - `configuration-paths`: A set of files/directories with configuration files. If target is a directory, all .json or .yaml files are read
 - `status-path`: Path where the status data will be stored. If not defined, status is not propagated. The file extension determines whether the data will be stored as .json or .yaml. Target cannot be a directory.
 
-### GoVPPMux plugin
+### GoVPPMux
 
 ```bash
 -govpp-config=
@@ -112,7 +126,7 @@ Initial configuration of the GoVPP multiplexer.
 - `retry-connect-count`: Defines max number of attempts GoVPPMux tries to reach the VPP (default is 3 attempts)
 - `retry-connect-timeout`: Defines time in nanoseconds between VPP connection retries (default is 1 second)
 
-### GRPC handler
+### GRPC
 
 ```bash
 -grpc-config=
@@ -126,6 +140,7 @@ Initial configuration of the GoVPP multiplexer.
 - `max-concurrent-streams`: Limit of server streams to each server transport
 
 GRPC also allows to use of simple flag to set GRPC port:
+
 ```bash
 -grpc-port=
 ```
@@ -139,13 +154,20 @@ GRPC also allows to use of simple flag to set GRPC port:
 - `group_id`: Name of the consumer's group
 - `tls`: Crypto/TLS configuration
 
+
 ### KV Scheduler
 
 ```bash
 -kvscheduler-config=
 ```
 
-Flag reserved for the KVScheduler plugin, currently not in use.
+| Option | Type | Default | Description |
+|---|---|---|---|
+| **record-transaction-history** | _bool_ | `true` | Enable recording history of processed transactions |
+| **transaction-history-age-limit** | _uint32_ (in minutes) | `24 * 60` | Age limit for recording transaction history |
+| **permanently-recorded-init-period** | _uint32_ (in minutes) | `60` | Duration of period from init that will be permanently recorded |
+| **enable-txn-simulation** | _bool_ | `false` | Enable transaction simulation |
+| **print-txn-summary** | _bool_ | `true` | Print transaction summary for each transaction |
 
 ### Linux Interface plugin
 
@@ -156,7 +178,7 @@ Flag reserved for the KVScheduler plugin, currently not in use.
 - `disabled`: Used to disable Linux ifplugin. Turned off by default
 - `go-routines-count`: How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel
 
-### Linux IP tables plugin
+### Linux IP Tables
 
 ```bash
 -linux-iptables-config=
@@ -165,7 +187,7 @@ Flag reserved for the KVScheduler plugin, currently not in use.
 - `disabled`: Used to disable Linux iptables plugin. Turned off by default
 - `go-routines-count`: How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel.
 
-### Linux L3 plugin
+### Linux L3
 
 ```bash
 -linux-l3plugin-config=
@@ -174,7 +196,7 @@ Flag reserved for the KVScheduler plugin, currently not in use.
 - `disabled`: Used to disable Linux l3plugin. Turned off by default
 - `go-routines-count`: How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel
 
-### Log manager
+### Log Manager
 
 ```bash
 --logs-config=
@@ -216,7 +238,7 @@ hooks:
 #    protocol: tcp
 ```
 
-### Namespace plugin
+### Namespace
 
 ```bash
 -linux-nsplugin-config=
@@ -232,7 +254,7 @@ hooks:
 
 - `template-path`: Template path is a path where the templates will be stored in the filesystem
 
-### REST handler
+### REST
 
 ```bash
 -http-config=
@@ -246,6 +268,7 @@ hooks:
 - `max-header-bytes`: Field controls the maximum number of bytes the server will read parsing the request header's keys and values, including the request line. It does not limit the size of the request body.
 - `enable-token-auth`: Enables/disabled HTTP token authentication
 - `users`: Registers additional users with permissions. Admin with full access to every permission group is registered automatically. Password has to be in hashed form.
+
 Format:
 ```
 users:
@@ -253,11 +276,13 @@ users:
      password_hash: <hash>
      permissions: [<group1>, <group2>, ...]
 ```
+
 - `token-expiration`: Token expiration time in nanoseconds. Zero means no expiration time
 - `password-hash-cost`: Number in range 4-31 used as a parameter for hashing passwords. Large numbers require a lot of CPU time and memory to process.
 - `token-signature`: A string value used as a key to sign a tokens
 
 REST also allows to use of the simple flag to set HTTP port:
+
 ```bash
 -http-port=
 ```
@@ -265,11 +290,12 @@ REST also allows to use of the simple flag to set HTTP port:
 ### Service Label
 
 Flag to set the microservice label for a given agent.
+
 ```bash
 --microservice-label=
 ```
 
-### VPP Interface plugin
+### VPP Interface
 
 ```bash
 -vpp-ifplugin-config=
@@ -277,6 +303,7 @@ Flag to set the microservice label for a given agent.
 
 - `mtu`: Default maximum transmission unit. The value is used if an interface without MTU is created (i.e. MTU in interface configuration is preferred)
 - `status-publishers`: VPP agent allows to send status data back to ETCD. To allow it, add desired status publishers. Currently supported for **etcd** and **redis** (both options can be chosen together)
+
 
 *[ACL]: Access Control List
 *[HTTP]: Hypertext Transfer Protocol
