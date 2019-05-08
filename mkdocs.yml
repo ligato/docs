@@ -20,7 +20,7 @@ extra_css:
 nav:
   - INTRODUCTION:
     - Overview: intro/overview.md
-    - Agent: intro/agent.md
+    - Framework: intro/framework.md
     - Glossary: intro/glossary.md
   - USER GUIDE:
     - Get Agent: user-guide/get-agent.md
