@@ -38,3 +38,5 @@ $ mkdocs serve
 ```
 
 The documentation site should be accessible at: `http://localhost:8000/`. The server also watches all changes which can be immediately seen in the browser.
+
+Note: The mkdocs rtd-dropdown theme is used (configured inside the mkdocs.yml file). If not present, you might need to install it. Instructions [here](https://github.com/cjsheets/mkdocs-rtd-dropdown).
