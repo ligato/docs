@@ -208,6 +208,21 @@ Start the agent with the config flag (default path to .conf file is `/opt/vpp-ag
 vpp-agent --kafka-config=/opt/vpp-agent/dev/kafka.conf
 ```
 
+### Executables
+
+The `/cmd` package groups executables that can be built from sources in the VPP-Agent repository:
+
+- **vpp-agent** - the default off-the-shelf VPP Agent 
+  executable (i.e. no app or extension plugins) that can be bundled with
+  an off-the-shelf VPP to form a simple cloud-native VNF,
+  such as a vswitch.
+- **agentctl** - CLI tool that allows to show
+  the state and to configure VPP Agents connected to etcd
+- **vpp-agent-ctl** - (DEPRECATED, will be removed in the next release)
+  a utility for testing VPP Agent configuration. It contains a set of hard-wired 
+  configurations that can be invoked using command line flags and sent to the 
+  VPP Agent.
+
 ### How to use multiple Agents
 
 **1. Microservice label**
