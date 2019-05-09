@@ -29,6 +29,7 @@ nav:
     - Concepts: user-guide/concepts.md
     - Config Files: user-guide/config-files.md
     - ARM64: user-guide/arm64.md
+    - Examples: user-guide/examples.md
     - FAQ: user-guide/faq.md
     - VPP CLI: user-guide/vpp-cli.md
   - TUTORIALS:
