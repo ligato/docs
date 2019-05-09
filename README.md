@@ -1,4 +1,4 @@
-# Ligato Docs
+# Ligato Docs [![Documentation Status](https://readthedocs.org/projects/ligato/badge/?version=latest)](https://docs.ligato.io/en/latest/?badge=latest)
 
 The Ligato Docs repository contains main source of documentation for Ligato. It's available at: [docs.ligato.io](https://docs.ligato.io/).
 
