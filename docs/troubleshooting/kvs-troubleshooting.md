@@ -13,6 +13,7 @@ to configure the value:
 1. **transaction is not triggered** (not found in the logs) or the **value is
    missing** in the transaction input
    - make sure the model is registered
+   
 !!! danger "Important"
     Not using a model is considered a programming error
     
