@@ -14,7 +14,7 @@ to configure the value:
    missing** in the transaction input
    - make sure the model is registered
 !!! danger "Important"
-    Not using model is considered a programming error
+    Not using a model is considered a programming error
     
 - [check if the plugin implementing the value is loaded][debug-plugin-lookup]
 - [check if the descriptor associated with the value is registered][how-to-descriptors]
