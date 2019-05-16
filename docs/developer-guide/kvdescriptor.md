@@ -23,9 +23,9 @@ What follows is a list of all descriptor attributes, each with detailed explanat
     - provide a callback that will return true for keys identifying values described by your descriptor (i.e. check that
       the key matches the key template of your model)
     - !!! danger "Important"
-      Make sure your KeySelector function only returns `true` for the keys from your Descriptor's key space. Otherwise,
-      the KeySelector function will be responding to key validation requests for keys that do not belong to your Descriptor
-      andthe behavior of the KVScheduler will be non-deterministic.
+      Make sure your KeySelector function only returns `true` for keys from your Descriptor's key space. Otherwise,
+      your KeySelector function will be responding to key validation requests for keys that do not belong to your Descriptor,
+      and the behavior of the KVScheduler will be undefined.
 * **ValueTypeName** (string, mandatory for non-derived values)
     - provide name of the protobuf message which defines your model
     - [here is an example][value-type-name] how the proto message name can be obtained from the generated type
