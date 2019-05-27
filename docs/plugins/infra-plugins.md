@@ -258,6 +258,37 @@ On the plugin init, all templates are read, and those with *run-on-startup* set 
 
 The plugin API allows to read templates directly with `GetTemplate(<name)` or `GetAllTmplates()`. The template object can be used as parameter to start a new process from it. 
 
+## Supervisor
+
+The supervisor is the infrastructure plugin providing mechanisms to handle and manage processes. Unlike the [process manager][process-manager], supervisor defines a configuration file with a simplified process definition where multiple processes together with hooks can be specified. The supervisor is considered a process manager extension with the convenient way how to define and manage various processes. 
+
+### Config File
+
+The config file is split into two main categories - processes or **programs**, and **hooks**. Each of these may contain multiple entries (more programs or hooks in a single file). The program definition is as follows:
+
+- **Name** is a unique program name, and also an optional parameter which is derived from the executable name if omitted.
+- **Executable path** is a mandatory field containing a path to the executable for a given program
+- **Executable arguments** is a list of strings is passed as executable arguments. An arbitrary count of arguments can be defined.
+- **Logfile path** should be added if it is required to put a program output log to the file. The log file is created if missing, and also every program can use its own file. In case the log file is not specified, the program log is written to standard output.
+- **Restarts** makes use of the process manager auto-restart feature. The field parameter defines the maximum auto-restarts of the given program. Note that any termination hooks are executed also when the program is restarted since the operating system sends events in order termination -> starting -> sleeping/idle.
+
+### Hooks
+
+Hooks are special commands which are executed when some specific event related to the programs occurs. The config file may define as many hooks as needed. Basically hooks are not bound to any specific program instance or event - instead, every hook is called for every program event and it is up to the called script to decide required actions.
+
+- **Cmd** is a command called for the given hook
+- **CmdArgs** is a set of parameters for the command above
+
+Usually, the hook is expected to run under certain conditions (a specific process, event, etc.), the executable is started within a specific environment (executed hook never uses the current process environment). 
+
+Environment variables used for hooks:
+
+- **SUPERVISOR_PROCESS_NAME** is set to the program name and can be used to start hooks bound to a specific process.
+- **SUPERVISOR_PROCESS_STATE** is a label marking what happened with the process in given event (started, idle, sleeping, terminated, ...)
+- **SUPERVISOR_EVENT_TYPE** defines event type (currently only for process status)
+
+Every hook is started with all those variables set.
+ 
 ## Service Label
 
 The `servicelabel` is a small Core Agent Plugin, which other plugins can use to obtain the microservice label, i.e. the string used to identify the particular VNF. The label is primarily used to prefix keys in ETCD data store so that the configurations of different VNFs do not get mixed up.
@@ -282,7 +313,8 @@ dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 [idx-map-cache-image]: ../img/user-guide/idxmap_cache.png
 [idx-map-local-image]: ../img/user-guide/idxmap_local.png
 [kubernetes-probes]: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
-[rest-plugin]: connection-plugins.md#vpp-agent-rest
+[process-manager]: infra-plugins.md#process-manager
+[rest-plugin]: connection-plugins.md#rest-plugin
 [sarama]: https://github.com/Shopify/sarama
 [status-check-image]: ../img/user-guide/status_check.png
 [status-check-push-image]: ../img/user-guide/status_check_push.png
