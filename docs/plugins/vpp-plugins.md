@@ -1326,17 +1326,20 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 ### Limitations
 
 Current limitations for a punt to host:
+
 * The UDP configuration cannot be shown (or even configured) via the VPP cli.
 * The VPP does not provide API to dump configuration, which takes the vpp-agent the opportunity to read existing entries and may case certain issues with resync.
 * Although the vpp-agent supports the TCP protocol as the L4 protocol to filter incoming traffic, the current VPP version don't.
 * Configured punt to host entry cannot be removed since the VPP does not support this option. The attempt to do so exits with an error.
 
 Current limitations for a punt to host via unix domain socket:
+
 * The configuration cannot be shown (or even configured) in the VPP cli.
 * The vpp-agent cannot read registered entries since the VPP does not provide an API to do so.
 * The VPP startup config punt section requires unix domain socket path defined. The VPP limitation is that only one path can be defined at the same time.
 
 Current limitations for IP redirect:
+
 * The VPP does not provide API calls to dump existing IP redirect entries. It may cause resync not to work properly.
 
 ### Known issues
