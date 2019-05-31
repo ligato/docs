@@ -35,20 +35,20 @@ This section describes supported key-value data bases and how to use them
 
 ### Why KV store?
 
-The VPP-Agent uses external KV store to keep desired state of the VPP/Linux configuration, eventually to store and export certain VPP statistics. The Agent reacts to data events created by changes within a data-store, in case the change of the data was done under a watched key with proper microservice label.
-It is the microservice label which allows to use single KVDB to serve multiple Agents. Every Agent defines its own label and uses it to distinguish what data were designed for it. 
+The vpp-agent uses external KV store to keep desired state of the VPP/Linux configuration, eventually to store and export certain VPP statistics. The Agent reacts to data events created by changes within a data-store, in case the change of the data was done under a watched key with proper microservice label.
+It is the microservice label which allows using single KVDB to serve multiple Agents. Every Agent defines its own label and uses it to distinguish what data were designed for it. 
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
 
-Underlying CN-Infra plugin validates key prefix (always in format `/vnf-agent/<microservice-label>`) and if the label matches, KV-pair is passed to VPP-Agent configuration watchers. If the prefix of the rest of the key is registered, KV-pair is sent via channel to particular watcher for processing.
+Underlying CN-Infra plugin validates key prefix (always in format `/vnf-agent/<microservice-label>`) and if the label matches, KV-pair is passed to vpp-agent configuration watchers. If the prefix of the rest of the key is registered, KV-pair is sent via channel to particular watcher for processing.
 
 The Agent can also connect to multiple different KVDB stores - the plugin called Orchestrator safely collects the data from multiple sources and provides it to underlying configuration plugins.
 
-However it is not inevitable to use the Agent with any KVDB store - it can perfectly work without it, obtaining configuration via GRPC (REST in the future) or via local or remote [Clientv2][client-v2] API (if the Agent is used as library). The KVDB offers very convenient way how to store and manage configuration data.
+However, it is not inevitable to use the Agent with any KVDB store - it can perfectly work without it, obtaining configuration via GRPC (REST in the future) or via local or remote [Clientv2][client-v2] API (if the Agent is used as library). The KVDB offers very convenient way how to store and manage configuration data.
 
 ### What KV store can I use?
 
-Technically any. The CN-Infra the VPP-Agent is based on provides connectors to several types of KVDB (see the list below). All of them are built on the common abstraction (called KVDB sync). It comes with significant advantages - the most important is that the change of the data store can be done very easily.
+Technically any. The CN-Infra the vpp-agent is based on provides connectors to several types of KVDB (see the list below). All of them are built on the common abstraction (called KVDB sync). It comes with significant advantages - the most important is that the change of the data store can be done very easily.
 
 Let's have a look at the example:
 ```go
@@ -83,7 +83,7 @@ import (
 )
 
 func New() *VPPAgent {
-	// Change KVDB sync plugin to use redis connector
+	// Change KVDB sync plugin to use Redis connector
 	redisDataSync := kvdbsync.NewPlugin(kvdbsync.UseKV(&redis.DefaultPlugin))
 	
 	watchers := datasync.KVProtoWatchers{
@@ -112,7 +112,7 @@ sudo docker run -p 2379:2379 --name etcd --rm \
     -listen-client-urls http://0.0.0.0:2379
 ``` 
 
-The Agent must start with the KVDB sync plugin using ETCD as a connector (to know how to do this, see code above or code inside [this example][datasync-example]). Information where the ETCD is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
+Vpp-agent must start with the KVDB sync plugin using ETCD as a connector (to know how to do this, see code above or code inside [this example][datasync-example]). Information where the ETCD is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
 
 The minimal content of the file may look as follows:
 ```
@@ -201,7 +201,7 @@ type Plugin struct {
 
 ```
 
-Prepare the connector in he application plugin definition and set it to the example plugin:
+Prepare the connector in the application plugin definition and set it to the example plugin:
 
 ```go
 func New() *VPPAgent {
@@ -255,7 +255,7 @@ It is a good practice to start event watcher before the watcher registration.
 
 **Publisher**
 
-Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows to store key-value pair to the data store. No 'Delete()' method is defined, objects are removed sending nil data under the key intended to remove.
+Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows storing key-value pair to the data store. No 'Delete()' method is defined, objects are removed sending nil data under the key intended to remove.
 
 ## VPP configuration order
 
