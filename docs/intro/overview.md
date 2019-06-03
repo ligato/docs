@@ -44,9 +44,8 @@ The VPP agent configuration behavior is as follows:
 
 Another significant feature is the ability to retrieve existing VPP configuration. In addition to status reporting, this data is used to perform resynchronization. This is the process by which the active VPP configuration is compared to the desired VPP configuration to resolve any required changes and to minimize the impact during restarts.
 
-```
+!!! note
 The need to address the configuration dependency problem arose when a configured VPP worked as expected. Following a restart/reconfiguration, the VPP state looked exactly the same - but did not work as before. The reason for this behavior is that the binary API calls followed an incorrect order during restart, resulting in a partially complete configuration and VPP dataplane errors.
-```
 
 #### Resync
 
