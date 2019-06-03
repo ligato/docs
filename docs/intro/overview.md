@@ -52,7 +52,7 @@ The need to address the configuration dependency problem arose when a configured
 
 Resync is one of the major features available with the VPP agent. It ensures consistency between configuration provided from an external source, internal VPP agent state and the actual VPP state. The automatic resync fetches all the data from any connected persistent data store (e.g. etcd) and reflects any changes to the VPP. Synchronization is also performed against the Linux host as well. 
 
-The resync is by default initated on VPP agent startup. It can also be automatically launched on certain events (i.e. VPP restart, reconnection to the data base). 
+The resync is by default initiated on VPP agent startup. It can also be automatically launched on certain events (i.e. VPP restart, reconnection to the data base). 
 
 #### Plugin Concept
 
