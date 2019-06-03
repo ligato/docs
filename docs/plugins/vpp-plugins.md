@@ -1517,6 +1517,112 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
+## ACL-based forwarding (ABF) plugin
+
+The ACL-based forwarding is an implementation of the policy-based routing which basically replaces packet's IP destination lookup with user-defined fields expresses by associated ACL in order to find out what to do with the packet.
+
+The ABF entry is uniquely defined by a numeric index. The data consists of a list of interfaces where the ABF is attached to, forwarding paths and name of the associated access list. Required ACL represents a dependency for the given ABF - if the ACL is not present, the ABF configuration will be cached until created. Same applies for ABF interfaces.   
+
+**Configuration example**
+
+Example value:
+```json
+{  
+   "index":1,
+   "acl_name":"aclip1",
+   "attached_interfaces":[  
+      {  
+         "input_interface":"tap1",
+         "priority":40
+      },
+      {  
+         "input_interface":"memif1",
+         "priority":60
+      }
+   ],
+   "forwarding_paths":[  
+      {  
+         "next_hop_ip":"10.0.0.10",
+         "interface_name":"loop1",
+         "weight":20,
+         "preference":25
+      }
+   ]
+}
+```
+
+Use `etcdctl` to put compacted key-value entry:
+```bash
+etcdctl put /vnf-agent/vpp1/config/vpp/abfs/v2/abf/1 '{"index":1,"acl_name":"aclip1","attached_interfaces":[{"input_interface":"tap1","priority":40},{"input_interface":"memif1","priority":60}],"forwarding_paths":[{"next_hop_ip":"10.0.0.10","interface_name":"loop1","weight":20,"preference":25}]}'
+```
+
+To remove the configuration:
+```bash
+etcdctl del /vnf-agent/vpp1/config/vpp/abfs/v2/abf/1
+``` 
+
+**2. Using REST:**
+
+Use following commands to obtain configured ABF entry:
+```bash
+curl -X GET http://localhost:9191/dump/vpp/v2/abf
+```
+
+**3. Using GRPC:**
+```go
+import (
+	"github.com/ligato/vpp-agent/api/models/vpp"
+	vpp_abf "github.com/ligato/vpp-agent/api/models/vpp/abf"
+)
+
+abfData := vpp.ABF{
+		Index: 1,
+		AclName: "acl1",
+		AttachedInterfaces: []*vpp_abf.ABF_AttachedInterface{
+			{
+				InputInterface: "if1",
+				Priority: 40,
+			},
+			{
+				InputInterface: "if2",
+				Priority: 60,
+			},
+		},
+		ForwardingPaths: []*vpp_abf.ABF_ForwardingPath{
+			{
+				NextHopIp: "10.0.0.1",
+				InterfaceName: "if1",
+				Weight: 1,
+				Preference: 40,
+			},
+			{
+				NextHopIp: "20.0.0.1",
+				InterfaceName: "if2",
+				Weight: 1,
+				Preference: 60,
+			},
+		},
+	}
+```
+
+Prepare the GRPC config data:
+```go
+import (
+	"github.com/ligato/vpp-agent/api/configurator"
+	"github.com/ligato/vpp-agent/api/models/vpp"
+)
+
+config := &configurator.Config{
+		Abfs: &vpp.ConfigData{
+			Abfs: []*vpp.ABF{ {
+				natGlobal,
+			},
+		}
+	}
+```
+
+The config data can be combined with any other VPP or Linux configuration.
+
 ## NAT plugin
 
 Network address translation, or NAT is a method of remapping IP address space into another IP address space modifying address information in the packet header. The VPP-Agent Network address translation is control plane plugin for the VPP NAT implementation of NAT44. The NAT plugin is dependent on [interface plugin][interface-plugin-guide].
@@ -1579,7 +1685,6 @@ etcdctl put /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings {"nat_interf
 ```
 
 To remove the configuration:
-
 ```bash
 etcdctl del /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings
 ```
@@ -2040,6 +2145,7 @@ The telemetry plugin configuration file allows to change polling interval, or tu
 [src6-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/srv6/srv6.proto
 [xc-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/xconnect.proto
 
+*[ABF]: ACL-Based Forwarding
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol
 *[DHCP]: Dynamic Host Configuration Protocol
