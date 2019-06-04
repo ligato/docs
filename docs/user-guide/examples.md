@@ -65,7 +65,7 @@ Current examples:
 [cn-infra-examples]: https://github.com/ligato/cn-infra/tree/master/examples 
 [example-govpp-call]: https://github.com/ligato/vpp-agent/tree/master/examples/govpp_call
 [example-grpc-vpp-notifications]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/notifications
-[example-grpc-vpp-remote]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/remote_clien
+[example-grpc-vpp-remote]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/remote_client
 [example-localclient-linux-tap]: https://github.com/ligato/vpp-agent/tree/master/examples/localclient_linux/tap
 [example-localclient-linux-veth]: https://github.com/ligato/vpp-agent/tree/master/examples/localclient_linux/veth
 [example-localclient-vpp-nat]: https://github.com/ligato/vpp-agent/tree/master/examples/localclient_vpp/nat

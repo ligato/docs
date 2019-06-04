@@ -500,7 +500,7 @@ Example verbose log of transaction processing as printed by the scheduler to std
 [graph-wal-img]: ../img/developer-guide/graph-walk.svg
 [how-to-descriptors]: kvs-troubleshooting.md#how-to-list-registered-descriptors-and-watched-key-prefixes
 [how-to-graph]: kvs-troubleshooting.md#how-to-visualize-the-graph
-[logmanager-readme]: https://github.com/ligato/cn-infra/blob/master/logging/logmanager/README.md
+[logmanager-readme]: ../plugins/infra-plugins.md#log-manager
 [plugin-interface]: https://github.com/ligato/cn-infra/blob/425b8dd352626b88fb36713d7589ac9fc678bdb7/infra/infra.go#L8-L16
 [rest-plugin-readme]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/README.md
 [resync]: ../developer-guide/kvscheduler.md#resync
