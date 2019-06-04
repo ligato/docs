@@ -6,7 +6,7 @@ This section provides an overview of the Ligato VPP agent.
 
 ## Ligato VPP Agent
 
-Ligato is a Golang (Go) framework for developing applications to control and manage cloud native network functions (CNF). The Ligato VPP Agent (VPP agent for short) is a Go implementation of control and management plane for VPP-based CNFs. The VPP agent comes with a set of VPP-specific plugins for programming the VPP dataplane. The Ligato framework's infra system and plugin-based architecture allows developers to build customized control plane applications and solutiuons that extend and/or compliment the functions provided by the VPP agent.  
+Ligato is a Golang (Go) framework for developing applications to control and manage cloud native network functions (CNF). The Ligato VPP Agent (VPP agent for short) is a Go implementation of control and management plane for VPP-based CNFs. The VPP agent comes with a set of VPP-specific plugins for programming the VPP dataplane. The Ligato framework's infra system and plugin-based architecture allows developers to build customized control plane applications and solutions that extend and/or compliment the functions provided by the VPP agent.  
 
 ### What Can It Do?
 
@@ -45,7 +45,7 @@ The VPP agent configuration behavior is as follows:
 Another significant feature is the ability to retrieve existing VPP configuration. In addition to status reporting, this data is used to perform resynchronization. This is the process by which the active VPP configuration is compared to the desired VPP configuration to resolve any required changes and to minimize the impact during restarts.
 
 !!! note
-The need to address the configuration dependency problem arose when a configured VPP worked as expected. Following a restart/reconfiguration, the VPP state looked exactly the same - but did not work as before. The reason for this behavior is that the binary API calls followed an incorrect order during restart, resulting in a partially complete configuration and VPP dataplane errors.
+    The need to address the configuration dependency problem arose when a configured VPP worked as expected. Following a restart/reconfiguration, the VPP state looked exactly the same - but did not work as before. The reason for this behavior is that the binary API calls followed an incorrect order during restart, resulting in a partially complete configuration and VPP dataplane errors.
 
 #### Resync
 
