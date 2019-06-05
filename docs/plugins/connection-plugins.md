@@ -90,7 +90,7 @@ The support for bridge domains, FIB entries and cross connects:
 
 **L3 plugin**
 
-ARPs, proxy ARP interfaces/ranges and static routes exposed via REST:
+ARPs, proxy ARP interfaces/ranges, static routes and IP scan neighbor config exposed via REST:
 ```
 # Routes
 /dump/vpp/v2/routes
@@ -103,6 +103,9 @@ dump/vpp/v2/proxyarp/interfaces
 
 # Proxy ARP ranges
 /dump/vpp/v2/proxyarp/ranges
+
+# IP scan neighbor
+/dump/vpp/v2/ipscanneigh
 ```
 
 **Linux L3 plugin**
@@ -128,6 +131,25 @@ The REST plugin allows to dump NAT44 global configuration, DNAT configuration or
 
 # DNAT configurations
 /dump/vpp/v2/nat/dnat
+```
+
+**IPSec plugin**
+
+The REST plugin allows to dump IPSec security policy databases and security associations:
+```
+# REST path of the SPD
+/dump/vpp/v2/ipsec/spds
+
+# REST path of the SA
+/dump/vpp/v2/ipsec/sas
+```
+
+**Punt plugins**
+
+The REST plugin allows to dump registered punt sockets:
+```
+# REST path of the punt socket register
+/dump/vpp/v2/punt/sockets
 ```
 
 **CLI command**

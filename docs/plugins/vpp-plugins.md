@@ -918,7 +918,11 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/ipscanneigh-global/settings '{"mode":"
 
 **2. Using REST:**
 
-IP scan neighbor configuration type does not support REST.
+The REST currently supports only retrieving of the existing configuration. The following command can be used to read IP scan neighbor configuration via cURL:
+
+```bash
+curl -X GET http://localhost:9191/dump/vpp/v2/ipscanneigh
+```
 
 **3. Using GRPC:**
 
@@ -1026,7 +1030,11 @@ etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/spd/1 '{"index":"1","interfaces"
 
 **2. Using REST:**
 
-IPSec currently does not support REST.
+The REST currently supports only retrieving of the existing configuration. The following command can be used to read all security policy databases via cURL:
+
+```bash
+curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/spds
+```
 
 **3. Using GRPC:**
 
@@ -1119,7 +1127,11 @@ etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/sa/1 '{"index":"1","spi":1001,"p
 
 **2. Using REST:**
 
-IPSec currently does not support REST.
+The REST currently supports only retrieving of the existing configuration. The following command can be used to read all security associations via cURL:
+
+```bash
+curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sas
+```
 
 **3. Using GRPC:**
 
@@ -1204,7 +1216,11 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/tohost/l3/IPv4/l4/UDP/port/9000 {"l3_p
 
 **2. Using REST:** 
 
-Punt currently does not support REST.
+The REST currently supports only retrieving of the registered punt to host entries with socket. Passive punt to host cannot be retrieved:
+
+```bash
+curl -X GET http://localhost:9191/dump/vpp/v2/punt/sockets
+```
 
 **3. Using GRPC:**
 
@@ -1278,7 +1294,7 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/ipredirect/l3/IPv4/tx/tap1 '{"l3_proto
 
 **2. Using REST:** 
 
-Punt currently does not support REST.
+Punt IP redirect currently does not support REST.
 
 **3. Using GRPC:**
 
