@@ -3,7 +3,7 @@
 This section explains how to prepare and run an environment supporting the VPP Agent and VPP in a single container.  
 
 !!! Note
-    The term `VPP Agent` is used when discussing the Ligato VPP Agent. The term `VPP` is used to describe the VPP dataplane.
+    `VPP Agent` is used when discussing the Ligato VPP Agent. `VPP` is used to describe the VPP dataplane.
 
 
 ---
