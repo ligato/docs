@@ -1,38 +1,42 @@
-# Connection plugins
+# Connection Plugins
 
 ---
 
-## REST plugin
+## REST Plugin
 
-The "builtin" REST support (plugin) in the VPP-Agent is currently limited to retrieving existing VPP configuration (called dumping) for core plugins. The Agent also provides simple html template (usable in browser) and optional support for https security, authentication and authorization.
+The "builtin" REST support (plugin) in the VPP Agent is currently limited to retrieving existing VPP configuration (called dumping) for core plugins. The VPP Agent also provides a simple html template (usable in browser) and optional support for https security, authentication and authorization.
 
-This article will often refer to two HTTP plugins which must be distinguished to understand all concepts:
+The Ligato Framework supports two distinct HTTP plugins: 
 
-- **The CN-Infra REST (HTTP) plugin** which enables general HTTP functionality and security
-- **The VPP-Agent REST plugin** which is the Agent-specific implementation of the CN-Infra REST plugin  
+- Ligato Infra (aka CN-infra) REST/HTTPMux Plugin for general HTTP functionality and security
+- VPP Agent REST Plugin applicable to VPP implementations and based on the CN-Infra HTTP plugin
 
 ### Basics
 
-The VPP-Agent contains the REST API plugin, which is based on CN-Infra HTTP plugin (HTTPMux). The basic functionality is allowed by default without need of any external configuration file, just add the VPP-Agent REST plugin to the Agent plugin pool. The default HTTP endpoint is opened on socket `0.0.0.0:9191`. There are several ways how to setup different port:
+The VPP Agent contains the REST API plugin, which is based on the CN-Infra HTTP plugin (HTTPMux). The functionality is enabled without the need of any external configuration file. The default HTTP endpoint is opened on socket `0.0.0.0:9191`. 
 
-**1. Using VPP-Agent flag:** the port can be set via flag `-http-port=<port>`
-**2. Using environment variable:** set the variable `HTTP_PORT` to desired value
-**3. Using the CN-Infra HTTP plugin config file:** this option allows to change the whole endpoint and also enable other features described in the part HTTP config file
+There are several options for configuring a different port number:
+ 
+- Set the VPP Agent flag: `-http-port=<port>`
+- Set the environment `HTTP_PORT` variable to a desired value
+- Modify the [HTTP plugin config file][http-config]
 
 ### Supported URLs
 
-There is a list of all supported URLs sorted by VPP-Agent plugins. If the retrieve URL is used (currently the only supported), the output is based on proto model structure for given data type together with VPP-specific data which are not a part of the model (like indexes for interfaces or ACLs, various internal names, etc.). Those data are in separate section labeled as `<type>_meta`.
+The VPP Agent REST plugin supports the retrieval (or dumping if you will) of configuration items sorted by type (interface plugin, telemetry, etc.).
 
-**Index page**
+**Index Page**
 
-The REST to get the index page. Configuration items are sorted by type (interface plugin, telemetry, etc.). The index is a root directory.
+Use the following to obtain an index of supported API URLs.
+
 ```
-/
+curl -X GET http://localhost:9191/
+
 ```
+---
 
 **Access lists**
 
-URLs to obtain ACL IP/MACIP configuration:
 ```
 # ACL IP
 /dump/vpp/v2/acl/ip
@@ -40,10 +44,10 @@ URLs to obtain ACL IP/MACIP configuration:
 # ACL MAC IP
 /dump/vpp/v2/acl/macip
 ```
+---
 
 **VPP Interfaces**
 
-The REST plugin exposes configured VPP interfaces, which can be shown all together, or interfaces of specific type only:
 ```
 # All interfaces
 /dump/vpp/v2/interfaces
@@ -66,17 +70,17 @@ The REST plugin exposes configured VPP interfaces, which can be shown all togeth
 # Af-Packet interface
 /dump/vpp/v2/interfaces/afpacket
 ```
+---
 
 **Linux Interfaces**
 
-The REST plugin exposes configured Linux interfaces. All configured interfaces are retrieved all together with interfaces in the default namespace: 
 ```
 /dump/linux/v2/interfaces
 ```
+---
 
 **L2 plugin**
 
-The support for bridge domains, FIB entries and cross connects:
 ```
 # Bridge domains
 /dump/vpp/v2/bd
@@ -87,10 +91,10 @@ The support for bridge domains, FIB entries and cross connects:
 # Cross-connects
 /dump/vpp/v2/xc
 ```
+---
 
 **L3 plugin**
 
-ARPs, proxy ARP interfaces/ranges, static routes and IP scan neighbor config exposed via REST:
 ```
 # Routes
 /dump/vpp/v2/routes
@@ -107,10 +111,10 @@ dump/vpp/v2/proxyarp/interfaces
 # IP scan neighbor
 /dump/vpp/v2/ipscanneigh
 ```
+---
 
 **Linux L3 plugin**
 
-The Linux ARPs and routes exposed via REST:
 ```
 # Linux routes
 /dump/linux/v2/routes
@@ -118,10 +122,10 @@ The Linux ARPs and routes exposed via REST:
 # Linux ARPs
 /dump/linux/v2/arps
 ```
+---
 
 **NAT plugin**
 
-The REST plugin allows to dump NAT44 global configuration, DNAT configuration or both of them together:
 ```
 # REST path of a NAT
 /dump/vpp/v2/nat
@@ -132,10 +136,10 @@ The REST plugin allows to dump NAT44 global configuration, DNAT configuration or
 # DNAT configurations
 /dump/vpp/v2/nat/dnat
 ```
+---
 
 **IPSec plugin**
 
-The REST plugin allows to dump IPSec security policy databases and security associations:
 ```
 # REST path of the SPD
 /dump/vpp/v2/ipsec/spds
@@ -143,49 +147,52 @@ The REST plugin allows to dump IPSec security policy databases and security asso
 # REST path of the SA
 /dump/vpp/v2/ipsec/sas
 ```
+---
 
 **Punt plugins**
 
-The REST plugin allows to dump registered punt sockets:
 ```
 # REST path of the punt socket register
 /dump/vpp/v2/punt/sockets
 ```
+---
 
-**CLI command**
+**VPP CLI**
 
-Allows to use VPP CLI command via REST. Commands are defined as a map as following:
+Use the VPP CLI command via REST. Commands are defined as a map as following:
 ```
 /vpp/command -d '{"vppclicommand":"<command>"}'
 ```
 
+---
 
 **Telemetry**
 
-The REST allows to get various types of telemetry metrics data, or selective using specific key:
 ```
 /vpp/telemetry
 /vpp/telemetry/memory
 /vpp/telemetry/runtime
 /vpp/telemetry/nodecount
 ```
+---
 
 **Tracer**
 
-The Tracer plugin exposes data via the REST as follows:
 ```
 /vpp/binapitrace
 ```
+---
 
 ## Security
 
-REST plugin allows to optionally configure following security features:
+The REST plugin allows one to optionally configure the following security features:
+
 - server certificate (HTTPS)
 - Basic HTTP Authentication - username & password
 - client certificates
 - token based authorization
 
-All of them are disabled by default and can be enabled by config file:
+All are disabled by default and can be enabled by a config file:
 
 ```yaml
 endpoint: 127.0.0.1:9292
@@ -198,11 +205,11 @@ client-basic-auth:
   - "foo:bar"
 ```
 
-If `server-cert-file` and `server-key-file` are defined the server requires HTTPS instead of HTTP for all its endpoints.
+If `server-cert-file` and `server-key-file` are defined, the server requires HTTPS instead of HTTP for all its endpoints.
 
-`client-cert-files` the list of the root certificate authorities that server uses to validate client certificates. If the list is not empty only client who provide a valid certificate is allowed to access the server.
+`client-cert-files` is the list of the root certificate authorities that server uses to validate client certificates. If the list is not empty, only clients who provide a valid certificate are allowed to access the server.
 
-`client-basic-auth` allows to define user password pairs that are allowed to access the server. The config option defines a static list of allowed user. If the list is not empty default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin (e.g.: if you want to read credentials from ETCD).
+`client-basic-auth` allows one to define user/password credentials permitting access to the server. The config option defines a static list of allowed user(s). If the list is not empty, default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin (e.g.: if you want to read credentials from ETCD).
 
 
 ***Example***
@@ -251,17 +258,17 @@ where `ca.pem` is a certificate authority where server certificate should be val
   curl --cacert ca.crt  --cert client.crt --key client.key -u user:pass  https://127.0.0.1:9292/log/list
   ```
   
-### Token-based authorization
+### Token-based Authorization
 
-REST plugin supports authorization based on tokens. To enable the feature, use `http.conf` file:
+REST plugin supports authorization based on tokens. To enable this feature, use  the [http.conf][http-config] file:
 
 ```
 enable-token-auth: true
 ```
 
-Authorization restricts access to every registered permission group URLs. The user receives token after login, which grants him access to all permitted sites. The token is valid until the user is logged in, or until it expires.
+Authorization restricts access to every registered permission group URLs. The user receives a token after login, which grants access to all permitted sites. The token is valid until the user is logged in, or until it expires.
 
-The expiration time is a token claim, set in the config file:
+The expiration time is a token claim, set in the [http.conf][http-config] file:
 
 ```
 token-expiration: 600000000000  
@@ -269,27 +276,27 @@ token-expiration: 600000000000
 
 Note that time is in nanoseconds. If no time is provided, the default value of 1 hour is set.
 
-Token uses by default pre-defined signature string as the key to sign it. This can be also changed via config file:
+Token uses by default a pre-defined signature string as the key to sign it. This can be changed in [http.conf][http-config] file.
 
 ```
 token-signature: <string>
 ```
 
-After login, the token is required in authentication header in the format `Bearer <token>`, so it can be validated. If REST interface is accessed via a browser, the token is written to cookie file.
+After login, the token is required in an authentication header in the format `Bearer <token>`, so it can be validated. If the REST interface is accessed via a browser, the token is written to cookie file.
 
-### Users and permission groups
+### Users and Permission Groups
 
-Users have to be pre-defined in `http.conf` file. User definition consists of name, hashed password and permission groups.
+Users must be pre-defined in the `http.conf` file. User definitions consists of name, hashed password and permission groups.
 
 **Name** defines username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and password "ligato123"
 
-**Password** has to be hashed. It is possible to use [password-hasher utility][password-hasher] to help with it. Password also has to be hashed with the same cost value, as defined in the configuration file:
+**Password** must be hashed. It is possible to use [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the configuration file:
 
 ```
 password-hash-cost: <number>
 ```
 
-Minimal hash cost is 4, maximal value is 31. The higher the cost, the more CPU time memory is required to hash the password.
+Minimal hash cost is 4, maximal value is 31. The higher the cost, the more CPU time/memory is required to hash the password.
 
 **Permission Groups** define a list of permissions; allowed URLs and methods. Every user needs at least one permission group defined, otherwise it will not have access to anything. Permission group is described in [proto model][access-security-model]. 
 
@@ -314,7 +321,7 @@ To log in a user, follow the URL `http://localhost:9191/login`. The site is enab
 }
 ```
 
-The site returns access token as plain text. If URL is accessed with `GET`, it shows the login page where the credentials are supposed to be put. After successful submit, it redirects to the index.
+The site returns the access token as plain text. If the URL is accessed with `GET`, it shows the login page where the credentials are supposed to be put. After successful submit, it redirects to the index.
 
 To log out, post username to `http://localhost:9191/logout`.
 
@@ -328,7 +335,7 @@ To log out, post username to `http://localhost:9191/logout`.
 
 **1. cURL** 
 
-Specify the VPP-Agent target HTTP IP address and port with link to desired data. All URLs are accessible via the `GET` method.
+Specify the VPP Agent target HTTP IP address and port with link to desired data. All URLs are accessible via the `GET` method.
 
 Example:
 ```
@@ -396,6 +403,7 @@ Once the handler is registered with the `GRPC Plugin` and the agent is running, 
 [grpc-plugin]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md
+[http-config]: ../user-guide/config-files.md#rest
 
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol
