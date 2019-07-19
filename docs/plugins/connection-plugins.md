@@ -237,23 +237,23 @@ openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out c
 
 Once the security features are enabled, the endpoint can be accessed by the following commands:
 
-- **HTTPS**
+- `HTTPS`
 where `ca.pem` is a certificate authority where server certificate should be validated (in case of self-signed certificates)
   ```
   curl --cacert ca.crt  https://127.0.0.1:9292/log/list
   ```
 
-- **HTTPS + client cert** where `client.crt` is a valid client certificate.
+- `HTTPS + client cert` where `client.crt` is a valid client certificate.
   ```
   curl --cacert ca.crt  --cert client.crt --key client.key  https://127.0.0.1:9292/log/list
   ```
 
-- **HTTPS + basic auth** where `user:pass` is a valid username password pair.
+- `HTTPS + basic auth` where `user:pass` is a valid username password pair.
   ```
   curl --cacert ca.crt  -u user:pass  https://127.0.0.1:9292/log/list
   ```
 
-- **HTTPS + client cert + basic auth**
+- `HTTPS + client cert + basic auth`
   ```
   curl --cacert ca.crt  --cert client.crt --key client.key -u user:pass  https://127.0.0.1:9292/log/list
   ```
@@ -266,7 +266,7 @@ REST plugin supports authorization based on tokens. To enable this feature, use 
 enable-token-auth: true
 ```
 
-Authorization restricts access to every registered permission group URLs. The user receives a token after login, which grants access to all permitted sites. The token is valid until the user is logged in, or until it expires.
+Authorization restricts access to all registered permission group URLs. The user receives a token after login, which grants access to all permitted sites. The token is valid until the user is logged out, or until it expires.
 
 The expiration time is a token claim, set in the [http.conf][http-config] file:
 
@@ -286,11 +286,11 @@ After login, the token is required in an authentication header in the format `Be
 
 ### Users and Permission Groups
 
-Users must be pre-defined in the `http.conf` file. User definitions consists of name, hashed password and permission groups.
+Users must be pre-defined in the `http.conf` file. User definitions consists of a name, hashed password and permission groups.
 
-**Name** defines username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and password "ligato123"
+`Name` defines a username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and password "ligato123"
 
-**Password** must be hashed. It is possible to use [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the configuration file:
+`Password` must be hashed. It is possible to use [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the configuration file:
 
 ```
 password-hash-cost: <number>
@@ -298,9 +298,9 @@ password-hash-cost: <number>
 
 Minimal hash cost is 4, maximal value is 31. The higher the cost, the more CPU time/memory is required to hash the password.
 
-**Permission Groups** define a list of permissions; allowed URLs and methods. Every user needs at least one permission group defined, otherwise it will not have access to anything. Permission group is described in [proto model][access-security-model]. 
+`Permission Groups` define a list of permissions composed of allowed URLs and methods. Every user needs at least one permission group defined, otherwise the user will be excluded from access to any server. Permission groups described in the [proto model][access-security-model]. 
 
-To add permission group, use rest plugin API:
+To add permission group, use a rest plugin API:
 
 ```
 RegisterPermissionGroup(group ...*access.PermissionGroup)
@@ -321,9 +321,9 @@ To log in a user, follow the URL `http://localhost:9191/login`. The site is enab
 }
 ```
 
-The site returns the access token as plain text. If the URL is accessed with `GET`, it shows the login page where the credentials are supposed to be put. After successful submit, it redirects to the index.
+The site returns the access token in plain text. If the URL is accessed with `GET`, it displays the login page where the credentials can be entered. After successful submit, it redirects to the index.
 
-To log out, post username to `http://localhost:9191/logout`.
+To log out, post the username to `http://localhost:9191/logout`.
 
 ```
 {
@@ -344,9 +344,9 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 
 **2. Postman**
 
-Choose the `GET` method, provide desired URL and send the request.
+Choose the `GET` method, provide the desired URL and send the request.
 
-## VPP-Agent GRPC
+## VPP Agent GRPC
 
 Related articles: 
 
@@ -355,32 +355,34 @@ Related articles:
 
 GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
 
-The VPP-Agent GRPC plugin can be used to:
+The VPP Agent GRPC plugin can be used to:
 
-* Send configuration to VPP
+* Send configuration data to VPP
 * Retrieve (dump) configuration from VPP
 * Start a notification watcher
 
 The following remote procedure calls are defined:
 
-* **Get** creates new configuration or updates existing configuration.
-* **Delete** removes specified (existing) configuration.
-* **Dump** (Retrieve) reads existing configuration from the VPP.
+* **Get** creates new configuration or updates and existing configuration.
+* **Delete** removes a specified (existing) configuration.
+* **Dump** (Retrieve) reads existing configuration from the VPP
 * **Notify** subscribes GRPC to the notification service
 
-To enable the GRPC server within the Agent, the GRPC plugin has to be added to the plugin pool and loaded (currently the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
+To enable the GRPC server within the VPP Agent, the GRPC plugin must be added to the plugin pool and loaded (currently the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
 
-Clients with the GRPC Server via an endpoint IP address and port or via a unix domain socket file. The TCP network is set as default, but other network types are also available (like TCP6 or UNIX).
+Clients can reach the GRPC Server via an endpoint IP:Port address or via a unix domain socket file. The TCP network is set as default, but other network types are also possible (like TCP6 or UNIX).
 
 ### GRPC Plugin
 
-The `GRPC Plugin` is a infrastructure Plugin which allows app plugins to handle GRPC requests (see the diagram below) as follows:
+The `GRPC Plugin` is a infrastructure plugin that enables app plugins to handle GRPC requests (see the diagram below) as follows:
 
 1. The GRPC Plugin starts the GRPC server + net listener in its own goroutine
-2. Plugins register their handlers with the `GRPC Plugin`. To service GRPC requests, a plugin must first implement a handler function and register it at a given URL path using the `RegisterService` method. `GRPC Plugin` uses an GRPC request multiplexer from `grpc/Server`.
+2. Plugins register their handlers with the `GRPC Plugin`. To service GRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. `GRPC Plugin` uses an GRPC request multiplexer from `grpc/Server`.
 3. The GRPC Server routes GRPC requests to their respective registered handlers using the `grpc/Server`.
 
 ![grpc][grpc-image]
+
+<br/>
 
 **Configuration**
 
@@ -388,7 +390,7 @@ The `GRPC Plugin` is a infrastructure Plugin which allows app plugins to handle 
 
 **Example**
 
-The [grpc-server greeter example]*(../../examples/grpc-plugin/grpc-server) demonstrates the usage of the `GRPC Plugin` plugin API GetServer():
+The [grpc-server greeter example](https://github.com/ligato/cn-infra/blob/master/examples/grpc-plugin/grpc-server/main.go) demonstrates the usage of the `GRPC Plugin` plugin API GetServer():
 ```
 // Register our GRPC request handler/service using generated RegisterGreeterServer:
 RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
