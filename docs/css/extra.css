@@ -70,3 +70,17 @@ code {
     word-wrap: normal !important;
     font-size: 12px !important;
 }
+
+.codehilite {
+    margin-top: -12px;
+    margin-bottom: 35px;
+}
+/*.sqs-block {*/
+    /*position: relative;*/
+    /*height: auto;*/
+    /*padding-top: 0px;*/
+    /*padding-bottom: 0px;*/
+    /*outline: none;*/
+    /*box-shadow: inset 0 0 0 1px rgba(128,128,128,0);*/
+    /*transition: box-shadow .2s ease-in-out;*/
+/*}*/

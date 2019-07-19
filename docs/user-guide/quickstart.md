@@ -90,7 +90,7 @@ API version: 3.3
 ```
 
 !!! note
-    According to the ETCD documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. However we do not need to explicitly set it because we defined it when starting the ETCD container.
+    According to the ETCD documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. You can check the the value of this environment variable with the command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
 
 
 ## 4. Run the VPP Agent
@@ -141,11 +141,10 @@ In the next section we will program a VPP dataplane with configuration data form
 
 ## 5. Manage the VPP Agent
 
-This section is divided into four parts:
+This section will explain:
 
 - How to configure the VPP dataplane through the ETCD store and VPP Agent
 - How to read VPP configuration data via a VPP Agent REST API
-- How to obtain interface status (stored in the ETCD store) provided by the VPP Agent
 - How to connect to the VPP CLI and show the configuration 
 
 ### 5.1 Configure the VPP Dataplane using the VPP Agent
@@ -243,7 +242,7 @@ The output should look something like this:
 ```
 
 
-This command returns the bridge domain configuration information using a VPP Agent REST API:
+This command returns the bridge domain configuration information:
 ```
 $ curl -X GET http://localhost:9191/dump/vpp/v2/bd
 ```
@@ -281,24 +280,7 @@ curl -X GET http://localhost:9191/
 To summarize so far, we used a combination of etcdctl, the ETCD store and the VPP agent to configure the VPP dataplane. Next we used REST APIs provided by the VPP Agent to read the loopback and bridge domain configuration data from the VPP dataplane.
 
 
-### 5.3 Read Interface Status provided by the VPP Agent
-
-The VPP Agent publishes interface status to the ETCD store. To obtain the status of the `loop1` interface (configured in 5.1) run following command:
-```
-$ docker exec etcd etcdctl get /vnf-agent/vpp1/vpp/status/v2/interface/loop1
-```
-
-The output should look like this:
-```json
-{"name":"loop1","internal_name":"loop0","if_index":1,"admin_status":"UP","oper_status":"UP","last_change":"1551866265","phys_address":"de:ad:00:00:00:00","mtu":9216,"statistics":{}}
-```
-
-Notice the `internal_name` assigned by the VPP as well as the `if_index`. The `statistics` section would show traffic stats (e.g. received/transmitted packets, bytes, ...). Since there is no traffic transiting the VPP dataplane, statistics are empty.
-
-!!! note
-    State is exposed only for interfaces (including default interfaces).
-
-### 5.4 Connect to the VPP Dataplane in the Container
+### 5.3 Connect to the VPP Dataplane in the Container
 
 The following command starts the VPP CLI in the VPP Agent container:
 ```
@@ -339,21 +321,33 @@ $ docker exec -it vpp-agent vppctl -s localhost:5002 show bridge-domain
 
 ## Troubleshooting
 
-- **The VPP Agent container was started and immediately closed.**
+The VPP Agent container was started and immediately closed.
   
-  The ETCD container is not running. Please verify it is running using command `docker ps`.
+- The ETCD container is not running. Please verify it is running using command `docker ps`.
 
-- **The etcdctl command returns "Error:  100: Key not found".**
+The etcdctl command returns "Error:  100: Key not found".
 
-  The etcdctl API version was not correctly set. Check the output of the appropriate environment variable with command `echo $ETCDCTL_API`. If the version is not set to "3", make it so with `export ETCDCTL_API=3`.
+- The etcdctl API version was not correctly set. Check the output of the appropriate environment variable with command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
 
-- **The cURL or Postman command to access VPP Agent API does not work (connection refused).**
 
-  The command starting the docker container exports port 9191 to allow access from the host. Make sure that the VPP Agent docker container is started with parameter `-p 9191:9191`.  
+The cURL or Postman command to access VPP Agent API does not work (connection refused).
 
-- **The cURL or Postman command to access VPP-cli does not work (connection refused).**
+- The command starting the docker container exports port 9191 to allow access from the host. Make sure that the VPP Agent docker container is started with parameter `-p 9191:9191`. Run the `Restart VPP Agent steps`   shown below to modify port numbers. 
 
-  The command starting docker container exports port 5002 (the VPP default port) to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 5002:5002`.
+
+The cURL or Postman command to access VPP-cli does not work (connection refused)
+
+- The command starting docker container exports port 5002 (the VPP default port) to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 5002:5002`. Run the `Restart VPP Agent steps` shown below to modify port numbers.
+
+Restart VPP Agent steps:
+
+    docker ps -f name=vpp-agent
+    docker stop <XX> ; with <XX> equals first to 2 characters of container ID
+    // restart with correct port numbers if needed
+    docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
+    
+<br/>
+
 
 [docker-install]: https://docs.docker.com/cs-engine/1.13/
 [dockerhub]: https://hub.docker.com/u/ligato
