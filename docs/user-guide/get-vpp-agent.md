@@ -1,9 +1,9 @@
 # VPP Agent Setup
 
-This section explains how to prepare and run an environment supporting the VPP Agent and VPP in a single container.  
+This section explains how to prepare and run an environment supporting the vpp-agent and VPP in a single container.  
 
 !!! Note
-    `VPP Agent` is used when discussing the Ligato VPP Agent. `VPP` is used to describe the VPP dataplane.
+    `VPP Agent` is used when discussing the Ligato VPP Agent in a higher level context with examples being an architecture description. `vpp-agent` is a term used to define the actual code itself and/or in describing direct interactions with other associated software components such as docker. You will see this term appear in commands, APIs and code. `VPP` is used to describe the VPP dataplane. 
 
 
 ---
@@ -31,14 +31,14 @@ Supported architectures:
 
 ** What is included in the pre-built production image:**
 
-- Binaries for the VPP Agent with default config files
+- Binaries for the vpp-agent with default config files
 - Installation of the compatible VPP
 
 **What is included in the pre-built development image:**
 
-- VPP Agent with default config files including source code
+- vpp-agent with default config files including source code
 - Compatible VPP installation including source code and build artifacts
-- Development environment with all requirements to build the VPP Agent and the VPP
+- Development environment with all requirements to build the vpp-agent and the VPP
 - Tools to generate code (proto models, binary APIs)
 
 Command to pull the docker image:
@@ -53,7 +53,7 @@ docker pull ligato/dev-vpp-agent
 
 ### Local Image Build
 
-First clone the VPP Agent repository:
+First clone the vpp-agent repository:
 
 ```
 git clone git@github.com:ligato/vpp-agent.git
@@ -104,25 +104,26 @@ Command to start the agent:
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
 ```
 
-Note that the VPP Agent is executed in `privileged` mode. Several VPP Agent operations (e.g. Linux namespace handling) require permissions on the target host instance. Running in non-privileged mode may cause the VPP Agent to fail to start ([more information here][interface-plugin]).
+Note that the vpp-agent is executed in `privileged` mode. Several vpp-agent operations (e.g. Linux namespace handling) require permissions on the target host instance. Running in non-privileged mode may cause the vpp-agent to fail to start ([more information here][interface-plugin]).
 
 Open another terminal and run the following command:
 ```
 sudo docker exec -it vpp_agent bash
 ```
 
-The VPP Agent and VPP are started automatically by default. 
+The vpp-agent and VPP are started automatically by default. 
 
 Image-specific environment variables available (assign with `docker -e` on image start):
-- `OMIT_AGENT` - do not start the Agent together with the Image
-- `RETAIN_SUPERVISOR` - unexpected Agent or VPP shutdown causes the supervisor to quit. This setting prevents that.
+
+- `OMIT_AGENT` - do not start the vpp-agent together with the Image
+- `RETAIN_SUPERVISOR` - unexpected vpp-agent or VPP shutdown causes the supervisor to quit. This setting prevents that.
 
 ---
 
-## Start VPP and the VPP Agent
+## Start VPP and the vpp-agent
 
 !!! note
-    The VPP Agent will terminate if unable to connect to the VPP, a database or the Kafka message server (if required by the config file). 
+    The vpp-agent will terminate if unable to connect to the VPP, a database or the Kafka message server (if required by the config file). 
 
 **Start VPP**:
 
@@ -136,64 +137,46 @@ Command to start VPP without DPDK:
 vpp unix { interactive } plugins { plugin dpdk_plugin.so { disable } }
 ```
 
-It is possible to apply additional VPP Agent features (e.g. plugins) with the specific startup flags. Examples include:
+---
 
+**Start the vpp-agent**
 
-
-For the full functionality of the NAT plugin: 
-```
-nat {
-  endpoint-dependent
-}
-```
-
-VPP socket definition for the Punt plugin:
-```
-punt {
-  socket /tmp/socket/punt
-}
-```
-
-Support for VPP stats (reports by the interface plugin, etc.)
-```
-statseg {
-  default
-}
-```
-
-<br/>
-
-
-**Start the VPP Agent**
-
-Command to start the VPP Agent
+Command to start the vpp-agent
 
 ```
 vpp-agent
 ```
 
-To enable certain features (database connection, messaging), the VPP Agent requires static configuration files referred to as `.conf` files. The majority of plugins support .conf files. Some plugins cannot be loaded without a `.conf` file even if defined as part of the plugin feature set(e.g. Kafka). Other plugins load `.conf` files as the default value. This makes it easy to use `.conf` files to modify certain plugin behavior.
+To enable certain features (database connection, messaging), the vpp-agent requires static [configuration files][config-files] referred to as `.conf` files. Quick notes on conf files:
+
+- majority of plugins support .conf files. 
+- Some plugins cannot be loaded without a `.conf` file even if defined as part of the plugin feature set(e.g. Kafka). 
+- Other plugins load `.conf` files as the default value. This makes it easy to use `.conf` files to modify certain plugin behavior.
 
 ---
 
 
-### Connect VPP Agent to the Key-Value Datastore
+### Connect vpp-agent to the Key-Value Store
 
-Configuration information is stored in a key-value datastore (or KV datastore for short). The VPP Agent needs to know how to connect to a particular instance of a KV datastore so that it can receive the config data. The connection information (IP address, port) is provided via a .conf file. Every KV datastore plugin defines its own config file. 
+!!! Note
+    There are a number of similar terms in this documentation and elsewhere used to define what is essentially a datastore or database of key-value pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV datastore and so on. We will use the term `KV store` in this section as this is the term used by [etcd](https://etcd.io), the most widely deployed key-value store in used today.
 
-Click [KV datastore][kv-overview] for more information.
 
-**Start ETCD:**
+Configuration information is stored in a key-value store (or KV store for short). The vpp-agent needs to know how to connect to a particular instance of a KV store so that it can listen for and receive config data. The connection information (IP address, port) is provided via a .conf file. Every KV store plugin defines its own config file. 
 
-The ETCD server is started in its own container on a local host. The command is as follows:
+Click [KV store][kv-overview] for more information.
+
+**Start etcd:**
+
+The etcd server is started in its own container on a local host. The command is as follows:
 
 ```
 docker run -p 2379:2379 --name etcd --rm quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
 
-The ETCD server docker image is downloaded (if it does not exist already) and started, ready to serve requests. In the default docker environment, the ETCD server will be available on the IP `172.17.0.1` on port `2379`. The command above can be edited to run a version other than `3.1.0`, or change the listen/advertise address. 
+The etcd server docker image is downloaded (if it does not exist already) and started, ready to serve requests. In the default docker environment, the etcd server will be available on the IP `172.17.0.1` on port `2379`. The command above can be edited to run a version other than `3.1.0`, or change the listen/advertise address. 
 
-The VPP defines flag for the ETCD plugin `--etcd-config` which can be used to provide static config (most importantly the IP address of an ETCD enpodint(s)). 
+The vpp-agent defines a flag for the etcd plugin `--etcd-config` which can be used to provide static config (most importantly the IP address of an etcd enpodint(s)). 
 
 Here is an example configuration:
 
@@ -204,7 +187,7 @@ endpoints:
  - "172.17.0.1:2379"
 ```
 
-Start the VPP Agent with the config flag (default path to .conf file is `/opt/vpp-agent/dev`):
+Start the vpp-agent with the config flag (default path to the etcd.conf file is `/opt/vpp-agent/dev`):
 ```
 vpp-agent --etcd-config=/opt/vpp-agent/dev/etcd.conf
 ```
@@ -218,14 +201,14 @@ The Kafka server is started in a separate container. The command fetches the Kaf
 docker run -p 2181:2181 -p 9092:9092 --name kafka --rm --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
 ```
 
-The VPP Agent needs to know the IP address and port of the Kafka server. This information is set via the config file, which is provided with flag `--kafka-conf`. The example config:
+The vpp-agent needs to know the IP address and port of the Kafka server. This information is set via the config file, which is provided with flag `--kafka-conf`. The example config:
 
 ```
 addrs:
  - "172.17.0.1:9092"
 ```
 
-Start the VPP Agent with the config flag (default path to .conf file is `/opt/vpp-agent/dev`): 
+Start the vpp-agent with the config flag (default path to .conf file is `/opt/vpp-agent/dev`): 
 ```
 vpp-agent --kafka-config=/opt/vpp-agent/dev/kafka.conf
 ```
@@ -237,44 +220,48 @@ vpp-agent --kafka-config=/opt/vpp-agent/dev/kafka.conf
 
 The `/cmd` package groups executables that can be built from sources in the vpp-agent repository:
 
-- **vpp-agent** - the default off-the-shelf VPP Agent 
+- **vpp-agent** - the default off-the-shelf vpp-agent 
   executable (i.e. no app or extension plugins) that can be bundled with
   an off-the-shelf VPP to form a simple cloud-native VNF,
   such as a vswitch.
 - **[agentctl][agentctl]** - CLI tool that allows to show
-  the state and to configure VPP Agents connected to etcd
+  the state and to configure vpp-agents connected to etcd
 
 
 ---
 
-### How to Use Multiple VPP Agents
+### How to Use Multiple vpp-agents
 
-**1. Microservice label**
+**1. Microservice Label**
 
-Currently, a single instance of a `VPP Agent` can serve a single `VPP` instance, while multiple VPP Agents can use (or listen to) the same KV datatstore. VPP Agent instances (there is an analogy to a microservice) are distinguished with the microservice label. The label is a part of the KV datastore key to make clear which part of configuration belongs to which VPP Agent. Note that every VPP Agent only watches keys associated with its own microservice label. 
+Currently, a single instance of a `vpp-agent` can serve a single `VPP` instance, while multiple vpp-agents can use (or listen to) the same KV store. vpp-agent instances (there is an analogy to a microservice) are distinguished with the microservice label. The label is a part of the KV store key to make clear which part of configuration belongs to which vpp-agent. Note that every vpp-agent only watches keys associated with its own microservice label. 
 
 The default microservice label is `vpp1`. It can be changed with the environment variable `MICROSERVICE_LABEL`, or via the `-microservice-label` flag.
 
-It is possible to use the same label to "broadcast" shared configuration data to multiple VPP Agents. However, this approach is generally not recommended.
+It is possible to use the same label to "broadcast" shared configuration data to multiple vpp-agents. However, this approach is generally not recommended.
+
+The [concepts][concepts] section of the user-guide provides more details on keys, microservice labels and KV stores.
 
 **2. Shared Memory Prefix**
 
-Running multiple `VPPs` on the same host requires a different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the VPP Agent to the VPP with a custom socket, a valid SHM needs to be provided to the GoVPP mux plugin (see [plugin's readme][govppmux-plugin])
+Running multiple `VPPs` on the same host requires a different shared memory prefix (SHM) to distinguish communication sockets for given VPP instances. In order to connect the vpp-agent to the VPP with a custom socket, a valid SHM needs to be provided to the GoVPP mux plugin (see [plugin's readme][govppmux-plugin])
  
 ---
 
 
-## Make Your First Configuration
+## Create Your First Configuration
 
-**Put the configuration into the KV datastore:**
+**Put the configuration into the KV store:**
 
-Store the values following the given model with the proper key to the KV datastore. We recommend the use of ETCD as the KV datastore and the 'etcdctl` tool. 
+Store the values following the given model with the proper key to the KV store. We recommend the use of etcd as the KV store and the 'etcdctl` tool. 
 
 Information about keys and data structures can be found [here][references].
 
+An example of how to perform this task is shown in [section 5.1][quickstart-guide-51-keys] of the Quickstart Guide.
+
 **Use clientv2**
 
-Package [clientv2][clientv2] contains API definition for every supported configuration item and can be used to pass data without a external database.
+The [clientv2][clientv2] package contains API definitions for every supported configuration item and can be used to pass data without an external database (i.e. KV store)
 
 [arm-doc]: https://github.com/ligato/vpp-agent/blob/master/docs/arm64/README.md
 [clientv2]: ../user-guide/concepts.md#client-v2
@@ -284,7 +271,10 @@ Package [clientv2][clientv2] contains API definition for every supported configu
 [kv-overview]: ../user-guide/concepts.md#key-value-store-overview
 [references]: ../user-guide/reference.md
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env
-[agentctl]: ../tools/agentctl.md#AgentCTL   
+[agentctl]: ../tools/agentctl.md#AgentCTL
+[config-files]: ../user-guide/config-files.md
+[concepts]: ../user-guide/concepts.md
+[quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent   
 
 *[DPDK]: Data Plane Development Kit
 *[KVDB]: Key-Value Database

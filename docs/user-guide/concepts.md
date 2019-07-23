@@ -1,6 +1,6 @@
 # Concepts
 
-This section will describe several key concepts for the Ligato VPP Agent and Infra.
+This section will describe several key concepts for the Ligato vpp-agent and Infra.
 
 !!! Note
     The documentation in some cases may refer to the Ligato Infra as Cloud Native - Infra or CN-infra for short.
@@ -9,7 +9,7 @@ This section will describe several key concepts for the Ligato VPP Agent and Inf
 
 ## What is a Model?
 
-The model represents an abstraction of an object (e.g. VPP interface) that can be managed through northbound APIs exposed by the VPP Agent. More specifically the model is used to generate a key associated with a value for the object that is stored in a KV store such as ETCD. 
+The model represents an abstraction of an object (e.g. VPP interface) that can be managed through northbound APIs exposed by the vpp-agent. More specifically the model is used to generate a key associated with a value for the object that is stored in a KV store such as ETCD. 
 
 ### Model Components
 
@@ -24,7 +24,7 @@ A single protobuf message can only be represented by a single model.
 Model spec (specification) describes the model using the module, version and type fields:
 
 - `module` -  groups models belonging for the same configuration entity. For example, models for VPP configuration have vpp module, models for Linux configuration have linux module, etc.
-- `version` - current version of the VPP Agent API. The version only changes upon release of a new version.
+- `version` - current version of the vpp-agent API. The version only changes upon release of a new version.
 - `type` - keyword describing the given model (e.g. interfaces, bridge-domains, etc.)
 
 These three parts are used to generate a model prefix. The model prefix is part of a key and uses the following format:
@@ -44,7 +44,7 @@ Module = vpp
 version = v2
 type = interfaces
 ```
-An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. It was used to program a VPP loopback interface with the value of an IP address for insertion into an ETCD KV store.
+An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. It was used to program a VPP loopback interface with the value of an IP address for insertion into an etcd KV store.
 
 ```
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
@@ -54,22 +54,44 @@ Note that the value of `loop1` is the `<name>` of the interface.
 
 
 
-## Key-value store overview
+## Key-Value Store Overview
 
-This section describes supported key-value data bases and how to use them
+This section describes how the Ligato vpp-agent interworks with KV stores. 
 
-### Why KV store?
+!!! Note
+    There are a number of similar terms in this documentation and elsewhere used to define what is essentially a datastore or database of key-value pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV datastore and so on. We will use the term `KV store` in this section as this is the term used by [etcd](https://etcd.io), the most widely deployed key-value store in used today.  
 
-The vpp-agent uses external KV store to keep desired state of the VPP/Linux configuration, eventually to store and export certain VPP statistics. The Agent reacts to data events created by changes within a data-store, in case the change of the data was done under a watched key with proper microservice label.
-It is the microservice label which allows using single KVDB to serve multiple Agents. Every Agent defines its own label and uses it to distinguish what data were designed for it. 
+### Why the KV Store?
+
+The vpp-agent uses an external KV store for several reasons:
+ 
+ - persist the desired state of the VPP/Linux configuration
+ - serve as a mechanism to store and export certain VPP statistics
+ - exploit the `"watch"` paradigm for distributed configuration management in which the client (i.e. vpp-agent) listens for and processes config changes maintained in a KV store. This same approach is incorporated into other configuration systems such as [confd](https://confd.io)
+ 
+Each vpp-agent is defined with a label known as the `microservice label`. Just as kubernetes uses labels attached to objects (e.g. pods) to group resources with certain common attributes (e.g. these pods with this label are part of this service), Ligato uses the [microservice label][microservce label] to group vpp-agents watching for KV store config changes with a common prefix, a "watch key" if you will.
+
+What are the mechanics of this? First we take `/vnf-agent/` and combine it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is in fact part of the key associated with a configuration value maintained inside a KV store.
+
+Once again, here is the key for a [VPP interface][vpp-keys]:
+
+```
+/vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
+```
+Next, the vpp-agent watches for any config changes in the KV store with a matching watch key prefix. In the figure below, vpp-agent 1 on the left with a microservice label = `vpp1` will only watch for config changes with a matching prefix of `/vnf-agent/vpp1/`. vpp-agent 1 does not care about nor is it watching KV store config data with a prefix of `/vnf-agent/vpp2/`
+
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
 
-Underlying CN-Infra plugin validates key prefix (always in format `/vnf-agent/<microservice-label>`) and if the label matches, KV-pair is passed to vpp-agent configuration watchers. If the prefix of the rest of the key is registered, KV-pair is sent via channel to particular watcher for processing.
 
-The Agent can also connect to multiple different KVDB stores - the plugin called Orchestrator safely collects the data from multiple sources and provides it to underlying configuration plugins.
+The vpp-agent validates the key prefix (in the format `/vnf-agent/<microservice-label>` as explained above) and if the label matches, the KV pair is passed to the vpp-agent configuration watchers. If the prefix of the rest of the key is registered, the KV-pair is sent to a articular watcher for processing such a re-programming the VPP dataplane.
 
-However, it is not inevitable to use the Agent with any KVDB store - it can perfectly work without it, obtaining configuration via GRPC (REST in the future) or via local or remote [Clientv2][client-v2] API (if the Agent is used as library). The KVDB offers very convenient way how to store and manage configuration data.
+There is quite a bit of flexibility in this architecture.
+
+- individual KV store can support multiple vpp-agent "groups".
+- vpp-agent can receive config data from multiple sources (e.g. KV store, GRPC, etc.). A special [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources thus presenting a single source appearance to the vpp-agent configuration plugins.  
+
+It should be noted that the vpp-agent does not require a KV store. Configuration data can be provided vis GRPC, potentially REST, the [Clientv2][client-v2] API and CLI. That said, a KV store such as etcd offers the most convenient method for managing and distributing configuration data.
 
 ### What KV store can I use?
 
@@ -98,7 +120,7 @@ func New() *VPPAgent {
 }
 ```
 
-The code above prepares KVDB sync plugin (KVDB abstraction) with ETCD plugin as connector. The KVDB sync can be then provided as watcher to other plugins (or writer if passed as `KVProtoWriters` object).
+The code above prepares KVDB sync plugin (KVDB abstraction) with etcd plugin as connector. The KVDB sync can be then provided as watcher to other plugins (or writer if passed as `KVProtoWriters` object).
 
 Switch to Redis:
 ```go
@@ -575,6 +597,8 @@ List of supported configuration files can be found [here][config-files]
 [quickstart-guide]: ../user-guide/quickstart.md
 [vpp-keys]: ../user-guide/reference.md#vpp-keys
 [quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent
+[microservice label]: ../user-guide/config-files.md#service-label
+[orchestrator plugin]: ../plugins/plugin-overview.md#orchestrator
 
 *[ARP]: Address Resolution Protocol
 *[CLI]: Command-Line Interface

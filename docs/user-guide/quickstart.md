@@ -2,37 +2,37 @@
 
 In this guide you will learn how to:
 
-- Install the VPP Agent
-- Install and Start ETCD
-- Run the VPP Agent container
-- Interact with the VPP Agent using REST, CLI and etcdctl interfaces.
+- Install the vpp-agent
+- Install and Start etcd
+- Run the vpp-agent container
+- Interact with the vpp-agent using REST, CLI and etcdctl interfaces.
 
 The figure below illustrates this quickstart guide environment.
 
 [![quickstart-topology](../img/user-guide/quickstart-topology.png)](https://www.draw.io/?lightbox=1&highlight=0000ff&edit=_blank&layers=1&nav=1&title=quickstart-topology.xml#Uhttps%3A%2F%2Fraw.githubusercontent.com%2Fligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fquickstart-topology.xml)
 
 !!! Note
-    `VPP Agent` is used when discussing the Ligato VPP Agent. `VPP` is used to describe the VPP dataplane. `vpp-agent` is a term that will appear in documentation usually involving direct interfaction with the Ligato VPP Agent and any associated software components such as docker. 
+    `VPP Agent` is used when discussing the Ligato VPP Agent in a higher level context with examples being an architecture description. `vpp-agent` is a term used to define the actual code itself and/or in describing direct interactions with other associated software components such as docker. You will see this term appear in commands, APIs and code. `VPP` is used to describe the VPP dataplane.  
 
 ---
 
 ## 1. Prerequisites
 
 - **Docker** (Docker ce [installation manual][docker-install])
-- **ETCD** 
+- **etcd** 
 - **Postman** or **cURL** tool (postman [installation manual][postman-install])  
 
 !!! note
     Docker ce 17.05 or higher is required.
 
-## 2. Download the VPP Agent image
+## 2. Download the vpp-agent Image
 
-To download the VPP Agent image from the [DockerHub][dockerhub] use the following command:
+To download the vpp-agent image from the [DockerHub][dockerhub] use the following command:
 ```
 $ docker pull ligato/vpp-agent
 ```
 
-This image contains the VPP Agent and a compatible VPP dataplane.
+This image contains the vpp-agent and a compatible VPP dataplane.
 
 The command `docker images` shows us that the image exists:
 
@@ -42,34 +42,34 @@ REPOSITORY                  TAG                 IMAGE ID            CREATED     
 ligato/vpp-agent            latest              17b7db787662        18 hours ago        175MB
 ```
 
-The `docker ps` command will not show any mention of the VPP Agent because it has not been started yet.
+The `docker ps` command will not show any mention of the vpp-agent because it has not been started yet.
 
 ```
 $ docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 ```
 
-### 3. Start ETCD
+### 3. Start etcd
 
-[ETCD][ETCD] is a key-value store that contains information about the VPP configuration. The next step is to pull down and start an ETCD container.
+[etcd][etcd] is a key-value store that contains information about the VPP configuration. The next step is to pull down and start an etcd container.
 
-### 3.1 Get the ETCD image
+### 3.1 Get the etcd Image
 
-The following command starts the ETCD in a docker container. If the image is not present on your local machine, docker will download it first.
+The following command starts the etcd in a docker container. If the image is not present on your local machine, docker will download it first.
 
 ```
 $ docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
-The CLI output will show that the etcd server is ready to accept requests from an etcd client. Open another terminal session and proceed to the next step verifying the ETCD container is running:
+The CLI output will show that the etcd server is ready to accept requests from an etcd client. Open another terminal session and proceed to the next step verifying the etcd container is running:
 ```sh
 $ docker ps -f name=etcd
 CONTAINER ID        IMAGE                        COMMAND                  CREATED             STATUS              PORTS                              NAMES
 f3db6e6d8975        quay.io/coreos/etcd:latest   "/usr/local/bin/etcd…"   16 minutes ago      Up 16 minutes       0.0.0.0:2379->2379/tcp, 2380/tcp   etcd
 ```
 
-### 3.2 Use the ETCD client (etcdctl)
+### 3.2 Use the etcd Client (etcdctl)
 
-__*etcdctl*__ is the official ETCD client which can be used to put/delete/get key-value pairs from the ETCD store. 
+__*etcdctl*__ is the official etcd client which can be used to put/delete/get key-value pairs from the etcd store. 
 
 You can install it locally:
 
@@ -81,7 +81,7 @@ $ apt-get install etcd-client
 $ brew install etcd
 ```
 
-However it's easier (and recommended) to use the one that comes with the ETCD image:
+However it's easier (and recommended) to use the one that comes with the etcd image:
 
 ```
 $ docker exec etcd etcdctl version
@@ -90,23 +90,23 @@ API version: 3.3
 ```
 
 !!! note
-    According to the ETCD documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. You can check the the value of this environment variable with the command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
+    According to the etcd documentation, the API version must be set via environmental variable: `ETCDCTL_API=3`. You can check the the value of this environment variable with the command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
 
 
-## 4. Run the VPP Agent
+## 4. Run the vpp-agent
 
-This command starts the Ligato VPP Agent together with the compatible version of the VPP dataplane in a new docker container:
+This command starts the Ligato vpp-agent together with the compatible version of the VPP dataplane in a new docker container:
 ```
 $ docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ``` 
 
-Verify the VPP Agent container is running with the following command:
+Verify the vpp-agent container is running with the following command:
 ```
 $ docker ps -f name=vpp-agent
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                                            NAMES
 77df69266072        ligato/vpp-agent    "/bin/sh -c 'rm -f /…"   26 seconds ago      Up 25 seconds       0.0.0.0:5002->5002/tcp, 0.0.0.0:9191->9191/tcp   vpp-agent
 ```
-With the following command you can list all key-value pairs contained in the ETCD store related to the VPP Agent:
+With the following command you can list all key-value pairs contained in the etcd store related to the vpp-agent:
 
 ```
 $ docker exec etcd etcdctl get --prefix /vnf-agent/
@@ -139,17 +139,17 @@ The output should look something like this:
 ```
 In the next section we will program a VPP dataplane with configuration data formatted as key-value pairs. You can then run this command again and the new configuration will be displayed.
 
-## 5. Manage the VPP Agent
+## 5. Manage the vpp-agent
 
 This section will explain:
 
-- How to configure the VPP dataplane through the ETCD store and VPP Agent
-- How to read VPP configuration data via a VPP Agent REST API
+- How to configure the VPP dataplane through the etcd KV store and vpp-agent
+- How to read VPP configuration data via a vpp-agent REST API
 - How to connect to the VPP CLI and show the configuration 
 
-### 5.1 Configure the VPP Dataplane using the VPP Agent
+### 5.1 Configure the VPP Dataplane using the vpp-agent
 
-Configure a simple loopback interface with an IP address putting the key-value pair into the ETCD store:
+Configure a simple loopback interface with an IP address putting the key-value pair into the etcd store:
 ```
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
@@ -163,18 +163,18 @@ $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd
 ```
 Same idea as above, but this time for a bridge domain.
 
-Verify the configuration is present in the ETCD store:
+Verify the configuration is present in the etcd store:
 ```
 $ docker exec etcd etcdctl get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 $ docker exec etcd etcdctl get /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 ```
-To summarize this first step, we used etcdctl, the ETCD store and the VPP Agent (with an etcd plugin) to program loopback and bridge domain configuration data for a VPP dataplane.
+To summarize this first step, we used etcdctl, the etcd store and the vpp-agent (with an etcd plugin) to program loopback and bridge domain configuration data for a VPP dataplane.
 
 Next we will use REST APIs to query the VPP dataplane configuration. 
 
-### 5.2 Read the VPP configuration via a VPP Agent REST API
+### 5.2 Read the VPP configuration via a vpp-agent REST API
 
-This command returns the list of VPP interfaces using a VPP Agent REST API:
+This command returns the list of VPP interfaces using a vpp-agent REST API:
 ```
 $ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
@@ -273,16 +273,16 @@ URLs can be used to get the same data via postman:
 http://localhost:9191/dump/vpp/v2/interfaces
 http://localhost:9191/dump/vpp/v2/bd
 ```
-You can view an index of the VPP Agent REST APIs using this command:
+You can view an index of the vpp-agent REST APIs using this command:
 ```
 curl -X GET http://localhost:9191/
 ```
-To summarize so far, we used a combination of etcdctl, the ETCD store and the VPP agent to configure the VPP dataplane. Next we used REST APIs provided by the VPP Agent to read the loopback and bridge domain configuration data from the VPP dataplane.
+To summarize so far, we used a combination of etcdctl, the etcd store and the VPP agent to configure the VPP dataplane. Next we used REST APIs provided by the vpp-agent to read the loopback and bridge domain configuration data from the VPP dataplane.
 
 
 ### 5.3 Connect to the VPP Dataplane in the Container
 
-The following command starts the VPP CLI in the VPP Agent container:
+The following command starts the VPP CLI in the vpp-agent container:
 ```
 $ docker exec -it vpp-agent vppctl -s localhost:5002
     _______    _        _   _____  ___ 
@@ -303,7 +303,7 @@ local0                            0     down          0/0/0/0
 loop0                             1      up          9000/0/0/0     
 ```
 
-We can see the default `local0` interface and `loop0` configured by the VPP Agent.
+We can see the default `local0` interface and `loop0` configured by the vpp-agent.
 
 The command `show bridge-domain` lists configured bridge domains:
 ```
@@ -321,25 +321,25 @@ $ docker exec -it vpp-agent vppctl -s localhost:5002 show bridge-domain
 
 ## Troubleshooting
 
-The VPP Agent container was started and immediately closed.
+The vpp-agent container was started and immediately closed.
   
-- The ETCD container is not running. Please verify it is running using command `docker ps`.
+- The etcd container is not running. Please verify it is running using command `docker ps`.
 
 The etcdctl command returns "Error:  100: Key not found".
 
 - The etcdctl API version was not correctly set. Check the output of the appropriate environment variable with command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
 
 
-The cURL or Postman command to access VPP Agent API does not work (connection refused).
+The cURL or Postman command to access vpp-agent API does not work (connection refused).
 
-- The command starting the docker container exports port 9191 to allow access from the host. Make sure that the VPP Agent docker container is started with parameter `-p 9191:9191`. Run the `Restart VPP Agent steps`   shown below to modify port numbers. 
+- The command starting the docker container exports port 9191 to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 9191:9191`. Run the `Restart vpp-agent steps`   shown below to modify port numbers. 
 
 
 The cURL or Postman command to access VPP-cli does not work (connection refused)
 
-- The command starting docker container exports port 5002 (the VPP default port) to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 5002:5002`. Run the `Restart VPP Agent steps` shown below to modify port numbers.
+- The command starting docker container exports port 5002 (the VPP default port) to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 5002:5002`. Run the `Restart vpp-agent steps` shown below to modify port numbers.
 
-Restart VPP Agent steps:
+Restart vpp-agent steps:
 
     docker ps -f name=vpp-agent
     docker stop <XX> ; with <XX> equals first to 2 characters of container ID
@@ -352,7 +352,7 @@ Restart VPP Agent steps:
 [docker-install]: https://docs.docker.com/cs-engine/1.13/
 [dockerhub]: https://hub.docker.com/u/ligato
 [postman-install]: https://learning.getpostman.com/docs/postman/launching_postman/installation_and_updates/
-[ETCD]: https://etcd.io/
+[etcd]: https://etcd.io/
 
 *[CLI]: Command-Line Interface
 *[REST]: Representational State Transfer
