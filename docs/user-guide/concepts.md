@@ -1,33 +1,58 @@
 # Concepts
 
-This page contains information about Ligato vpp-agent and CN-Infra concepts.
+This section will describe several key concepts for the Ligato VPP Agent and Infra.
+
+!!! Note
+    The documentation in some cases may refer to the Ligato Infra as Cloud Native - Infra or CN-infra for short.
 
 ---
 
 ## What is a Model?
 
-The model represents a northbound API data model defined together with specific protobuf message. It is used to allow generating keys prefix and name of model instance using its value data. The key (prefix + name) is used for storing model in a key-value database.
+The model represents an abstraction of an object (e.g. VPP interface) that can be managed through northbound APIs exposed by the VPP Agent. More specifically the model is used to generate a key associated with a value for the object that is stored in a KV store such as ETCD. 
 
-### Model components
+### Model Components
 
 - model spec
 - protobuf message (`proto.Message`)
 - name template (optional)
 
-Single protobuf message can only be represented by one model.
+A single protobuf message can only be represented by a single model.
 
 ### Model Specification
 
-Model spec (specification) describes particular model using module, version and type fields:
+Model spec (specification) describes the model using the module, version and type fields:
 
-- `module` - defines module, which groups models (vpp, linux..)
-- `version` - describes version of value data (e.g. v1)
-- `type` - describes type of model for humans (unique in module)
+- `module` -  groups models belonging for the same configuration entity. For example, models for VPP configuration have vpp module, models for Linux configuration have linux module, etc.
+- `version` - current version of the VPP Agent API. The version only changes upon release of a new version.
+- `type` - keyword describing the given model (e.g. interfaces, bridge-domains, etc.)
 
-These three parts are used for generating model prefix. The model prefix uses following format:
+These three parts are used to generate a model prefix. The model prefix is part of a key and uses the following format:
 ```
 config/<module>/<version>/<type>/
 ```
+This is an important concept so let's look at some examples.
+
+Here is the key for a [VPP interface][vpp-keys]:
+
+```
+/vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
+```
+Inside that key is the model prefix of `../vpp/v2/interfaces` where:
+```
+Module = vpp
+version = v2
+type = interfaces
+```
+An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. It was used to program a VPP loopback interface with the value of an IP address for insertion into an ETCD KV store.
+
+```
+$ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
+'{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
+``` 
+Note that the value of `loop1` is the `<name>` of the interface.
+
+
 
 ## Key-value store overview
 
@@ -548,6 +573,8 @@ List of supported configuration files can be found [here][config-files]
 [redis-quickstart]: https://redis.io/topics/quickstart
 [telemetry-plugin]: ../plugins/vpp-plugins.md#telemetry
 [quickstart-guide]: ../user-guide/quickstart.md
+[vpp-keys]: ../user-guide/reference.md#vpp-keys
+[quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent
 
 *[ARP]: Address Resolution Protocol
 *[CLI]: Command-Line Interface
