@@ -91,13 +91,18 @@ There is quite a bit of flexibility in this architecture.
 - individual KV store can support multiple vpp-agent "groups".
 - vpp-agent can receive config data from multiple sources (e.g. KV store, GRPC, etc.). A special [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources thus presenting a single source appearance to the vpp-agent configuration plugins.  
 
-It should be noted that the vpp-agent does not require a KV store. Configuration data can be provided vis GRPC, potentially REST, the [Clientv2][client-v2] API and CLI. That said, a KV store such as etcd offers the most convenient method for managing and distributing configuration data.
+It should be noted that the vpp-agent does not require a KV store. Configuration data can be provided via GRPC, potentially REST, the [Clientv2][client-v2] API and CLI. That said, a KV store such as etcd offers the most convenient method for managing and distributing configuration data.
 
-### What KV store can I use?
+### What KV Store can I Use?
 
-Technically any. The CN-Infra the vpp-agent is based on provides connectors to several types of KVDB (see the list below). All of them are built on the common abstraction (called KVDB sync). It comes with significant advantages - the most important is that the change of the data store can be done very easily.
+!!! Note
+    Some of the items below are technically speaking, KV stores. Some are databases. The term `KVDB` (key-value database) will be used as a single term to mean one or the other unless specifically called out.
 
-Let's have a look at the example:
+Technically any. The vpp-agent provides connectors to several types of KVDBs stores (see the list below). All are built on the common abstraction (called KVDB sync). It comes with significant advantages - the most important is that the change of which data store or database can be accomplished with a minimum of effort. 
+
+
+
+Let's have a look at an example:
 ```go
 import (
 	"github.com/ligato/cn-infra/db/keyval/etcd"
@@ -120,9 +125,9 @@ func New() *VPPAgent {
 }
 ```
 
-The code above prepares KVDB sync plugin (KVDB abstraction) with etcd plugin as connector. The KVDB sync can be then provided as watcher to other plugins (or writer if passed as `KVProtoWriters` object).
+The code above prepares the KVDB sync plugin (KVDB abstraction) with the etcd plugin as a connector. The KVDB sync plugin can be provided as watcher to other plugins (or writer if passed as the `KVProtoWriters` object).
 
-Switch to Redis:
+Let's switch to Redis:
 ```go
 import (
 	"github.com/ligato/cn-infra/db/keyval/redis"
@@ -143,15 +148,15 @@ func New() *VPPAgent {
 }
 ```
  
-The orchestrator now connects to Redis data base.
+The orchestrator now connects to a Redis database.
 
-Another advantage is that to add support for new KVDB basically means to write a plugin able to establish connection to the desired database and wire it with the KVDB sync, which is significantly easier and faster.
+Another advantage is that to add support for a new KVDB, one need only write a plugin able to establish a connection to the desired KVDB and wire it up with the KVDB sync. Pretty straightforward. 
 
 ### ETCD
 
 More information: [ETCD documentation][etcd-plugin]
 
-The ETCD is a distributed KV store that provides data read-write. The ETCD can be started on local machine in its own container with following command: 
+etcd is a distributed KV store that provides data read-write capabilities. etcd can be started on local machine in its own container with following command: 
 ```bash
 sudo docker run -p 2379:2379 --name etcd --rm \
     quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd \
@@ -159,64 +164,68 @@ sudo docker run -p 2379:2379 --name etcd --rm \
     -listen-client-urls http://0.0.0.0:2379
 ``` 
 
-Vpp-agent must start with the KVDB sync plugin using ETCD as a connector (to know how to do this, see code above or code inside [this example][datasync-example]). Information where the ETCD is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
+The vpp-agent `must` start with the KVDB sync plugin using etcd as a connector.
+ 
+!!! Note
+ 
+    There is the example above and look over the code in [this example][datasync-example]). Information where etcd is running (IP address, port) must be provided upon etcd startup via the configuration file. 
 
 The minimal content of the file may look as follows:
 ```
 endpoints:
   - "172.17.0.1:2379"
 ```
-The config file is passed to the Agent via flag `--etcd-confg=<path>`. The file contains more fields where ETCD-specific parameters can be set (dial timeout, certification, compaction, etc.). See [guide to config files][list-of-supported] for more details.
+The etcd config file is passed to the vpp-agent via the flag `--etcd-confg=<path>`. The file contains more fields where etcd-specific parameters can be set (e.g. dial timeout, certification, compaction, etc.). See [guide to config files][list-of-supported] for more details.
 
-Note that if the config file is not provided, the connector plugin will not be started and no connection will be established. If the ETCD is not reachable at the address provided, the Agent may not start at all.
+Note that if the config file is not provided, the connector plugin will not be started and no connection will be established. If the etcd server is not reachable, the vpp-agent may not start at all.
 
-Recommended tool to manage ETCD database is the official `etcdctl`.
+The recommended tool to manage the etcd datastore is [`etcdctl`][etcdctl].
 
 ### Redis
 
 More information: [Redis documentation][redis-plugin]
 
-Redis is another type of in-memory data structure store, used as a database, cache or message broker. 
+Redis is another type of in-memory datastore, that can function as a database, cache or message broker. 
 
 Follow [this guide][redis-quickstart] to learn how to install `redis-server` on any machine.
 
-The Agent must start with the KVDB sync plugin using Redis as a connector (to know how to do this, see code above or code inside [this example][datasync-example]). Information where the Redis is running (IP address, port) has to be also provided on the Agent startup via the configuration file. 
+The vpp-agent must start with the KVDB sync plugin using Redis as a connector (see code above or code inside [this example][datasync-example]). Information where the Redis is running (IP address, port) must be also provided to the vpp-agent at startup via the configuration file. 
 
 The content of the .yaml configuration file:
 ```yaml
 endpoint: localhost:6379
 ```
 
-The config file is provided to the Agent via the flag `--redis-config=<path>`. See [guide to config files][list-of-supported] to learn more about Redis configuration.
+The config file is provided to the vpp-agent via the flag `--redis-config=<path>`. See [guide to config files][list-of-supported] to learn more about Redis configuration.
 
-Note that if the Redis config file is not provided, the particular connector plugin will not be started and no connection will be established. If the Redis is not reachable at the provided address, the Agent may not start at all.
+Note that if the Redis config file is not provided, the connector plugin will not be started and no connection will be established. If the Redis is not reachable at the provided address, the vpp-agent may not start at all.
 
-Recommended tool to manage Redis database is the `redis-cli` tool.
+The recommended tool to manage a Redis database is the [`redis-cli`][rediscli] tool.
 
 !!! note "Important" 
-    The Redis server is by default started with keyspace event notifications disabled. It means, no data change events are forwarded to the Agent watcher. To enable it, use `config SET notify-keyspace-events KA` command directly in the `redis-cli`, or change the settings in the Redis server startup config.
+    The Redis server is by default started with keyspace event notifications disabled. It means, no data change events are forwarded to the watcher. To enable this, use the `config SET notify-keyspace-events KA` command directly in the `redis-cli`, or change the settings in the Redis server startup config.
 
 ### Consul
 
 More information: [consul documentation][consul-plugin]
 
-Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a consul key-value data store. Location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
+Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a consul key-value datastore. Location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
 
 ### Bolt
   
-Bolt is low-level, simple and fast key-value data store. The Bolt plugin provides an API to access the Bolt server.
+[Bolt][bolt] is low-level, simple and fast key-value datastore. The Bolt plugin provides an API to the Bolt server.
 
 ### FileDB
 
 More information: [fileDB documentation][filedb-plugin]
 
-The fileDB is a special case of database, which uses host OS filesystem as a database. The key-value configuration is stored in text files in defined path. The fileDB connector works as any other KVDB connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
+fileDB is unique in that it uses the host OS filesystem as a database. The key-value configuration is stored in text files in a defined path. The fileDB connector works like any other KVDB connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
 
-The fileDB is not a process, so it does not need to be started - the Agent only needs correct permission to access files with configuration (and write access if the status is published).
+The fileDB is not a process, so it does not need to be started - the vpp-agent only requires correct permission to access configuration files (and write access if the status is published).
 
-The file with configuration has requisite format and can be kept as `.json` or `.yaml`.
+The configuration file format and can be `.json` or `.yaml`.
 
-As any other KVDB plugin, fileDB also requires config file to load, provided via flag `--filedb-config=<path>`. 
+fileDB requires config file to load, via flag `--filedb-config=<path>`. 
 
 Example config file:
 
@@ -224,13 +233,13 @@ Example config file:
 configuration-paths: [/path/to/directory/or/file.txt]
 ```
 
-In this case, absence of the config file does not prevent agent from starting, since the configuration files can be created at later point.
+In this case, absence of the config file does not prevent the vpp-agent from starting, since the configuration files can be created at a later point.
 
-The file with configuration can be edited with any text editor, like `vim`.
+The file with configuration can be edited with any text editor such as `vim`.
 
-### How to use it in a plugin
+### How to Use at KVDB in a Plugin
 
-In the plugin which intends to use KVDB connection for publishing or watching, define similar fields of the type:
+In the plugin which intends to us a KVDB connection for publishing or watching, similar fields of the type are used:
 
 ```go 
 import (
@@ -271,7 +280,7 @@ func New() *VPPAgent {
 
 **Watcher**
 
-Back in the Plugin, start watcher. The watcher requires two channels of type `datasync.ChangeEvent` and `datasync.ResyncEvent` (the resync one is optional) and a set of key prefixes to watch on:
+Back in the plugin, start the watcher. The watcher requires two channel types: `datasync.ChangeEvent` and `datasync.ResyncEvent` (the resync one is optional) and a set of key prefixes to watch:
 
 ```go
 p.resyncEventChannel := make(chan datasync.ResyncEvent)
@@ -281,7 +290,7 @@ keyPrefixes := []string{<prefixes>...}
 watchRegistration, err = p.Watcher.Watch("plugin-resync-name", p.resyncEventChannel, p.changeEventChannel, keyPrefixes)
 ```
 
-Data change and resync events arrive via the particular channel, so the next step is to start the watcher in new go routine:
+Data change and resync events arrive on a particular channel, so the next step is to start the watcher in new go routine:
 
 ```go
 func (p *Plugin) watchEvents() {
@@ -298,22 +307,22 @@ func (p *Plugin) watchEvents() {
 }
 ```
 
-It is a good practice to start event watcher before the watcher registration. 
+It is a good practice to start the event watcher before the watcher registration. 
 
 **Publisher**
 
-Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows storing key-value pair to the data store. No 'Delete()' method is defined, objects are removed sending nil data under the key intended to remove.
+Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows the key-value pair to be saved in the datastore. No `Delete()` method is defined. Objects can be removed by sending `null` data with the associated key. 
 
-## VPP configuration order
+## VPP Configuration Order
 
-One of the VPP biggest drawbacks is that the dependency relations of various configuration items are very strict, and ability of the VPP to manage it is limited, or not present at all. There are two problems to be solved:
+One of the VPP biggest drawbacks is that the dependency relations of various configuration items is quite strict. The ability of VPP to manage is limited, or not present at all. There are two problems to address:
 
-1. A configuration item dependent on any other configuration item cannot be created "in advance", the dependency must be fulfilled first
-2. If the dependency item is removed, the VPP behavior is not consistent here. Sometimes, also the dependent item is removed as expected but there are cases where it becomes unmanageable or in any other kind of invalid state where it cannot be directly handled.
+1. A configuration item dependent on any other configuration item cannot be created "in advance". The dependency must be addressed first.
+2. If the dependency item is removed, VPP behavior is not consistent. In other cases, the dependency item is removed as expected but itself becomes unmanageable. 
 
-### Configuration order using the VPP CLI
+### Configuration Order using VPP CLI
 
-The base kind of the VPP configuration are interfaces. After the interface creation, the VPP generates its index which is serves as a reference for other configuration items which plan to use it (bridge domains, routes, ARP entries, ...). Other items, like FIBs may have even more complicated dependencies on several configuration types.
+Interfaces are the most basic type of VPP configuration. After interface creation, VPP generates an index which serves as a reference for other configuration items using interfaces (i.e. bridge domains, routes, ARP entries, ...). Other items, such as FIBs may have even more complicated dependencies involving additional configuration types.
 
 Example:
 
@@ -324,17 +333,15 @@ loop0
 vpp# 
 ```
 
-The interface `loop0` was added and interface index (and also name) was generated for it. The index can be shown by `show interfaces`. 
+The interface `loop0` was added and the interface index (and name) was generated. The index can be shown by `show interfaces`. 
 
-Set the interface up:
+Set the interface to the `UP` state. The interface name is required.
 ```bash
 vpp# set interface state loop0 up
 vpp#
 ``` 
 
-The CLI command requires interface name to know which interface should be set to UP state. 
-
-Now let's create the bridge domain:
+Now let's create a bridge domain:
 ```bash
 vpp# create bridge-domain 1 learn 1 forward 1 uu-flood 1 flood 1 arp-term 1   
 bridge-domain 1
@@ -347,7 +354,7 @@ vpp# set interface l2 bridge loop0 1
 vpp#
 ``` 
 
-We set `loop0` to bridge domain with index 1. Again, we cannot use non-existing interface (since the names are generated) but we also cannot use non-existing bridge domain.
+We set `loop0` to bridge domain with index 1. Again, we cannot use a non-existing interface (since the names are generated at interface creation) but we also cannot use a non-existing bridge domain.
 
 At last, let's configure the FIB table entry:
 ```bash
@@ -355,7 +362,7 @@ vpp# l2fib add 52:54:00:53:18:57 1 loop0
 vpp#
 ```
 
-The call contains dependencies on the `loop0` interface and on our bridge domain with ID=1. From the example steps above, we see that the order of CLI commands must follow in this way (with some exceptions like the bridge domain creation (third step) which can be called earlier).
+The call contains dependencies on the `loop0` interface and on our bridge domain with ID=1. From the example steps above, we see that the order of CLI commands must follow in this strict sequence.
 
 Now remove the interface:
 ```bash
@@ -363,7 +370,7 @@ vpp# delete loopback interface intfc loop0
 vpp#
 ```
 
-If we check the FIB table now with `show l2fib details`, we can see that the interface name was changed from `loop0` to `Stale`.
+If we check the FIB table now with `show l2fib details`, we will see that the interface name was changed from `loop0` to `Stale`.
 
 Remove bridge domain. The command is:
 ```bash
@@ -379,23 +386,23 @@ vpp# sh l2fib verbose
 L2FIB total/learned entries: 2/0  Last scan time: 6.6309e-4sec  Learn limit: 4194304 
 vpp#
 ``` 
-But attempt to remove the FIB entry will not pass:
+But attempt to remove the FIB entry is invalid:
 ```bash
 vpp# l2fib del 52:54:00:53:18:57 1 
 l2fib del: bridge domain ID 1 invalid
 vpp#
 ```
 
-So we ended up with the configuration which cannot be removed (until the bridge domain is re-created). To avoid similar scenarios and provide more freedom in configuration order, the vpp-agent uses automatic configuration order mechanism which handles this one and similar cases.
+So we end up with the configuration which cannot be removed (until the bridge domain is re-created). To avoid similar scenarios and provide more flexibility in configuration order, the vpp-agent uses automatic configuration order mechanism which handles this and similar cases.
 
-### Configuration order using the Ligato vpp-agent
+### Configuration Order using the Ligato vpp-agent
 
-The vpp-agent uses northbound API definition of every supported configuration item, while the single proto-modelled dataset may call multiple binary API calls to the VPP. For example NB interface configuration creates the interface itself, sets its state, MAC address, IP addresses and other. However, the vpp-agent goes even further - it allows to "configure" VPP items with not-yet-existing references. Such an item is not really configured (since it cannot be), but the agent "remembers" it and puts to the VPP when possible, without any other intervention, thus removing strict VPP ordering.
+The vpp-agent employs a northbound (NB) API definition for every supported configuration type (or item).  NB interface configuration through an API creates the interface itself, sets its state, MAC address, IP addresses and so pn. The vpp-agent goes even further - it permits the configuration of VPP items with non-existent references. Such an item is not really configured, but the vpp-agent "remembers" it and programs VPP when possible, thus removing the strict VPP configuration ordering constraint.
 
 !!! note
-    If you want to follow, this part expects to have the basic setup prepared (vpp-agent + VPP + ETCD). If you need help with the setup, [here is the guide][quickstart-guide].
+    This part requires to the basic setup to prepared (vpp-agent + VPP + ETCD). The steps to achieve this are covered in the [quick start guide][quickstart-guide].
 
-Let's start from the end and put configuration for the FIB entry:
+Let's start from the end and program the FIB entry into VPP:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C '{"phys_address":"62:89:C6:A3:6D:5C","bridge_domain":"bd1","outgoing_interface":"if1","action":"FORWARD"}'
 ```
@@ -407,14 +414,14 @@ Have a look at the vpp-agent output of `planned operations`:
   - value: { phys_address:"62:89:C6:A3:6D:5C" bridge_domain:"bd1" outgoing_interface:"if1" } 
 ```
 
-There is one `CREATE` transaction planned - our FIB entry with interface `if1` and bridge domain `bd1`. None of these exists, so the transaction was postponed, highlighting it as `[NOOP IS-PENDING]`.
+There is one `CREATE` transaction planned - our FIB entry with interface `if1` and bridge domain `bd1`. None of these exist, so the transaction was postponed, highlighting it as `[NOOP IS-PENDING]`.
 
 Configure the bridge domain:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1 '{"name":"bd1","interfaces":[{"name":"if1"}]}'
 ```
 
-We have created a simple bridge domain with interface. Let's break down the output:
+We have created a simple bridge domain with an interface. Let's parse the output:
 ```bash
 1. CREATE:
   - key: config/vpp/l2/v2/bridge-domain/bd1
@@ -424,9 +431,9 @@ We have created a simple bridge domain with interface. Let's break down the outp
   - value: { name:"if1" }
 ```
 
-Now there are two planned operations - the first is the bridge domain `bd1` which can be created since there are no restrictions. The second operation contains following highlight: `[DERIVED NOOP IS-PENDING]`. 'DERIVED' means that this item was processed as separate key within the vpp-agent (it is internal functionality so let's not to bother with it now). The rest of the flag is the same as before, meaning that the value `if1` is not present yet.
+Now there are two planned operations - the first is the bridge domain `bd1` which can be created with no restrictions. The second operation contains the following highlight: `[DERIVED NOOP IS-PENDING]`. `DERIVED` means that this item was processed as a separate key within the vpp-agent (it is internal functionality so let's not to bother with it now). The rest of the flag is the same as before, meaning that the value `if1` is not present yet.
 
-Next step is to add incriminated interface:
+Next step is to add the interface:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/tap1 '{"name":"tap1","type":"TAP","enabled":true}
 ```
@@ -445,7 +452,9 @@ The output:
 ```
 
 There are three `planned operations` present. The first one is the interface itself, which was created (and also enabled). 
-The second operation is marked as `DERIVED` (the same meaning, not important here) and `WAS-PENDING` which means the cached value could be finally resolved. This operation means that the interface was added to the bridge domain, as defined in the bridge domain configuration.
+
+The second operation is marked as `DERIVED` (the same meaning, not not important here) and `WAS-PENDING` which means the cached value could be resolved. This operation means that the interface was added to the bridge domain, as defined in the bridge domain configuration.
+
 The last statement is marked `WAS-PENDING` as well and represents our FIB entry, cached until now. Since all dependencies were fulfilled (the bridge domain and the interface as a part of it), the FIB was configured.
 
 Now let's try to remove the bridge domain as before:
@@ -466,21 +475,23 @@ The output:
   - value: { name:"bd1" interfaces:<name:"if1" > } 
 ```
 
-Notice that the first performed operation was removal of the FIB entry, but the value was not discarded by the vpp-agent since it still exists in the ETCD. The vpp-agent put the value back to the cache. This is important step since the FIB entry is removed before the bridge domain, so it will not get mis-configured and stuck in the VPP. The value no longer exists on the VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any action required from outside.
-The second step means that the interface `if1` was removed from the bridge domain, before its removal in the last step of the transaction.
+Notice that the first operation was removal of the FIB entry. The value was not discarded by the vpp-agent because it still exists in the etcd datastore. The vpp-agent places the value back into cache. This is an important step since the FIB entry is removed before the bridge domain. Thus it will not be accidentally  mis-configured and stranded in VPP. The value no longer exists in VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any external intervention. 
 
-The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information how it works, please refer [here][telemetry-plugin].
+The second step means that the interface `if1` was removed from the bridge domain, before its final removal in the last step of the transaction.
 
-## VPP multi-version support
+The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information on how it works, please refer to the discussion of the [KV Scheduler][kvs].
 
-The vpp-agent is highly dependent on the version of the VPP binary API used to send and receive various types of configuration messages. The VPP API is changing over time, adding new binary calls or modifying or removing existing ones. The latter is the most crucial from the vpp-agent perspective since it introduces incompatibilities between vpp-agent and the VPP.
-For that reason the vpp-agent does a compatibility check in the GoVPP multiplex plugin (an adapter of the GoVPP - the GoVPP component provides API for communication with the VPP). The compatibility check attempts to read an ID of the provided message. If just one message ID is not found (validation if the cyclic redundancy code), the VPP is considered incompatible and the vpp-agent will not connect. The message validation is essential for successful connection. Now it is clear that the vpp-agent is tightly bound to the version of the VPP (for that reason the vpp-agent image is shipped together with compatible VPP version to make it easier for users).
+## VPP Multi-Version Support
 
-This concept may cause some inconveniences during manual setup, and especially in scenarios where the vpp-agent needs to be quickly switched to different VPP which is not compatible.
+The vpp-agent is highly dependent on the version of the VPP binary API used to send and receive various types of configuration messages. The VPP API is evolving changing over time, adding new binary calls or, modifying or removing existing ones. The latter is the most crucial from the vpp-agent perspective since it introduces incompatibilities between vpp-agent and the VPP.
 
-### VPP compatibility
+For that reason the vpp-agent performs a compatibility check in the GoVPP multiplex plugin (the GoVPP component provides an API for communication with VPP). The compatibility check attempts to read the ID of the provided message. If just one message ID is not found (validation in the cyclic redundancy code), VPP is considered incompatible and the vpp-agent and will not connect. The message validation is essential for successful connection. Now it is clear that the vpp-agent is tightly bound to the version of the VPP. For that reason, the vpp-agent image is shipped together with a compatible VPP dataplane version to make it easier and safer for users.
 
-The vpp-agent bindings are generated from the VPP JSON API definitions. Those can be found in the path `/usr/share/vpp/api`. Full VPP installation is required if definitions should be generated. The json API definition is then transformed to the `*.ba.go` file using `binapi-generater` which is a part of the GoVPP project. All generated structures implement the GoVPP `Message` interface which allows to get message name, CRC or message type, and represents generic type for all messages which could be sent via the VPP channel.
+This function may cause some inconveniences during manual setup, and especially in scenarios where the vpp-agent needs to be quickly switched to different VPP which might not be compatible.
+
+### VPP Compatibility
+
+The vpp-agent bindings are generated from VPP JSON API definitions. Those can be found in the path `/usr/share/vpp/api`. Full VPP installation is required if definitions need be generated. The JSON API definition is then transformed to the `*.ba.go` file using `binapi-generater` which is a part of the GoVPP project. All generated structures implement the GoVPP `Message` interface proving the message name, CRC or message type, and represents the generic type for all messages which can be sent via the VPP channel.
 
 Example:
 ```go
@@ -499,7 +510,9 @@ func (*CreateLoopback) GetMessageType() api.MessageType {
 }
 ```
 
-The code above is generated from `create_loopback` within the `interface.api.json`. The structure represents the binary API request call, and usually contains a set of fields which can be set to required values (like MAC address of the loopback interface in this example). Every VPP request call requires a response:
+The code above is generated from `create_loopback` within `interface.api.json`. The structure represents the binary API request call, and usually contains a set of fields which can be set to required values (e.g. MAC address of the loopback interface). 
+
+Every VPP request call requires a response:
 
 ```go
 type CreateLoopbackReply struct {
@@ -518,60 +531,58 @@ func (*CreateLoopbackReply) GetMessageType() api.MessageType {
 }
 ``` 
 
-The response has a `Retval` field, which is `0` if the API call was successful and without errors. In case of any error, the field contains numerical index of VPP-defined error message. Other fields can be present (usually some information generated within the VPP, as the `SwIfIndex` of the created interface in this case). Notice that the response message has the same name but with `Reply` suffix. Other types of messages may serve to obtain various information from the VPP - those API calls have suffix `Dump` (and for them, the reply message is with `Details` suffix).
+The response has a `Retval` field, which is `0` if the API call was successful and error free. In case of any error, the field contains a numerical index of a VPP-defined error message. Other fields can be present (usually some information generated within the VPP, as the `SwIfIndex` of the created interface in this case). Notice that the response message has the same name but with a `Reply` suffix. Other types of messages may provide information from the VPP. Those API calls have a suffix of `Dump` (and for them, the reply message is with a `Details` suffix).
 
-If the json API was changed, it must be re-generated in the vpp-agent in order to be compatible again (and all changes caused by the modified binary api structures must be resolved, like added, removed or renamed fields). This process can be time-consuming sometimes (depends on the size of the difference). In order to minimize updates for various VPP versions, the vpp-agent introduced multi-version support. 
+If the JSON API was changed, it must be re-generated in the vpp-agent in order to be compatible again. All changes caused by the modified binary api structures must be resolved (e.g. new or modified data fields). This process can be time consuming as it depends on the size of the difference detected differences.  
 
-### Multi-version
+### Multi-Version
 
-The vpp-agent multi-version support allows to switch to the different VPP version (with different API) without any changes to the vpp-agent itself and without any need to rebuild the vpp-agent binary. Plugins can now obtain the version of the VPP and the vpp-agent is trying to connect and initialize correct set of `vppcalls` - base methods preparing API requests for the VPP. 
+In order to minimize updates for various VPP versions, the vpp-agent introduced multi-version support.The vpp-agent can switch to a different VPP version (with different API) without any changes to the vpp-agent itself and, without any need to rebuild the vpp-agent binary. Plugins can now obtain the version of the VPP and the vpp-agent to connect and initialize the correct set of `vppcalls` - base methods preparing API requests for the VPP. 
 
-Every `vppcalls` handler registers itself with the VPP version intended to support (like `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent does compatibility check with with all available handlers, until it founds some which is compatible with required messages. The chosen handled must be in line with all messages, it is not possible (and reasonable) to use multiple handlers for single VPP. When the compatibility check found any handler, it is returned to the main plugin for use. 
+Every `vppcalls` handler registers itself with the VPP version it is intended to support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent performs compatibility check with all available handlers, until it finds those compatible with required messages. The chosen handler must be in line with all messages, as it is not possible (and reasonable) to use multiple handlers for single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin for use. 
 
-The little drawback of this solution is a lot of duplicated code across `vppcalls`, since there is not much of significant API changes between versions.
+One small drawback of this solution is code duplication across `vppcalls`, since there is in the majority of cases insignificant API changes between versions. 
 
 ## Client v2
 
-Client v2 (i.e. the second version) defines an API that allows to manage
-configuration of VPP and Linux plugins.
-How the configuration is transported between APIs and the plugins
-is fully abstracted from the user.
+Client v2 (i.e. the second version) defines an API for configuration management of VPP and Linux plugins. How the configuration is transported between APIs and the plugins is fully abstracted from the user.
 
 The API calls can be split into two groups:
 
-- **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. The name is an abbreviation of *resynchronization*. It is used initially and after any system event that may leave the configuration out-of-sync while the set of outdated configuration options is impossible to determine locally (e.g. temporarily lost connection to data store).
-- **data change** allows to deliver incremental changes of a configuration.
+- **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. The name is an abbreviation of *resynchronization*. It is used initially and following any system event that may result in the configuration being out-of-sync while the set of outdated configuration options is impossible to determine locally (e.g. temporarily lost connection to data store).
+- **data change** delivers incremental changes of a configuration.
 
-There are two implementations:
+There are two Client v2 implementations:
 
-- **local client** runs inside the same process as the agent and delivers configuration through go channels directly to the plugins.
+- **local client** runs inside the same process as the agent and delivers configuration data through go channels directly to the plugins.
 - **remote client** stores the configuration using the given `keyval.broker`.
    
-## Plugin configuration files
+## Plugin Configuration Files
 
-Some plugins may require an external information in order to set proper behavior. The good example are database connector plugins like ETCD. By default, the plugin tries default IP address and port to connect to the running database instance. If we want to connect to a different IP address or some custom port, we need to pass this information to the plugin. For that purpose, the vpp-agent plugins support configuration files. 
-The plugin configuration file (or just config-file) is a short file with fields (every plugin can define its own set of fields), which can statically modify the initial plugin setup and change some aspects of its behavior. 
+Some plugins require external information to ensure proper behavior. An example are database connector plugins such as etcd. By default, the plugin tries a default IP address and port to connect to. If we want to connect to a different IP address or custom port, we need to pass this information to the plugin. For that purpose, the vpp-agent plugins support [config files][config-files]. The plugin configuration file (or just config-file) is a small file with fields (every plugin can define its own set of fields), which can statically modify the initial plugin setup and change some aspects of its behavior. 
 
-### Plugin definition of the config-file
+### Plugin Definition of the Config File
 
-The configuration file is passed to the plugin via the vpp-agent flags. Using the command `vpp-agent -h` can be shown the list of all plugins supporting any static config and can be set simply via the flag command:
+The configuration file is passed to the plugin via the vpp-agent flags. The command `vpp-agent -h` displays the list of all plugins supporting static config and can be set simply via the flag command:
 
 ```bash
 vpp-agent -etcd-config=/opt/vpp-agent/dev/etcd.conf
 ```
 
-Other option is to set related environment variable:
+Another option is to set related environment variable:
 ```bash
 export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 ```
 
-The provided config follows YAML syntax and is un-marshaled to defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is a good practice to always use default values in case the configuration file or any of its field is not provided, so the plugin can be successfully started without it. The config-file (yaml) representation:
+The provided config conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the configuration file or any of its fields are not provided. This is so the plugin can be successfully started without it. 
+
+An example of config file (in yaml format):
 ```bash
 db-path: /tmp/bolt.db
 file-mode: 0654
 ```
 
-Every plugin supporting configuration file defines its content as a separate structure. For example, here is the definition of the BoltDB config-file:
+Every plugin supporting a configuration file defines its content as a separate structure. For example, here is the definition of the BoltDB config-file:
 ```go
 type Config struct {
 	DbPath      string        `json:"db-path"`
@@ -580,7 +591,7 @@ type Config struct {
 }
 ```
 
-As you can see, the config file can contain multiple fields of various types together with the json struct tag. Lists and maps are also allowed. Notice that not all fields must be defined in the file itself - empty fields are set to default values or handled as not set. 
+As one can see, the config file can contain multiple fields of various types together with the json struct tag. Lists and maps are also allowed. Notice that not all fields must be defined in the file itself - empty fields are set to default values or handled as not set. 
 
 List of supported configuration files can be found [here][config-files]
 
@@ -599,6 +610,11 @@ List of supported configuration files can be found [here][config-files]
 [quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent
 [microservice label]: ../user-guide/config-files.md#service-label
 [orchestrator plugin]: ../plugins/plugin-overview.md#orchestrator
+[etcdctl]: https://github.com/etcd-io/etcd/tree/master/etcdctl
+[rediscli]: https://redis.io/topics/rediscli
+[bolt]: https://github.com/boltdb/bolt
+[kvs]: ../developer-guide/kvscheduler.md
+[govpp]: ../plugins/
 
 *[ARP]: Address Resolution Protocol
 *[CLI]: Command-Line Interface
