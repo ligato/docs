@@ -59,7 +59,7 @@ Note that the value of `loop1` is the `<name>` of the interface.
 This section describes how the Ligato vpp-agent interworks with KV stores. 
 
 !!! Note
-    There are a number of similar terms in this documentation and elsewhere used to define what is essentially a datastore or database of key-value pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV datastore and so on. We will use the term `KV store` in this section as this is the term used by [etcd](https://etcd.io), the most widely deployed key-value store in used today.  
+    There are a number of similar terms in this documentation and elsewhere used to define what is essentially a data or database of key-value pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV data and so on. We will use the term `KV store` in this section as this is the term used by [etcd](https://etcd.io), the most widely deployed key-value store in used today.  
 
 ### Why the KV Store?
 
@@ -179,13 +179,13 @@ The etcd config file is passed to the vpp-agent via the flag `--etcd-confg=<path
 
 Note that if the config file is not provided, the connector plugin will not be started and no connection will be established. If the etcd server is not reachable, the vpp-agent may not start at all.
 
-The recommended tool to manage the etcd datastore is [`etcdctl`][etcdctl].
+The recommended tool to manage the etcd data is [`etcdctl`][etcdctl].
 
 ### Redis
 
 More information: [Redis documentation][redis-plugin]
 
-Redis is another type of in-memory datastore, that can function as a database, cache or message broker. 
+Redis is another type of in-memory data, that can function as a database, cache or message broker. 
 
 Follow [this guide][redis-quickstart] to learn how to install `redis-server` on any machine.
 
@@ -209,11 +209,11 @@ The recommended tool to manage a Redis database is the [`redis-cli`][rediscli] t
 
 More information: [consul documentation][consul-plugin]
 
-Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a consul key-value datastore. Location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
+Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a consul key-value data. Location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
 
 ### Bolt
   
-[Bolt][bolt] is low-level, simple and fast key-value datastore. The Bolt plugin provides an API to the Bolt server.
+[Bolt][bolt] is low-level, simple and fast key-value data. The Bolt plugin provides an API to the Bolt server.
 
 ### FileDB
 
@@ -237,9 +237,9 @@ In this case, absence of the config file does not prevent the vpp-agent from sta
 
 The file with configuration can be edited with any text editor such as `vim`.
 
-### How to Use at KVDB in a Plugin
+### How to Use a KVDB in a Plugin
 
-In the plugin which intends to us a KVDB connection for publishing or watching, similar fields of the type are used:
+In the plugin which intends to use a KVDB connection for publishing or watching, fields of this type are used:
 
 ```go 
 import (
@@ -311,7 +311,7 @@ It is a good practice to start the event watcher before the watcher registration
 
 **Publisher**
 
-Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows the key-value pair to be saved in the datastore. No `Delete()` method is defined. Objects can be removed by sending `null` data with the associated key. 
+Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows the key-value pair to be saved in the data. No `Delete()` method is defined. Objects can be removed by sending `null` data with the associated key. 
 
 ## VPP Configuration Order
 
@@ -475,7 +475,7 @@ The output:
   - value: { name:"bd1" interfaces:<name:"if1" > } 
 ```
 
-Notice that the first operation was removal of the FIB entry. The value was not discarded by the vpp-agent because it still exists in the etcd datastore. The vpp-agent places the value back into cache. This is an important step since the FIB entry is removed before the bridge domain. Thus it will not be accidentally  mis-configured and stranded in VPP. The value no longer exists in VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any external intervention. 
+Notice that the first operation was removal of the FIB entry. The value was not discarded by the vpp-agent because it still exists in the etcd data. The vpp-agent places the value back into cache. This is an important step since the FIB entry is removed before the bridge domain. Thus it will not be accidentally  mis-configured and stranded in VPP. The value no longer exists in VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any external intervention. 
 
 The second step means that the interface `if1` was removed from the bridge domain, before its final removal in the last step of the transaction.
 
