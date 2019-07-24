@@ -1,6 +1,6 @@
 # Integration Tests
 
-This page contains information about integration tests for VPP Agent. The following text describes how to run robot test suites (locally or in any other environment).
+This page contains information about integration tests for the vpp-agent. The following text describes how to run robot test suites (locally or in any other environment).
 
 ---
 
