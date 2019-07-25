@@ -60,6 +60,10 @@ This section describes how the Ligato vpp-agent interworks with KV stores.
 
 !!! Note
     There are a number of similar terms in this documentation and elsewhere used to define what is essentially a data or database of key-value pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV data and so on. We will use the term `KV store` in this section as this is the term used by [etcd](https://etcd.io), the most widely deployed key-value store in used today.  
+    
+    `Connector` is a term that applies to any plugin providing access or connectivity to an external entity such as a KVDB. The etcd plugin is considered a connector.
+    
+    
 
 ### Why the KV Store?
 

@@ -4,51 +4,51 @@
 
 ## GoVPPMux plugin
 
-The `govppmux` is a core Agent plugin which **allows other plugins to access the VPP** independently at each other by means of connection multiplexing.
+The `govppmux` plugin allows other plugins to access VPP independentlyby means of connection multiplexing.
 
-Any plugin (core or external) that interacts with the VPP can ask `govppmux` to get its own, potentially customized communication channel to access running VPP instance. Behind the scene, **all channels share the same connection** created during the plugin initialization using `govpp` core.
+Any plugin that interacts with the VPP can ask `govppmux` to obtain its own communication channel to access a running VPP instance. Behind the scenes, all channels share the same connection created during the plugin initialization using `govpp` core.
 
 ### Connection
 
 Tho GoVPP multiplexer supports two connection types:
+
   - using socket client
   - using shared memory
     
-By default the GoVPP connects uses the **socket client**. This option can be changed using environment variable `GOVPPMUX_NOSOCK` which fallback to the **shared memory** - in that case, the plugin connects to that instance of the VPP which uses the default shared memory segment prefix.
+By default the GoVPP connects using the `socket client`. This option can be changed using the environment variable `GOVPPMUX_NOSOCK` with a fallback to `shared memory`. In that case, the plugin connects to that VPP instance which uses the default shared memory segment prefix.
  
-The **default behaviour assumes that there is only a single VPP running** in a sand-boxed environment together with the agent (e.g. through containerization). In case the VPP runs with customized SHM prefix, or **there are several VPP instances** running side-by-side, the **GoVPP needs to know the prefix in order to connect to the desired VPP 
-instance**. The prefix has to be put into the GoVPPMux configuration file (called `govpp.conf`) with the key `shm-prefix` and value matching the VPP shared memory prefix name.
+The default behaviour assumes that there is only a single VPP running in a sand-boxed environment together with the vpp-agent. In the case the VPP runs with customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the prefix in order to connect to the desired VPP 
+instance. The prefix must be included in the GoVPPMux configuration file `govpp.conf` with the key `shm-prefix` and the value matching the VPP shared memory prefix name.
 
 ### Multiplexing
 
-The `NewAPIChannel` call returns a new API channel for communication with VPP via the `GoVPP` core. It uses default buffer sizes for the request and reply go channels (by default both are 100 messages long).
+The `NewAPIChannel` call returns a new API channel for communication with VPP via the `GoVPP` core. It uses default buffer sizes for the request and reply go channels. By default both are 100 messages long.
 
-If it is expected that the VPP may get overloaded at peak loads (for example if the user plugin sends configuration requests in bulks) then it is recommended to use `NewAPIChannelBuffered` and increase the buffer size for requests appropriately. Similarly, `NewAPIChannelBuffered` allows to configure the size of the buffer for responses. This is also useful since the buffer for responses is also used to carry VPP notifications and statistics which may temporarily rapidly grow in size and frequency. By increasing the reply channel size, the probability of dropping messages from VPP decreases at the cost of increased memory footprint.
+A user plugin could blast configuration requests in bulk mode which could overload VPP. To avoid these situations, it is recommended to use `NewAPIChannelBuffered` and increase the buffer size for requests. This is also useful since the buffer for responses is also used to carry VPP notifications and statistics which can burst in size and frequency on occassion. By increasing the reply channel size, the probability of dropping messages from VPP decreases at the cost of increased memory footprint. 
+
 
 ### Trace
  
-Duration of the VPP binary api call can be measured using trace feature. These data are logged after every event (any resynchronization, new interfaces, bridge domains, fib entries etc.). Enable trace in the `govpp.conf`: 
+The duration of a VPP binary api call can be measured using trace feature. Data is logged after every event (any resynchronization, new interfaces, bridge domains, fib entries etc.). 
+
+Enable trace in the `govpp.conf`: 
  
 `trace-enabled: true` or  `trace-enabled: false`
   
-The trace feature is disabled by default (if there is no config available). 
+The trace feature is disabled by default. 
 
-**Configuration example**
-
-The plugin allows to configure parameters of the VPP health-check probe. Possible items to configure:
+The trace plugin supports several configuraion items for the VPP health-check probe:
 
   - `health check probe interval`: time between health check probes
-  - `health check reply timeout`: if the reply does not arrive until timeout elapses probe is considered failed
-  - `health check threshold`: number of consequent failed health checks until an error is reported
-  - `reply timeout`: if the reply from channel does not arrive until timeout elapses, the request fails
-  - `shm-prefix`: used for connection to a VPP instance which is not using default shared memory prefix
-  - `resync-after-reconnect`: allows to run resync after the VPP reconnection
+  - `health check reply timeout`: if this timer pops, probe is considered failed
+  - `health check threshold`: number of consecutive failed health checks until an error is reported
+  - `reply timeout`: if the reply from a channel does not arrive until timeout elapses, the request fails
+  - `shm-prefix`: used for connection to a VPP instance not using default shared memory prefix
+  - `resync-after-reconnect`: resync after the VPP reconnection
   
 ## Interface plugin
 
-The VPP interface plugin is a base plugin able to setup various types of **VPP interfaces** and also manages **the 
-interface status** (state data, optionally published back to the database) and **interface and DHCP lease 
-notifications**. The VPP provides multiple interface types, following are supported in the VPP-Agent:
+The VPP interface plugin is used to setup `VPP Interfaces`, manage interface status and interface and DHCP lease notifications. VPP can support multiple interface types with the following supported by the vpp-agent:
 
   - Sub-interface
   - Software loopback
@@ -61,116 +61,94 @@ notifications**. The VPP provides multiple interface types, following are suppor
   - VmxNet3 interface
   - Bond interfaces
 
-Other types are specified as undefined for the vpp-agent purpose.
+Other types are specified as undefined.
+
   
-All the interfaces except DPDK (physical) can be created or removed directly in the VPP if all necessary conditions are 
-met (for example an Af-packet interface requires a VEth as a host in order to attach to it. The **DPDK interfaces** 
-(PCI, physical) **can be only configured**, cannot be added or removed.
+All the interface types except DPDK (physical) can be created or removed directly in the VPP if all necessary conditions are met. For example an Af-packet interface requires a VEth as a host in order to attach to it. The DPDK interfaces (PCI, physical) can be only configured. The cannot be added or removed.
   
-The VPP uses multiple commands and/or binary APIs to create and configure shared boundaries. The vpp-agent is 
-simplifying this processes, providing the single model with specific extensions depending on required interface type. 
-The northbound configuration is translated to a sequence of binary API calls using GoVPP library. All interface types 
-except the DPDK (physical) interface can be directly created or removed in the VPP. Physical interfaces can be only 
-configured. The Af-packet interface is dependent on host-interface of the VEth type, and cannot exist without it.
+VPP uses multiple commands and/or binary APIs to create and configure shared binaries. The vpp-agent is 
+simplifies this processes by providing a single model with specific extensions depending on the interface type. 
+The northbound configuration demands are translated to a sequence of binary API calls using the GoVPP library for eventual programming of the VPP interface.
 
-The interface plugin defines following [model][interface-model]. The model is divided into two parts - **the first, 
-which contains fields common for all interface types, and the second, exclusive for given interface type**. Note that 
-there are even exceptions in the common part, where not all fields can be defined on every interface type. For example, 
-a physical address cannot be set to Af-packet or to DPDK interface despite the field exists in the definition. If this 
-is done, the value is silently ignored.
+The interface plugin defines following [model][interface-model] and is divided into two parts:
+ 
+ - data common to all interface types.
+ - data for a specific interface type.
+  
+Note that there are exceptions in the common part, where not all fields can be defined on every interface type. For example, a physical address cannot be set to Af-packet or to DPDK interface despite the presence of the field in the definition. If set, the value is silently ignored.
 
-Mandatory fields are **interface type** and **logical name**. The name is limited to 63 characters. The interface may 
-or may not define unique fields for the given type.
+Mandatory fields are `interface type` and `logical name`. The name is limited to 63 characters. The interface may define unique fields for the given type.
 
-All interfaces use the same key for every type. It means the name has to be incomparable among all interfaces. See the
-[key reference][key-reference] to learn more about the interface keys.
+A key is defined for every interface type. Here is an example of a VPP interface key with `<name>` being unique for a particular instance of the interface type:
 
-The **interface logical name is for the vpp-agent use only**. It serves as a reference for other models (bridge domains 
-for instance). The VPP works with indexes, which are generated when the new interface instance is created. The index is 
-a unique integer for identification and future VPP internal references. In order to parse name and index, the VPP-Agent
-stores a tag to the VPP via binary API - it's a name-to-index entry which helps the VPP-Agent to classify interface 
-name and assign the correct index to it. 
+```
+/vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
+
+```
+
+See the [key reference][key-reference] to learn more about the interface keys. 
+
+The interface's logical name is for use by the vpp-agent. It serves as a reference for other models (e.g. bridge domains). VPP works with indexes, which are generated when the new interface instance is created. 
+
+The index is a unique integer for identification and future VPP internal references. In order to parse name and index, the vpp-agent uses a corresponding tag in the VPP via binary API. This "name-to-index" mapping entry enables the vpp-agent to locate the interface name and assign the correct index to it. 
 
 ### Unnumbered interfaces
 
-Every **interface can have assigned one or more IPv4 or IPv6 addresses** or their combination. Besides this, the VPP 
-interface can be set as unnumbered; it **takes the IP address of another interface and performs as it has the same IP 
-address** as the target instance. 
+An interface can have assigned with IPv4 or IPv6 addresses some combination thereof. A VPP 
+interface can also be set as unnumbered. It this scenario it "borrows" the IP address of another interface, the so called "target" interface. 
 
-To set an interface as unnumbered, omit `ip_addresses` and set `interface_with_ip` in the model. The target interface 
-has to exist (if not, the unnumbered interface will be postponed and configured later when the required interface 
-appears) and must contain at least one IP address. 
+To set an interface as unnumbered, omit `ip_addresses` and set `interface_with_ip`. The target interface 
+must exist and if it does not, the unnumbered interface will be postponed and configured later when the required target interface appears. The target interface and must contain at least one IP address. 
 
 ### Maximum transmission unit
 
-The MTU is the size of the largest protocol data unit that can be communicated in a single network layer transaction. 
-The VPP interfaces allow setting custom MTU size. For this purpose, there is a field called `mtu` available in the 
-interface model. If the field is left empty, the VPP uses a default value of the MTU.
+The MTU is the size of the largest protocol data unit that can be communicated in a single network layer transmission. A custom MTU size for the interface can be set using the `mtu` value in the interface definition. If the field is left empty, VPP uses a default MTU size value.
 
-The vpp-agent offers an option to automatically set the MTU of specific size to every created interface via config file 
-([example][interface-config-file]). If the global MTU value is set to non-zero value, but interface definition contains 
-its own different value, the **local value is preferred before the global** one.
+The vpp-agent provides an option to automatically set the MTU size for an interface using a [config file] [interface-config-file]. If the global MTU value is set to non-zero value, but interface definition contains 
+a different local value, the local value is preferred over the global value.
 
 !!! note
-    MTU is not available for VxLan tunnels and IPSec tunnel interfaces (despite they contain incriminated fields).
+    MTU is not available for VxLan tunnels and IPSec tunnel interfaces.
 
 ### Interface types
 
-Type-specific interface fields in the VPP-Agent are defined in special structures called links. Type of the interface's 
-link must match the type of the interface itself. Description of main differences for given interface types:
+!!! Note
+    In the brief descriptions below, reference will be made to interface `links` for `structures` along with the contents defining various properties and functions specific to the respective interface type. Those details are contained in a file called [`interface.proto`][links].
 
-**Bond interface** was created to support Link Aggregation Control Protocol (LACP)). Network bonding is a process of 
-combing or joining two or more network interfaces together into a single interface. The bond interface in addition 
-supports various modes and load balancing techniques.
+Interface type-specific fields in the vpp-agent are defined in special structures called [links][links]. A description of the primary differences for the given interface types follows:
 
-**Sub-interface** is an interface type derived from other interfaces adding VLAN ID to it. The sub-interface link of type `SubInterface` requires a name of the parent (super) interface, and ID of the VLAN.
+- **Bond** was created to support the Link Aggregation Control Protocol (LACP)). Network bonding is the process of combining or joining two or more network interfaces together into a single interface. It can support various modes of operation and load balancing across the different interface constiuent interfaces of the bond. 
 
-**Software loopback** interface type does not have any special fields.
+- **Sub-interface** is derived from other interfaces by adding VLAN ID to it. The sub-interface link of type `SubInterface` requires a name of the parent interface, and the ID of the VLAN.
 
-**DPDK interface** or the physical interface cannot be created or removed directly by the VPP-Agent. The PCI interface 
-has to be connected to the VPP - they should be configured for use by the Linux kernel and shut down. VPP-Agent can set 
-the interface IP, MAC or set it as enabled. No special configuration fields are defined.
+- **Software** loopback does not have any special fields.
 
-**Memory interface** or shared memory packet interface ( or simply memif) provides high-performance packet transmit and 
-reception between VPPs. The memory interface defines additional fields in `MemifLink`. The most important is a socket 
-filename - the VPP by default contains default socket filename with zero index which can be used to create memif 
-interfaces (the vpp-agent needs to be resynced to register it). 
+- **DPDK** and physical interfaces cannot be created or removed directly by the vpp-agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The vpp-agent can set the interface IP, MAC or set it as enabled. No special configuration fields are defined.
 
-**Tap interface** exists in two versions but only the latter can be configured. TAPv2 is based on virtio (it knows that 
-runs in a virtual environment, and cooperates with the hypervisor). The `TapLink` provides several setup options 
-available for the TAPv2. 
+- **Memory interface** or shared memory packet interface ( or simply memif) types provides high-performance send and receive functions between VPP instances. Additional fields are defubed in `MemifLink`. The most important is a socket filename. The default contains default socket filename with zero index which can be used to create memif interfaces. Note that the vpp-agent needs to be resynced to register the new memif interface. 
+
+- **Tap interface** exists in two versions, TAPv1 and TAPv2 but only the latter can be configured. TAPv2 is based on virtio which means it knows that it runs in a virtual environmentand cooperates with the hypervisor. The `TapLink` provides several setup options available for the TAPv2. 
 
 !!! danger "important"
-    The first version of the Tap interface is no longer supported by the VPP, thus cannot be managed by the vpp-agent. 
+    The first version of the Tap interface is no longer supported by VPP. It cannot be managed by the vpp-agent. 
 
-Field `version` sets the desired version (should be set only to 2), `host_if_name` allows to set a custom name for the 
-TAP interface in the host OS (optional, if not set it will be autogenerated). The option `to_microservice` puts the 
-host TAP to the desired namespace right after creation. Please refer the [interface model][interface-model] to know 
-which fields are defined for specific TAP interface version.
 
-**Af-packet interface** is the VPP "host" interface, its main purpose is to connect it to the host via the OS VEth 
-interface. Because of this, the Af-packet cannot exist without its host interface. If the desired VEth is missing, the 
-configuration is postponed. If the host interface was removed, vpp-agent un-configures and caches related Af-packets. 
+- **Af-packet interface** the VPP "host" interface. Its primary function in life is to connect to the host via the OS VEth interface. Because of this, the Af-packet interface cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, the vpp-agent un-configures and caches related Af-packets information 
 The `AfpacketLink` contains only one field with the name of the host interface (as defined in the 
 [Linux interface plugin][linux-interface-plugin-guide].
 
-**VxLan tunnel** endpoint (VTEP) defines `VxlanLink` with source and destination address, a VXLan network identifier 
-(VNI) and a name of the optional multicast interface.
+- **VxLan tunnel** endpoint (VTEP) defines a `VxlanLink` with source and destination address, a VXLan network identifier (VNI) and a name of the optional multicast interface.
 
-**IPSec virtual tunnel** interface (VTI) provides a routable interface type for terminating IPSec tunnels and an easy 
-way to define protection between sites to form an overlay network. The IPSec tunnel defines `IPSecLink` with various 
-options like local and remote IP address, local and remote security parameter index (SPI) or cryptographic algorithms 
-for encryption and authentication. Available cryptographic algorithms are determined from types supported by the VPP.
+- **IPSec virtual tunnel** interface (VTI) provides a routable interface type for terminating IPSec tunnels and an easy way to define protection between sites to form an overlay network. The IPSec tunnel defines `IPSecLink` with various options including local and remote IP address, local and remote security parameter index (SPI) and various crypto algorithms for encryption and authentication. The choice crypto algorithms are determined by those supported by VPP.
 
-**VmxNet3 interface** is a virtual network adapter designed to deliver high performance in virtual environments. 
-VmxNet3 requires VMware tools to be used. Type-specific fields are defined in `VmxNet3Link` structure.
+- **VmxNet3** interface is a virtual network adapter designed to deliver high performance in virtual environments. 
+VmxNet3 requires VMware tools to be used. Type-specific fields are defined in the `VmxNet3Link` structure.
 
 **Configuration example**
 
-**1. Using key-value database** put the proto-modelled data with the correct key for interfaces 
-([key reference][key-reference]).
+**1. Using key-value database** (etcd in our example) put the interface config data using the correct [interface key][key-reference]).
 
-Example value of common interface configuration, since loopback type does not use any type specific fields.
+Example of a common interface configuration in JSON format:
 ```json
 {  
     "name":"loop1",
@@ -185,12 +163,12 @@ Example value of common interface configuration, since loopback type does not us
 }
 ```
 
-Use `etcdctl` to put compacted loop interface key-value entry:
+Use `etcdctl` to put the compacted loop interface key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
 ```
 
-Another example with memif type interface. Note memif-specific fields in `memif` section:
+Another example with a memif type interface. Note memif-specific fields in the `memif` section:
 ```json
 {  
     "name":"memif1",
@@ -217,7 +195,7 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memif1","t
 
 **2. Using REST:**
 
-The REST currently supports only retrieval of the existing configuration. The following command can be used to read all interfaces via cURL:
+Currently REST only supports retrieval of the existing configuration. The following command can be used to read all interfaces via cURL:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
@@ -287,14 +265,14 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Interface status
 
-The interface status is a **collection of interface data and identification** (tagged name, internal name, index) which can be stored to an external database or send a notification.
+Interface status is a **collection of interface data and identification** (tagged name, internal name, index) which can be stored in an external database or sent as a notification.
 
-The vpp-agent waits on several types of VPP events, like creation, deletion or counter update. The event is processed and all the data extracted. Using the collected information, VPP-Agent builds a notification which is sent to all registered publishers (databases). All errors occurred are also stored. The statistics readout is performed every second.
+The vpp-agent waits on several types of VPP event such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the vpp-agent builds a notification which is sent to all registered publishers (databases). Any errors that occurred are also stored. The statistics readout is performed every second.
 
 !!! danger "Important"
-    The interface status is disabled by default, since no default publishers are defined. Use interface plugin config file to define it (see the [example config file][interface-config-file])   
+    The interface status is disabled by default, since no default publishers are defined. Use the interface plugin config file to enable interface status. (see the [example config file][interface-config-file])   
 
-The interface state [model][interface-state-model] is represented by two objects: `InterfaceState` with all the status data, and `InterfaceNotification` which is a wrapper around the state with additional information required to send status as a notification.
+The interface state [model][interface-state-model] is represented by two objects: `InterfaceState` with all the status data, and `InterfaceNotification` which is a wrapper around the state with additional information required to send a status notification.
 
 Keys used for interface status and errors:
 
@@ -306,7 +284,7 @@ Keys used for interface status and errors:
 /vnf-agent/<label>/vpp/status/v2/interface/errors/<name>
 ```
 
-The interface status is meant to be read-only, published only by the VPP-Agent.
+The interface status is meant to be read-only and published only by the vpp-agent.
 
 Data provided by interface status:
 
@@ -318,40 +296,40 @@ Data provided by interface status:
 
 **Interface status usage**
 
-To read status data, use any tool with access to a given database (**etcdctl** for the ETCD, **redis-cli** for Redis, **boltbrowser** for BoltDB, etc). 
+To read status data, use any tool with access to a given database (**etcdctl** for etcd, **redis-cli** for Redis, **boltbrowser** for BoltDB, etc). 
 
 Let's read interface status data with `etcdctl`:
 ```
 etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/
 ```
 
-The command above returns status for all interfaces, which have it currently stored inside the ETCD. To read the status just for single interface, add its name to the end:
+The command above returns status for all interfaces that published to and stored in etcd. To read the status for just a single interface, append its name to the end of etcdctl command as so:
 ```
 etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/loop1
 etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/memif1
 ```
-
-Do not forget to enable status in the config file, otherwise, the status will not be published to the database.
+!!! note
+    Do not forget to enable status in the config file, otherwise, the status will not be published to the database.
 
 ## L2 plugin
 
-The VPP L2 plugin is a base plugin which can be used to configure link-layer related configuration items to the VPP, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**. The L2 plugin is strongly dependent on [interface plugin][interface-plugin-guide] since every configuration item has some kind of dependency on it. 
+The VPP L2 plugin is used to configure VPP link-layer related configuration items, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**.  
 
 ### Bridge domains
 
-The L2 bridge domain is a set of interfaces which share the same flooding or broadcasting characteristics. Every bridge domain contains several attributes (MAC learning, unicast forwarding, flooding, ARP termination table) which can be enabled or disabled. The bridge domain is identified by unique ID, which is managed by the plugin and cannot be defined 
-from outside.   
+The L2 bridge domain is a set of interfaces which share the same flooding or broadcasting characteristics. Every bridge domain contains several attributes (MAC learning, unicast forwarding, flooding, ARP termination table) which can be enabled or disabled. The bridge domain is identified by a unique ID, which is managed by the plugin and cannot be externally defined.   
 
-The L2 plugin defines individual proto definition for every configuration item, so the bridge domain is also defined by its own [model][bd-model]. The definition consists of common bridge domain fields (forwarding, learning...), list of assigned interfaces and ARP termination table. Bridge domain interfaces are only referenced - the configuration of the interface itself (IP address, ...) lays on the interface plugin. Every referenced interface also contains bridge domain-specific fields (BVI and split horizon group). Note that **only one BVI interface is allowed per bridge domain**.
+The L2 plugin defines an individual model for every configuration item and a [bridge domain][bd-model] is no exception. The definition consists of common bridge domain fields (forwarding, learning...), a list of assigned interfaces and an ARP termination table. Bridge domain interfaces are only referenced - the configuration of the interface itself is handled by the interface plugin. Every referenced interface also contains bridge domain-specific fields (BVI and split horizon group). Note that **only one BVI interface is allowed per bridge domain**.
 
-The bridge domain does not have any mandatory fields except the logical name. In that case, an empty bridge domain with no interface or ARP entries is created. The bridge domain logical name is for the plugin-use and also as a reference in other configuration types dependent on the specific bridge domain. The bridge domain index can be obtained via 
-retrieve, but the value is only informative since it cannot be changed, set or referenced.
+The bridge domain does not have any mandatory fields except the logical name. In that case, an empty bridge domain with no interface or ARP entries is created. The bridge domain logical name can be used as a reference for other configuration types dependent on the specific bridge domain. 
+
+The bridge domain index can be obtained via the usual retrievel methods (e.g. etcdctl get, REST, etc.), but the value is only informative since it cannot be changed, set or referenced.
 
 **Configuration example**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for bridge domains to the database ([key reference][key-reference]).
+**1. Using the key-value database** (etcd in our example) put the interface config data using the correct [bridge domain key][key-reference]).
 
-Example value:
+Example value in JSON format:
 
 ```json
 {
@@ -403,7 +381,7 @@ etcdctl del /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 
 **2. Using REST:**
 
-The REST currently supports only retrieving of the existing configuration. The following command can be used to read all bridge domains via cURL:
+Currently REST only supports retrieval of the existing configuration. The following command can be used to read all bridge domains via cURL:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/bd
@@ -464,16 +442,15 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Forwarding tables  
 
-An L2 forwarding information base (FIB) (also known as a forwarding table) can be used in network bridging or routing to **find the output interface to which the incoming packet should be forwarded**. FIB entries are created also by the VPP itself (like for interfaces within the bridge domain with enabled MAC learning). The VPP-Agent allows to configuring static FIB entries for a combination of interface and bridge domain.
+An L2 forwarding information base (FIB) can be used in network bridging or routing. It defines the output interface to which the incoming packet should be forwarded. FIB entries are created by the VPP just as are interfaces within the bridge domain with enabled MAC learning. The vpp-agent enables configuration of static FIB entries with a combination of interface and bridge domain values.
 
-A FIB entry is defined in the following [model][fib-model]. To successfully configure FIB entry, a MAC address, interface and bridge domain must be provided. Also, the condition that the interface is a part of the bridge domain has to be fulfilled. The interface and the bridge domain are referenced with logical names. Note that the FIB entry will 
-not appear in the VPP until all conditions are met.  
+A FIB entry is defined in the following [model][fib-model]. To successfully configure a FIB entry, a MAC address, interface and bridge domain must be provided. The condition that the interface is a part of the bridge domain must be fulfilled. The interface and the bridge domain are referenced with logical names. Note that the FIB entry will not appear in the VPP until all conditions are met.  
 
 **Configuration example**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for FIB to the database ([key reference][key-reference]).
+**1. Using the key-value database** put the proto-modelled data with the correct FIB key to the database ([key reference][key-reference]).
 
-Example value:
+Example value in JSON format:
 ```json
 {
     "bridge_domain": "bd1",
@@ -492,7 +469,7 @@ etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C '{"ph
 
 **2. Using REST:**
 
-The REST currently supports only retrieving of the existing configuration. The following command can be used to read all FIBs via cURL:
+Currently REST only supports retrieval of the existing configuration. The following command can be used to read all FIBs via cURL:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/fib
 ```
@@ -543,15 +520,15 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Cross connects
 
-The Agent supports L2 cross connect feature, which sets interface pair to cross connect mode. All packets received on the first interface are transmitted to the second interface. This mode is not bidirectional by default, both interfaces have to be set.
+The vpp-agent supports the L2 cross connect feature which sets an interface pair to cross connect mode. All packets received on the first interface are transmitted to the second interface. This mode is not bidirectional by default, both interfaces in each direction must be set.
 
-The cross-connect mode uses a very simple [model][xc-model] which defines references to transmit and receive interface. Both interfaces are mandatory fields and must exist in order to set the mode successfully. If one or both of them are missing, the configuration is postponed. 
+The cross-connect mode uses a very simple [model][xc-model] that references  the transmit and receive interfaces. Both interfaces are mandatory fields and must exist in order to set the mode successfully. If one or both are missing, the configuration is postponed. 
 
 **Configuration example**
 
 **1. Using the key-value database** put the proto-modelled data with the correct key for cross connect to the database ([key reference][key-reference]).
 
-Example value:
+Example value in JSON format:
 ```json
 {
     "receive_interface": "if1",
@@ -565,7 +542,7 @@ etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/xconnect/if1 '{"receive_interface":
 ```
 **2. Using REST:**
 
-The REST currently supports only retrieving of the existing configuration. The following command can be used to read all cross-connect entries via cURL:
+Currently REST only supports retrieval of the existing configuration. The following command can be used to read all cross-connects via cURL:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/xc
@@ -615,19 +592,19 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ## L3 plugin
 
-The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and **IP neighbor** feature. The L3 plugin is dependent on the [interface plugin][interface-plugin-guide] in many aspects since several configuration items require the interface to be already present.
+The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and the **IP neighbor** feature. 
 
 ### ARP entries  
 
-The L3 plugin defines descriptor managing the VPP implementation of the address resolution protocol. **ARP is a communication protocol for discovering the MAC address associated with a given IP address**. In terms of the plugin, the ARP entry is uniquely identified by the interface and IP address.
+The L3 plugin defines a descriptor managing the VPP implementation of the address resolution protocol. **ARP is a communication protocol for discovering the MAC address associated with a given IP address**. In terms of the plugin, the ARP entry is uniquely identified by the interface and IP address.
 
-The northbound plugin API defines ARP in the following [model][arp-model]. Every ARP entry is defined with MAC address, IP address and an Interface. The two latter are a part of the key.
+The northbound plugin API defines ARP in the following [model][arp-model]. Every ARP entry is defined with MAC address, IP address and an interface. The two latter values are a part of the key.
 
 **Configuration example**
 
 **1. Using the key-value database** put the proto-modelled data with the correct key for ARP to the database ([key reference][key-reference]).
 
-Example value:
+Example value in JSON format:
 ```json
 {  
     "interface":"if1",
@@ -650,7 +627,7 @@ etcdctl del /vnf-agent/vpp1/config/vpp/v2/arp/tap1/192.168.10.21
 
 **2. Using REST:**
 
-The REST currently supports only retrieving of the existing configuration. The following command can be used to read all ARP entries via cURL:
+REST currently supports retrieval of the existing configuration. The following command can be used to read all ARP entries via cURL:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/arps
@@ -701,9 +678,9 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Proxy ARP
 
-Support for the VPP proxy ARP - a technique by which a proxy device an a given network answers the ARP queries for an IP address from a different network. Proxy ARP IP address ranges are defined via the respective binary API call. Besides this, desired interfaces have to be enabled for the proxy ARP feature.    
+Proxy ARP is a technique in which a proxy device on a given subnet network answers ARP queries for an IP address of a host from a different network. Proxy ARP IP address ranges are defined via the respective binary API call. In addition, the desired interfaces must be enabled for the proxy ARP feature.    
 
-The Proxy ARP [model][l3-model] is located in the common L3 model proto file. The model defines a list of IP address ranges and another list of interfaces. Naturally, the interface has to exist in order to be set as enabled for ARP 
+The Proxy ARP [model][l3-model] is located in the common L3 model file. The model defines a list of IP address ranges and another list of interfaces. Naturally, the interface must exist in order for it to be enabled for ARP 
 proxy. 
 
 **Configuration example**  
@@ -737,7 +714,7 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/proxyarp-global/settings '{"interfaces
 
 **2. Using REST:**
 
-The REST currently supports only retrieving of the existing configuration. The Proxy ARP uses two cURL commands to obtain interfaces and ranges: 
+REST currently supports retrieval of the existing configuration. Proxy ARP uses two cURL commands to obtain interfaces and ranges: 
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/interfaces
@@ -795,13 +772,17 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Routes 
 
-The VPP routing table lists routes to particular network destinations. Routes are grouped in virtual routing and forwarding (VRF) tables, with default table of index 0. A route can be assigned to different VRF table directly in the modeled data.
+The VPP routing table lists routes to particular network destinations. Routes are grouped in virtual routing and forwarding (VRF) tables, with a default table of index 0. A route can be assigned to different VRF table.
 
-The VPP route [model][route-model] defines all the base route fields (destination IP, next hop, interface) and other specifications like weight or preference. The model also distinguishes amidst several route types:
+The VPP route [model][route-model] defines all the base routing table fields (destination IP address (prefix), next hop interface) as well as additional fields including weight and preference. 
 
-  **1. Intra-VRF route:** defines a route where the forwarding is done only in the specific VRF or according to the outgoing interface.
-  **2. Inter-VRF route:** forwarding is being done by a lookup into different VRF routes. This kind of route does not  expect outgoing interface being defined. 
-  **3. Drop route:** such a route drops network communication designed for IP address specified.
+The model also defines several route types:
+
+- Intra-VRF route: forwarding is done by a lookup VRF in the local VRF table. .
+
+- Inter-VRF route: forwarding is done by a lookup into a external VRF table. 
+ 
+- Drop route: drops network communication destined for specified IP address.
   
 **Configuration example**
 
@@ -840,7 +821,7 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/route/vrf/0/dst/1.2.3.4/32/gw '{"type"
 
 **2. Using REST:**
 
-The REST currently supports only retrieving of the existing configuration. The following command can be used to read all routes via cURL:
+The following command can be used to read all routes via cURL:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/routes
@@ -2160,6 +2141,7 @@ The telemetry plugin configuration file allows to change polling interval, or tu
 [route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/route.proto
 [src6-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/srv6/srv6.proto
 [xc-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/xconnect.proto
+[links]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto 
 
 *[ABF]: ACL-Based Forwarding
 *[ACL]: Access Control List
