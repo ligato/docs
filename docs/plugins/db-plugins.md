@@ -43,38 +43,38 @@ The CN-Infra Data Broker abstraction (see the diagram below) is based on two API
   
 ![db][db-image]
 
-The Broker & Watcher APIs abstract common database operations implemented by different databases (ETCD, Redis, Cassandra). Still, there are major differences between key-value-based & sql-based databases. Therefore the Broker & Watcher Go interfaces are defined in each package separately; while the method names for a given operation 
+The Broker & Watcher APIs abstract common database operations implemented by different databases (etcd, Redis, Cassandra). Still, there are major differences between key-value-based & sql-based databases. Therefore the Broker & Watcher Go interfaces are defined in each package separately; while the method names for a given operation 
 are the same, the method arguments are different.
 
-### Key-value datastore
+### Key-value data store
 
 The `keyval` package defines the client API to access a key-value data store. It comprises two sub-APIs: the `Broker` interface supports reading and manipulation of key-value pairs; the `Watcher` API provides functions for monitoring of changes in a data store. Both interfaces are available with arguments of type `[]bytes` (raw data) and `proto.Message` (protobuf formatted data).
 
 The `keyval` package also provides a skeleton for a key-value plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to datastore implementing the `KvPlugin` interface.
 
-## ETCD plugin
+## etcd plugin
 
-The ETCD plugin provides access to an ETCD key-value data store.
+The etcd plugin provides access to an etcd key-value data store.
 
 ### Configuration
 
-- Location of the ETCD configuration file can be defined either by the command line flag `etcd-config` or set via the `ETCD_CONFIG` environment variable.
+- Location of the etcd configuration file can be defined either by the command line flag `etcd-config` or set via the `etcd_CONFIG` environment variable.
 
 ### Status Check
 
-- If injected, ETCD plugin will use StatusCheck plugin to periodically issue a minimalistic GET request to check for the status of the connection. The ETCD connection state affects the global status of the agent. If agent cannot establish connection with ETCD, both the readiness and the liveness probe from the probe plugin will return a negative 
+- If injected, etcd plugin will use StatusCheck plugin to periodically issue a minimalistic GET request to check for the status of the connection. The etcd connection state affects the global status of the agent. If agent cannot establish connection with etcd, both the readiness and the liveness probe from the probe plugin will return a negative 
 result (accessible only via REST API in such case).
 
 ### Compacting
 
-You can compact ETCD using two ways.
+You can compact etcd using two ways.
 
 - using API by calling `plugin.Compact()` which will compact the database to the current revision.
-- using config file by setting `auto-compact` option to the duration of period that you want the ETCD to be compacted.
+- using config file by setting `auto-compact` option to the duration of period that you want the etcd to be compacted.
 
 ### Reconnect resynchronization
 
-- If connection to the ETCD is interrupted, resync can be automatically called after re-connection. This option is disabled by default and has to be allowed in the `etcd.conf` file.
+- If connection to the etcd is interrupted, resync can be automatically called after re-connection. This option is disabled by default and has to be allowed in the `etcd.conf` file.
   
 Set `resync-after-reconnect` to `true` to enable the feature.
   

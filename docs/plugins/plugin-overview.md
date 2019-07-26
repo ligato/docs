@@ -6,7 +6,7 @@
 
 More in: [KVScheduler plugin][kvscheduler]
 
-The KV Scheduler is the first step in any VPP or Linux related data processing. It validates the existence of the configuration item dependencies, handles local caching and performs retries if possible or allowed by the underlying plugin. The KV Scheduler does not operate with data directly (does not call any VPP binary API); it only determines what operations are needed to achieve the desired result. 
+The KV Scheduler is the first step in any VPP or Linux related data processing. It validates the existence of the configuration item dependencies, handles local caching and performs retries if possible or allowed by the underlying plugin. The KV Scheduler does not operate with data directly (i.e. does not call any VPP binary API); it only determines what operations are needed to achieve the desired result. 
 
 ## VPP plugins
 
@@ -17,7 +17,7 @@ vpp-gent core VPP plugins (e.g. plugins which are always required when working w
 - L2 plugin
 - L3 plugin
 - Access Control List (ACL)
-- ACL-based forwarding (ABD)
+- ACL-based forwarding (ABF)
 - IPSec plugin
 - NAT plugin
 - Punt plugin
@@ -28,27 +28,27 @@ vpp-gent core VPP plugins (e.g. plugins which are always required when working w
 
 More in: [GoVPPMux plugin][govppmux-plugin]
 
-The GoVPP mux plugin is the vpp-agent's wrapper around the [GoVPP][govpp-readme]and provides access to the VPP. Every plugin can interact with the VPP using the GoVPP mux. It provides an independent communication channel to the VPP instance. The communication is done via shared memory segment prefix, and the plugin also supports custom prefixes to connect to 
-the correct VPP instance in the multi-VPP environment.
+The GoVPP mux plugin is the vpp-agent's wrapper around the [GoVPP][govpp-readme] and provides access to the VPP. Every plugin can interact with the VPP using the GoVPP mux. It provides an independent communication channel to the VPP instance. The communication is done via shared memory segment prefix, and the plugin also supports custom prefixes to connect to 
+the correct VPP instance in multi-VPP environment.
 
 
 ### Interface plugin
 
 More in: [Interface plugin][interface-plugin]
 
-Creates various types of interfaces (e.g. DPDK, MEMIF, TAP ...) in VPP. It can also configure base fields (IP address, MAC address, etc.) as well as more advanced features such as unnumbered interfaces or RX-mode. 
+Create various types of interfaces (e.g. DPDK, MEMIF, TAP ...) in VPP. It can also configure base fields (IP address, MAC address, etc.) as well as more advanced features such as unnumbered interfaces or RX-mode. 
 
 ### L2 plugin
 
 More in: [l2-plugin][l2-plugin]
 
-A base plugin configuring link-layer related configuration items such as **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**. The L2 plugin is dependent on [interface plugin][interface-plugin-guide]. 
+Setup link-layer configuration items such as **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**. Dependent on [interface plugin][interface-plugin-guide]. 
 
 ### L3 plugin
 
 More in: [l3-plugin][l3-plugin]
 
-Configure **ARP** entries (including **proxy ARP**), **VPP routes** and **IP neighbor** feature. The L3 plugin is dependent on the [interface plugin][interface-plugin-guide].
+Configure **ARP** entries (including **proxy ARP**), **VPP routes** and the **IP scan neighbor** feature. The L3 plugin is dependent on the [interface plugin][interface-plugin-guide].
 
 ### ACL plugin
 
@@ -58,25 +58,25 @@ Handles VPP access control lists. If rules defined in the access list are met by
 
 ### ACL-based forwarding (ABF) plugin
 
-Implementation of the ACL-based forwarding feature.
+Implementation of the ACL-based forwarding feature. Performs policy-based routing (PBR) where forwarding is done based on ACL matches rather than destination address prefix.
 
 ### IPSec plugin
 
 More in: [IPSec plugin][ipsec-plugin]
 
-Allows one to configure **security policy databases** (SPD) and **security associations** (SA) in VPP. It also handles relationships between the SPD and SA or between SPD and an assigned interface. Note that the IPSec tunnel interfaces are not part of IPSec plugin. Their configuration is handled in the [VPP interface plugin][interface-plugin-guide]).
+Allows one to configure **security policy databases** (SPD) and **security associations** (SA) in VPP. It also handles relationships between the SPD and SA or between SPD and an assigned interface. `IPSec tunnel interfaces are not part of the IPSec plugin.` Their configuration is handled by the [VPP interface plugin][interface-plugin-guide]).
 
 ### NAT plugin
 
 More in: [NAT-plugin][nat-plugins]
 
-Network address translation, or NAT is a method for translating one IP address into another by modifying (rewriting) packet headers. The vpp-agent NAT plugin is a `control plane` plugin for the VPP NAT dataplane implementation of NAT44. The NAT plugin is dependent on [interface plugin][interface-plugin-guide].
+Network address translation, or NAT is a method for translating one IP address into another by modifying (rewriting) packet headers. The vpp-agent NAT plugin is a `control plane` plugin for the VPP NAT dataplane implementation of NAT44. Can also DNAT44 (with load balancing useful in K8s network clusters. The NAT plugin is dependent on the [interface plugin][interface-plugin-guide].
 
 ### Punt plugin
 
 More in: [punt-plugin][punt-plugin]
 
-Provides access to the VPP punt feature, where incoming VPP traffic matching a set pre-defined rules is 'punted' or redirected.
+Provides access to the VPP punt feature, where incoming VPP traffic matching a set pre-defined rules is 'punted' or redirected to the host stack or socket.
 
 ### Telemetry
 
@@ -86,13 +86,13 @@ Collects telemetry statistics from VPP for export to external monitoring and man
 
 ### STN plugin
 
-Implementation of the `control plane` for the VPP STN (Steal the NIC)
+Implementation of the `control plane` for the VPP STN (Steal the NIC) feature
 
 ## Linux plugins
 
 This section describes the vpp-agent's Linux plugins used to configure the host OS. These plugins can be used as they are, or together with VPP plugins.
 
-- Linux Interface plugin
+- Linux interface plugin
 - Linux L3 plugin
 - IP-tables plugin
 - Namespace plugin
@@ -101,27 +101,29 @@ This section describes the vpp-agent's Linux plugins used to configure the host 
 
 More in: [Linux Interface plugin][linux-interface-pluign]
 
-Processes Linux interfaces related to the adjacent VPP configuration (VEth, TAPv2). Virtual Ethernet interfaces can be directly created by the vpp-agent.
+Processes Linux interfaces related to the adjacent VPP configuration (VEth, TAPv2). Virtual Ethernet interfaces can be created by the vpp-agent.
 
 ### Linux L3 plugin
 
-More in: [Linux L3 plugin][linux-l3-plugin]:
+More in: [Linux L3 plugin][linux-l3-plugin]
 
 Configure Linux routes  and ARPs. 
 
-### IP-tables plugin
+### IPtables plugin
 
-Implementation of the Linux IP-tables feature.
+More in: [Linux iptables plugin][linux-iptables-plugin]
+
+Implementation of the [Linux IPtables feature][linux-iptables].
 
 ### Namespace plugin
 
 More in: [Namespace plugin][linux-namespace-pluign]
 
-Helper plugin tied in with the Linux interface/l3 plugins. It manages namespaces in terms of Linux (named namespace) or as a microservice in the container-based environment. 
+Helper plugin tied in with the Linux interface/l3 plugins. It manages namespaces in terms of Linux (named namespace) or as a microservice in container-based environment. 
 
 ## Connection plugins
 
-vpp-agentcConnection plugins enable external data read or write without the use of a data store.
+vpp-agent connection plugins enable external data read or write without the use of a data store.
 
 - REST plugin
 - GRPC plugin
@@ -156,7 +158,7 @@ This section describes the vpp-agent database plugins.
 
 More in: [Datasync plugin][datasync-plugin]
 
-Package datasync defines the interfaces for the abstraction of a data synchronization between app plugins and different backend data sources.
+defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources.
 
 ### Data Broker plugin
 
@@ -166,7 +168,7 @@ data broker abstraction.
 
 ### ETCD
 
-More in: [ETCD plugin][etcd-plugin]
+More in: [etcd plugin][etcd-plugin]
 
 Provides access to an etcd key-value data store.
 
@@ -184,11 +186,15 @@ Provides access to a consul key-value data store.
 
 ### Bolt
 
+More in: [Bolt plugin][bolt-plugin]
+
 Provides access to a Bolt key-value data store.
 
 ### Cassandra
 
-The Cassandra plugin provides access to a Cassandra MYSQL data store.
+More in: [Cassandra][cassandra-plugin]
+
+Provides access to a Cassandra MYSQL data store.
 
 ### FileDB 
 
@@ -198,7 +204,7 @@ Uses the OS file system as a key-value data store.
 
 ## Infra plugins
 
-Discusses the vpp-agent infra plugins.
+Discusses the Ligato infra plugins.
 
 - Configurator
 - Orchestrator
@@ -221,7 +227,7 @@ In a scenario where a single vpp-agent instance receives configuration data from
 
 More in: [Status Check plugin][status-check]
 
-Monitors the overall status of a Ligato infra-based app by collecting and aggregating partial status of agents plugins.
+Monitors the status of a Ligato infra app by collecting and aggregating partial status of vpp-agent plugins.
 
 ### Index Map plugin
 
@@ -239,7 +245,7 @@ View and modify log levels of loggers using a REST API.
 
 More in: [Messaging/Kafka plugin][messaging-kafka]
 
-The client package provides single purpose clients for publishing synchronous/asynchronous messages and for consuming selected topics.
+Provides single purpose clients for publishing synchronous/asynchronous messages and for consuming selected topics.
 
 ### Process Manager
 
@@ -251,9 +257,11 @@ Set of methods to create a process instance to manage and monitor plugins.
 
 More in: [Service Label plugin][service-label]
 
-Other plugins can use to obtain the microservice label, i.e. the string used to identify a particular VPP instance. 
+Other plugins can use this to obtain the microservice label, more specifically the string used to identify a particular VPP instance. 
 
 [acl-plugin]: vpp-plugins.md#access-control-lists-plugin
+[bolt-plugin]: https://github.com/ligato/cn-infra/tree/master/db/keyval/bolt
+[cassandra-plugin]: https://github.com/ligato/cn-infra/tree/master/db/sql/cassandra
 [consul-plugin]: db-plugins.md#consul-plugin
 [data-broker-plugin]: db-plugins.md#data-broker
 [datasync-plugin]: db-plugins.md#datasync-plugin
@@ -272,6 +280,8 @@ Other plugins can use to obtain the microservice label, i.e. the string used to 
 [linux-interface-pluign]: linux-plugins.md#interface-plugin
 [linux-l3-plugin]: linux-plugins.md#l3-plugin
 [linux-namespace-pluign]: linux-plugins.md#namespace-plugin
+[linux-iptables-plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/linux/iptablesplugin
+[linux-iptables]: https://linux.die.net/man/8/iptables
 [log-manager]: infra-plugins.md#log-manager
 [messaging-kafka]: infra-plugins.md#messagingkafka
 [nat-plugin]: vpp-plugins.md#nat-plugin
@@ -281,7 +291,7 @@ Other plugins can use to obtain the microservice label, i.e. the string used to 
 [rest-plugin]: connection-plugins.md#rest-plugin
 [service-label]: infra-plugins.md#status-check
 [status-check]: infra-plugins.md#status-check
-[telemetry-plugin]: vpp-plugins.md#telemetry
+[telemetry-plugin]: vpp-plugins.md#telemetry 
 
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol
