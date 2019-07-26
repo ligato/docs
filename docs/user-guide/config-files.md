@@ -77,15 +77,15 @@ Provides all fields required for Consul plugin:
 - `address`: IP Address of the consul server 
 - `resync-after-reconnect`: this field runs resync procedure for all registered plugins in case the plugin loses connection to the database and then reconnects back 
 
-### ETCD
+### etcd
 
 ```bash
 -etcd-config=
 ```
 
-Startup-config for the ETCD plugin:
+Startup-config for the etcd plugin:
 
-- `endpoints`: A list of IP address and port entries in format <ip-address>:<port>, where the ETCD server is reachable
+- `endpoints`: A list of IP address and port entries in format <ip-address>:<port>, where the etcd server is reachable
 - `dial-timeout`: A time window in <ns> where the connection should be established
 - `operation-timeout`: Operation timeout in <ns>
 - `insecure-transport`: If set to `true` the TLS is omitted
@@ -93,10 +93,10 @@ Startup-config for the ETCD plugin:
 - `cert-file`: Path to a TLS certification file
 - `key-file`: Path to a TLS certification key
 - `ca-file`: Path to a CA file used to create a set of x509 certificates
-- `auto-compact`: Defines interval between ETCD auto-compaction cycles. Set to 0 to disable the feature
-- `resync-after-reconnect`: If ETCD server lost connection, the flag allows to automatically run the whole resync procedure for all registered plugins if it reconnects
-- `allow-delayed-start`: Allows starting without connected ETCD database. The plugin will try to connect and if successful, overall resync will be called
-- `reconnect-interval`: Interval between ETCD reconnect attempts in <ns>. The default value is 2 seconds. Has no use if `delayed start` is turned off
+- `auto-compact`: Defines interval between etcd auto-compaction cycles. Set to 0 to disable the feature
+- `resync-after-reconnect`: If etcd server lost connection, the flag allows to automatically run the whole resync procedure for all registered plugins if it reconnects
+- `allow-delayed-start`: Allows starting without connected etcd database. The plugin will try to connect and if successful, overall resync will be called
+- `reconnect-interval`: Interval between etcd reconnect attempts in <ns>. The default value is 2 seconds. Has no use if `delayed start` is turned off
 
 ### FileDB
 
@@ -278,8 +278,8 @@ users:
 ```
 
 - `token-expiration`: Token expiration time in nanoseconds. Zero means no expiration time
-- `password-hash-cost`: Number in range 4-31 used as a parameter for hashing passwords. Large numbers require a lot of CPU time and memory to process.
-- `token-signature`: A string value used as a key to sign a tokens
+- `password-hash-cost`: Number in range between 4 and 31 used as a parameter for hashing passwords. Large numbers require more CPU time and memory to process.
+- `token-signature`: A string value used as a key to sign tokens
 
 REST also allows to use of the simple flag to set HTTP port:
 
@@ -289,7 +289,7 @@ REST also allows to use of the simple flag to set HTTP port:
 
 ### Service Label
 
-Flag to set the microservice label for a given agent.
+Flag to set the microservice label for a given vpp-agent.
 
 ```bash
 --microservice-label=
@@ -301,8 +301,8 @@ Flag to set the microservice label for a given agent.
 -vpp-ifplugin-config=
 ```
 
-- `mtu`: Default maximum transmission unit. The value is used if an interface without MTU is created (i.e. MTU in interface configuration is preferred)
-- `status-publishers`: VPP agent allows to send status data back to ETCD. To allow it, add desired status publishers. Currently supported for **etcd** and **redis** (both options can be chosen together)
+- `mtu`: Default maximum transmission unit (MTU). The value is used if an interface without MTU is created (i.e. MTU in the interface configuration is preferred)
+- `status-publishers`: VPP agent allows to send status data back to etcd. To allow it, add desired status publishers. Currently supported for **etcd** and **redis** (both options can be chosen together)
 
 
 *[ACL]: Access Control List

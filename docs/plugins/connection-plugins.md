@@ -2,32 +2,32 @@
 
 ---
 
-## REST Plugin
+## REST plugin
 
-The "builtin" REST support (plugin) in the VPP Agent is currently limited to retrieving existing VPP configuration (called dumping) for core plugins. The VPP Agent also provides a simple html template (usable in browser) and optional support for https security, authentication and authorization.
+The REST plugin in the vpp-agent is currently limited to retrieving existing VPP configuration (called dumping). The vpp-agent also provides a simple html template (usable in browser) and optional support for https security, authentication and authorization.
 
 The Ligato Framework supports two distinct HTTP plugins: 
 
 - Ligato Infra (aka CN-infra) REST/HTTPMux Plugin for general HTTP functionality and security
-- VPP Agent REST Plugin applicable to VPP implementations and based on the CN-Infra HTTP plugin
+- vpp-agent REST plugin applicable to VPP implementations
 
 ### Basics
 
-The VPP Agent contains the REST API plugin, which is based on the CN-Infra HTTP plugin (HTTPMux). The functionality is enabled without the need of any external configuration file. The default HTTP endpoint is opened on socket `0.0.0.0:9191`. 
+REST plugin functionality is enabled without the need for any external configuration file. The default HTTP endpoint is opened on socket `0.0.0.0:9191`. 
 
 There are several options for configuring a different port number:
  
-- Set the VPP Agent flag: `-http-port=<port>`
+- Set the vpp-agent flag: `-http-port=<port>`
 - Set the environment `HTTP_PORT` variable to a desired value
-- Modify the [HTTP plugin config file][http-config]
+- Modify the [REST plugin config file][http-config]
 
 ### Supported URLs
 
-The VPP Agent REST plugin supports the retrieval (or dumping if you will) of configuration items sorted by type (interface plugin, telemetry, etc.).
+The vpp-agent REST plugin supports the retrieval of configuration items sorted by type (interfaces, L3 routes, telemetry, etc.).
 
 **Index Page**
 
-Use the following to obtain an index of supported API URLs.
+Index of supported API URLs.
 
 ```
 curl -X GET http://localhost:9191/
@@ -185,7 +185,7 @@ Use the VPP CLI command via REST. Commands are defined as a map as following:
 
 ## Security
 
-The REST plugin allows one to optionally configure the following security features:
+Configurable security functions:
 
 - server certificate (HTTPS)
 - Basic HTTP Authentication - username & password
@@ -207,14 +207,14 @@ client-basic-auth:
 
 If `server-cert-file` and `server-key-file` are defined, the server requires HTTPS instead of HTTP for all its endpoints.
 
-`client-cert-files` is the list of the root certificate authorities that server uses to validate client certificates. If the list is not empty, only clients who provide a valid certificate are allowed to access the server.
+`client-cert-files` is the list of the root certificate authorities the server uses to validate client certificates. If the list is not empty, only clients who provide a valid certificate are allowed to access the server.
 
-`client-basic-auth` allows one to define user/password credentials permitting access to the server. The config option defines a static list of allowed user(s). If the list is not empty, default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin (e.g.: if you want to read credentials from ETCD).
+`client-basic-auth` allows one to define user/password credentials permitting access to the server. The config option defines a static list of allowed user(s). If the list is not empty, default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin (e.g.: if you want to read credentials from etcd).
 
 
 ***Example***
 
-In order to generated self-signed certificates you can use the following commands:
+In order to generate self-signed certificates, with the following commands:
 
 ```bash
 #generate key for "Our Certificate Authority"
@@ -260,7 +260,7 @@ where `ca.pem` is a certificate authority where server certificate should be val
   
 ### Token-based Authorization
 
-REST plugin supports authorization based on tokens. To enable this feature, use  the [http.conf][http-config] file:
+REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST plugin config file][http-config]:
 
 ```
 enable-token-auth: true
@@ -268,7 +268,7 @@ enable-token-auth: true
 
 Authorization restricts access to all registered permission group URLs. The user receives a token after login, which grants access to all permitted sites. The token is valid until the user is logged out, or until it expires.
 
-The expiration time is a token claim, set in the [http.conf][http-config] file:
+The expiration time is a token claim set in the [REST plugin config file][http-config]:
 
 ```
 token-expiration: 600000000000  
@@ -276,7 +276,7 @@ token-expiration: 600000000000
 
 Note that time is in nanoseconds. If no time is provided, the default value of 1 hour is set.
 
-Token uses by default a pre-defined signature string as the key to sign it. This can be changed in [http.conf][http-config] file.
+Token uses by default a pre-defined signature string as the key to sign it. This can be changed in [REST plugin config file][http-config].
 
 ```
 token-signature: <string>
@@ -335,7 +335,7 @@ To log out, post the username to `http://localhost:9191/logout`.
 
 **1. cURL** 
 
-Specify the VPP Agent target HTTP IP address and port with link to desired data. All URLs are accessible via the `GET` method.
+Specify the vpp-agent target HTTP IP address and port with link to desired data. All URLs are accessible via the `GET` method.
 
 Example:
 ```
@@ -346,16 +346,16 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 
 Choose the `GET` method, provide the desired URL and send the request.
 
-## VPP Agent GRPC
+## vpp-agent GRPC
 
 Related articles: 
 
-* [GRPC client tutorial][grpc-client-tutorial] shows how to create a client for the off-the-shelf VPP Agent's GRPC Server
+* [GRPC client tutorial][grpc-client-tutorial] shows how to create a client for the off-the-shelf vpp-agent's GRPC Server
 * [GRPC server tutorial][grpc-server-tutorial] shows how to create your own GRPC Server using the [CN-Infra GRPC Plugin][grpc-plugin].
 
 GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
 
-The VPP Agent GRPC plugin can be used to:
+The vpp-agent GRPC plugin can be used to:
 
 * Send configuration data to VPP
 * Retrieve (dump) configuration from VPP
@@ -368,7 +368,7 @@ The following remote procedure calls are defined:
 * **Dump** (Retrieve) reads existing configuration from the VPP
 * **Notify** subscribes GRPC to the notification service
 
-To enable the GRPC server within the VPP Agent, the GRPC plugin must be added to the plugin pool and loaded (currently the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
+To enable the GRPC server within the vpp-agent, the GRPC plugin must be added to the plugin pool and loaded (currently the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
 
 Clients can reach the GRPC Server via an endpoint IP:Port address or via a unix domain socket file. The TCP network is set as default, but other network types are also possible (like TCP6 or UNIX).
 
@@ -404,8 +404,8 @@ Once the handler is registered with the `GRPC Plugin` and the agent is running, 
 [grpc-image]: ../img/user-guide/grpc.png
 [grpc-plugin]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
-[password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md
 [http-config]: ../user-guide/config-files.md#rest
+[password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md
 
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol
