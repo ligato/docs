@@ -1,28 +1,37 @@
 # Infra plugins
 
+!!! Note
+    The documentation in some cases may refer to the Ligato Infra as Cloud Native - Infra or CN-infra for short.
+
 ---
 
 ## Status Check
 
-The `statuscheck` infrastructure plugin monitors the overall status of a CN-Infra based app by collecting and aggregating partial statuses of agents plugins. The status is exposed to external clients via [ETCD - datasync][datasync-plugin] and [HTTP][rest-plugin], as shown in the following diagram:
+The `statuscheck` infra plugin monitors the overall status of a cn-infra based app by collecting and aggregating the status of agents plugins. The status is exposed to external clients via [ETCD - datasync][datasync-plugin] and [HTTP][rest-plugin]. 
+
+See the `statuscheck API` figure below:
 
 ![status check][status-check-image]
+<p style="text-align: center; font-weight: bold">StatusCheck API</p>
 
 ### Overall Agent Status
 
-The overall Agent Status is aggregated from all Plugins' Status (logical AND for each Plugin Status success/error).
+The overall agent status is aggregated from all plugins' status. Conceptually this is a  `logical AND` for each plugin's status.
 
-The agent's current overall status can be retrieved from ETCD from the following key: 
-`/vnf-agent/<agent-label>/check/status`
+The agent's current status can be retrieved from etcd using this key: 
+```
+/vnf-agent/<agent-label>/check/status`
 
+```
+
+Example:
 ```
 $ etcdctl get /vnf-agent/<agent-label>/check/status/v1/agent
 /vnf-agent/<agent-label>/check/status/v1/agent
 {"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
 ```
 
-To verify the agent status via HTTP (e.g. for Kubernetes 
-[liveness and readiness probes][kubernetes-probes], use the `/liveness` and `/readiness` URLs:
+To verify the agent status via HTTP, use the `/liveness` and `/readiness` URLs:
 ```
 $ curl -X GET http://localhost:9191/liveness
 {"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
@@ -30,20 +39,29 @@ $ curl -X GET http://localhost:9191/readiness
 {"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
 ```
 
-To change the HTTP server port (default `9191`), use the `http-port` option of the agent, e.g.:
+To change the HTTP server port (default `9191`), use the `http-port` option of the vpp-agent:
 ```
 $ vpp-agent -http-port 9090
 ```
 
 ### Plugin Status
 
-Plugin may use `PluginStatusWriter.ReportStateChange` API to **PUSH** the status information at any time. For optimum performance, 'statuscheck' will then propagate the status report further to external clients only if it has changed since the last update.
+Plugins may use the `PluginStatusWriter.ReportStateChange` API to `push` status information at any time. For optimum performance, `statuscheck` will then propagate the status report to external clients if and only if it has changed since the last update. 
 
-Alternatively, plugin may chose to use the **PULL** based approach and define the `probe` function passed to `PluginStatusWriter.Register` API. `statuscheck` will then periodically probe the plugin for the current status. Once again, the status is propagated further only if it has changed since the last enquiry.
+See the `Push Status` figure below. 
 
-It is recommended not to mix the PULL and the PUSH based approach within the same plugin.
+![status check push][status-check-push-image]
+<p style="text-align: center; font-weight: bold">Push Status</p>
 
-To retrieve the current status of a plugin from ETCD, use the following key template: `/vnf-agent/<agent-label>/check/status/v1/plugin/<PLUGIN_NAME>`
+Alternatively, plugins may choose to use the `PULL`-based approach and define the `probe` function passed to `PluginStatusWriter.Register` API. `statuscheck` will then periodically probe the plugin for the current status. Once again, the status is propagated only if it has changed since the last enquiry. See the 'Push Status' figure below.
+
+
+![status check pull][status-check-pull-image]
+<p style="text-align: center; font-weight: bold">PullStatus</p>
+
+It is recommended `NOT` to mix the `push` and the `pull` approaches within the same plugin.
+
+To retrieve the current status of a plugin from etcd, use the following key template: `/vnf-agent/<agent-label>/check/status/v1/plugin/<PLUGIN_NAME>`
  
 For example, to retrieve the status of the GoVPP plugin, use: 
 
@@ -53,88 +71,106 @@ $ etcdctl get /vnf-agent/<agent-label>/check/status/v1/plugin/GOVPP
 {"state":2,"last_change":1496322205,"last_update":1496322361,"error":"VPP disconnected"}
 ```
 
-Push Plugin Status:
-![status check pull][status-check-pull-image]
 
-Pull Plugins Status - PROBING:
-![status check push][status-check-push-image]
+
+
 
 ## Index Map
 
-The idxmap package provides an enhanced mapping structure to help in the following use cases:
+The idxmap package provides a mapping structure to support the following use-cases:
 
 * Exposing read-only access to plugin local data for other plugins
 * Secondary indexing
-* Data caching for key-value store (such as ETCD)
+* Data caching for a key-value store (such as etcd)
 
-For more detailed description see the godoc.
+For more detailed description see the godoc reference [here][idxmap-godoc].
 
-### Exposing plugin local information Use Case
+### Exposing plugin local data Use-Case
 
-App plugins often need to expose some structured information to other plugins inside the agent (see the following diagram). Structured data stored in idxmap are available for (possibly concurrent) read access to other plugins:
+App plugins often need to expose some structured information to other plugins inside the agent (see the `Using idxmap to expose local data` figure below). Structured data stored in idxmap is available for read access to other plugins:
 
-1. either via lookup using primary keys or secondary indices;
-2. or via watching for data changes in the map using channels or callbacks (subscribe for changes and receive notification once an item is added, changed or removed).
+- via lookup using primary keys or secondary indices;
+- via watching for data changes in the map using channels or callbacks. Subscribe for changes and receive notification once an item is added, changed or removed.
 
 ![idxmap local][idx-map-local-image]
+<p style="text-align: center; font-weight: bold">Using idxmap to expose local data</p>
 
-### Caching Use Case
+### Caching Use-Case
 
-It is useful to have the data from a key-value store cached when you need to:
+It is useful to cache data from a key-value store when you need to:
 
 - minimize the number of lookups into the key-value store
-- execute lookups by secondary indexes for key-value stores that do not necessarily support secondary indexing (e.g. ETCD)
+- execute lookups by secondary indexes for key-value stores that do not necessarily support secondary indexing (e.g. etcd does not support this)
 
 **CacheHelper** turns `idxmap` (injected as field `IDX`) into an indexed local copy of remotely stored key-value data. `CacheHelper` watches the target key-value store for data changes and resync events. Received key-value pairs are transformed into the name-value (+ secondary indices if defined) pairs and stored into the injected idxmap instance. 
-For a visual explanation, see the diagram below:
 
+See the `idxmap caching` figure below.
 ![idxmap cache][idx-map-cache-image]
+<p style="text-align: center; font-weight: bold">idxmap caching</p>
 
-The constructor that combines `CacheHelper` with `idxmap` to build the cache from the example can be found there as well.
   
 ## Log Manager
 
-Log manager plugin allows to view and modify log levels of loggers using REST API.
 
-**API**
-- List all registered loggers:
+The log manager plugin allows one to view and modify the log levels of loggers using a REST API.
 
-    ```curl -X GET http://<host>:<port>/log/list```
-- Set log level for a registered logger:
-   ```curl -X PUT http://<host>:<port>/log/<logger-name>/<log-level>```
+**APIs**
+
+List all registered loggers:
+```
+curl -X GET http://<host>:<port>/log/list
+```
+    
+Set log level for a registered logger:
+```
+curl -X PUT http://<host>:<port>/log/<logger-name>/<log-level>
+```
  
-   `<log-level>` is one of `debug`,`info`,`warning`,`error`,`fatal`,`panic`
+where `<log-level>` is one of the following: `debug`,`info`,`warning`,`error`,`fatal`,`panic`
    
-`<host>` and `<port>` are determined by configuration of rest.Plugin.
+and `<host>` and `<port>` are determined by configuration of the REST plugin.
  
 **Config file**
 
-- Logger config file is composed of two parts: the default level applied for all plugins, and a map where every logger can have its own log level defined.
+The logger config file is composed of two parts: 
+
+- default level applied for all plugins.
+- map where every logger can have its own log level defined.
  
 !!! note    
-    Initial log level can be set using environmental variable `INITIAL_LOGLVL`. The variable replaces default-level from configuration file. However, loggers (partial definition) replace default value set by environmental variable for specific loggers defined.  
+    Initial log levels can be set using the environmental variable `INITIAL_LOGLVL` which overrides `default-level` defined in the [configuration file][log-level-config].   
   
 ### Tracer
 
-A simple utility able to log measured time periods various events. To create a new tracer, call:
+Trace is a utility for logging events across time periods.
 
-`t := NewTracer(name string, log logging.Logger)`
+To create a new tracer, call:
+```
+t := NewTracer(name string, log logging.Logger)
+```
 
-Tracer object can store a new entry with `t.LogTime(entity string, start Time)` where `entity` is a string representation of a measured object (name of a function, structure or just simple string) and `start` is a start time. Tracer can measure repeating event (in a loop for example). Every event will be stored with the particular index.
+Tracer object can store a new entry with: 
+
+```
+t.LogTime(entity string, start Time)
+``` 
+where `entity` is a string representation of a measured object (name of a function, structure or just simple string) and `start` is a start time. 
+
+Tracer can measure a repeating event (in a loop for example). Every event will be stored with the particular index.
 
 Use `t.Get()` to read all measurements. The Trace object contains a list of entries and overall time duration.
 
-Last method is `t.Clear()` which removes all entries from the internal database.  
+The last method is `t.Clear()` which removes all entries from the internal database.  
 
 ## Messaging/Kafka
 
-The client package provides single purpose clients for publishing synchronous/asynchronous messages and for consuming selected topics.
+This package provides clients for publishing synchronous/asynchronous messages and for consuming selected topics.
 
-The mux package uses these clients and allows to share their access to Kafka brokers among multiple entities. This package also implements the generic messaging API defined in the parent package.
+The mux package uses these clients and allows them to share their access to Kafka brokers among multiple entities. This package also implements the generic messaging API defined in the parent package.
 
 ### Requirements
 
-Minimal supported version of Kafka is determined by [sarama][sarama] library - Kafka 0.10 and 0.9, although older releases are still likely to work.
+The minimal supported version of Kafka is determined by the [sarama][sarama] library.  
 
 If you don't have Kafka installed locally you can use docker image for testing:
 ```
@@ -144,20 +180,21 @@ sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
 
 ### Kafka plugin
 
-Kafka plugin provides access to Kafka brokers.
+The Kafka plugin provides access to Kafka brokers.
 
 **Configuration**
 
-- Location of the Kafka configuration file can be defined either by command line flag `kafka-config` or set via `KAFKA_CONFIG` env variable.
+- Location of the Kafka configuration file can be defined either by CLI flag `kafka-config` or set via `KAFKA_CONFIG` env variable.
 
 **Status Check**
 
-- Kafka plugin has a mechanism to periodically check a connection status of the Kafka server. 
+- Kafka plugin has a mechanism to periodically check the connection status of the Kafka server. 
 
 ### Multiplexer
 
-The multiplexer instance has an access to Kafka brokers. To share the access it allows to create connections. There are available two connection types one support message of type `[]byte` and the other `proto.Message`. Both of them allows to create several SyncPublishers and AsyncPublishers that implements `BytesPublisher` interface or `ProtoPubliser` 
-respectively. The connections also provide API for consuming messages implementing `BytesMessage` interface or `ProtoMessage` respectively.
+The multiplexer instance provides access to Kafka brokers through connections. There are two connection types with one supporting messages of type `[ ]byte` and the other `proto.Message`.
+
+Both are allowed to create SyncPublishers and AsyncPublishers that implement the `BytesPublisher` or `ProtoPubliser` interfaces. The connections provide an API for consuming messages implementing the said `BytesMessage` interface or `ProtoMessage` respectively.
 
 ```
    
@@ -182,89 +219,96 @@ respectively. The connections also provide API for consuming messages implementi
 
 ## Process manager
 
-The process manager plugin provides a set of methods to create a plugin-defined processes instance implementing a set of methods to manage and monitor them. There are several ways how to obtain a process instance via `ProcessManager` 
+The process manager plugin enables the creation of processes to  manage and monitor plugins. 
+
+There are several possible ways to obtain a process instance via the `ProcessManager` 
 API:
 
-**New process with options:** using method `NewProcess(<cmd>, <options>...)` which requires a command and a set of optional parameters. 
-**New process from template:** using method `NewProcessFromTemplate(<tmp>)` which requires template as a parameter
-**Attach to existing process:** using method `AttachProcess(<pid>)`. The process ID is required to order to attach.
+- New process with options: using method `NewProcess(<cmd>, <options>...)` which requires a command and set of optional parameters. 
+- New process from template: using method `NewProcessFromTemplate(<tmp>)` which requires a parameter template.
+- Attach to existing process: using method `AttachProcess(<pid>)`. The process ID is required to order to attach.
 
 ### Management
 
 !!! note
-    Since application (management plugin) is parent of all processes, application termination causes all started processes to stop as well. This can be changed with *Detach* option (see process options).
+    Since the application is parent to all processes, application termination causes all started processes to stop as well. This can be changed with the `Detach` option (see process options).
 
 Process management methods:
 
-* `Start()` starts the plugin-defined process, stores the instance and does initial status file read
-* `Restart()` tries to gracefully stop (force stop if fails) the process and starts it again. If the instance is not running, it is started.
-* `Stop()` stops the instance using SIGTERM signal. Process is not guaranteed to be stopped. Note that child processes (not detached) may end up as defunct if stopped this way. 
-* `StopAndWait()` stops the instance using SIGTERM signal and waits until the process completes. 
-* `Kill()` force-stops the process using SIGKILL signal and releases all the resources used.
-* `Wait()` waits until the process completes.
-* `Signal()` allows user to send custom signal to a process. Note that some signals may cause unexpected behavior in process handling.
+- `Start()` starts the plugin-defined process, stores the instance and performs an initial status file read.
+- `Restart()` attempts to gracefully stop (force stop if it fails) and then (re)start the process. 
+- `Stop()` stops the instance using a SIGTERM signal. Process is not guaranteed to be stopped. Note that child processes (not detached) may be killed if stopped this way. 
+- `StopAndWait()` stops the instance using a SIGTERM signal and waits until the process completes. 
+- `Kill()` force-stops the process using a SIGKILL signal and releases all used resources used.
+- `Wait()` waits until the process completes.
+- `Signal()` allows the user to send a custom signal to a process. Note that some signals may cause unexpected behavior in process handling.
 
 Process monitor methods:
 
-* `IsAlive()` returns true if process is running
-* `GetNotificationChan()` returns channel where process status notifications will be sent. Useful when a process is created via template with 'notify' field set to true. In other cases, the channel is provided by user.
-* `GetName` returns process name as defined in status file
-* `GetPid()` returns process ID
-* `UpdateStatus()` updates internal status of the plugin and returns the actual status file
-* `GetCommand()` returns original process command. Always empty for attached processes.
-* `GetArguments()` returns original arguments the process was run with. Always empty for attached processes.
-* `GetStartTime()` returns time stamp when the process was started for the last time
-* `GetUpTime()` returns process up-time in nanoseconds
+- `IsAlive()` returns true if process is running
+- `GetNotificationChan()` returns a channel where process status notifications will be sent. Useful when a process is created via template with 'notify' field set to true. In other cases, the channel is provided by a user.
+- `GetName` returns process name as defined in the status file.
+- `GetPid()` returns process ID.
+- `UpdateStatus()` updates the plugin's internal status and returns the actual status file
+- `GetCommand()` returns the original process command. This will always be empty for attached processes.
+- `GetArguments()` returns original arguments the process was started with. This will always be empty for attached processes.
+- `GetStartTime()` returns the time stamp when the process was started for the last time
+- `GetUpTime()` returns process up-time in nanoseconds
 
 ### Status watcher
 
-Every process is watched for status changes (it does not matter which way it was crated) despite the process is running or not. The watcher uses standard statuses (running, sleeping, idle, etc.). The state is read from process status file and every change is reported. The plugin also defines two plugin-wide statues:
-* **Initial** - only for newly created processes, means that the process command was defined but not started yet
-* **Terminated** - if the process is not running or does not respond
-* **Unavailable** - if the process is running but the status cannot be obtained
-The process status is periodically polled and notifications can be sent to the user defined channel. In case process was crated via template, channel was initialized in the plugin and can be obtained via `GetNotificationChan()`.
+Every process is watched for status changes independed of how it was created and if the process is running or not. Status such as running, sleeping, idle, etc. are used. The state is read from a process status file and every change is reported. 
+
+The plugin defines several system-wide status types:
+
+- Initial: only for newly created processes, meaning the process command was defined but not started yet
+- Terminated: if the process is not running or does not respond
+- Unavailable: if the process is running but the status cannot be obtained
+
+The process status is periodically polled and notifications can be sent to the user defined channel. In case the process was created via template, the channel initialized in the plugin and can be obtained via `GetNotificationChan()`.
 
 ### Process options
 
-Following options are available for processes. All options can be defined in the API method as well as in the template. All of them are optional.
+The following options are available for processes. All options can be defined in the API method or template. All of them are optional.
 
-**Args:** takes string array as parameter, process will be started with given arguments. 
+**Args:** takes string array as a parameter and process will be started with given arguments. 
 
-**Restarts:** takes a number as a parameter, defines count of automatic restarts when the process state becomes terminated.
+**Restarts:** takes a number as a parameter that defines the count of automatic restarts when the process state becomes terminated.
 
-**Writer** allows to define custom `stdOut` and `stdErr` values. 
+**Writer:** can define custom `stdOut` and `stdErr` values.
+ 
 !!! note  
-    Usability is limited when defined via template (only standard `os.stdout` and `os.stderr` can be used)
+    Usability is limited when defined via template. Only standard `os.stdout` and `os.stderr` can be used.
 
-**Detach:** no parameters, started process detaches from the parent application and will be given to current user. This setting allows the process to run even after the parent was terminated.
+**Detach:** no parameters applicable. Started process detaches from the parent application and will be given to the current user. This setting allows the process to run even after the parent has been terminated.
 
-**EnvVar** can be used to define environment variables (for example `os.Environ` for all)
+**EnvVar:** define environment variables (for example `os.Environ` for all)
 
-**Template:** requires name, and run-on-startup flag. This setup creates a template on process creation. The template path has to be set in the plugin.
+**Template:** requires name `run-on-startup` flag. This creates a template upon process creation. The template path must be set in the plugin.
 
-**Notify:** allows user to provide a notification channel for status changes.
+**Notify:** to provide a notification channel for status changes.
 
 ### Templates
 
-The template is a file which defines process configuration for plugin manager. All templates should be stored in the path defined in the plugin config file.
+The template is a file which defines the process configuration for the plugin manager. All templates should be stored in the path defined in the plugin config file.
 
 ```
 ./process-manager-plugin -process-manager-config=<path-to-file>
 ```
 
-The template can be either written by hand using proto model, or generated with the *Template* option while creating a new process. 
+The template can be written "by hand" using a proto model, or generated with the `Template` option while creating a new process. 
 
-On the plugin init, all templates are read, and those with *run-on-startup* set to 'true' are also immediately started. The template contains several fields defining process name, command, arguments and all the other fields from options.
+Upon plugin init, all templates are read, and those with *run-on-startup* set to `true` are started. The template contains several fields defining process name, command, arguments and additional options fields.
 
-The plugin API allows to read templates directly with `GetTemplate(<name)` or `GetAllTmplates()`. The template object can be used as parameter to start a new process from it. 
+The plugin API is used to read templates directly with `GetTemplate(<name)` or `GetAllTmplates()`. The template object can be used as parameter to start a new process.  
 
 ## Service Label
 
-The `servicelabel` is a small Core Agent Plugin, which other plugins can use to obtain the microservice label, i.e. the string used to identify the particular VNF. The label is primarily used to prefix keys in ETCD data store so that the configurations of different VNFs do not get mixed up.
+The `servicelabel` is a plugin, available to other plugins that require the use of the `microservice label`. The label is primarily used to prefix keys in the etcd data store so that the configurations of different VPPs are not mixed up in a [multiple vpp-agent environment][multi-vpp-agent].
 
 **Configuration**
 
-- the serviceLabel can be set either by commandline flag `microservice-label` or environment variable `MICROSERVICE_LABEL`
+- the serviceLabel can be set by the config file flag `microservice-label` or environment variable `MICROSERVICE_LABEL`
 
 **Example**
 
@@ -281,7 +325,10 @@ dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 [datasync-plugin]: db-plugins.md#datasync-plugin
 [idx-map-cache-image]: ../img/user-guide/idxmap_cache.png
 [idx-map-local-image]: ../img/user-guide/idxmap_local.png
+[idxmap-godoc]: https://godoc.org/github.com/ligato/cn-infra/idxmap
 [kubernetes-probes]: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/
+[log-level-config]: ../user-guide/config-files.md#log-manager
+[multi-vpp-agent]: ../user-guide/get-vpp-agent.md#how-to-use-multiple-vpp-agents
 [rest-plugin]: connection-plugins.md#vpp-agent-rest
 [sarama]: https://github.com/Shopify/sarama
 [status-check-image]: ../img/user-guide/status_check.png
