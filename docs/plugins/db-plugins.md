@@ -12,36 +12,36 @@ Data synchronization is about multiple data sets that need to be synchronized wh
 
 The data synchronization APIs are centered around watching and publishing data change events. These events are processed asynchronously.
 
-The data handled by one plugin can have references to the data of another plugin. Therefore, a proper time/order of data resynchronization between plugins needs to be maintained. The datasync plugin initiates a full data resync in the same order as the other plugins have been registered in Init().
+The data handled by one plugin can have references to the data of another plugin. Therefore, a proper time/order sequence of data resynchronization between plugins needs to be maintained. The datasync plugin initiates a full data resync in the same order as the other plugins have been registered in Init().
 
 !!! Note
-    In the discussions that follow, the term `agent` is used to describe a server. A KV data store holds data/configuration information for multiple agents (servers). Mechanisms are introduced to propagate  data/configurations changes from the KV data store to the different agents. In addition these changes could require a resynchronization. 
+    In the discussions that follow, the term `agent` is used to describe a server. A KV data store holds data/configuration information for multiple agents (servers). Mechanisms are introduced to propagate  data/configurations changes from the KV data store to the different agents. In addition these changes may require a resynchronization. 
   
 ### Watch data API
 
-Watch data API (see figure below) is used by app plugins to:
+Watch data API (see `Watch data API Functions` figure below) is used by app plugins to:
 
-- Subscribe to channels for data changes using `Watch()`, while being "abstracted away" from the particular message source.
+- Subscribe to channels for data changes using `Watch()`, while being "abstracted away" from the particular message source such as etcd.
 - Process a full Data RESYNC (startup & fault recovery scenarios). Feedback is provided to the user of this API (e.g. success or error) via callback.
-- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where only the minimal set of changes (deltas) needed to get in-sync gets propagated to plugins. Again, feedback to the user of the API (e.g. successful configuration or an error) is returned via callback.
+- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where only the minimal set of changes (deltas) needed to required to reach synchronized state is propagated to plugins. Again, feedback to the user of the API (e.g. successful configuration or an error) is returned via callback.
 
 ![datasync][datasync-image]
 <p style="text-align: center; font-weight: bold">Watch data API Functions</p>
 
-This API define two types of events that a plugin must be able to process:
+This API define two types of events that a plugin be able to process:
 
-- Full Data RESYNC (resynchronization) event triggers a resync of the entire configuration. This event is used after agent start/restart, or for a fault recovery scenario (e.g. when the agent's (i.e. server) connectivity to an external data source is lost and restored).
+- Full Data RESYNC (resynchronization) event triggers a resync of the entire configuration. This event is used after an agent start/restart, or for a fault recovery scenario (e.g. when the agent's (i.e. server) connectivity to an external data source is lost and restored).
 - Incremental Data CHANGE event triggers incremental processing of configuration changes. Each data change event contains both the previous and the new/current value. The Data synchronization is switched to this optimized mode only after a successful Full Data RESYNC.
 
 ### Publish data API
 
-Publish data API (see figure below) is used by app plugins to asynchronously publish events with data change values and still remain abstracted away from the target data store, message bus or RPC client(s).
+Publish data API (see `Publish data API Functions` figure below) is used by app plugins to asynchronously publish events with data change values and still remain abstracted away from the target data store, message bus or RPC client(s).
 
 ![datasync publish][datasync-publish-image]
 <p style="text-align: center; font-weight: bold">Publish data API Functions</p>
 ## Data Broker 
 
-The Data Broker abstraction (see figure below) is based on two APIs: 
+The Data Broker abstraction (see `Broker and Watcher APIs Functions` figure below) is based on two APIs: 
 
 * **Broker** - used by app plugins to `pull` (i.e. read) data from a data store or `push` (i.e. write) data into the data store. Data can be retrieved for a specific key or by running a query. Data can be written for a specific key. Multiple writes can be executed in a transaction.
 * **Watcher** - used by app plugins to WATCH data on a specified key. Watching means to monitor for data changes and receive a notification as soon as a change occurs.
@@ -80,14 +80,14 @@ export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 
 ### Status Check
 
-- If injected, the etcd plugin will use the Status Check plugin to periodically issue a GET request to check for the status of the connection. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with etcd, both the readiness and the liveness probe from the probe plugin will return a negative result (accessible only via a REST API in such cases).
+- If injected, the etcd plugin will use the Status Check plugin to periodically issue a GET request to check connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with etcd, both the readiness and the liveness probe from the probe plugin will return a negative result (accessible only via a REST API in such cases).
 
 ### Compacting
 
 You can compact etcd using two ways.
 
 - using an API by calling `plugin.Compact()` which will compact the database to the current revision.
-- using a config file by setting `auto-compact` option to the duration of period that you want the etcd to be compacted.
+- using a config file by setting `auto-compact` option to the duration of period that wish the etcd to be compacted.
 
 ### Reconnect resynchronization
 
@@ -95,12 +95,6 @@ You can compact etcd using two ways.
   
 Set `resync-after-reconnect` to `true` to enable the feature.
   
-Redis is the implementation of the key-value Data Broker client API for the Redis key-value data store. The entity `BytesConnectionRedis` provides access to CRUD as well as event subscription API's.
-```
-   +-----+   (Broker)   +------------------------+ -->  CRUD      +-------+ -->
-   | app |                   |  BytesConnectionRedis  |                 | Redis |
-   +-----+    <-- (KeyValProtoWatcher)  +------------------------+  <--  events    +-------+
-```
 
 ## Redis
 
@@ -223,7 +217,7 @@ for {
 }
 ```
 !!! note
-    You must configure Redis for it to publish key space events.
+    You must configure Redis so it may publish key space events.
 ```
 config SET notify-keyspace-events KA
 ```
@@ -243,6 +237,14 @@ $ docker-compose ps
 |dockerredissentinel_sentinel_2 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
 |dockerredissentinel_sentinel_3 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
 
+Redis is the implementation of the key-value Data Broker client API for the Redis key-value data store. The entity `BytesConnectionRedis` provides access to CRUD as well as event subscription API's.
+```
+   +-----+   (Broker)   +------------------------+ -->  CRUD      +-------+ -->
+   | app |                   |  BytesConnectionRedis  |                 | Redis |
+   +-----+    <-- (KeyValProtoWatcher)  +------------------------+  <--  events    +-------+
+```
+
+
 ## Consul plugin
 
 The Consul plugin provides access to a consul key-value data store.
@@ -253,7 +255,7 @@ The Consul plugin provides access to a consul key-value data store.
 
 ### Status Check
 
-- If injected, the Consul plugin will use StatusCheck plugin to periodically issue a GET request to check for the status of the connection. The consul connection state affects the global status of the agent. If the agent cannot establish a connection with consul, both the readiness and the liveness probe from the probe plugin will return a negative result (accessible only via a REST API in such cases).
+- If injected, the Consul plugin will use the Status Check plugin to periodically issue a GET request to check connection status. The Consul connection state affects the global status of the agent. If the agent cannot establish a connection with Consul, both the readiness and the liveness probe from the probe plugin will return a negative result (accessible only via a REST API in such cases).
 
 ### Reconnect resynchronization
 
@@ -261,9 +263,9 @@ The Consul plugin provides access to a consul key-value data store.
 
 ## FileDB
 
-The fileDB plugin uses the file system of a operating system as a key-value data store. The filesystem plugin watches for pre-defined files or directories, reads a configuration and sends response events according to changes.
+The fileDB plugin uses the file system of an operating system as a key-value data store. The filesystem plugin watches for pre-defined files or directories, reads a configuration and sends response events according to changes.
 
-All the configuration is resynced in the beginning (as for standard key-value data store). Configuration files then can be added, updated, moved, renamed or removed, plugin makes all of the necessary changes.
+All configuration is resynced in the beginning (as for standard key-value data store). Configuration files then can be added, updated, moved, renamed or removed, plugin makes all of the necessary changes.
 
 !!! danger "Important"
     FileDB as datastore is read-only from the plugin perspective. Changes from within the plugin are not allowed.
@@ -279,7 +281,7 @@ All files/directories used as a data store must be defined in the configuration 
 
 ### Data structure
 
-Currently only JSON and YAML-formatted data is supported The format of the file is as follows for JSON:
+Currently only JSON and YAML-formatted data is supported. JSON format follows:
 
 ```
 {
@@ -314,13 +316,12 @@ data:
 
 ```
 
-Key must contain instance prefix with a microservice label. This is so the plugin knows which portions of the configuration are applicable. All configuration data is stored internally in a local database. This allows one to compare events and respond with the correct 'previous' value for a given key. 
+Key must contain instance prefix with a microservice label. This is so the plugin knows which portions of the configuration are applicable to it. All configuration data is stored internally in a local database. This allows one to compare events and respond with the correct `previous` value for a given key. 
 
 ### Data state propagation
 
-Data types supporting status propagation (e.g. interfaces or bridge domains) can store their state in the filesystem. There is a field in the configuration file called `status-path` which must be set in order to store the status. Status data will be stored in JSON or YAML formats.
+Data types supporting status propagation (e.g. interfaces or bridge domains) can store their state in the filesystem. There is a field in the configuration file called `status-path` which must be set in order to store status. Status data will be stored in JSON or YAML formats.
 
-Data will not be propagated if target path directory.
 
 [datasync-image]: ../img/user-guide/datasync_watch.png
 [datasync-publish-image]: ../img/user-guide/datasync_pub.png
