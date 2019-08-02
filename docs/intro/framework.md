@@ -2,149 +2,94 @@
 
 ---
 
-## Architecture
+## Context
 
-The VPP Agent is basically a set of VPP-specific plugins that use the CN-Infra framework to interact with other services/microservices in the cloud (e.g. a KV data store, messaging, log warehouse, etc.). The VPP Agent
-exposes VPP functionality to client apps via a higher-level model-driven API. Clients that consume this API may be either external (connecting to the VPP Agent via REST, gRPC API, ETCD or message bus transport), or local Apps and/or Extension plugins running on the same CN-Infra framework in the same Linux process. 
+Ligato is THE software platform for building and developing VPP-based cloud native network functions CNFs. Because VPP is the preferred dataplane (linux kernel also supported), one way to view the architecture would be through the lens of a protocol stack. Now this is not necessarily your classic 7-layer OSI model but rather one that has evolved over the last few years. Applications pass on their intent to orchestrators such as Kubernetes. The orchestrators consume the intent and in cahoots with APIs and other software collaborators (e.g. kubectl, CNI, etc.) more or less convert it into low-level commands to configure network resources. 
 
-The VNF Agent architecture is shown in the following figure: 
+With VPP a bit more precision and flexibility is required. This is because VPP supports a broad suite of L2/L3/L4 network functions and services. High performance L2 bridge domains interconnecting application pod via tunnels are supported. ACLs, NATs and IPsec tunnels can be provisioned and even wired up into K8s services and policies along with service functions. All with scale, performance and resiliency. Of course one size _does not fit_ all and it is a certainty that developers will build CNFs of different shapes, sizes and abilities exploiting the VPP dataplane in one way or another. 
 
-![vpp agent][vpp-agent]
+However _one size can fit all_ when talking about a software platform, toolchains, programming languages, resource models, APIs, management and control. It really makes no sense to 'one-off' the CNF software ecosystem. It just leads to a slew of avoidable challenges including pidgeon-holed resources, code duplication, closed APIs, a high degree of partial function duplication and mis-matched orchestrator/resource interactions. Survivability and evolvability are called into question.   
 
-Each (northbound) VPP API - L2, L3, ACL, ... - is implemented by a specific VNF Agent plugin, which translates northbound API calls/operations into (southbound) low level VPP Binary API calls. Northbound APIs are defined using protobufs, which allow for the same functionality to be accessible over multiple transport protocols (HTTP, gRPC, ETCD, ...). Plugins use the  GoVPP library to interact with the VPP.
+A subtle point to note is that while all of these wonderful VPP functions are available to CNFs, the dynamics and velocity of cloud native enabled configuration starts/restarts/stops driven by available resource gravity fields requires a new configuration model. It needs to be fast, accurate, resilient, lightweight and all the while handle that delicate balancing act between application intent and run-time network configuration. Time is not our friend here. Guesswork is problematic. And an all-knowing centralized oracle is not the answer.   
 
-The following figure shows the VPP Agent in context of a cloud-native VNF, where the VNF's data plane is implemented using VPP/DPDK and its management/control planes are implemented using the VNF agent:
+## Ligato Architecture Stack
 
-![context][context]
+As suggested, we can view and describe the Ligato framework as a protocol Stack. See the `Ligato Architecture Stack` below. At the bottom we have the VPP and Linux kernel dataplanes. 
 
-## Design
+!!! Note 
+    While much of the Ligato development effort and software is focused on VPP, there is and certainly can be new CNFs (or even non-CNFs) that employ the linux kernel dataplane. The `one size can fit all` discussion applies here with respect to dataplane realities in the CNF universe.
 
-![VPP agent 10.000 feet][vpp-agent-10k]
+![ligato framework][ligato-framework]
+<p style="text-align: center; font-weight: bold">Ligato Architecture Stack</p>
 
-Brief description:
-* **SFC Controller** - renders a logical network topology (which defines how VNF are logically interconnected) onto a given physical network and VNF placement; the rendering process creates configuration for VNFs and network devices.
+On the top, are the applications with the assumption that over time, they will be developed and deployed as microservices inside containers residing in pods deployed on VMs or bare metal servers all under the purview of Kubernetes. A mouthful indeed.
+
+Ligato resides in the middle. Explanations follow.
+
+
+### Infra
+
+Each management/control plane app built on top of the Infra framework (also referred to as the cn-infra) is basically a set of modules called "plugins". Each plugin provides a very specific/focused functionality. Some plugins are provided by the cn-nfra framework itself; some are written by the app's implementors. In other words, the CN-Infra framework itself is implemented as a set of plugins that together provide the framework's functional potential. In the cloud native world of software development platforms, Ligato offers tablestakes: logging, health checks, messaging (e.g. Kafka), a common front-end API and back-end connectivity to various KV data stores (etcd, Cassandra, Redis, etc. ), and REST and gRPC APIs.
+
+Infra provides plugin lifecycle management (initialization and graceful shutdown of plugins) and a set of framework plugins mentioned above. These infra framework plugins provide APIs consumed by app plugins. App plugins themselves may provide their own APIs consumed by external clients. See the `CN-infra` figure below.
+
+![cn-infra][infra]
+<p style="text-align: center; font-weight: bold">CN-infra</p>
+
+The framework is modular and extensible. Plugins supporting new functionality (e.g. another KV store or another message bus) can be easily swapped or spliced in to the existing set of Infra framework plugins. Moreover, Infra-based apps can be built in layers: a set of app plugins together with new Infra plugins can form a new framework providing APIs/services to higher layer apps. This approach was used in the building the vpp-agent discussed below
+
+Extending the code base does not mean that all plugins end up in all apps - app writers can pick and choose only those framework plugins that are required by their apps. For example, if an app does not need a KV store, the Infra framework KV data store plugins need not be included in the app. Simple - use what you need.
+
+### VPP Agent
+
+The VPP Agent (referred to as the vpp-agent) is a set of VPP-specific plugins that leverage the Ligato Infra to interact with other services/microservices in a cloud native environment (e.g. a KV data store, messaging, telemetry, etc.). The vpp-agent exposes VPP dataplane functionality to client app components via a higher-level model-driven API. Clients that consume this API may be either external (connecting to the vpp-agent via REST, gRPC API, etcd or message bus transport), or local apps and/or extension plugins running on the same Ligato infra framework in the same Linux process. See the `ligato vpp-agent` figure below.
+
+ 
+![vpp-agent][vpp-agent-new]
+<p style="text-align: center; font-weight: bold">Ligato vpp-agent</p>
   
-* **Control Plane Apps** - renders specific VPP configuration for multiple agents to the Data Store
 
-* **Clientv1** - VPP Agent clients (control plane apps & tools) can use the clientv1 library to interact with one or more VPP Agents. The clientv1 library is based on generated GO structures from protobuf messages. The library contains helper methods for working with KV Data Stores, used for generation of keys and storage/retrieval of configuration data to/from Data Store under a given key.
+Each (northbound) VPP API is implemented by a vpp-agent plugin, which translates northbound (NB) API calls/operations into southbound (SB) low level VPP Binary API calls. Northbound APIs are defined using protobufs, which allow for the same functionality to be accessible over multiple transport protocols (HTTP, gRPC, ETCD, ...). The  GoVPP library is used to interact with VPP.
 
-* **Data Store** (ETCD, Redis, etc.) is used to:
-  * store VPP configuration; this data is put into the Data Store by one or more orchestrator apps and retrieved by one or more VPP Agents.
-  * store operational state, such as network counters /statistics or errors; this data is put into the Data Store by one or more VPP Agents and retrieved by one or more monitoring/analytics applications.
 
-* **VPP vSwitch** - privileged container that cross-connects multiple VNFs
+### KVScheduler
 
-* **VPP VNF** - a container with a Virtual Network Function implementation 
-  based on VPP
+Applications are packaged up into containers. The nature of cloud native networks means these containers can be started, restarted, stopped, added, removed at any time. A VPP-based CNF is no exception and is, like any pod or containerized microservice, subject to the whims of the K8s orchestrator and its own configuration idiosyncrasies.
 
-* **Non VPP VNF** - container with a non-VPP based Virtual Network Function; that can nevertheless interact with VPP containers (see below MEMIFs, VETH)
+This introduced a bevy of challenges:
 
-* **Messaging** - AD-HOC events (e.g. link UP/Down)
+- Both data plane and control plane can be implemented as a set of microservices independent of each other. Therefore, the overall configuration of a system may be incomplete at times, since one object may refer to another object owned by a service that has not been instantiated yet. 
+- VPP dataplane is pretty strict on the correct sequence of the configuration VPP binary API calls
+- Removal of a dependency configuration item, unless performed in the correct sequence could appear successful but under the covers, inconsistent VPP behavior lurks
+- Asking each vpp-agent plugin to resolve the configuration dependency problem creates too much complexity, way. Plugins needed to talk to other plugins.  Not feasible as system scales
+- Non-standard methods for tracking and logging the configuration item transactions, caches, errors etc.
+- Synchronizing the northbound (NB) intent with the southbound (SB) config state is difficult.
 
-### Requirements
+Thanks to the KVScheduler, these challenges are addressed. This is a core Ligato plugin that works with vpp-agent and linux agent on the SB side, orchestrators/external data sources (i.e. KV data stores, RPC clients) on the NB side. In a nutshell, it keeps track of the correct configuration order along with any dependencies. It will cache any configuration items until all dependencies are resolved.    
 
-The VPP Agent was designed to meet the following requirements:
-
-* Modular design with API contracts
-* Cloud native
-* Fault tolerant
-* Rapid deployment
-* High performance & minimal footprint
-
-### Modular design with API contract
-
-The VPP Agent codebase is basically a collection of plugins. Each plugin provides a specific service defined by the service's API. VPP Agent's functionality can be easily extended by introducing new plugins. Well-defined API contracts facilitate seamless integration of new plugins into the VPP Agent or integration of multiple plugins into a new application.
-
-### Cloud native
-
-*Assumption*: both data plane and control plane can be implemented as a set of microservices independent of each other. Therefore, the overall configuration of a system may be incomplete at times, since one object may refer to another object owned by a service that has not been instantiated yet. The VPP agent can handle this case - at first it skips
-the incomplete parts of the overall configuration, and later, when the configuration is updated, it tries again to configure what has been previously skipped.
-
-The VPP Agent is usually deployed in a container together with VPP. There can be many of these containers in a given cloud or in a more complex data plane implementation. Containers can be used in many different infrastructures (on-premise, hybrid, or public cloud). The VPP + VPP Agent containers have been tested with [Kubernetes][kubernetes].
-
-Control Plane microservices do not really depend on the current lifecycle phase of the VPP Agents. Control Plane can render config data for one or more VPP Agents and store it in the KV Data Store even if (some of) the VPP Agents have not been started yet. This is possible because:
-
-- The Control Plane does not access the VPP Agents directly, instead it accesses the KV Data Store; the VPP Agents are responsible for downloading their data from the Data Store.
-- Data structures in configuration files use logical object names, not internal identifiers of the VPP). See the 
-  [protobuf][protobuf] definitions in the `model` sub folders in various VPP Agent plugins. 
-
-### Fault tolerance
-
-Each microservice has its own lifecycle, therefore the VPP Agent is designed to recover from HA events even when some subset of microservices (e.g. db, message bus...) are temporary unavailable.
-
-The same principle can be applied also for the VPP Agent process and the VPP process inside one container. The VPP Agent checks the VPP actual configuration and does data synchronization by polling latest configuration from the KV Data Store.
-
-VPP Agent also reports status of the VPP in probes & Status Check Plugin.  
-
-In general, VPP Agents:
-
- * propagate errors to upper layers & report to the Status Check Plugin 
- * fault recovery is performed with two different strategies:
-   * easily recoverable errors: retry data synchronization (Data Store configuration -> VPP Binary API calls)
-   * otherwise: report error to control plane which can failover or recreate the microservice
-
-### Rapid deployment
-
-Containers allow to reduce deployment time to seconds. This is due to the fact that containers are created at process level and there is no need to boot an OS. Moreover, K8s helps with the (un)deployment of possibly different versions of multiple microservice instances.
-
-### High performance & minimal footprint
-
-Performance optimization is currently a work-in-progress.
-Several bottlenecks that can be optimized have been identified:
-- GOVPP
-- minimize context switching
-- replace blocking calls to non-blocking (asynchronous) calls
-
-## Deployment
-
-VPP Agent can run on any server where VPP is installed. It can run on a bare metal, in a VM, or in a container.
+![kvs-arch-pict][ligato-kvs-arch] 
+<p style="text-align: center; font-weight: bold">Ligato KVScheduler</p>
  
-Benefits of putting a VPP-based VNF (basically just a combination of VPP and the VPP Agent) into a container are:
- * simplified upgrades and startup/shutdown, which results in improved scalability
- * Container-based VNFs are in essence lightweight and reusable data-plane microservices which can be used to build larger systems and applications
- * supports container healing 
- 
-### K8s integration
+KVScheduler builds a graph of vertices and edges. The vertices represents configuration items. The edges represent relationships (i.e. dependency, derived from) between the configuration items. Each configuration item has its own set of KVDescriptors which are in essence pointers to CRUD callback operations. Thus the KVSchedulers does not need to know the low-levels of configuration items. 
 
-The following diagram shows VPP deployement in:
-- Data Plane vSwitch
-- Control Plane vSwitch ([Contiv][contiv] integration)
-- VPP VNF Container
-- Non-VPP Container
+The KVScheduler walks the tree to sequence the correct configuration actions. It builds a transaction plan that drives CRUD operations to the vpp-agent in the SB direction. Configuration items can be cached until outstanding dependencies are resolved. 
 
-![K8s integration][k8s-integ]
+NB and SB partial or full state reconciliation (synchronization) is supported. And transaction plans, cached values, errors and so are exposed via REST APIs.
 
-K8s:
-- starts/stops the containers running on multiple hosts
-- checks health of the individual containers (using probes - HTTP calls)
+Note that any plugin that requires an object that is dependent on another object can leverage the KVSscheduler functions.   
 
-### NB (North-bound) configuration vs. deployment
+### Ligato Plugins
 
-VPP + Agent can be deployed in different environments. Several deployment alternatives are briefly described in the following sub-chapters. Regardless of the deployment, the VPP Agent can be configured using the same Client v1 interface. There are three different implementations of the interface:
- - local client
- - remote client using Data Broker
- - remote client using GRPC
+The notion of component-based architecture ("plugginability") in software platforms has become the defacto standard with React and Go being two popular examples. With its diverse assortment of different plugins, the Ligato framework has adopted this very same notion. The benefits bequethed to CNF developeprs are many:
 
-### Key Value Data Store for NB (north-bound)
+- pick and choose only those plugins needed. 
+- flexibility to swap in or out different plugins performing similar. The aforementioned example applied here. The developer could decide to use Redis vs etcd as a key value store.
+- create app plugins compatible with those provided by Ligato.
 
-The Control Plane using remote client writes (north-bound) configuration to the Data Store (tested with ETCD, Redis). VPP Agent watches dedicated key prefixes in Data Store using dbsync package.
+Ligato plugins are defined using almost templated pattern making it straightforward to understand existing plugins as well as create new ones. In addition config files are used to define plugin functionality at startup.
 
-![deployment with data store][deployment-with-ds]
 
-### GRPC for NB (north-bound)
-
-The Control Plane using remote client sends configuration (north-bound) via Remote Procedure Call (in this case GRPC). VPP Agent exposes GRPC service.
-
-![grpc northbound][grpc-nb]
-
-### Embedded deployment
-
-VPP Agent can be directly embedded into a different project. For integration with [Contiv][contiv] we decided to
-embed the VPP Agent directly into the netplugin process as a new driver for VPP-based networking. Using the Local client v1 the driver is able to propagate the configuration into the Agent via Go channels.
-
-![embeded deployment][deployment-embeded]
-TBD links to the code
-
+[infra]: ../img/intro/ligato-framework-arch-infra.svg
 [context]: ../img/intro/context.png "VPP Agent & Plugins on top of CN-infra"
 [contiv]: http://contiv.github.io/
 [deployment-embeded]: ../img/intro/deployment_embeded.png
@@ -152,8 +97,11 @@ TBD links to the code
 [grpc-nb]: ../img/intro/deployment_nb_grpc.png
 [k8s-integ]: ../img/intro/k8s_deployment.png "VPP Agent - K8s integration"
 [kubernetes]: https://kubernetes.io/
+[ligato-framework]: ../img/intro/ligato-framework-arch2.svg
+[ligato-kvs-arch]: ../img/intro/ligato-framework-arch-KVS2.svg
 [protobuf]: https://developers.google.com/protocol-buffers/
 [vpp-agent]: ../img/intro/vpp_agent.png "VPP Agent & plugins on top of CN-infra"
+[vpp-agent-new]: ../img/intro/ligato-framework-vpp-agent2-picture.svg
 [vpp-agent-10k]: ../img/intro/vpp_agent_10K_feet.png
 
 *[ACL]: Access Control List

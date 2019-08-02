@@ -45,7 +45,7 @@ have any data, so we just need an empty structure that satisfies the
 `Plugin` interface.
 
 Some plugins may require additional initialization that can only be
-performed after the base system is up (for example, ...). If your plugin
+performed after the base system is up. If your plugin
 needs this, you can optionally define the `AfterInit` method for your
 plugin. It will be executed after the `Init` method has been called for
 all plugins. The `AfterInit` method comes from the `PostInit` interface

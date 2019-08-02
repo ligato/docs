@@ -1,6 +1,6 @@
 # Reference
 
-This page is an overview of all keys supported for the VPP-Agent
+This page is an overview of all keys supported for the vpp-agent.
 
 ---
 

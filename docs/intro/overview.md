@@ -6,17 +6,17 @@ This section provides an overview of the Ligato VPP agent.
 
 ## Ligato VPP Agent
 
-Ligato is a Golang (Go) framework for developing applications to control and manage cloud native network functions (CNF). The Ligato VPP Agent (VPP agent for short) is a Go implementation of control and management plane for VPP-based CNFs. The VPP agent comes with a set of VPP-specific plugins for programming the VPP dataplane. The Ligato framework's infra system and plugin-based architecture allows developers to build customized control plane applications and solutions that extend and/or compliment the functions provided by the VPP agent.  
+Ligato is a Golang (Go) framework for developing applications to control and manage cloud native network functions (CNF). The Ligato VPP Agent (vpp-agent for short) is a Go implementation of control and management plane for VPP-based CNFs. The vpp-agent comes with a set of VPP-specific plugins for programming the VPP dataplane. The Ligato framework's infra system and plugin-based architecture allows developers to build customized control plane applications and solutions that extend and/or compliment the functions provided by the vpp-agent.  
 
 ### What Can It Do?
 
-The features supported by the VPP agent are:
+The features supported by the vpp-agent are:
 
 * VPP configuration management
 * Linux networking configuration management
 * Metrics collection for the VPP and Linux networking systems.
 
-The features provided by the Ligato framework in support of the VPP agent include: 
+The features provided by the Ligato framework in support of the vpp-agent include: 
 
 * Dependency handling between related configuration items
 * Transaction-based configuration processing
@@ -32,9 +32,9 @@ The features provided by the Ligato framework in support of the VPP agent includ
 
 Configuring VPP via CLI is challenging. The CLI commands mostly reflect low-level binary API calls and must be executed in a specific order or sequence for the configuration to succeed. In some cases, a configuration item (e.g. interface) could depend on another separate configuration item. In other cases, a specific sequence of commands (API calls), each handling an individual configuration item, must be completed before the system is brought up to the desired state. As networks scale and the number of configuration items grows, it becomes vastly more difficult to ensure correct network configuration deployment and operation even under normal conditions. 
 
-The VPP agent addresses this challenge by providing a mechanism to sort out dependencies for the entire configuration, all accessible from a northbound protobuf API. Configuration items use logical names instead of software indexes to ensure consistent configuration setup, even across process runtimes. For example, interfaces can be referenced before they are even created because the user defines each with a logical name.  
+The vpp-agent addresses this challenge by providing a mechanism to sort out dependencies for the entire configuration, all accessible from a northbound (NB) protobuf API. Configuration items use logical names instead of software indexes to ensure consistent configuration setup, even across process runtimes. For example, interfaces can be referenced before they are even created because the user defines each with a logical name.  
 
-The VPP agent configuration behavior is as follows:
+The vpp-agent configuration behavior is as follows:
 
 * Configuration items with all dependencies satisfied or no dependencies are programmed into VPP
 
@@ -49,24 +49,24 @@ Another significant feature is the ability to retrieve existing VPP configuratio
 
 #### Resync
 
-Resync is one of the major features available with the VPP agent. It ensures consistency between configuration provided from an external source, internal VPP agent state and the actual VPP state. The automatic resync fetches all the data from any connected persistent data store (e.g. etcd) and reflects any changes to the VPP. Synchronization is also performed against the Linux host as well. 
+Resync is one of the major features available with the vpp-agent. It ensures consistency between configuration provided from an external source, internal vpp-agent state and the actual VPP state. The automatic resync fetches all the data from any connected persistent data store (e.g. etcd) and reflects any changes to the VPP. Synchronization is performed against the Linux host as well. 
 
-The resync is by default initiated on VPP agent startup. It can also be automatically launched on certain events (i.e. VPP restart, reconnection to the data base). 
+The resync is by default initiated on vpp-agent startup. It can also be automatically launched on certain events (i.e. VPP restart, reconnection to the data base). 
 
 #### Plugin Concept
 
-The VPP agent is based on the Ligato framework plugin architecture. In general, a plugin is a small chunk of code that performs a specific function (or functions). Plugins can be assembled in any combination to build solutions ranging from simple elementary tasks (e.g. basic configuration) to larger more complex applications such as managing configuration state across multiple nodes in a network. Plugins are designed to be setup and/or modified at startup based on a configuration file. The plugin definition is standardized in the Ligato framework, so it can be easily extended with customized plugins to create new solutions and applications.
+The vpp-agent is based on the Ligato framework plugin architecture. In general, a plugin is a small chunk of code that performs a specific function (or functions). Plugins can be assembled in any combination to build solutions ranging from simple elementary tasks (e.g. basic configuration) to larger more complex applications such as managing configuration state across multiple nodes in a network. Plugins are designed to be setup and/or modified at startup based on a configuration file. The plugin definition is standardized in the Ligato framework, so it can be easily extended with customized plugins to create new solutions and applications.
   
 ### What It Cannot Do?
 
-The VPP agent is a control/management plane. It provides a configuration and monitoring services for the VPP dataplane. It does not decide what to do with packets arriving on any of the VPP interfaces and does not change any of the configuration parameters (routes, FIBs) based on the actual VPP state.
+The vp-agent is a control/management plane. It provides a configuration and monitoring services for the VPP dataplane. It does not decide what to do with packets arriving on any of the VPP interfaces and does not change any of the configuration parameters (routes, FIBs) based on the actual VPP state.
 
 ### What's Next?
 
 Want to learn more about Ligato?
 
 * Read about the [concepts][concepts] used in Ligato.
-* Learn how to use Ligato in **User Guide** section.
+* Set up and run the Ligato vpp-agent by following the [quickstart guide][quickstart].
 
 Want to start developing with Ligato?
 
@@ -74,6 +74,7 @@ Want to start developing with Ligato?
 * Try to make your own plugin with the help of the **Developer Guide**
 
 [concepts]: ../user-guide/concepts.md
+[quickstart]: ../user-guide/quickstart.md
 
 *[CLI]: Command-Line Interface
 *[FIB]: Forwarding Information Base

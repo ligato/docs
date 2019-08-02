@@ -9,7 +9,7 @@ This section will describe several key concepts for the Ligato vpp-agent and Inf
 
 ## What is a Model?
 
-The model represents an abstraction of an object (e.g. VPP interface) that can be managed through northbound APIs exposed by the vpp-agent. More specifically the model is used to generate a key associated with a value for the object that is stored in a KV store such as ETCD. 
+The model represents an abstraction of an object (e.g. VPP interface) that can be managed through northbound APIs exposed by the vpp-agent. More specifically the model is used to generate a key associated with a value for the object that is stored in a KV data store such as etcd. 
 
 ### Model Components
 
@@ -44,7 +44,7 @@ Module = vpp
 version = v2
 type = interfaces
 ```
-An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. It was used to program a VPP loopback interface with the value of an IP address for insertion into an etcd KV store.
+An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. It was used to program a VPP loopback interface with the value of an IP address for insertion into an etcd KV data store.
 
 ```
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
@@ -56,33 +56,33 @@ Note that the value of `loop1` is the `<name>` of the interface.
 
 ## Key-Value Store Overview
 
-This section describes how the Ligato vpp-agent interworks with KV stores. 
+This section describes how the Ligato vpp-agent interworks with KV data stores. 
 
 !!! Note
-    There are a number of similar terms in this documentation and elsewhere used to define what is essentially a data or database of key-value pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV data and so on. We will use the term `KV store` in this section as this is the term used by [etcd](https://etcd.io), the most widely deployed key-value store in used today.  
+    There are a number of similar terms in this documentation and elsewhere used to define what is essentially a data store or database of key-value pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV store and so on. We will use the term `KV data store` in this section and elsewhere in the documentation.   
     
-    `Connector` is a term that applies to any plugin providing access or connectivity to an external entity such as a KVDB. The etcd plugin is considered a connector.
+    `Connector` is a term that applies to any plugin providing access or connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
     
     
 
-### Why the KV Store?
+### Why the KV Data Store?
 
-The vpp-agent uses an external KV store for several reasons:
+The vpp-agent uses an external KV data store for several reasons:
  
  - persist the desired state of the VPP/Linux configuration
  - serve as a mechanism to store and export certain VPP statistics
- - exploit the `"watch"` paradigm for distributed configuration management in which the client (i.e. vpp-agent) listens for and processes config changes maintained in a KV store. This same approach is incorporated into other configuration systems such as [confd](https://confd.io)
+ - exploit the `"watch"` paradigm for distributed configuration management in which the client (i.e. vpp-agent) listens for and processes config changes maintained in a KV data store. This same approach is incorporated into other configuration systems such as [confd](https://confd.io)
  
-Each vpp-agent is defined with a label known as the `microservice label`. Just as kubernetes uses labels attached to objects (e.g. pods) to group resources with certain common attributes (e.g. these pods with this label are part of this service), Ligato uses the [microservice label][microservce label] to group vpp-agents watching for KV store config changes with a common prefix, a "watch key" if you will.
+Each vpp-agent is defined with a label known as the `microservice label`. Just as Kubernetes uses labels attached to objects (e.g. pods) to group resources with certain common attributes (e.g. these pods with this label are part of this service), Ligato uses the [microservice label][microservice-label] to group vpp-agents watching for KV data store config changes with a common prefix, a "watch key" if you will.
 
-What are the mechanics of this? First we take `/vnf-agent/` and combine it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is in fact part of the key associated with a configuration value maintained inside a KV store.
+What are the mechanics of this? First we take `/vnf-agent/` and combine it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is in fact part of the key associated with a configuration value maintained inside a KV data store.
 
 Once again, here is the key for a [VPP interface][vpp-keys]:
 
 ```
 /vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
 ```
-Next, the vpp-agent watches for any config changes in the KV store with a matching watch key prefix. In the figure below, vpp-agent 1 on the left with a microservice label = `vpp1` will only watch for config changes with a matching prefix of `/vnf-agent/vpp1/`. vpp-agent 1 does not care about nor is it watching KV store config data with a prefix of `/vnf-agent/vpp2/`
+Next, the vpp-agent watches for any config changes in the KV data store with a matching watch key prefix. In the figure below, vpp-agent 1 on the left with a microservice label = `vpp1` will only watch for config changes with a matching prefix of `/vnf-agent/vpp1/`. vpp-agent 1 does not care about nor is it watching KV data store config data with a prefix of `/vnf-agent/vpp2/`
 
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
@@ -92,17 +92,17 @@ The vpp-agent validates the key prefix (in the format `/vnf-agent/<microservice-
 
 There is quite a bit of flexibility in this architecture.
 
-- individual KV store can support multiple vpp-agent "groups".
-- vpp-agent can receive config data from multiple sources (e.g. KV store, GRPC, etc.). A special [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources thus presenting a single source appearance to the vpp-agent configuration plugins.  
+- individual KV data store can support multiple vpp-agent "groups".
+- vpp-agent can receive config data from multiple sources (e.g. KV data store, GRPC, etc.). A special [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources thus presenting a single source appearance to the vpp-agent configuration plugins.  
 
-It should be noted that the vpp-agent does not require a KV store. Configuration data can be provided via GRPC, potentially REST, the [Clientv2][client-v2] API and CLI. That said, a KV store such as etcd offers the most convenient method for managing and distributing configuration data.
+It should be noted that the vpp-agent does not require a KV data store. Configuration data can be provided via GRPC, potentially REST, the [Clientv2][client-v2] API and CLI. That said, a KV data store such as etcd offers the most convenient method for managing and distributing configuration data.
 
-### What KV Store can I Use?
+### Which KV Data Store can I Use?
 
 !!! Note
-    Some of the items below are technically speaking, KV stores. Some are databases. The term `KVDB` (key-value database) will be used as a single term to mean one or the other unless specifically called out.
+    Some of the items below are technically speaking, KV data stores. Some are databases. To avoid acronym bloat, this section will continue to the `KV data store` to include the database options below as well as the actual key value datastores. 
 
-Technically any. The vpp-agent provides connectors to several types of KVDBs stores (see the list below). All are built on the common abstraction (called KVDB sync). It comes with significant advantages - the most important is that the change of which data store or database can be accomplished with a minimum of effort. 
+Technically any. The vpp-agent provides connectors to several types of KV data stores (see the list below). All are built on the common abstraction (called [kvdbsync][kvdbsync]). It comes with significant advantages - the most important is that the change of which data store or database can be accomplished with a minimum of effort. 
 
 
 
@@ -129,7 +129,7 @@ func New() *VPPAgent {
 }
 ```
 
-The code above prepares the KVDB sync plugin (KVDB abstraction) with the etcd plugin as a connector. The KVDB sync plugin can be provided as watcher to other plugins (or writer if passed as the `KVProtoWriters` object).
+The code above prepares the KVDB sync plugin (KVDB abstraction) with the etcd plugin as a connector. The KVDB sync plugin can be provided as a watcher to other plugins (or writer if passed as the `KVProtoWriters` object).
 
 Let's switch to Redis:
 ```go
@@ -154,13 +154,13 @@ func New() *VPPAgent {
  
 The orchestrator now connects to a Redis database.
 
-Another advantage is that to add support for a new KVDB, one need only write a plugin able to establish a connection to the desired KVDB and wire it up with the KVDB sync. Pretty straightforward. 
+Another advantage is that to add support for a new KV data store, one need only write a plugin able to establish a connection to this new data store and wire it up with KVDB sync. Pretty straightforward. 
 
-### ETCD
+### etcd
 
 More information: [ETCD documentation][etcd-plugin]
 
-etcd is a distributed KV store that provides data read-write capabilities. etcd can be started on local machine in its own container with following command: 
+etcd is a distributed KV data store that provides data read-write capabilities. etcd can be started on local machine in its own container with following command: 
 ```bash
 sudo docker run -p 2379:2379 --name etcd --rm \
     quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd \
@@ -172,14 +172,14 @@ The vpp-agent `must` start with the KVDB sync plugin using etcd as a connector.
  
 !!! Note
  
-    There is the example above and look over the code in [this example][datasync-example]). Information where etcd is running (IP address, port) must be provided upon etcd startup via the configuration file. 
+    There is the example above and look over the code in [this example][datasync-example]. Information where etcd is running (IP address, port) must be provided upon etcd startup via the configuration file. 
 
 The minimal content of the file may look as follows:
 ```
 endpoints:
   - "172.17.0.1:2379"
 ```
-The etcd config file is passed to the vpp-agent via the flag `--etcd-confg=<path>`. The file contains more fields where etcd-specific parameters can be set (e.g. dial timeout, certification, compaction, etc.). See [guide to config files][list-of-supported] for more details.
+The etcd config file is passed to the vpp-agent via the flag `--etcd-confg=<path>`. The file contains more fields where etcd-specific parameters can be set (e.g. dial timeout, certification, compaction, etc.). See the [guide to config files][list-of-supported] for more details.
 
 Note that if the config file is not provided, the connector plugin will not be started and no connection will be established. If the etcd server is not reachable, the vpp-agent may not start at all.
 
@@ -189,11 +189,11 @@ The recommended tool to manage the etcd data is [`etcdctl`][etcdctl].
 
 More information: [Redis documentation][redis-plugin]
 
-Redis is another type of in-memory data, that can function as a database, cache or message broker. 
+Redis is another type of in-memory data store, that can function as a database, cache or message broker. 
 
 Follow [this guide][redis-quickstart] to learn how to install `redis-server` on any machine.
 
-The vpp-agent must start with the KVDB sync plugin using Redis as a connector (see code above or code inside [this example][datasync-example]). Information where the Redis is running (IP address, port) must be also provided to the vpp-agent at startup via the configuration file. 
+The vpp-agent must start with the KVDB sync plugin using Redis as a connector (see code above or code inside [this example][datasync-example]). Information where the Redis is running (IP address, port) must be provided to the vpp-agent at startup via the configuration file. 
 
 The content of the .yaml configuration file:
 ```yaml
@@ -202,7 +202,7 @@ endpoint: localhost:6379
 
 The config file is provided to the vpp-agent via the flag `--redis-config=<path>`. See [guide to config files][list-of-supported] to learn more about Redis configuration.
 
-Note that if the Redis config file is not provided, the connector plugin will not be started and no connection will be established. If the Redis is not reachable at the provided address, the vpp-agent may not start at all.
+Note that if the Redis config file is not provided, the connector plugin will not be started and no connection will be established. If the Redis server is not reachable at the provided address, the vpp-agent may not start at all.
 
 The recommended tool to manage a Redis database is the [`redis-cli`][rediscli] tool.
 
@@ -213,23 +213,23 @@ The recommended tool to manage a Redis database is the [`redis-cli`][rediscli] t
 
 More information: [consul documentation][consul-plugin]
 
-Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a consul key-value data. Location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
+Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a Consul KV data store. Location of the Consul configuration file is defined by the flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
 
 ### Bolt
   
-[Bolt][bolt] is low-level, simple and fast key-value data. The Bolt plugin provides an API to the Bolt server.
+[Bolt][bolt] is low-level, simple and fast KV data store. The Bolt plugin provides an API to the Bolt server.
 
 ### FileDB
 
 More information: [fileDB documentation][filedb-plugin]
 
-fileDB is unique in that it uses the host OS filesystem as a database. The key-value configuration is stored in text files in a defined path. The fileDB connector works like any other KVDB connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
+fileDB is unique in that it uses the host OS filesystem as a database. The key-value configuration is stored in text files in a defined path. The fileDB connector works like any other KV data store connector, reacts on data change events (file edits) in real time and supports all KVDB features (resync, versioning, microservice labels, ...).
 
 The fileDB is not a process, so it does not need to be started - the vpp-agent only requires correct permission to access configuration files (and write access if the status is published).
 
-The configuration file format and can be `.json` or `.yaml`.
+The configuration file format can be `.json` or `.yaml`.
 
-fileDB requires config file to load, via flag `--filedb-config=<path>`. 
+fileDB requires the config file to load, via flag `--filedb-config=<path>`. 
 
 Example config file:
 
@@ -241,7 +241,7 @@ In this case, absence of the config file does not prevent the vpp-agent from sta
 
 The file with configuration can be edited with any text editor such as `vim`.
 
-### How to Use a KVDB in a Plugin
+### How to Use a KV Data Store in a Plugin
 
 In the plugin which intends to use a KVDB connection for publishing or watching, fields of this type are used:
 
@@ -315,11 +315,11 @@ It is a good practice to start the event watcher before the watcher registration
 
 **Publisher**
 
-Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allows the key-value pair to be saved in the data. No `Delete()` method is defined. Objects can be removed by sending `null` data with the associated key. 
+Nothing special is required for the publisher. The `KeyProtoValWriter` object defines method `Put(<key>, <value>, <variadic-options>)` which allow the key-value pair to be saved in the data store. No `Delete()` method is defined. Objects can be removed by sending `null` data with the associated key. 
 
 ## VPP Configuration Order
 
-One of the VPP biggest drawbacks is that the dependency relations of various configuration items is quite strict. The ability of VPP to manage is limited, or not present at all. There are two problems to address:
+A drawback of VPP biggest is that the dependency relations of various configuration items is quite strict. The ability of VPP to manage this is limited, or not present at all. There are two problems to address:
 
 1. A configuration item dependent on any other configuration item cannot be created "in advance". The dependency must be addressed first.
 2. If the dependency item is removed, VPP behavior is not consistent. In other cases, the dependency item is removed as expected but itself becomes unmanageable. 
@@ -382,7 +382,7 @@ vpp# create bridge-domain 1 del
 vpp#
 ```
 
-Here we get into trouble, since the output of the `show l2fib verbose` is still the same:
+Here is where we get into trouble, since the output of the `show l2fib verbose` is still the same:
 ```bash
 vpp# sh l2fib verbose
     Mac-Address     BD-Idx If-Idx BSN-ISN Age(min) static filter bvi         Interface-Name        
@@ -390,7 +390,7 @@ vpp# sh l2fib verbose
 L2FIB total/learned entries: 2/0  Last scan time: 6.6309e-4sec  Learn limit: 4194304 
 vpp#
 ``` 
-But attempt to remove the FIB entry is invalid:
+But an attempt to remove the FIB entry is invalid:
 ```bash
 vpp# l2fib del 52:54:00:53:18:57 1 
 l2fib del: bridge domain ID 1 invalid
@@ -457,7 +457,7 @@ The output:
 
 There are three `planned operations` present. The first one is the interface itself, which was created (and also enabled). 
 
-The second operation is marked as `DERIVED` (the same meaning, not not important here) and `WAS-PENDING` which means the cached value could be resolved. This operation means that the interface was added to the bridge domain, as defined in the bridge domain configuration.
+The second operation is marked as `DERIVED` (the same meaning, not important here) and `WAS-PENDING` meaning the cached value could be resolved. This operation means that the interface was added to the bridge domain, as defined in the bridge domain configuration.
 
 The last statement is marked `WAS-PENDING` as well and represents our FIB entry, cached until now. Since all dependencies were fulfilled (the bridge domain and the interface as a part of it), the FIB was configured.
 
@@ -479,19 +479,21 @@ The output:
   - value: { name:"bd1" interfaces:<name:"if1" > } 
 ```
 
-Notice that the first operation was removal of the FIB entry. The value was not discarded by the vpp-agent because it still exists in the etcd data. The vpp-agent places the value back into cache. This is an important step since the FIB entry is removed before the bridge domain. Thus it will not be accidentally  mis-configured and stranded in VPP. The value no longer exists in VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any external intervention. 
+Notice that the first operation was removal of the FIB entry. The value was not discarded by the vpp-agent because it still exists in the etcd data store. The vpp-agent places the value back into cache. This is an important step since the FIB entry is removed before the bridge domain. Thus it will not be accidentally mis-configured and stranded in VPP. The value no longer exists in VPP (since logically it cannot without all the dependencies met), but if the bridge domain reappears, the FIB will be added back without any external intervention. 
 
 The second step means that the interface `if1` was removed from the bridge domain, before its final removal in the last step of the transaction.
 
-The ordering and caching of the configuration is performed by the vpp-agent KVScheduler component. For more information on how it works, please refer to the discussion of the [KV Scheduler][kvs].
+The ordering and caching of the configuration described in this section is performed by the KVScheduler plugin component. For more information on how it works, please refer to the discussion of the [KV Scheduler][kvs].
 
 ## VPP Multi-Version Support
 
 The vpp-agent is highly dependent on the version of the VPP binary API used to send and receive various types of configuration messages. The VPP API is evolving changing over time, adding new binary calls or, modifying or removing existing ones. The latter is the most crucial from the vpp-agent perspective since it introduces incompatibilities between vpp-agent and the VPP.
 
-For that reason the vpp-agent performs a compatibility check in the GoVPP multiplex plugin (the GoVPP component provides an API for communication with VPP). The compatibility check attempts to read the ID of the provided message. If just one message ID is not found (validation in the cyclic redundancy code), VPP is considered incompatible and the vpp-agent and will not connect. The message validation is essential for successful connection. Now it is clear that the vpp-agent is tightly bound to the version of the VPP. For that reason, the vpp-agent image is shipped together with a compatible VPP dataplane version to make it easier and safer for users.
+For that reason the vpp-agent performs a compatibility check in the GoVPP multiplex plugin (the GoVPP component provides an API for communication with VPP). The compatibility check attempts to read the ID of the provided message. If just one message ID is not found (validation in the cyclic redundancy code), VPP is considered incompatible and the vpp-agent and will not connect. The message validation is essential for successful connection. 
 
-This function may cause some inconveniences during manual setup, and especially in scenarios where the vpp-agent needs to be quickly switched to different VPP which might not be compatible.
+The vpp-agent is tightly bound to the version of the VPP. For that reason, the vpp-agent image is shipped together with a compatible VPP dataplane version to make it easier and safer for users.
+
+This function may cause some inconveniences during manual setup, and especially in scenarios where the vpp-agent needs to be quickly switched to a different VPP which may not be compatible.
 
 ### VPP Compatibility
 
@@ -541,9 +543,9 @@ If the JSON API was changed, it must be re-generated in the vpp-agent in order t
 
 ### Multi-Version
 
-In order to minimize updates for various VPP versions, the vpp-agent introduced multi-version support.The vpp-agent can switch to a different VPP version (with different API) without any changes to the vpp-agent itself and, without any need to rebuild the vpp-agent binary. Plugins can now obtain the version of the VPP and the vpp-agent to connect and initialize the correct set of `vppcalls` - base methods preparing API requests for the VPP. 
+In order to minimize updates for various VPP versions, the vpp-agent introduced multi-version support.The vpp-agent can switch to a different VPP version (with different APIs) without any changes to the vpp-agent itself and, without any need to rebuild the vpp-agent binary. Plugins can now obtain the version of the VPP and the vpp-agent to connect and initialize the correct set of `vppcalls` - base methods preparing API requests for the VPP. 
 
-Every `vppcalls` handler registers itself with the VPP version it is intended to support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent performs compatibility check with all available handlers, until it finds those compatible with required messages. The chosen handler must be in line with all messages, as it is not possible (and reasonable) to use multiple handlers for single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin for use. 
+Every `vppcalls` handler registers itself with the VPP version it is intended to support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent performs a compatibility check with all available handlers, until it finds those compatible with required messages. The chosen handler must be in line with all messages, as it is not possible (and reasonable) to use multiple handlers for single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin for use. 
 
 One small drawback of this solution is code duplication across `vppcalls`, since there is in the majority of cases insignificant API changes between versions. 
 
@@ -605,6 +607,7 @@ List of supported configuration files can be found [here][config-files]
 [datasync-example]: https://github.com/ligato/cn-infra/tree/master/examples/datasync-plugin
 [etcd-plugin]: ../plugins/db-plugins.md#etcd-plugin
 [filedb-plugin]: ../plugins/db-plugins.md#filedb
+[kvdbsync]: https://github.com/ligato/cn-infra/tree/master/datasync/kvdbsync
 [list-of-supported]: config-files.md
 [redis-plugin]: ../plugins/db-plugins.md#redis
 [redis-quickstart]: https://redis.io/topics/quickstart
@@ -612,7 +615,7 @@ List of supported configuration files can be found [here][config-files]
 [quickstart-guide]: ../user-guide/quickstart.md
 [vpp-keys]: ../user-guide/reference.md#vpp-keys
 [quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent
-[microservice label]: ../user-guide/config-files.md#service-label
+[microservice-label]: ../user-guide/config-files.md#service-label
 [orchestrator plugin]: ../plugins/plugin-overview.md#orchestrator
 [etcdctl]: https://github.com/etcd-io/etcd/tree/master/etcdctl
 [rediscli]: https://redis.io/topics/rediscli

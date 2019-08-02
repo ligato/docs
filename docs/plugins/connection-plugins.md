@@ -353,7 +353,7 @@ Related articles:
 * [GRPC client tutorial][grpc-client-tutorial] shows how to create a client for the off-the-shelf vpp-agent's GRPC Server
 * [GRPC server tutorial][grpc-server-tutorial] shows how to create your own GRPC Server using the [CN-Infra GRPC Plugin][grpc-plugin].
 
-GRPC support in the VPP-Agent is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
+GRPC support in the vpp-agent is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
 
 The vpp-agent GRPC plugin can be used to:
 
@@ -374,14 +374,14 @@ Clients can reach the GRPC Server via an endpoint IP:Port address or via a unix 
 
 ### GRPC Plugin
 
-The `GRPC Plugin` is a infrastructure plugin that enables app plugins to handle GRPC requests (see the diagram below) as follows:
+The `GRPC Plugin` is an infrastructure plugin that enables app plugins to handle GRPC requests (see the `GRPC Plugin API` figure below) as follows:
 
 1. The GRPC Plugin starts the GRPC server + net listener in its own goroutine
 2. Plugins register their handlers with the `GRPC Plugin`. To service GRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. `GRPC Plugin` uses an GRPC request multiplexer from `grpc/Server`.
 3. The GRPC Server routes GRPC requests to their respective registered handlers using the `grpc/Server`.
 
 ![grpc][grpc-image]
-
+<p style="text-align: center; font-weight: bold">GRPC Plugin API</p>
 <br/>
 
 **Configuration**
