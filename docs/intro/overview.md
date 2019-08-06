@@ -59,7 +59,7 @@ The vpp-agent is based on the Ligato framework plugin architecture. In general, 
   
 ### What It Cannot Do?
 
-The vp-agent is a control/management plane. It provides a configuration and monitoring services for the VPP dataplane. It does not decide what to do with packets arriving on any of the VPP interfaces and does not change any of the configuration parameters (routes, FIBs) based on the actual VPP state.
+The vpp-agent is a control/management plane. It provides a configuration and monitoring services for the VPP dataplane. It does not decide what to do with packets arriving on any of the VPP interfaces and does not change any of the configuration parameters (routes, FIBs) based on the actual VPP state.
 
 ### What's Next?
 
