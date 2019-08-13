@@ -6,9 +6,9 @@ Under the term **Agent** is meant a set of plugins, which are started and initia
 
 ### Quick Start Guide
 
-1. Define your plugin. Every plugin must implement the `infra.Plugin` interface. 
+- Define your plugin. Every plugin must implement the `infra.Plugin` interface. 
 
-2. Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`, which is a configuration stanza used to tell the Agent about your plugin. Pass the plugin defined in Step 1 as a parameter into `agent.Plugins(<plugin>...)`. If you need to define multiple plugins, you can pass them into the function all at once, since its parameter is variadic. If there are relationships/dependencies between your plugins and/or if one or more of your plugins depends on other plugins which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
+- Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`. This is a configuration stanza that tells the vpp-agent about your plugin. Pass the plugin defined in preceding step as a parameter into `agent.Plugins(<plugin>...)`. This is a variadic function which means you can pass multiple parameters into it if you need to define multiple plugins. If there are relationships/dependencies between your plugins and/or if one or more of your plugins depends on other plugins which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
 
 3. Use the `agent.NewAgent(opts ...Option)` function to create a new agent instance.
 
