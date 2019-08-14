@@ -12,7 +12,7 @@ The VPP cli has several CLI commands to verify configuration:
 - various information about the state: `show hardware`
 - show VxLan tunnel details: `show vxlan tunnel`
 - show IPSec tunnel details: `show ipsec`
-- bond
+- show bond interface config: `show bond` or `show bond details`
 
 **The VPP CLI bridge domain commands:** 
 
