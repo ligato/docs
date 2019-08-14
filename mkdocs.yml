@@ -36,7 +36,7 @@ nav:
     - Hello World: tutorials/01_hello-world.md
     - Plugin Dependencies: tutorials/02_plugin-deps.md
     - REST Handler: tutorials/03_rest-handler.md
-    - KV Datastore: tutorials/04_kv-store.md
+    - KV Data Store: tutorials/04_kv-store.md
     - KV Scheduler: tutorials/05_kv-scheduler.md
     - Plugin Lookup: tutorials/06_plugin-lookup.md
     - VPP Connection: tutorials/07_vpp-connection.md

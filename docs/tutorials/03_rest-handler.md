@@ -11,10 +11,10 @@ by the [REST plugin](https://github.com/ligato/cn-infra/tree/master/rpc/rest).
 
 Requirements:
 
-* Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
-* Complete and understand the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
+* Complete the ['Hello World Agent'](01_hello-world.md) tutorial
+* Complete the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
 
-Each plugin that wants to provide a REST api will register its own custom
+Each plugin requiring a REST APPI will register its own custom
 handler with the REST plugin using the registration API:
 
 ```go
@@ -26,7 +26,7 @@ type HTTPHandlers interface {
 }
 ```
 
-To use the REST plugin we first define it as a dependency in our plugin:
+To use the REST plugin, we first define it as a dependency in our plugin:
 
 ```go
 type MyPlugin struct {
@@ -34,11 +34,11 @@ type MyPlugin struct {
 	REST rest.HTTPHandlers
 }
 ```
-Note that the dependency is defined as an `interface`, therefore it can be
+Note that the dependency is defined as an `interface`. This means it can be
 satisfied by any object that implements the interface methods. The `rest.HTTPHandlers`
 interface is defined in [`cn-infra/rpc/rest/plugin_api_rest.go`](https://github.com/ligato/cn-infra/blob/master/rpc/rest/plugin_impl_rest.go).
 
-Then, we can "wire" the dependency (i.e. set the instance) in the plugin's 
+Next, we can "wire" the dependency (i.e. set the instance) in the plugin's 
 constructor. Note that we use the default REST plugin provided by the Ligato
 infrastructure (`rest.DefaultPlugin`). Most Ligato infrastructure plugins
 have a default plugin instance defined as a global variable that can be used.

@@ -1,10 +1,10 @@
 # Robot Framework Guide
 
-This page contains a how-to guide for writing custom integration tests using the VPP Agent's libraries for the Robot framework.
+This page contains a how-to guide for writing custom integration tests using the vpp-agent's libraries for the Robot framework.
 
 ---
 
-## Robot Test setup
+## Robot Test Setup
 
 The following text describes how to write robot test suites (locally or in any other environment).
 
@@ -18,15 +18,17 @@ Example:
 ```
 Resource setup in the next step is based on where you have created the file. 
 
-### Setup test
+### Setup Test
 
 When you have the file, you need to define (libraries, resources, tags, variables).
-- Base libraries used are "[OperatingSystem](http://robotframework.org/robotframework/latest/libraries/OperatingSystem.html)" and "[Collections](http://robotframework.org/robotframework/latest/libraries/Collections.html)".
-  OperatingSystem - is for use with the files- create, delete, copy, check if exist file, ... . This is mostly used for configuration, make logs and other.
+
+- Base libraries used are "[OperatingSystem](http://robotframework.org/robotframework/latest/libraries/OperatingSystem.html)" and "[Collections](http://robotframework.org/robotframework/latest/libraries/Collections.html)". OperatingSystem - is for use with the files- create, delete, copy, check if exist file, ... . This is mostly used for configuration, make logs and other.
   Collections - Append To List, Combine Lists, Convert To Dictionary, Convert To List, Copy Dictionary, Copy List, Count Values In List, Dictionaries Should Be Equal, Should Contain Match, Should Not Contain Match, ... .
+<br/>
  - Resources are defined in [our libraries](https://github.com/ligato/vpp-agent/tree/master/tests/robot/libraries). 
  - Tags are used to skip tests or mark them as non-critical. ["Robot Tags"](http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#tagging-test-cases)
- - Example:
+
+Example:
 ```robot
 Library      OperatingSystem
 Library      Collections
@@ -50,7 +52,7 @@ If you need to add another library, then you add lib into -All libraries:
 ../vpp-agent/tests/robot/libraries/all_libs.robot
 ```
 
-### Configuring the test environment
+### Configuring the Test Environment
 
  - Base configuration:
 ```robot
@@ -60,7 +62,7 @@ Configure Environment
 ```
 Setup nodes(docker) for the test. 
 
- - Configuration keyword is based on add VPP nodes and run them:
+ - Configuration keyword is based on add and run VPP nodes:
 ```robot
 Configure Environment 1
     Add Agent VPP Node    agent_vpp_1
@@ -71,11 +73,10 @@ Configure Environment 1
     Execute On Machine    docker    ${DOCKER_COMMAND} images
     Execute On Machine    docker    ${DOCKER_COMMAND} ps -as
 ```
- - Mostly used configurations:
+ - Common Configurations:
 ```
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/configurations.robot
 ```
-Sometimes, you can use next keyword for other needed configuration. Its means interfaces, fill files, routes, ... .
 
  - Specific configuration example:	
 ```robot
@@ -86,9 +87,9 @@ Configure Environment
     Configure Environment 2        acl_basic.conf
 ```
 
-### Test Setup, Teardown
+### Test Setup and Teardown
 
- - Mostly used in the test is "make snapshots ETCD". This part is needed for better test debugging. Add them to the end of the test, in part- Keywords.
+ - Commonly used test is "make snapshots etcd". This is required for optimal test debugging. 
 
 ```robot
 *** Keywords ***
@@ -101,29 +102,30 @@ TestTeardown
 
 ### Test body
 
-Test cases use keywords from our libraries.
-After configuration, setup and teardown you can start with testing.
-Before starting the test, it is a good practice to check whether there is no existing configuration from previous runs.
+Test cases use keywords from our libraries. After configuration, setup and teardown, you can start with testing.
+Before starting the test, it is good practice to check whether there is any configuration remaining from previous runs.
 ```robot
 Show Something Before Setup
     ${interfaces}=    vpp_term: Show Interfaces    agent_vpp_1
 ```
-This shows only the configuration. You can use keywords comparing output, or check if the output is empty(used in next step- Interface Not Exists).
-The next step is to configure something (in example interface):
+This shows only the configuration. You can use keywords comparing output, or check if the output is empty.
+The next step is to configure something (an example interface):
 ```robot
 Add Something
     vpp_term: Interface Not Exists  node=agent_vpp_1    mac=${MAC_TAP1}
     Put TAP Interface With IP    node=agent_vpp_1    name=${NAME_TAP1}    mac=${MAC_TAP1}    ip=${IP_TAP1}    prefix=${PREFIX}    host_if_name=linux_${NAME_TAP1}
 ```
 
-Every configuration must be checked (sometimes a timeout is needed, in that case, use the Wait Until keyword):
+Every configuration must be checked. In some cases, a timeout is needed for that case, use the `Wait Until` keyword):
 ```robot
 Check Something Is Created
     ${interfaces}=       vat_term: Interfaces Dump    node=agent_vpp_1
     Wait Until Keyword Succeeds   ${WAIT_TIMEOUT}   ${SYNC_SLEEP}    vpp_term: Interface Is Created    node=agent_vpp_1    mac=${MAC_TAP1}
     ${actual_state}=    vpp_term: Check TAP interface State    agent_vpp_1    ${NAME_TAP1}    mac=${MAC_TAP1}    ipv4=${IP_TAP1}/${PREFIX}    state=${UP_STATE}
 ```
-Always is good add other configuration from same thing and check if is created(delete "No Operation" and use same configuration from "Add Something" and "Check Something Is Created". You need only change interface name, mac, ip):
+
+It is alway useful to add a similar configuration and verify if it has been deleted. 
+You can delete "No Operation" and use the same configuration from "Add Something" and "Check Something Is Created". You need only change the interface name, mac, ip and so on:
 ```robot
 Add Something_Other
     No Operation
@@ -132,12 +134,12 @@ Check Something_Other Is Created
     No Operation
 ```
 
-After this, you need to check if the first thing (interface) is still configured and without failure:
+After this, you need to check if the first item (i.e. interface) is still configured and error free:
 ```robot
 Check Something Is Still Configured
     ${actual_state}=    vpp_term: Check TAP interface State    agent_vpp_1    ${NAME_TAP1}    mac=${MAC_TAP1}    ipv4=${IP_TAP1}/${PREFIX}    state=${UP_STATE}
 ```
-In the CRUD, test should try to update configured data and check whether they are correct:
+In the CRUD, the test should attempt to update and validate the configured data: 
 ```robot
 Update Something
     Put TAP Interface With IP    node=agent_vpp_1    name=${NAME_TAP1}    mac=${MAC_TAP1_2}    ip=${IP_TAP1_2}    prefix=${PREFIX}    host_if_name=linux_${NAME_TAP1}
@@ -152,7 +154,7 @@ Also need:
 Check Something_Other Has Not Changed
     No Operation
 ```
-Try delete the configuration and check it:
+Try to delete and then check the configuration:
 ```robot
 Delete Something
     Delete VPP Interface    agent_vpp_1    ${NAME_TAP1}
@@ -160,13 +162,13 @@ Delete Something
 Check Something Has Been Deleted
     Wait Until Keyword Succeeds   ${WAIT_TIMEOUT}   ${SYNC_SLEEP}    vpp_term: Interface Not Exists  node=agent_vpp_1    mac=${MAC_TAP1_2}
 ```
-After delete, check other configuration for changes (there should not be any):
+After delete, check another configuration for changes (there should not be any):
 ```robot
 Check Something_Other Is Still Configured
     No Operation
 ```
 
-Last part can be in your own manage. This example could you help with debugging:
+The last part can use your own image. An example: 
 ```robot
 Show Interfaces And Other Objects After Setup
     vpp_term: Show Interfaces    agent_vpp_1
@@ -180,9 +182,9 @@ Show Interfaces And Other Objects After Setup
     Execute In Container    agent_vpp_1    ip a
 ```
 
-## Reference guide
+## Reference Guide
 
-In this part are examples of keywords, short descriptions and libraries witch you can use for tests.
+In this section are examples of keywords, short descriptions and libraries which can be useful for tests.
 
 ### Docker container keywords
  - Add Agent Node, Add Agent VPP Node, Execute In Container, Write Command to Container, ...,
@@ -191,19 +193,19 @@ In this part are examples of keywords, short descriptions and libraries witch yo
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/docker.robot
 ```
 ### Read/Write ETCD
- - Get, Put, keywords for read, write into ETCD:
+ - Get, Put, keywords for read, write into etcd:
 ```
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/etcdctl.robot
 ```
-### Linux interfaces and Linux commands 
- - If you will use Linux interfaces and commands inside Linux for tests you need this library:
+### Linux Interfaces and Commands 
+ - If you will be using Linux interfaces and commands inside Linux for testing purposes you need this library:
 ```
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/linux.robot
 ```
-Inside are keywords for create, delete or read interfaces and interface status. Also, are there the keywords for ping in tests(traffic tests).
+Inside are keywords for create, delete or read interfaces and interface status. Also, there the keywords for ping tests(traffic tests).
 
 ### Create, Delete, Update
- - Most keywords for create, delete, update, show interfaces and routes in VPP-Agent are here:
+ - Most keywords for create, delete, update, show interfaces and routes in vpp-gent are here:
 ```
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/pretty_keywords.robot
 ```
@@ -218,17 +220,17 @@ https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/setup-tear
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/ssh.robot
 ```
 ### Read/Write VAT terminal
- - VAT terminal keywords are used for check status interfaces, bridge domains, ... in docker. You read ("Write To Machine") from docker.
+ - VAT terminal keywords are used to check status for interfaces, bridge domains, ... in docker. You read ("Write To Machine") from docker.
 ```
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/vat_term.robot
 ```
 ### Start/Stop VPP
- - Start, stop keywords for VPP(in docker) and write into VPP:
+ - Start, stop keywords for VPP (in docker) and write into VPP:
 ```
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/vpp.robot
 ```
 ### Read/Write VPP terminal
- - Direct keywords to show (interfaces, acl, BD, route, DNAT,...), ping and other commands in VPP(not docker, inside VPP):
+ - Direct keywords to show (interfaces, acl, BD, route, DNAT,...), ping and other commands in VPP (not docker, inside VPP):
 ```
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/vpp_term.robot
 ```
@@ -237,21 +239,20 @@ https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/vpp_term.r
 https://github.com/ligato/vpp-agent/blob/master/tests/robot/libraries/vxlan.robot
 ```
 ### Wait until Keyword
- - is used when some time is needed to provide to the test:
+ - used when some amount of time is needed for the test:
 ```robot
 Wait Until Keyword Succeeds   ${WAIT_TIMEOUT}   ${SYNC_SLEEP}    ...
 ```
 
-## Test examples
+## Test Examples
 
-Tests example directory- vpp-agent/tests/robot/examples/.
+Tests example directory is `vpp-agent/tests/robot/examples/`.
 
- - CRUD test example: 
-  - on github:
+ - CRUD test example on github:
 ```
 https://github.com/ligato/vpp-agent/blob/dev/tests/robot/examples/example_crud_test.robot
 ```
-  - full example:
+  - complete example:
 ```robot
 *** Settings ***
 Library      OperatingSystem

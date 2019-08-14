@@ -1,23 +1,22 @@
-# KV Datastore
+# KV Data Store
 
 ---
 
 Link to code: [Working with KV Data Stores][code-link]
 
 In this tutorial we will learn how to use an external key-value (KV) data store.
-The tutorial shows how to read and write data to/from the data store and how to 
+The tutorial shows you how to read and write data to/from the data store and how to 
 watch for changes. 
 
 Requirements:
 
-* Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
-* Complete and understand the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
+* Complete the ['Hello World Agent'](01_hello-world.md) tutorial
+* Complete the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
 
-We will be using [ETCD][1] as the KV data store, but the Ligato infrastructure 
-support several other key-value data stores: [Consul][2], [BoltDB][3], [FileDB][4], 
+We will be using [etcd][1] as the KV data store. Note that is not the only choice as the Ligato infrastructure supports several other key-value data stores: [Consul][2], [BoltDB][3], [FileDB][4], 
 [Redis][5].
 
-The common interface for all key-value store implementations is `KvProtoPlugin`, 
+The common interface for all KV data store implementations is `KvProtoPlugin`, 
 defined in [`cn-infra/db/keyval/plugin_api_keyval.go`][7]:
 
 ```go
@@ -30,11 +29,12 @@ type KvProtoPlugin interface {
 }
 ```
 
-To use the ETCD as our KV data store plugin we simply define a field for the 
-`KvProtoPlugin` interface in our plugin and initialize it with an ETCD plugin 
-instance in our plugin's constructor. Note that we use the default ETCD plugin
-(`etcd.DefaultPlugin`). In other words, we basically create a dependency on
-the KV data store in our plugin and satisfy it with the default ETCD KV data
+To use etcd as our KV data store plugin, we simply define a field for the 
+`KvProtoPlugin` interface in our plugin and initialize it with an etcd plugin 
+instance in our plugin's constructor. Note that we use the default etcd plugin
+(`etcd.DefaultPlugin`). 
+
+Essentially we create a dependency on the KV data store in our plugin and satisfy it with the default etcd KV data
 store implementation:
 
 ```go
@@ -50,10 +50,7 @@ func NewMyPlugin() *MyPlugin {
 }
 ```
 
-Once we have the appropriate KV data store plugin, we can create a broker which
-will be the facade (mediator) through which we will communicate with the data 
-store. The broker hides the complexity of interacting with the different data 
-stores and gives us a simple read/write API. 
+Once we have the appropriate KV data store plugin set up, we can create a broker. The broker is a facade (mediator) through which we will communicate with the data store. The broker conceals the complexity of interacting with the different data stores and provides a simple read/write API. 
 
 The broker must be initialized with a key prefix that becomes the root for the
 kv tree that the broker will operate on. The broker uses the key prefix for all
@@ -64,16 +61,15 @@ broker := p.KVStore.NewBroker("/myplugin/")
 ```
 
 !!! note
-    The Etcd plugin must be configured with the address of the ETCD server. This is typically done through the etcd config file. In most cases, the etcd config file must be in the same folder where the agent executable is started. 
+    The etcd plugin must be configured with the address of the etcd server. This is typically done through the etcd confige file. In most cases, the etcd config file must be in the same folder where the agent executable is started. 
 
-If the etcd config file is not found, the ETCD plugin will be disabled, and you will see 
-and error log like this:
+If the etcd config file is not found, the etcd plugin will be disabled, and you will see an error that looks something like this:
 ```
 level=error msg="KV store is disabled" loc="04_kv-store/main.go(41)" logger=defaultLogger
 ```
 
-The broker accepts `proto.Message` parameters in its methods, therefore we need to
-define a Protobuf model for data that we want to put in and read from the data store.
+The broker accepts `proto.Message` parameters in its methods. Therefore we need to define a protobuf model for data that we want to put in and read from the data store respectively.
+
 For this tutorial we define a very simple model - `Greetings`. You can find it in
 the [`model.proto`][6] file.
 
@@ -83,23 +79,23 @@ message Greetings {
 }
 ```
 !!! note
-    It is a good practice to put all Protobuf definitions for a plugin in a `model` directory.
+    It is a good practice to put all protobuf definitions for a plugin in a `model` directory.
 
 Next, we need to generate Go code from our model. We will use the generated Go 
 structures as parameters in calls to the broker. The code generation is controlled
-from the `go:generate` directive; since we only have one go file in this tutorial,
-we put the directive there:
+from the `go:generate` directive. Since we only have one go file in this tutorial,
+we put the directive `model` directory like so:
 
 ```go
 //go:generate protoc --proto_path=model --gogo_out=model ./model/model.proto
 ```
-Note that the above directive assumes that we use the gogo protbuf generator,
-the source protobuf files can be found in the model directory and the
+The above directive assumes that we use the gogo protobuf generator.
+The source protobuf files can be found in the model directory and the
 generated files will also be put into the model directory. Note also that to
 use the gogo protobuf generator, you must install it on your machine as 
-described, for example, [here](https://github.com/gogo/protobuf).
+described [here](https://github.com/gogo/protobuf).
 
-We use the go compiler to generate Go files from the model. In the tutorial Type:
+We use the go compiler to generate Go files from the model with this command:
 ```
 go generate
 ``` 
@@ -122,7 +118,7 @@ if err != nil {
 
 The value above will be updated for key `/myplugin/greetings/hello`.
 
-To retrieve a value from a KV store we will use broker's `GetValue` method:
+To retrieve a value from the KV data store we will use broker's `GetValue` method:
 
 ```go
 value := new(model.Greetings)
@@ -134,7 +130,7 @@ if err != nil {
 }
 ```
 
-To watch for changes in the KV store we need to initialize a watcher:
+To watch for changes in the KV data store we need to initialize a watcher:
 
 ```go
 watcher := p.KVStore.NewWatcher("/myplugin/")

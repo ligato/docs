@@ -10,7 +10,7 @@ Every change in the repository will be reflected on the main page after a while 
 
 ## Running Locally
 
-It can be a good thing to check changes locally before pushing to the main repository to ensure that everything looks like required. It may prevent broken links or any other formatting issues which may become live. To do so, you need to install `mkdocs` locally.
+It is recommended to verify changes locally before pushing to the main repository to ensure that everything looks okay. It may prevent broken links or any other formatting issues which may become live. To do so, you need to install `mkdocs` locally.
 
 ### 1. Install MkDocs
 

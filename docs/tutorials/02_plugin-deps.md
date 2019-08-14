@@ -5,28 +5,29 @@
 Link to code: [Adding dependencies to your plugin][code-link]
 
 Your control plane agent will typically consist of one or more plugins that
-contain the application logic and a bunch of Ligato plugins and other components
-that will provide services to your application plugins, such as KV- Data Store
-adapters, message bus adapters, loggers or health monitors. This tutorial shows
-how to add dependencies to your plugins.
+contain the application logic.  In addition there could be a suite of Ligato plugins and components providing various services to your application plugins. Examples include a KV data store, message bus adapters, loggers and health monitors 
+
+This tutorial shows how to add dependencies to your plugins.
 
 Requirements:
 
-* Complete and understand the ['Hello World Agent'](01_hello-world.md) tutorial
+* Complete the ['Hello World Agent'](01_hello-world.md) tutorial
 
 The Ligato infrastructure uses the **dependency injection** design pattern to
 manage dependencies. In other words, dependencies on other plugins are injected
-into your plugin when it's initialized. You should use dependency injection to 
-manage all dependencies in your plugin - you need it to be able to create mocks
-in your unit tests, especially for components that interact with the external
-world, such as the KV data store adapters or message bus adpters. Without good
-mocks, i.e. without dependency injection it is almost impossible to achieve 
-production-level unit test coverage.
+into your plugin when it is initialized. You should use dependency injection to 
+manage all dependencies in your plugin. 
+
+!!! Note
+    You need dependency injection to be able to create mocks in your unit tests. This is especially true for components that interact with the external world, such as KV data store or message bus adapters. Without good mocks (i.e. without dependency injection), it is almost impossible to achieve production-level unit test coverage.
 
 One of the most commonly used dependencies in your plugins will likely be 
 `PluginDeps` defined in the `github.com/ligato/cn-infra/infra` package. It is
-a struct that aggregates three plugin essentials: plugin name, logging and plugin
-configuration. 
+a struct that aggregates three plugin essentials: 
+
+- plugin name
+- logging 
+- plugin configuration. 
 
 It is defined as:
 ```go
@@ -46,18 +47,16 @@ type HelloWorld struct {
 ```
 
 `PluginName`, which is embedded in the `PluginDeps` struct, provides the `String()`
-method for getting the name of the plugin. The plugin name is set using the 
+method for obtaining the name of the plugin. The plugin name is set using the 
 `SetName(name string)` method defined for `PluginName`:
 
 ```go
 p.SetName("helloworld")
 ```
 
-The two other components in `PluginDeps` are `Log` and `Cfg`. `Log` is the plugin's 
-logger, used to log message at different log levels. `Cfg` is used to load configuration
-from a configuration file in YAML format. `PluginDeps` has the `Setup()` method, which
-initializes `Log` and `Cfg` with the name from `PluginName`. It is typically called in
-the plugin's constructor:
+The two other components in `PluginDeps` are `Log` and `Cfg`. `Log` is the plugin's logger used to log message at different log levels. `Cfg` is used to load configuration data from a configuration file in YAML format. 
+
+`PluginDeps` has the `Setup()` method, which initializes `Log` and `Cfg` with the name from `PluginName`. It is typically called in the plugin's constructor:
 
 ```go
 func NewHelloWorld() *HelloWorld {
@@ -68,7 +67,9 @@ func NewHelloWorld() *HelloWorld {
 }
 ```
 
-After initializing `Log` and `Cfg`, they can be used. Let's log a few messages:
+After initializing `Log` and `Cfg`, they are ready for action. 
+
+Let's log a few messages:
 
 ```go
 func (p *HelloWorld) Init() error {
@@ -80,9 +81,7 @@ func (p *HelloWorld) Init() error {
 
 For more details on the Log API see [infra/logging/log_api.go](https://github.com/ligato/cn-infra/blob/master/logging/log_api.go).
 
-Now, let's load configuration from a file. By default, the name of the config file
-will be derived from the plugin name with extension `.conf`. In our case, the 
-configuration file name will be `helloworld.conf`.
+Now, let's load configuration from a file. By default, the name of the config file will be derived from the plugin name with extension `.conf`. In our example, the configuration file name will be `helloworld.conf`.
 
 ```go
 type Config struct {
@@ -96,8 +95,7 @@ func (p *HelloWorld) Init() error {
 }
 ```
 
-If the config file is not found, the `LoadValue` will return false. If the configuration 
-cannot be parsed, the function will return an error.
+If the config file is not found, the `LoadValue` will return false. If the configuration cannot be parsed, the function will return an error.
 
 The complete working example can be found at [examples/tutorials/02_plugin-deps](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/02_plugin-deps).
 

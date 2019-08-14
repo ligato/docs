@@ -2,10 +2,13 @@
 
 ---
 
-Link to code: [getting started: the 'Hello World' agent][code-link]
+Link to code: [Getting Started: the 'Hello World' agent][code-link]
 
 In this tutorial we will create a simple Ligato control plane agent that 
 contains a single `Helloworld` plugin that prints "Hello World" to the log.
+
+!!! Note
+    In the tutorial section, the term `agent` is used to describe a Ligato software component providing life-cycle management functions for plugins.
 
 We start with the plugin. Every plugin must implement the `Plugin` interface
 defined in the `github.com/ligato/cn-infra/infra` package:
@@ -45,7 +48,7 @@ have any data, so we just need an empty structure that satisfies the
 `Plugin` interface.
 
 Some plugins may require additional initialization that can only be
-performed after the base system is up (for example, ...). If your plugin
+performed after the base system is up. If your plugin
 needs this, you can optionally define the `AfterInit` method for your
 plugin. It will be executed after the `Init` method has been called for
 all plugins. The `AfterInit` method comes from the `PostInit` interface
