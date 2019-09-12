@@ -2,15 +2,13 @@
 
 ---
 
-The agentctl should provide single universal tool for managing Ligato agents.
-
-![agentctl](../img/tools/agentctl.png)
-
 ## Intro
 
 Agentctl is a command line client to manage not only vpp-agent, but any agent built with Ligato framework.
 
-### Table of contents
+![agentctl](../img/tools/agentctl.png)
+
+**Table of contents:**
 
 - [Intro](#intro)
 - [Usage](#usage)
@@ -62,15 +60,16 @@ The agentctl can also be built using make target `make agentctl`.
 ### Setup
 
 The agentctl currently uses various NB access provided by Ligato agents:
-- Agent host instance running on `127.0.0.1` 
-  - use option `-H`/`--host` or env var `AGENT_HOST` to change this
-  - this is used for both GRPC and REST access
+
+- Agent host instance running on `127.0.0.1` by default
+    * use option `-H`/`--host` or env var `AGENT_HOST` to change this
+    * this is used for both GRPC and REST access
 - GRPC running on port `9111` by default
-  - use option `--grpc-port` to change this
+    * use option `--grpc-port` to change this
 - REST running on port `9191` by default
-  - use option `--http-port` to change this
+    * use option `--http-port` to change this
 - ETCD datastore used by the agent on `127.0.0.1:2379 `by default 
-  - use option `--etcd-endpoints` or env var `ETCD_ENDPOINTS` to change this
+    * use option `--etcd-endpoints` or env var `ETCD_ENDPOINTS` to change this
 
 ## Subcommands
 
@@ -87,7 +86,8 @@ List of agentctl subcommands:
 
 ### Model
 
-<details><summary>The <code>model</code> subcommand provides information about models.</summary>
+<details>
+<summary>The <code>model</code> subcommand provides information about models.</summary>
 <p>
 
 ```
@@ -106,6 +106,7 @@ Options:
 
 </p>
 </details>
+</br>
 
 To list all supported models, run:
 
@@ -161,9 +162,9 @@ To show details about specific model, run:
 
 ### Dump
 
-<details><summary>The <code>dump</code> subcommand dumps running state from the scheduler.</summary>
+<details>
+<summary>The <code>dump</code> subcommand dumps running state from the scheduler.</summary>
 <p>
-
 
 ```
 Dump running state
@@ -196,6 +197,7 @@ Options:
 
 </p>
 </details>
+</br>
 
 It uses model name to specify what to dump and provides 3 different view types (uses <code>cached</code> view by default).
 
@@ -244,7 +246,8 @@ vpp.vrf-table            id/0/protocol/IPV6                              obtaine
 
 ### KVDB
 
-<details><summary>The <code>kvdb</code> subcommand managed data stored in KV datastore.</summary>
+<details>
+<summary>The <code>kvdb</code> subcommand managed data stored in KV datastore.</summary>
 <p>
 
 ```
@@ -269,6 +272,8 @@ Options:
 </p>
 </details>
 
+The `kvdb` command is similar to using etcdctl, but supports short keys (which require setting `--service-label` option).
+
 ### VPP
 
 <details><summary>The <code>vpp</code> subcommand manages the connected VPP instance.</summary>
@@ -290,6 +295,7 @@ Options:
 
 </p>
 </details>
+</br>
 
 To run VPP CLI command, run:
 
@@ -301,7 +307,8 @@ vpp v19.08-rc2~12-g1c586de48~b37 built by root on 9ce218d4b187 at Wed Aug 21 17:
 
 ### Import
 
-<details><summary>The <code>import</code> subcommand can be used to import config data from file using GRPC or ETCD.</summary>
+<details>
+<summary>The <code>import</code> subcommand can be used to import config data from file using GRPC or ETCD.</summary>
 <p>
 
 ```
@@ -351,6 +358,7 @@ Options:
 
 </p>
 </details>
+</br>
 
 The import command supports importing via GRPC which can be enabled with `--grpc` option.
 
@@ -374,9 +382,9 @@ The import file supports full version of keys including agent namespace (microse
 
 ### Generate
 
-<details><summary>The <code>generate</code> subcommand can be used to generate config samples for models.</summary>
+<details>
+<summary>The <code>generate</code> subcommand can be used to generate config samples for models.</summary>
 <p>
-
 
 ```
 Generate config samples
@@ -395,6 +403,7 @@ Options:
 
 </p>
 </details>
+</br>
 
 To generate config sample for VPP route, run:
 
@@ -414,7 +423,8 @@ To generate config sample for VPP route, run:
 
 ### Log
 
-<details><summary>The  <code>log</code> subcommand manages the logging of the agent instance.</summary>
+<details>
+<summary>The <code>log</code> subcommand manages the logging of the agent instance.</summary>
 <p>
 
 ```
@@ -433,6 +443,7 @@ Options:
 
 </p>
 </details>
+</br>
 
 To list current loggers and their log levels, run `log list`.
 
