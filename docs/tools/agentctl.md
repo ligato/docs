@@ -8,22 +8,27 @@ Agentctl is a command line client to manage not only vpp-agent, but any agent bu
 
 ![agentctl](../img/tools/agentctl.png)
 
-**Table of contents:**
+## Install
 
-- [Intro](#intro)
-- [Usage](#usage)
-- [Setup](#setup)
-- [Subcommands](#subcommands)
+### Build from source
+
+The agentctl can also be installed using make target `make agentctl` in vpp-agent repo.
+
+### Pull docker image
+
+The agentctl is also available in the official docker images for vpp-agent.
+
+!!! caution
+     The agentctl is currently only available in development images `ligato/vpp-agent:dev`.
+     The `latest` images will contain agentctl in the upcoming release (v2.3.0).
 
 ## Usage
 
-To use pre-built version of agentctl, you can use official docker image `ligato/vpp-agent:dev` (the `:latest` tag will be available in the next release 2.3.0).
-
 ```
-➤ docker run --rm -it ligato/vpp-agent:dev agentctl
+➤ agentctl
      ___                    __  ________  __
     /   | ____ ____  ____  / /_/ ____/ /_/ /
-   / /| |/ __ '/ _ \/ __ \/ __/ /   / __/ / 
+   / /| |/ __ '/ _ \/ __ \/ __/ /   / __/ /
   / ___ / /_/ /  __/ / / / /_/ /___/ /_/ /  
  /_/  |_\__, /\___/_/ /_/\__/\____/\__/_/   
        /____/
@@ -54,8 +59,6 @@ Options:
 
 Run "agentctl COMMAND --help" for more information about a command.
 ```
-
-The agentctl can also be built using make target `make agentctl`.
 
 ### Setup
 
@@ -199,7 +202,7 @@ Options:
 </details>
 </br>
 
-It uses model name to specify what to dump and provides 3 different view types (uses <code>cached</code> view by default).
+Model name should be used to specify what to dump. Dump supports 3 view types (<code>cached</code> view is used by default).
 
 To dump VPP interfaces, run:
 
