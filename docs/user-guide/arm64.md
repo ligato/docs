@@ -62,10 +62,14 @@ sudo docker run -p 2379:2379 --name etcd -e ETCDCTL_API=3 -e ETCD_UNSUPPORTED_AR
     -listen-client-urls http://0.0.0.0:2379
 ```
 
-The ETCD server will be available on your host OS IP `172.17.0.1` (by default) and port `2379`. Call the agent via ETCD using the testing client:
+The ETCD server will be available on your host OS IP `172.17.0.1` (by default) and port `2379`. Call the agent via ETCD using the [agentctl testing client][agentctl]:
 ```
-vpp-agent-ctl /opt/vpp-agent/dev/etcd.conf -tap
-vpp-agent-ctl /opt/vpp-agent/dev/etcd.conf -tapd
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/192.168.1.13 '{
+    "dst_network": "10.1.1.3/32",
+	"next_hop_addr": "192.168.1.13"
+}'
+
+agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/192.168.1.13
 ```
 
 !!! note
@@ -98,6 +102,7 @@ sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
  --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 kafka-arm64
 ```
 
+[agentctl]: ../tools/agentctl.md
 [dockerhub]: https://hub.docker.com/r/ligato/vpp-agent-arm64/
 [etcd]: https://quay.io/repository/coreos/etcd?tag=latest&tab=tags
 [kafka]: https://github.com/spotify/docker-kafka#build-from-source
