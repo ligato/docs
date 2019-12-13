@@ -288,6 +288,7 @@ Example configuration:
 ```json
 {  
     "outgoing_interface":"linuxIf1",
+    "scope":"GLOBAL",
     "dst_network":"10.0.2.0/24",
     "metric":100
 }
@@ -295,7 +296,7 @@ Example configuration:
 
 Use `etcdctl` to put compacted key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1 '{"outgoing_interface":"veth1","dst_network":"10.0.2.0/24","metric":100}'
+etcdctl put /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1 '{"outgoing_interface":"veth1","scope":"GLOBAL","dst_network":"10.0.2.0/24","metric":100}'
 ```
 
 To remove the configuration:
