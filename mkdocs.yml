@@ -33,6 +33,7 @@ nav:
     - FAQ: user-guide/faq.md
     - VPP CLI: user-guide/vpp-cli.md
   - TUTORIALS:
+    - Setup: tutorials/00_tutorial-setup.md
     - Hello World: tutorials/01_hello-world.md
     - Plugin Dependencies: tutorials/02_plugin-deps.md
     - REST Handler: tutorials/03_rest-handler.md
