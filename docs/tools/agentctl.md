@@ -18,10 +18,6 @@ The agentctl can also be installed using make target `make agentctl` in vpp-agen
 
 The agentctl is also available in the official docker images for vpp-agent.
 
-!!! caution
-     The agentctl is currently only available in development images `ligato/vpp-agent:dev`.
-     The `latest` images will contain agentctl in the upcoming release (v2.3.0).
-
 ## Usage
 
 ```
