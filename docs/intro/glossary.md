@@ -1,22 +1,91 @@
 # Glossary
 
-This page documents various definitions used in Ligato.
-
----
-
 ## CNF
 
-**Cloud-Native Virtual Network Functions**
+[Cloud Native Network Function](https://github.com/lf-edge/glossary/blob/master/edge-glossary.md#cloud-native-network-function-cnf). Containerized network function (e.g. IPsec) subscribing to cloud native architecture and operational principles (e.g. Kubernetes lifecycle).
 
-So what is a *cloud-native* virtual network function? 
+## VNF
 
-A virtual network function (or VNF), as commonly known today, is a software implementation of a network function that runs on one or more *virtual machines* (VMs) on top of the hardware networking infrastructure — routers, switches, etc. Individual virtual network functions can be connected or combined together as building blocks to offer a full-scale networking communication service. A VNF may be implemented as standalone entity using existing networking and orchestration paradigms - for example being managed through CLI, SNMP or Netconf. Alternatively, an NFV may be a part
-of an SDN architecture, where the control plane resides in an SDN controller and the data plane is implemented in the VNF.
+General term describing a network function formally running on a dedicated hardware device that runs now as a virtual network or service appliance in virtualized network. Some documentation will implicitly or explicitly define a VNF as a VM-based network function.
 
-A *cloud-native VNF* is a VNF designed for the emerging cloud environment - it runs in a container rather than a VM, its lifecycle is orchestrated by a container orchestration system, such as Kubernetes, and it's using cloud-native orchestration paradigms. In other words, its control/management plane looks just like any other container based [12-factor app][l2-factor-app]. to orchestrator or external clients it exposes REST or gRPC APIs, data stored in centralized KV data stores, communicate over message bus, cloud-friendly logging and config, cloud friendly build & deployment process, etc., Depending on the desired functionality, scale and performance, a cloud-native VNF may provide a high-performance data plane, such as the [VPP][vpp].
+## Memif
 
-[l2-factor-app]: https://12factor.net
-[vpp]: https://fd.io
+Shared memory interface between two instances of VPP
+
+## Tap
+
+Linux kernel interface allowing user space networking apps to send/receive raw ethernet or IP packets.
+
+## Kubernetes
+
+[Orchestration and scheduling platform](https://kubernetes.io/) for cloud native environments
+
+## vSwitch
+
+Virtual networking component for switching packets between virtual machines or containers.
+
+## VPP
+
+[Vector Packet Processing](https://wiki.fd.io/view/VPP/What_is_VPP%3F), a software platform for forwarding packets
+
+## KV Data Store
+
+Data store (or database) of key-value (KV) pairs or more generally structured data objects
+
+## etcd
+
+[etcd](https://etcd.io/) is an open source distributed KV data store
+
+## Redis
+
+[Redis](https://redis.io/) is an open source data store and database
+
+## Ligato
+
+[Ligato](https://ligato.io/) is an open source framework consisting of a vpp agent and suite of plugins for building and developing CNFs
+
+## FD.io
+
+[Open source project for VPP](https://fd.io/)
+
+## Contiv - VPP
+
+[Kubernetes CNI plugin using FD.io/VPP as the dataplane](https://contivpp.io/)
+
+## Cloud Native
+
+Architecture pattern based on microservices, containers and Kubernetes for building cloud-based applications
+
+## Protobufs
+
+[Protocol Buffers](https://developers.google.com/protocol-buffers) is a language/platform-nuetral method that defines the structure and serialized format of the data associated with the object. Each object supported in Ligato (e.g. interfaces) has a `.proto` definition.
+
+## Go
+
+[Programming Language](https://golang.org/) developed by Google. Used by Ligato and other cloud-native projects including Kubernetes and etcd. Advantages over other languages (i.e. python, java) employed in distributed systems are speed (it is a compiled languagee), concurrency and simple.
+
+## Plugin
+
+Small chunk of code performing a specific function. Ligato (vpp-agent and cn-infra) come with multiple out-of-the-box [plugins](../plugins/plugin-overview.md). New plugins can be developed performing additional functions. Developers need only use the plugins required for their application
+
+## KVScheduler
+
+Handles configuration VPP/Linux plugin dependency resolution thus achieving a working sequence of configuration transactions.
+
+## Connectors
+
+Another term for plugins (e.g. etcd plugin) that communicate with an external application (e.g. etcd server)
+
+## Descriptors
+
+Describes object data (dependencies, metadata, etc.) enabling the KVscheduler to perform CRUD callbacks against such objects
+
+## Model
+
+Each object is defined by a model consisting of a [module, version and type fields](../user-guide/concepts.md). Models for specific objects are defined in the `models.go` files located in the /proto folder
+
+
+
 
 *[CLI]: Command-Line Interface
 *[NFV]: Network Functions Virtualization
