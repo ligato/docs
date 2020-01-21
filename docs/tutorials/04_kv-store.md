@@ -61,12 +61,7 @@ broker := p.KVStore.NewBroker("/myplugin/")
 ```
 
 !!! note
-    The etcd plugin must be configured with the address of the etcd server. This is typically done through the etcd confige file. In most cases, the etcd config file must be in the same folder where the agent executable is started. 
-
-If the etcd config file is not found, the etcd plugin will be disabled, and you will see an error that looks something like this:
-```
-level=error msg="KV store is disabled" loc="04_kv-store/main.go(41)" logger=defaultLogger
-```
+    The etcd plugin must be configured with the address of the etcd server. This means the `endpoints` IP address in the `etcd.conf` file must match etcd server's `advertise client URLs` address displayed in the etcd startup log. See the etcd troubleshooting section below for clarification.
 
 The broker accepts `proto.Message` parameters in its methods. Therefore we need to define a protobuf model for data that we want to put in and read from the data store respectively.
 
@@ -161,7 +156,85 @@ if err != nil {
 
 The channel `cancelWatch` can be used to cancel watching.
 
+Before running the kv-store code, the etcd server must be running.
+
+Start etcd
+```
+etcd
+```
+
+__Run the kv-store code__
+
+First open a new terminal in the tutorial folder
+```
+go run main.go
+```
+
+Output
+```
+INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc="agent/agent.go(134)" logger=agent
+INFO[0000] Connected to Etcd (took 1.715168ms)           endpoints="[0.0.0.0:2379]" loc="etcd/bytes_broker_impl.go(60)" logger=etcd
+INFO[0000] Status check for etcd was started             loc="etcd/plugin_impl_etcd.go(122)" logger=etcd
+INFO[0000] Agent started with 4 plugins (took 4ms)       loc="agent/agent.go(179)" logger=agent
+INFO[0000] Found some greetings: greeting:"Hello"        loc="04_kv-store/main.go(112)" logger=myplugin
+INFO[0002] updating..                                    loc="04_kv-store/main.go(118)" logger=myplugin
+INFO[0002] Put change, Key: "greetings/hello" Value: greeting:"Hello"   loc="04_kv-store/main.go(98)" logger=myplugin
+INFO[0005] Agent plugin state update.                    lastErr="<nil>" loc="statuscheck/plugin_impl_statuscheck.go(183)" logger=status-check plugin=etcd state=ok
+```
+
+# __Tutorial etcd troubleshooting__
+
+You might encounter the following if the tutorial code does not complete properly.
+
+!!! Error
+    `etcd.conf` is not present in the tutorial folder
+
+Output
+```
+INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc=“agent/agent.go(134)” logger=agent
+INFO[0000] ETCD config not found, skip loading this plugin  loc="etcd/plugin_impl_etcd.go(293)" logger=etcd
+ERRO[0000] KV store is disabled                          loc="04_kv-store/main.go(43)" logger=defaultLogger
+```
+
+The etcd plugin must be configured with the address of the etcd server. This is typically done through the etcd.conf file. In most cases, the etcd.conf file must be in the same folder where the agent executable (tutorial) is started.
+
+!!! Error
+    Incorrect `endpoints` value in the etcd.conf file
+
+Output
+```
+CHMETZ-M-72TZ:04_kv-store chrismetz$ go run main.go
+INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc=“agent/agent.go(134)" logger=agent
+WARN[0001] Failed to connect to Etcd: context deadline exceeded  endpoints=“[172.17.0.1:2379]” loc=“etcd/bytes_broker_impl.go(60)” logger=etcd
+ERRO[0001] error connecting to ETCD: context deadline exceeded  loc="04_kv-store/main.go(43)" logger=defaultLogger
+```
+
+The message indicates a connection problem with `172.17.0.1:2379` which presumably is the address of the etcd server.
+
+First look for this value in the log when you started etcd
+```
+etcdserver: advertise client URLs = http://localhost:2379
+```
+This is the address the etcd plugin should use to connect to the etcd server. It is okay to use a localhost IP address for running this tutorial on our computer.
+
+Next check the etcd.conf file
+```
+insecure-transport: true
+dial-timeout: 1000000000
+endpoints:
+ - "172.17.0.1:2379"
+```
+It appears the etcd plugin is not configured with the address of the etcd server. The solution is to edit the etcd.conf so it appears like so
+```
+insecure-transport: true
+dial-timeout: 1000000000
+endpoints:
+ - "0.0.0.0:2379"
+```
+
+
 Complete working example can be found at [examples/tutorials/04_kv-store](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/04_kv-store).
+
 
 [1]: https://github.com/ligato/cn-infra/tree/master/db/keyval/etcd
 [2]: https://github.com/ligato/cn-infra/tree/master/db/keyval/consul

@@ -95,7 +95,7 @@ if err := a.Run(); err != nil {
 When the interrupt comes from the user (for example. when the user hits `ctrl-c`), 
 the `Close` methods will be called on all agent's plugins and the agent will exit.
 
-__Run Hello World code__
+__Run the Hello World code__
 ```
 go run main.go
 ```
