@@ -288,6 +288,7 @@ Example configuration:
 ```json
 {  
     "outgoing_interface":"linuxIf1",
+    "scope":"GLOBAL",
     "dst_network":"10.0.2.0/24",
     "metric":100
 }
@@ -295,7 +296,7 @@ Example configuration:
 
 Use `etcdctl` to put compacted key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1 '{"outgoing_interface":"veth1","dst_network":"10.0.2.0/24","metric":100}'
+etcdctl put /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1 '{"outgoing_interface":"veth1","scope":"GLOBAL","dst_network":"10.0.2.0/24","metric":100}'
 ```
 
 To remove the configuration:
@@ -387,7 +388,7 @@ To simplify further, it is not required to start the microservice before the con
 [linux-interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/interfaces/interface.proto
 [linux-namespace-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/namespace/namespace.proto
 [linux-route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/l3/route.proto
-[redhat-veth-page]: http://man7.org/linux/man-pages/man4/veth.4.htmlis
+[redhat-veth-page]: http://man7.org/linux/man-pages/man4/veth.4.html
 [veth]: http://man7.org/linux/man-pages/man4/veth.4.html
 [vpp-interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
 

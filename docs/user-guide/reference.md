@@ -75,9 +75,14 @@ Key (single for the entire proxy-arp configuration):
 
 **[VPP routes:][route-proto]**
 
-Key (dst_network is with mask in format <ip>/<mask>, gw can be empty if not set):
+Key (dst_network is with mask in format <ip>/<mask>):
 ```text
 /vnf-agent/vpp1/config/vpp/v2/route/vrf/<vrf_id>/dst/<dst_network>/gw/<next_hop_addr>
+```
+
+Key if the gateway is not set:
+```text
+/vnf-agent/vpp1/config/vpp/v2/route/vrf/<vrf_id>/dst/<dst_network>
 ```
 
 **[IP scan neighbor:][l3-proto]**

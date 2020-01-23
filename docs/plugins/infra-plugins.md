@@ -310,11 +310,13 @@ The supervisor is the infrastructure plugin providing mechanisms to handle and m
 
 The config file is split into two main categories - processes or **programs**, and **hooks**. Each of these may contain multiple entries (more programs or hooks in a single file). The program definition is as follows:
 
-- **Name** is a unique program name, and also an optional parameter which is derived from the executable name if omitted.
-- **Executable path** is a mandatory field containing a path to the executable for a given program.
-- **Executable arguments** is a list of strings which is passed to the command as executable arguments. An arbitrary count of arguments can be defined.
-- **Logfile path** should be added if it is required to put a program output log to the file. The log file is created if missing, and also every program can use its own file. In case the log file is not specified, the program log is written to standard output.
-- **Restarts** makes use of the process manager auto-restart feature. The field parameter defines the maximum auto-restarts of the given program. Note that any termination hooks are executed also when the program is restarted since the operating system sends events in order termination -> starting -> sleeping/idle.
+- **name** is a unique program name, and also an optional parameter which is derived from the executable name if it is omitted.
+- **executable-path** is a mandatory field containing a path to the executable for a given program.
+- **executable-args** is a list of strings which is passed to the command as executable arguments. An arbitrary count of arguments can be defined.
+- **logfile-path** should be added if it is required to put a program output log to the file. The log file is created if missing, and also every program can use its own file. In case the log file is not specified, the program log is written to standard output.
+- **restarts** make use of the process manager auto-restart feature. The field parameter defines the maximum auto-restarts of the given program. Note that any termination hooks are executed also when the program is restarted since the operating system sends events in order termination -> starting -> sleeping/idle.
+- **cpu-affinity-mask** allows to bind a process to a given set of CPUs. Value is the same hexadecimal format as for taskset command. Invalid value prints error message but it does not terminate the process. Use only when you know what you are doing, do not try to outsmart OS CPU scheduling. If a program has its own config file to manage CPUs, prioritize it. Keep in mind that incorrect use may slow down certain applications or that the application may contain its own CPU manager which overrides this value. Locking process to CPU does NOT keep other processes off that CPU.
+- **cpu-affinity-setup-delay** postpones CPU affinity setup for a given time. Some processes may manipulate CPU scheduling during startup, this option allows to "bypass" it, waiting until the process is fully loaded and then lock it to the given value.
 
 All spawned processes are bound to the supervisor and cannot exist without it. Terminating supervisor exists all running instances.
 
@@ -322,8 +324,8 @@ All spawned processes are bound to the supervisor and cannot exist without it. T
 
 Hooks are special commands which are executed when some specific event related to the programs occurs. The config file may define as many hooks as needed. Basically hooks are not bound to any specific program instance or event - instead, every hook is called for every program event and it is up to the called script to decide required actions.
 
-- **Cmd** is a command called for the given hook.
-- **CmdArgs** is a set of parameters for the command above.
+- **cmd** is a command called for the given hook.
+- **cmd-args** is a set of parameters for the command above.
 
 Usually, the hook is expected to run under certain conditions (a specific process, event, etc.). The executable is started within a specific environment (executed hook never uses the current process environment). 
 
