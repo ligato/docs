@@ -28,6 +28,7 @@ nav:
     - Reference: user-guide/reference.md
     - Concepts: user-guide/concepts.md
     - Config Files: user-guide/config-files.md
+    - AgentCtl: user-guide/agentctl.md
     - ARM64: user-guide/arm64.md
     - Examples: user-guide/examples.md
     - FAQ: user-guide/faq.md
@@ -54,6 +55,7 @@ nav:
     - Plugin Lookup: developer-guide/plugin-lookup.md
     - KV Scheduler: developer-guide/kvscheduler.md
     - KV Descriptors: developer-guide/kvdescriptor.md
+    - KVS Troubleshooting: developer-guide/kvs-troubleshooting.md
     - Control Flows: developer-guide/control-flows.md
     - Model Registration: developer-guide/model-registration.md
     - Build VPP Agent + VPP with No Image: developer-guide/build-vpp-agent-no-image.md
@@ -61,10 +63,6 @@ nav:
   - TESTING:
     - Integration Tests: testing/integration-tests.md
     - Robot Framework Guide: testing/robot-framework-guide.md
-  - TOOLS:
-    - AgentCTL: tools/agentctl.md
-  - TROUBLESHOOTING:
-    - KVS Troubleshooting: troubleshooting/kvs-troubleshooting.md
 
 markdown_extensions:
   - extra

@@ -102,7 +102,7 @@ sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
  --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 kafka-arm64
 ```
 
-[agentctl]: ../tools/agentctl.md
+[agentctl]: ../user-guide/agentctl.md
 [dockerhub]: https://hub.docker.com/r/ligato/vpp-agent-arm64/
 [etcd]: https://quay.io/repository/coreos/etcd?tag=latest&tab=tags
 [kafka]: https://github.com/spotify/docker-kafka#build-from-source
