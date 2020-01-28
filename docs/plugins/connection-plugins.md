@@ -4,7 +4,7 @@
 
 ## REST plugin
 
-The REST plugin in the vpp-agent is currently limited to retrieving existing VPP configuration (called dumping). The vpp-agent also provides a simple html template (usable in browser) and optional support for https security, authentication and authorization.
+The REST plugin in the vpp-agent is currently limited to retrieving existing VPP configuration (called dumping) information. The vpp-agent also provides a simple html template (usable in browser) and optional support for https security, authentication and authorization.
 
 The Ligato Framework supports two distinct HTTP plugins: 
 

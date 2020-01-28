@@ -14,7 +14,7 @@ Requirements:
 * Complete the ['Hello World Agent'](01_hello-world.md) tutorial
 * Complete the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
 
-Each plugin requiring a REST APPI will register its own custom
+Each plugin requiring a REST API will register its own custom
 handler with the REST plugin using the registration API:
 
 ```go
@@ -78,12 +78,39 @@ func (p *MyPlugin) Init() error {
 }
 ```
 
-Now we run the app and try using `curl`: 
 
-```sh
-curl -X POST -d 'John' -H "Content-Type: application/json" http://localhost:9191/greeting
-// outputs: Hello John
+__Run the REST Handler code__
+
 ```
+go run main.go
+```
+Example output on the terminal CLI
+```
+INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc="agent/agent.go(134)" logger=agent
+INFO[0000] Listening on http://0.0.0.0:9191              loc="rest/plugin_impl_rest.go(109)" logger=http
+INFO[0000] Agent started with 2 plugins (took 1ms)       loc="agent/agent.go(179)" logger=agent
+```
+
+You might see an deny/allow incoming connection warning message. Either one is okay for this example.
+
+Open a new terminal in the `03_rest-handler chrismetz` folder and type in this curl command
+```
+curl -X POST -d 'John' -H "Content-Type: application/json" http://localhost:9191/greeting
+```
+Output
+```
+Hello John
+```
+
+Example output upon `ctrl-c user interrupt`
+```
+^CINFO[0045] Signal interrupt received, stopping.          loc="agent/agent.go(196)" logger=agent
+INFO[0045] Stopping agent                                loc="agent/agent.go(269)" logger=agent
+INFO[0045] Agent stopped                                 loc="agent/agent.go(291)" logger=agent
+```
+
+
+
 
 Complete working example can be found at [examples/tutorials/03_rest-handler](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/03_rest-handler).
 

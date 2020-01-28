@@ -5,7 +5,7 @@
 Link to code: [Adding dependencies to your plugin][code-link]
 
 Your control plane agent will typically consist of one or more plugins that
-contain the application logic.  In addition there could be a suite of Ligato plugins and components providing various services to your application plugins. Examples include a KV data store, message bus adapters, loggers and health monitors 
+contain the application logic.  In addition there could be other Ligato plugins and components providing various services to your application plugins. Examples include a KV data store, message bus adapters, loggers and health monitors.
 
 This tutorial shows how to add dependencies to your plugins.
 
@@ -96,6 +96,27 @@ func (p *HelloWorld) Init() error {
 ```
 
 If the config file is not found, the `LoadValue` will return false. If the configuration cannot be parsed, the function will return an error.
+
+__Run the Plugin Dependency code__
+
+```
+go run main.go
+```
+Example output
+```
+INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc="agent/agent.go(134)" logger=agent
+INFO[0000] Greetings World!                              loc="02_plugin-deps/main.go(77)" logger=helloworld
+INFO[0000] Agent started with 1 plugins (took 1ms)       loc="agent/agent.go(179)" logger=agent
+```
+
+Example output upon `ctrl-c user interrupt`
+```
+^CINFO[0013] Signal interrupt received, stopping.          loc="agent/agent.go(196)" logger=agent
+INFO[0013] Stopping agent                                loc="agent/agent.go(269)" logger=agent
+INFO[0013] Goodbye World!                                loc="02_plugin-deps/main.go(83)" logger=helloworld
+INFO[0013] Agent stopped                                 loc="agent/agent.go(291)" logger=agent
+```
+
 
 The complete working example can be found at [examples/tutorials/02_plugin-deps](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/02_plugin-deps).
 

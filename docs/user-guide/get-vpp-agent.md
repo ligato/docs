@@ -273,7 +273,7 @@ The [clientv2][clientv2] package contains API definitions for every supported co
 [kv-overview]: ../user-guide/concepts.md#key-value-data-store-overview
 [references]: ../user-guide/reference.md
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env
-[agentctl]: ../tools/agentctl.md#AgentCTL
+[agentctl]: ../user-guide/agentctl.md#AgentCTL
 [config-files]: ../user-guide/config-files.md
 [concepts]: ../user-guide/concepts.md
 [quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent   

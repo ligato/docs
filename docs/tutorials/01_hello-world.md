@@ -74,7 +74,9 @@ func main() {
 
 We use agent options to add the list of plugins to the agent at the agent's creation
 time. In our example we use the option `agent.Plugins` to add the newly created 
-`HelloWorld` instance to the agent. Alternatively, we could use the option 
+`HelloWorld` instance to the agent.
+
+Alternatively, we could use the option
 `agent.AllPlugins`, which would add our `HelloWorld` plugin instance to the agent,
 along with all of its dependencies (i.e. all plugins it depends on). Since our 
 simple plugin has no dependencies, the simpler `agent.Plugins` option will suffice.
@@ -82,6 +84,8 @@ simple plugin has no dependencies, the simpler `agent.Plugins` option will suffi
 Finally, we can start the agent using its `Run()` method, which will initialize
 all agent's plugins by calling their `Init` and `AfterInit` methods and then wait
 for an interrupt from the user.
+
+
 
 ```go
 if err := a.Run(); err != nil {
@@ -91,6 +95,30 @@ if err := a.Run(); err != nil {
 When the interrupt comes from the user (for example. when the user hits `ctrl-c`), 
 the `Close` methods will be called on all agent's plugins and the agent will exit.
 
+__Run the Hello World code__
+```
+go run main.go
+```
+Example output
+```
+INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc="agent/agent.go(134)" logger=agent
+2020/01/17 10:25:02 Hello World!
+2020/01/17 10:25:02 All systems go!
+INFO[0000] Agent started with 1 plugins (took 0s)        loc="agent/agent.go(179)" logger=agent
+```
+
+Example output upon `ctrl-c user interrupt`
+
+```
+^CINFO[0030] Signal interrupt received, stopping.          loc="agent/agent.go(196)" logger=agent
+INFO[0030] Stopping agent                                loc="agent/agent.go(269)" logger=agent
+2020/01/17 10:25:32 Goodbye World!
+INFO[0030] Agent stopped                                 loc="agent/agent.go(291)" logger=agent
+```
+
 The complete working example can be found at [examples/tutorials/01_hello-world](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/01_hello-world).
+
+!!! Note
+    In some examples, the output may differ from what was described above. Examine the working code example to locate those differences.
 
 [code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/01_hello-world
