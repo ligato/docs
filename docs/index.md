@@ -13,7 +13,7 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 
 - [Quickstart](user-guide/quickstart.md) is the best place to start for users.
 - [Concepts](user-guide/concepts.md) will teach you about some Ligato concepts.
-- [FAQ](user-guide/faq.md) provides answers to common questions.
+- [FAQ](intro/faq.md) provides answers to common questions.
 
 See **User Guide** section to get more information for users.
 

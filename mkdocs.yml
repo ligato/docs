@@ -21,17 +21,16 @@ nav:
   - INTRODUCTION:
     - Overview: intro/overview.md
     - Framework: intro/framework.md
-    - Glossary: intro/glossary.md
+    - FAQ: intro/faq.md
   - USER GUIDE:
-    - VPP Agent Setup: user-guide/get-vpp-agent.md
     - Quickstart Guide: user-guide/quickstart.md
+    - VPP Agent Setup: user-guide/get-vpp-agent.md
     - Reference: user-guide/reference.md
     - Concepts: user-guide/concepts.md
     - Config Files: user-guide/config-files.md
     - AgentCtl: user-guide/agentctl.md
     - ARM64: user-guide/arm64.md
     - Examples: user-guide/examples.md
-    - FAQ: user-guide/faq.md
     - VPP CLI: user-guide/vpp-cli.md
   - TUTORIALS:
     - Setup: tutorials/00_tutorial-setup.md
@@ -60,6 +59,9 @@ nav:
     - Model Registration: developer-guide/model-registration.md
     - Build VPP Agent + VPP with No Image: developer-guide/build-vpp-agent-no-image.md
     - Go Docs: developer-guide/godocs.md
+  - Troubleshooting:
+    - Start Up: troubleshooting/startup-ts.md
+    - Configuration: troubleshooting/config-ts.md
   - TESTING:
     - Integration Tests: testing/integration-tests.md
     - Robot Framework Guide: testing/robot-framework-guide.md
@@ -73,4 +75,6 @@ markdown_extensions:
       use_pygments: false
   - sane_lists
   - toc:
-      permalink: 
+      permalink: "#"
+      baselevel: 3
+

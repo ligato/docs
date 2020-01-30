@@ -43,6 +43,7 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
 ```
 
 2. **transaction containing the value was triggered**, yet the value is not configured in SB - the issue could be one of the following:
+
 * the value is *pending*
   - [display graph][how-to-graph] and check the state of dependencies (follow black arrows coming out of the value)
   - dependency is either missing (state = `NONEXISTENT`) or in a failed state (state = `INVALID`/`FAILED`/`RETRYING`)
@@ -255,7 +256,7 @@ KVScheduler-internal debug messages, which require some knowledge of the underly
 ### How-to debug agent plugin lookup
 
 The easiest way to determine if your plugin has been found and properly initialized by the Agent's plugin lookup procedure is to enable verbose lookup logs. Before the agent
-is start, set the `DEBUG_INFRA` environment variable as follows:
+is started, set the `DEBUG_INFRA` environment variable as follows:
 ``` 
 export DEBUG_INFRA=lookup
 ```
@@ -359,9 +360,10 @@ We find the graph visualization tremendously helpful for debugging. It provides 
 
 ### Understanding the graph walk (advanced)
 
-To observe and understand how KVScheduler walks through the graph to process transactions, define environment variable `KVSCHED_LOG_GRAPH_WALK` before the agent is started, which will enable verbose logs showing how the graph nodes get visited by the scheduling algorithm.
+To observe and understand how KVScheduler walks through the graph to process transactions, define environment variable `KVSCHED_LOG_GRAPH_WALK` before the agent is started, which will enable verbose logs showing how the graph nodes are visited by the scheduling algorithm.
 
 The scheduler may visit a graph node in one of the transaction processing stages:
+
 1. graph refresh
 2. transaction simulation
 3. transaction execution

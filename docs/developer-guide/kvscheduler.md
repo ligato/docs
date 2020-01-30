@@ -89,6 +89,7 @@ The following diagram shows the interactions between the scheduler and the layer
 Plugins no longer have to implement their own resync (state reconciliation) mechanisms. By providing a KVDescriptor with CRUD operation callbacks to the KVScheduler a plugin "teaches" the KVScheduler how to handle plugin's configuration items. The KVScheduler has all it needs to determine and execute the set of operations needed to get the state in-sync after a transaction or restart.
 
 The KVScheduler further enhances the concept of state reconciliation. Three resync types are defined:
+
 * **Full resync**: the intended configuration is re-read from NB, the view of SB is refreshed via one or more `Retrieve` operations and inconsistencies are resolved via the `Create`\\`Delete`\\`Update` operations.
 * **Upstream resync**: a partial resync, similar to the Full resync, but the view of SB state is not refreshed. It is either assumed to be up-to-date and/or it is not required int the resync because it may be easier to re-calculate the intended state than to determine the (minimal) difference 
 * **Downstream resync**: partial resync, similar to the Full resync, except the intended configuration is assumed to be up-to-date and will not be re-read from the NB. Downstream resync can be used periodically to resync, even without interacting with the NB.

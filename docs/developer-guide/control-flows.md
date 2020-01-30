@@ -212,6 +212,7 @@ the address before it is unassigned and turn back into the L2 mode.
 This is the most basic scenario covered in the guide. On the other hand,
 the attached control-flow diagram is the most verbose - it includes all the
 interacting components (listed from the top to the bottom layer):
+
  * `NB (KVDB)`: contains configuration of a single `my-tap` interface
  * `Orchestrator`: listing KVDB and propagating the configuration to the KVScheduler
  * `KVScheduler`: planning and executing the transaction operations
