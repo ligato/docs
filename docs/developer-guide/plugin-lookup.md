@@ -10,11 +10,11 @@ Under the term **Agent** is meant a set of plugins, which are started and initia
 
 - Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`. This is a configuration stanza that tells the vpp-agent about your plugin. Pass the plugin defined in preceding step as a parameter into `agent.Plugins(<plugin>...)`. This is a variadic function which means you can pass multiple parameters into it if you need to define multiple plugins. If there are relationships/dependencies between your plugins and/or if one or more of your plugins depends on other plugins which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
 
-3. Use the `agent.NewAgent(opts ...Option)` function to create a new agent instance.
+- Use the `agent.NewAgent(opts ...Option)` function to create a new agent instance.
 
-4. Use the `Run()` method (blocking) or the `Start()` method (non-blocking) to start the agent created in Step 3.
+- Use the `Run()` method (blocking) or the `Start()` method (non-blocking) to start the agent created in Step 3.
 
-5. Stop the agent with the `Stop()` method; alternatively, define a struct-type channel and add it to the agent using the option `agent.QuitOnClose(<channel>)`. Closing the channel stops the agent.
+- Stop the agent with the `Stop()` method; alternatively, define a struct-type channel and add it to the agent using the option `agent.QuitOnClose(<channel>)`. Closing the channel stops the agent.
 
 
 ```go
@@ -37,6 +37,7 @@ func main() {
 **Options** are configuration stanzas used to customize an agent. The most important option is the *plugin list*, which tells the agent about the plugins it needs to control. If the initialization order of your plugins and their dependencies does not matter, use the `agent.Plugins(<plugin>....)` function to create the plugin list option.  If your plugins need to be initialized in certain order because there are dependencies to resolve, use the `agent.Allplugins(<plugin>)` function to create the plugin list option.
 
 The available [options](https://godoc.org/github.com/ligato/cn-infra/agent#Option) to customize an agent are:
+
 * `Plugins(...)` adds one or more plugins that will be started in the same order they were added
 * `AllPlugins(...)` adds one or more plugins and sorts them into the correct startup order; this option will automatically add all plugins listed as dependencies in other plugins
 * `Version(<version>, <date>, <id>)` sets the version of the program
