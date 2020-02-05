@@ -186,7 +186,7 @@ The linux plugin namespace management requires that docker run in privileged mod
 
 ### Disable the Linux interface plugin
 
-Use the Linux config file for interfaces and for l3 plugin and set `disabled` and `true` (both must be disabled).
+Use the config files for Linux interfaces and the Linux l3 plugins and set both to `disabled` and `true`.
 
 ## L3 plugin
 

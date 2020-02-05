@@ -64,7 +64,7 @@ The `keyval` package also provides a skeleton for a key-value plugin. A particul
 
 ## etcd plugin
 
-The etcd plugin provides access to an etcd key-value data store.
+The etcd plugin provides access to an etcd key-value data store. The host or server where the etcd data store is running is also known as an etcd server.
 
 ### Configuration
 
