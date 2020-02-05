@@ -17,21 +17,21 @@ The model represents an abstraction of an object such as a VPP interface that ca
 - protobuf message (`proto.Message`)
 - name template (optional)
 
-A single protobuf message represents by a single model.
+A single protobuf message represents a single model.
 
 ### Model Specification
 
-Model spec (specification) describes the model using the module, version and type fields:
+The model spec (specification) describes the model using the module, version and type fields:
 
-- `module` -  groups models belonging for the same configuration entity. For example, models for VPP configuration have vpp module, and models for Linux configuration have a linux module
+- `module` -  groups models belonging to the same configuration entity. For example, models for VPP configuration have a vpp module, and models for Linux configuration have a linux module
 - `version` - current version of the vpp-agent API. This value changes upon release of a new version.
 - `type` - keyword describing the given model (e.g. interfaces, bridge-domains, etc.)
 
-These three parts are used to generate a model prefix. The model prefix is part of a key and uses the following format:
+These three parts are used to generate a model prefix. The model prefix is part of a key, which uses the following format:
 ```
 config/<module>/<version>/<type>/
 ```
-This is an important concept so let's look at some examples.
+This is an important concept so let's look at an example.
 
 Here is the key for a [VPP interface][vpp-keys]:
 
@@ -44,7 +44,7 @@ Module = vpp
 version = v2
 type = interfaces
 ```
-An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. It was used to program a VPP loopback interface with the value of an IP address for insertion into an etcd KV data store.
+An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. A VPP loopback interface with the value of an IP address was inserted into an etcd KV data store.
 
 ```
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
@@ -56,28 +56,30 @@ Note that the value of `loop1` is the `<name>` of the interface.
 
 ## Key-Value Data Store Overview
 
-This section describes how the Ligato vpp-agent works with KV data stores. 
+This section describes how the vpp-agent works with KV data stores.
 
 !!! Note
-    Terms such as KV database, KVDB, KV store and KV data store are all terms that define a data store or database of key-value (KV) pairs or more generally, structured data objects. Unless otherwise noted, we will use the term `KV data store` in this documentation. The term `KVDB` might appear in the code examples and this will remain as is.
+    Terms such as KV database, KVDB, KV store and KV data store are all terms that define a data store or database of key-value (KV) pairs, or more generally, structured data objects. Unless otherwise noted, we will use the term `KV data store` in this documentation. The term `KVDB` will appear in the code examples and this will remain as is.
     
     `Connector` is a plugin providing access or connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
     
     
 
-### Why the KV Data Store?
+### Why a KV Data Store?
 
 The vpp-agent uses an external KV data store for several reasons:
  
  - persist the desired state of the VPP/Linux configuration
- - serve as a mechanism to store and export certain VPP statistics
- - exploit the `"watch"` paradigm for distributed configuration management in which the client (i.e. vpp-agent) listens for and processes config changes maintained in a KV data store. This same approach is incorporated into other configuration systems such as [confd](https://confd.io)
+ - To store and export certain VPP statistics
+ - exploit the `"watch"` paradigm for stateless configuration management. This same approach is employed in other configuration systems such as [confd](https://confd.io)
  
-Each vpp-agent is defined with a label known as the `microservice label`. Kubernetes uses labels attached to objects (e.g. pods) to group resources with certain common attributes (e.g. "these pods with this label are part of this service"). Similarly, Ligato uses the [microservice label][microservice-label] to group vpp-agents watching a KV data store for changes with a common prefix referred to as a watch key.
+Each vpp-agent is defined with a construct known as the `microservice label`. Kubernetes uses [labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) attached to objects (e.g. pods) to group resources with common attributes (e.g. "these pods with this label are part of this service").
 
-What are the mechanics of this? First, we take `/vnf-agent/` and combine it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is part of the key associated with a configuration value maintained inside a KV data store.
+Similarly, Ligato uses the [microservice label][microservice-label] to group vpp-agents with common attributes. In this case, the attribute is a prefix associated with configuration items stored in the KV data store. The vpp-agents with the same microservice label will watch or listen to configuration item changes with this common prefix. The prefix is also referred to as a `watch key`.
 
-Once again, here is the key for a [VPP interface][vpp-keys]:
+What are the mechanics of this? First, we take `/vnf-agent/` and combine it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is part of the [key](../user-guide/reference.md) associated with a configuration item maintained inside a KV data store.
+
+Here is the key for a VPP interface:
 
 ```
 /vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
@@ -88,19 +90,19 @@ Next, the vpp-agent watches for any config changes in the KV data store with a m
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
 
 
-The vpp-agent validates the key prefix (in the format `/vnf-agent/<microservice-label>` as explained above) and if the label matches, the KV pair is passed to the vpp-agent configuration watchers. If the prefix of the rest of the key is registered, the KV pair is sent to a watcher for processing such as re-programming the VPP data plane.
+The vpp-agent validates the key prefix (in the format `/vnf-agent/<microservice-label>` as explained above) and if the label matches, the KV pair is passed to the vpp-agent configuration watchers. Additionally, if the prefix for the rest of the key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing such as the VPP data plane.
 
 There is quite a bit of flexibility in this architecture.
 
 - single KV data store can support multiple vpp-agent groups using the microservice label.
-- vpp-agent can receive config data from multiple sources (e.g. KV data store, GRPC, etc.). A special [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the vpp-agent configuration plugins.
+- vpp-agent can receive config data from multiple sources (e.g. KV data store, GRPC, etc.). An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the vpp-agent configuration plugins.
 
-It should be noted that the vpp-agent _does not require_ a KV data store. Configuration data can be provided via GRPC, potentially REST, AgentCtl and CLI. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state on CNFs.
+It should be noted that the vpp-agent _does not require_ a KV data store. Configuration data can be provided using GRPC, potentially REST, AgentCtl and CLI. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
 
 ### Which KV Data Store can I Use?
 
 !!! Note
-    Some of the items below are technically speaking KV data stores. Some are databases. To avoid acronym bloat, this section will continue to use the `KV data store` as a single term for both.
+    Some of the items below are technically speaking KV data stores. Some are databases. To avoid acronym overlap and bloat, this section will continue to use the `KV data store` as a uniform term for both.
 
 The vpp-agent provides connectors to different KV data stores (see the list below). All are built on a common abstraction (called [kvdbsync][kvdbsync]). The KVDB abstraction approach simplifies the process of changing out one KV data store for another with minimal effort.
 
@@ -129,7 +131,7 @@ func New() *VPPAgent {
 }
 ```
 
-The code above prepares the kvdbsync plugin with the etcd connector. The kvdbsync plugin serves as a watcher to other plugins, or a writer if passed as the `KVProtoWriters` object. The orchestrator connects to the etcd data store.
+The code above prepares the kvdbsync plugin with the etcd connector. The kvdbsync plugin serves as a watcher to other plugins, or a writer if passed as the `KVProtoWriters` object. The orchestrator connects to the etcd server.
 
 Let's switch to Redis:
 ```go
@@ -152,15 +154,15 @@ func New() *VPPAgent {
 }
 ```
  
-The orchestrator now connects to a Redis database.
+The orchestrator now connects to a Redis database server.
 
-To add support for a new KV data store, one need only write a plugin that can establish a connection to this new data store and wire it up with the kvdbsync plugin.  
+To add support for a new KV data store, one need only write a plugin that can establish a connection to the new data store and wire it up with the kvdbsync plugin.
 
 ### etcd
 
 More information: [etcd documentation][etcd-plugin]
 
-etcd is a distributed KV data store that provides data read-write capabilities. The machine hosting the KV data store is referred to as the `etcd server`.
+[etcd](https://etcd.io/) is a distributed KV data store that provides data read-write capabilities. The machine hosting the KV data store is referred to as the `etcd server`.
 
 etcd can be started on a local machine in its own container with the following command:
 ```bash
@@ -181,9 +183,9 @@ Here is an example of a minimal etcd.conf file defining the IP address and port 
 endpoints:
   - "172.17.0.1:2379"
 ```
-The etcd config file is passed to the vpp-agent using the flag `--etcd-confg=<path>`. The file contains additional etcd-specific parameters such as dial timeout, certification and compaction. See the [guide to config files][list-of-supported] for more details.
+The etcd config file is passed to the vpp-agent using the flag `--etcd-confg=<path>`. The file contains additional etcd-specific parameters such as dial timeout, certification and compaction. See the [config files section][list-of-supported] for more details.
 
-Note that if the config file is not provided, the connector plugin will not be started and no connection will be established. If the etcd server is not reachable, the vpp-agent may not start at all.
+Note that if the config file is not provided, the connector plugin will not be started and a connection will not be established. If the etcd server is not reachable, the vpp-agent may not start. [Here](../tutorials/04_kv-store.md#tutorial-etcd-troubleshooting) are several etcd troubleshooting tips.
 
 The recommended tool to manage etcd data is [`etcdctl`][etcdctl].
 
@@ -195,7 +197,7 @@ Redis is another type of in-memory data store that can function as a database, c
 
 Instructions [here][redis-quickstart] on how to install a `redis-server` on any machine.
 
-The vpp-agent must start with the kvdbsync plugin using Redis as a connector (see code above or look over [this example][datasync-example]). Information where the Redis is running (IP address, port number) is defined in the .conf file and must be provided to the vpp-agent at startup.
+The vpp-agent must start with the kvdbsync plugin using Redis as a connector (see code above or look over [this example][datasync-example]). The IP address and port number of Redis server is defined in the [.conf file](http://download.redis.io/redis-stable/redis.conf) and must be provided to the vpp-agent at startup.
 
 The content of the .yaml configuration file:
 ```yaml

@@ -4,24 +4,21 @@
 
 ### Concept
 
-Every top-level message from northbound proto-definition is expected to have its own key which identifies a proto message data. The key can be composite (most often the case), containing some unique parameter (e.g. an interface name or a SPD index), or it can be global, allowing only one message of the given type to be stored under a global key. 
+Every top-level message from a northbound proto-definition is expected to have its own key which identifies a proto message data.
 
-The vpp-agent defines model specification - a set of data related to the given model, like proto name, key prefix, or model path. Very important is the model specification (or `Spec`), which defines a module, version, and type of the proto model.  
+The model is explained [here](../user-guide/concepts/#model-specification).
 
-**Module** groups models belonging for the same configuration entity. For example models for VPP configuration have `vpp` module, models for Linux configuration have `linux` module, etc.
+The keys can be structured in one of three ways:
 
-**Version** is the current version of the vpp-agent API. The version changes only between major vpp-agent versions, not after every API update.
+* composite which is most often the case
+* specific containing a unique parameter (e.g. an interface name or a SPD
+* global allowing only one message of the given type to be stored under a global key.
 
-**Type** is a keyword describing the given model (like interfaces, bridge-domains, etc.).
 
-The constructed key has the following format:
-```
-<key-prefix>/<config/status>/<module-path>/<version>/<type>/<optional-identifiers>
-``` 
 
 ### Registration
 
-Model is registered to the vpp-agent `spec.go`, where the key, paths, and names are generated and stored to the registration map. The example registration is done via the `models` package:
+The model is registered to the vpp-agent `spec.go`, in which the key, paths, and names are generated and stored in the registration map. An example registration is illustrated in the `models` package shown here
 
 ```go
 models.Register(&ProtoMessage{}, models.Spec{
