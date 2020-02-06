@@ -1,6 +1,6 @@
 # DB plugins
 
-## Datasync plugin
+## Datasync
 
 Datasync defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources such as data stores, message buses, or RPC-connected clients.
 
@@ -51,7 +51,7 @@ The Data Broker abstraction (see `Broker and Watcher APIs Functions` figure belo
 
 The Broker & Watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between key-value-based & sql-based data stores. Therefore the Broker & Watcher Go interfaces are defined in each package separately; while the method names for a given operation are the same, the method arguments are different.
 
-### Key-value data store
+### KV data store
 
 The `keyval` package defines the client API to access a key-value data store. It is comprised of two sub-APIs: 
 
@@ -62,7 +62,7 @@ Both interfaces are available with arguments of type `[]bytes` (raw data) and `p
 
 The `keyval` package also provides a skeleton for a key-value plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to data stores implementing the `KvPlugin` interface.
 
-## etcd plugin
+## etcd
 
 The etcd plugin provides access to an etcd key-value data store. The host or server where the etcd data store is running is also known as an etcd server.
 
@@ -245,7 +245,7 @@ Redis is the implementation of the key-value Data Broker client API for the Redi
 ```
 
 
-## Consul plugin
+## Consul
 
 The Consul plugin provides access to a consul key-value data store.
 

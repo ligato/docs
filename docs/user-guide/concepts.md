@@ -1,6 +1,6 @@
 # Concepts
 
-This section will describe several key concepts of the vpp-agent and Infra.
+This section describes several key concepts of the vpp-agent and cn-infra.
 
 !!! Note
     The documentation in some cases may refer to the Ligato Infra as cloud native-infra or cn-infra for short.
@@ -21,7 +21,7 @@ A single protobuf message represents a single model.
 
 ### Model Specification
 
-The model spec (specification) describes the model using the module, version and type fields:
+The model specification (spec) describes the model using the module, version and type fields:
 
 - `module` -  groups models belonging to the same configuration entity. For example, models for VPP configuration have a vpp module, and models for Linux configuration have a linux module
 - `version` - current version of the vpp-agent API. This value changes upon release of a new version.
@@ -31,8 +31,6 @@ These three parts are used to generate a model prefix. The model prefix is part 
 ```
 config/<module>/<version>/<type>/
 ```
-This is an important concept so let's look at an example.
-
 Here is the key for a [VPP interface][vpp-keys]:
 
 ```
@@ -56,7 +54,7 @@ Note that the value of `loop1` is the `<name>` of the interface.
 
 ## Key-Value Data Store Overview
 
-This section describes how the vpp-agent works with KV data stores.
+This section describes how the vpp-agent works with a KV data store.
 
 !!! Note
     Terms such as KV database, KVDB, KV store and KV data store are all terms that define a data store or database of key-value (KV) pairs, or more generally, structured data objects. Unless otherwise noted, we will use the term `KV data store` in this documentation. The term `KVDB` will appear in the code examples and this will remain as is.
@@ -77,22 +75,22 @@ Each vpp-agent is defined with a construct known as the `microservice label`. Ku
 
 Similarly, Ligato uses the [microservice label][microservice-label] to group vpp-agents with common attributes. In this case, the attribute is a prefix associated with configuration items stored in the KV data store. The vpp-agents with the same microservice label will watch or listen to configuration item changes with this common prefix. The prefix is also referred to as a `watch key`.
 
-What are the mechanics of this? First, we take `/vnf-agent/` and combine it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is part of the [key](../user-guide/reference.md) associated with a configuration item maintained inside a KV data store.
+The structure of the prefix is formed by taking `/vnf-agent/` and combining it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is part of the [key](../user-guide/reference.md) associated with a VPP configuration item maintained inside a KV data store.
 
-Here is the key for a VPP interface:
+Here again is the key for a VPP interface:
 
 ```
 /vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
 ```
-Next, the vpp-agent watches for any config changes in the KV data store with a matching watch key prefix. In the figure below, vpp-agent 1 on the left with a microservice label = `vpp1` will watch for config changes only with the matching prefix of `/vnf-agent/vpp1/`. vpp-agent 1 does not care about nor is it watching KV data store config data with a prefix of `/vnf-agent/vpp2/`.
+Next, the vpp-agent watches for any config changes in the KV data store with a matching prefix. In the figure below, vpp-agent 1 on the left with a microservice label = `vpp1` will watch for config changes with the matching prefix of `/vnf-agent/vpp1/`. vpp-agent 1 does not care about nor is it watching KV data store config data with a prefix of `/vnf-agent/vpp2/`.
 
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
 
 
-The vpp-agent validates the key prefix (in the format `/vnf-agent/<microservice-label>` as explained above) and if the label matches, the KV pair is passed to the vpp-agent configuration watchers. Additionally, if the prefix for the rest of the key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing such as the VPP data plane.
+The vpp-agent validates the prefix (in the format `/vnf-agent/<microservice-label>` as explained above) and if the label matches, the KV pair is passed to the vpp-agent configuration watchers. Additionally, if the prefix for the rest of the key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing such as programming the VPP data plane.
 
-There is quite a bit of flexibility in this architecture.
+Flexibility is extended using this architecture.
 
 - single KV data store can support multiple vpp-agent groups using the microservice label.
 - vpp-agent can receive config data from multiple sources (e.g. KV data store, GRPC, etc.). An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the vpp-agent configuration plugins.
@@ -104,7 +102,7 @@ It should be noted that the vpp-agent _does not require_ a KV data store. Config
 !!! Note
     Some of the items below are technically speaking KV data stores. Some are databases. To avoid acronym overlap and bloat, this section will continue to use the `KV data store` as a uniform term for both.
 
-The vpp-agent provides connectors to different KV data stores (see the list below). All are built on a common abstraction (called [kvdbsync][kvdbsync]). The KVDB abstraction approach simplifies the process of changing out one KV data store for another with minimal effort.
+The vpp-agent provides [connectors to different KV data stores](../plugins/db-plugins.md). All are built on a common abstraction called [kvdbsync][kvdbsync]). The KVDB abstraction approach simplifies the process of changing out one KV data store for another with minimal effort.
 
 
 
@@ -154,9 +152,9 @@ func New() *VPPAgent {
 }
 ```
  
-The orchestrator now connects to a Redis database server.
+The orchestrator now connects to a Redis server.
 
-To add support for a new KV data store, one need only write a plugin that can establish a connection to the new data store and wire it up with the kvdbsync plugin.
+To add support for a new KV data store, one need only write a plugin that can establish a connection to the new data store, and wire it up with the kvdbsync plugin.
 
 ### etcd
 
@@ -199,7 +197,7 @@ Instructions [here][redis-quickstart] on how to install a `redis-server` on any 
 
 The vpp-agent must start with the kvdbsync plugin using Redis as a connector (see code above or look over [this example][datasync-example]). The IP address and port number of the Redis server is defined in the [redis.conf file](http://download.redis.io/redis-stable/redis.conf) and must be provided to the vpp-agent at startup.
 
-The config file is provided to the vpp-agent using the flag `--redis-config=<path>`. Note that if the Redis config file is not provided, the connector plugin will not be started and no connection will be established. If the Redis server is not reachable, the vpp-agent may not start at all.
+The config file is provided to the vpp-agent using the flag `--redis-config=<path>`. Note that if the Redis config file is not provided, the connector plugin will not be started and no connection will be established. If the Redis server is not reachable, the vpp-agent may not start.
 
 The recommended tool to manage a Redis database is the [`redis-cli`][rediscli] tool.
 
@@ -327,7 +325,7 @@ Interfaces are the most common configuration item programmed into VPP. After int
 
 
 
-Start with an empty VPP and configure an interface:
+To illustrate how this works, start with an empty VPP and configure an interface:
 ```bash
 vpp# create loopback interface 
 loop0
@@ -486,17 +484,17 @@ The ordering and caching of the configuration data described in this section is 
 
 ## VPP Multi-Version Support
 
-The vpp-agent is highly dependent on the version of the VPP binary API used to send and receive various configuration message types. The VPP API is evolving and changing over time, adding new binary calls or, modifying or removing existing ones. The latter is the most crucial from the vpp-agent perspective since it introduces incompatibilities between vpp-agent and VPP.
+The vpp-agent is highly dependent on the version of the VPP binary API used to send and receive configuration message types. The VPP API is evolving and changing over time, adding new binary calls, or modifying or removing existing ones. The latter is the most crucial from the vpp-agent perspective since it introduces incompatibilities between the vpp-agent and VPP.
 
-For that reason the vpp-agent performs a compatibility check in the GoVPP multiplex plugin. Note that the GoVPP component provides an API for communication with VPP. The compatibility check attempts to read the message ID. If just one message ID is not found per validation in the cyclic redundancy code, VPP is considered incompatible and the vpp-agent will not connect. The message validation is essential for successful connection. 
+For that reason the vpp-agent performs a compatibility check in the GoVPP multiplex plugin. Note that the GoVPP component provides an API for communication with VPP. The compatibility check attempts to read the message ID. If just one message ID is not found per validation in the cyclic redundancy code, VPP is considered incompatible and the vpp-agent will not connect. The message validation is essential for a successful connection.
 
-The vpp-agent is tightly bound to the version of VPP. For that reason, the vpp-agent image is shipped together with a compatible VPP dataplane version to make it easier and safer for users.
+The vpp-agent is tightly bound to the version of VPP. For that reason, the vpp-agent image is shipped together with a compatible VPP data plane version to safeguard against inconsistencies.
 
-This function may cause some inconveniences during manual setup, and especially in scenarios where the vpp-agent needs to be quickly switched to a different VPP which may not be compatible.
+However, the compatibility check function could cause some inconveniences during manual setup. A scenario where the vpp-agent is switched to a different but incompatible version of VPP could induce this situation.
 
 ### VPP Compatibility
 
-The vpp-agent bindings are generated from VPP JSON API definitions. Those can be found in the path `/usr/share/vpp/api`. Full VPP installation is required if definitions need to be generated. The JSON API definition is then transformed to the `*.ba.go` file using `binapi-generator` which is a part of the [GoVPP project][govpp-project]. All generated structures implement the GoVPP `Message` interface proving the message name, CRC or message type which represents the generic type for all messages which can be sent via the VPP channel.
+The vpp-agent bindings are generated from VPP JSON API definitions. Those can be found in the path `/usr/share/vpp/api`. Full VPP installation is a prerequisite if definitions need to be generated. The JSON API definition is then transformed to the `*.ba.go` file using `binapi-generator`, which is a part of the [GoVPP project][govpp-project]. All generated structures implement the GoVPP `Message` interface providing the message name, CRC or message type. This represents the generic type for all messages that can be sent using a VPP channel.
 
 Example:
 ```go
@@ -515,9 +513,9 @@ func (*CreateLoopback) GetMessageType() api.MessageType {
 }
 ```
 
-The code above is generated from `create_loopback` within `interface.api.json`. The structure represents the binary API request call, and usually contains a set of fields which can be set to the required values (e.g. MAC address of the loopback interface). 
+The code above is generated from `create_loopback` within `interface.api.json`. The structure represents the binary API request call. usually this contains a set of fields, which can be set to the required values such as the MAC address of a loopback interface.
 
-Every VPP request call requires a response:
+Every VPP API request call requires a response:
 
 ```go
 type CreateLoopbackReply struct {
@@ -536,17 +534,19 @@ func (*CreateLoopbackReply) GetMessageType() api.MessageType {
 }
 ``` 
 
-The response has a `Retval` field, which is `0` if the API call was successful. In an error is returned, the field contains a numerical index of a VPP-defined error message. Other fields can be present usually with information generated within VPP with the `SwIfIndex` of the created interface above as an example. Notice that the response message has the same name but with a `Reply` suffix. Other types of messages may provide information from VPP. Those API calls have a suffix of `Dump` and for them, the reply message contains a `Details` suffix).
+The response has a `Retval` field, which is `0` if the API call was successful. In an error is returned, the field contains a numerical index of a VPP-defined error message. Other fields can be present with information generated within VPP with the `SwIfIndex` of the created interface above as an example.
+
+Note that the response message has the same name but with a `Reply` suffix. Other types of messages may provide information from VPP. Those API calls have a suffix of `Dump`, and the corresponding reply message contains a `Details` suffix).
 
 If the JSON API was changed, it must be re-generated in the vpp-agent. All changes caused by the modified binary api structures must be resolved (e.g. new or modified data fields). This process can be time consuming as it depends on the size of the detected differences.  
 
 ### Multi-Version
 
-In order to minimize updates for various VPP versions, the vpp-agent introduced multi-version support. The vpp-agent can switch to a different VPP version (with different APIs) without any changes to the vpp-agent itself and, without any need to rebuild the vpp-agent binary. Plugins can now obtain the version of the VPP and the vpp-agent to connect and initialize the correct set of `vppcalls`. 
+In order to minimize updates for various VPP versions, the vpp-agent introduced multi-version support. The vpp-agent can switch to a different VPP version with corresponding APIs without any changes to the vpp-agent itself,  without any need to rebuild the vpp-agent binary. Plugins can now obtain the version of the VPP and the vpp-agent to connect and initialize the correct set of `vppcalls`.
 
-Every `vppcalls` handler registers itself with the VPP version it will support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent performs a compatibility check with all available handlers, until it finds those compatible with required messages. The chosen handler must be in line with all messages, as it is not possible to use multiple handlers for a single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin for use. 
+Every `vppcalls` handler registers itself with the VPP version it will support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent performs a compatibility check with all available handlers, until it finds those compatible with the required messages. The chosen handler must be in line with all messages, as it is not possible to use multiple handlers for a single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin for .
 
-One small drawback of this solution is code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions which happens to be the case in the majority of cases.  
+One small drawback of this solution is code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions. This happens to be the case in the majority of cases.
 
 ## Client v2
 
@@ -554,23 +554,25 @@ Client v2 defines an API for configuration management of VPP and Linux plugins. 
 
 The API calls can be split into two groups:
 
-- **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. The name is an abbreviation of *resynchronization*. It is used initially and following any system event that may result in the configuration being out-of-sync. Recovering stale configuration options is impossible to determine locally (e.g. temporarily lost connection to the data store).
+- **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. The name is an abbreviation of *resynchronization*. It is applied at initialization, and following any system event resulting in an out-of-sync configuration. Recovering stale configuration options is impossible to determine locally, because for example, connectivity to the data store is temporarily lost.
 - **data change** delivers incremental configuration changes.
 
 There are two Client v2 implementations:
 
-- **local client** runs inside the same process as the vpp-agent and delivers configuration data through go channels directly to the plugins.
-- **remote client** stores the configuration using the given `keyval.broker`.
+- **local client** runs inside the same process as the vpp-agent and delivers configuration data through Go channels directly to the plugins.
+- **remote client** stores the configuration data in a data store using the given `keyval.broker`.
    
 ## Plugin Configuration Files
 
-Some plugins require external information to ensure proper behavior. An example is a database connector plugin such as etcd. By default, the plugin attempts to connect to a default IP address and port. If we want to connect to a different IP address or custom port, we need to pass this information to the plugin. 
+Some plugins require external information to ensure proper behavior. An example is the etcd plugin that needs to communicate with an external etcd server to retrieve configuration data. By default, the plugin attempts to connect to a default IP address and port. If connectivity to a different IP address or custom port is desired, this information must be conveyed to the plugin.
 
-For that purpose, the vpp-agent plugins support [config files][config-files]. The plugin configuration file (or just config-file) is a small file with fields (every plugin can define its own set of fields), which can statically modify the initial plugin setup and change some aspects of its behavior. 
+For that purpose, the vpp-agent plugins support [conf files][config-files]. A plugin conf file contains plugin-specific fields, which can be modified to effect changes, in plugin behavior.
 
 ### Plugin Definition of the Config File
 
-The configuration file is passed to the plugin via the vpp-agent flags. The command `vpp-agent -h` displays the list of all plugins supporting static config and can be set using the flag command:
+The configuration file is passed to the plugin via vpp-agent flags. The command `vpp-agent -h` displays the list of all plugins supporting static config and can be set using the flag command.
+
+Here is an example using vpp-agent flags to pass an etcd conf file to the plugin:
 
 ```bash
 vpp-agent -etcd-config=/opt/vpp-agent/dev/etcd.conf
@@ -581,7 +583,7 @@ Another option is to set the related environment variable:
 export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 ```
 
-The provided config conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the configuration file or any of its fields are not provided. This is so the plugin can be successfully started without it. 
+The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so the plugin can be successfully started without it.
 
 An example config file (in yaml format):
 ```bash
@@ -589,7 +591,7 @@ db-path: /tmp/bolt.db
 file-mode: 0654
 ```
 
-Every plugin supporting a configuration file defines its content as a separate structure. For example, here is the definition of the BoltDB config-file:
+Every plugin supporting a conf file defines its content as a separate structure. For example, here is the definition of the BoltDB config-file:
 ```go
 type Config struct {
 	DbPath      string        `json:"db-path"`
@@ -598,7 +600,7 @@ type Config struct {
 }
 ```
 
-As one can see, the config file can contain multiple fields of various types together with the JSON struct tag. Lists and maps are also allowed. Notice that not all fields must be defined in the file itself - empty fields are set to default values or handled as not set. 
+The conf file contains multiple fields of various types together with the JSON struct tag. Lists and maps are also allowed. All fields do not necessarily need to be defined in the file. Empty fields are set to default values, or treated as not set.
 
 A list of supported configuration files can be found [here][config-files].
 
