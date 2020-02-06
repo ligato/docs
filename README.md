@@ -29,6 +29,10 @@ mkdocs, version 1.0.4 from /usr/local/lib/python3.6/dist-packages/mkdocs (Python
 $ git clone https://github.com/ligato/docs
 ``` 
 
+```
+$ cd docs
+```
+
 ### 3. Start Server
 
 To start server, run following command in the root directory:
