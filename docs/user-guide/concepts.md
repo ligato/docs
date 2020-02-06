@@ -178,7 +178,7 @@ The vpp-agent `must` start with the kvdbsync plugin using etcd as a connector.
  
     There is the example above or you can look over the code [here][datasync-example].
 
-Here is an example of a minimal etcd.conf file defining the IP address and port number of the etcd server.
+Here is an example of an etcd.conf file defining the IP address and port number of the etcd server.
 ```
 endpoints:
   - "172.17.0.1:2379"
@@ -193,20 +193,13 @@ The recommended tool to manage etcd data is [`etcdctl`][etcdctl].
 
 More information: [Redis documentation][redis-plugin]
 
-Redis is another type of in-memory data store that can function as a database, cache or message broker.
+[Redis](https://redis.io/) is another type of in-memory data store that can function as a database, cache or message broker.
 
 Instructions [here][redis-quickstart] on how to install a `redis-server` on any machine.
 
-The vpp-agent must start with the kvdbsync plugin using Redis as a connector (see code above or look over [this example][datasync-example]). The IP address and port number of Redis server is defined in the [.conf file](http://download.redis.io/redis-stable/redis.conf) and must be provided to the vpp-agent at startup.
+The vpp-agent must start with the kvdbsync plugin using Redis as a connector (see code above or look over [this example][datasync-example]). The IP address and port number of the Redis server is defined in the [redis.conf file](http://download.redis.io/redis-stable/redis.conf) and must be provided to the vpp-agent at startup.
 
-The content of the .yaml configuration file:
-```yaml
-endpoint: localhost:6379
-```
-
-The config file is provided to the vpp-agent using the flag `--redis-config=<path>`. See [here][list-of-supported] to learn more about Redis configuration.
-
-Note that if the Redis config file is not provided, the connector plugin will not be started and no connection will be established. If the Redis server is not reachable, the vpp-agent may not start at all.
+The config file is provided to the vpp-agent using the flag `--redis-config=<path>`. Note that if the Redis config file is not provided, the connector plugin will not be started and no connection will be established. If the Redis server is not reachable, the vpp-agent may not start at all.
 
 The recommended tool to manage a Redis database is the [`redis-cli`][rediscli] tool.
 
@@ -217,23 +210,23 @@ The recommended tool to manage a Redis database is the [`redis-cli`][rediscli] t
 
 More information: [consul documentation][consul-plugin]
 
-Consul is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a Consul KV data store. The location of the Consul configuration file is defined using the flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
+[Consul](https://www.consul.io/) is a service mesh solution providing a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul plugin provides access to a Consul KV data store. The location of the [Consul conf  file](../user-guide/config-files.md#consul) is defined using the `consul-config` flag or set via the `CONSUL_CONFIG` environment variable.
 
 ### Bolt
   
-[Bolt][bolt] is low-level, simple and fast KV data store. The Bolt plugin provides an API to the Bolt server.
+[Bolt][bolt] is low-level, simple and fast KV data store for Go implementations. The Bolt plugin provides an API to the Bolt server.
 
 ### FileDB
 
 More information: [fileDB documentation][filedb-plugin]
 
-fileDB is unique in that it uses the host OS filesystem as a database. The key-value configuration is stored in text files in a defined path. The fileDB connector works like any other KV data store connector, reacts on data change events (file edits) in real time and supports all kvdb features (resync, versioning, microservice labels, ...).
+fileDB is unique in that it uses the host OS filesystem as a database. The key-value configuration is stored in text files in a defined path. The fileDB connector works like any other KV data store connector. It reacts on data change events (file edits) in real time and supports all kvdb features including resync, versioning, and microservice labels.
 
-The fileDB is not a process, so it does not need to be started - the vpp-agent only requires correct permissions to access configuration files and write access if the status is published.
+fileDB is not a process, so it does not need to be started. The vpp-agent only requires  correct permissions to access configuration files, and write access if the status is published.
 
 The configuration file format can be `.json` or `.yaml`.
 
-fileDB requires the config file to load, using the flag `--filedb-config=<path>`. 
+fileDB requires the [conf file](../user-guide/config-files.md#filedb) to load using the `--filedb-config=<path>` flag.
 
 Example config file:
 
@@ -241,13 +234,13 @@ Example config file:
 configuration-paths: [/path/to/directory/or/file.txt]
 ```
 
-In this case, absence of the config file does not prevent the vpp-agent from starting, since the configuration files can be created at a later point.
+In this case, absence of the conf file does not prevent the vpp-agent from starting, since the configuration files can be created at a later point.
 
-The configuration file can be edited with any text editor such as `vim`.
+The configuration file can be edited with a text editor such as `vim`.
 
 ### How to Use a KV Data Store in a Plugin
 
-In the plugin which intends to use a KV data store connection for publishing or watching, fields of this type are used:
+Implementing a plugin that intends to use a KV data store for publishing or watching begins with the following:
 
 ```go 
 import (
@@ -288,7 +281,7 @@ func New() *VPPAgent {
 
 **Watcher**
 
-Back in the plugin, start the watcher. The watcher requires two channel types: `datasync.ChangeEvent` and `datasync.ResyncEvent`  and a set of key prefixes to watch:
+Back in the plugin, start the watcher. The watcher requires two channel types: `datasync.ChangeEvent` and `datasync.ResyncEvent`. It also requires a set of key prefixes to watch.
 
 ```go
 p.resyncEventChannel := make(chan datasync.ResyncEvent)
@@ -298,7 +291,7 @@ keyPrefixes := []string{<prefixes>...}
 watchRegistration, err = p.Watcher.Watch("plugin-resync-name", p.resyncEventChannel, p.changeEventChannel, keyPrefixes)
 ```
 
-Data change and resync events arrive on a particular channel, so the next step is to start the watcher in a new go routine:
+Data change and resync events arrive on a particular channel. Next, start the watcher in a new Go routine:
 
 ```go
 func (p *Plugin) watchEvents() {
@@ -319,29 +312,29 @@ It is a good practice to start the event watcher before the watcher registration
 
 **Publisher**
 
-Nothing special is required for the publisher. The `KeyProtoValWriter` object defines a method `Put(<key>, <value>, <variadic-options>)` which allow the key-value pair to be saved in the data store. No `Delete()` method is defined. Objects can be removed by sending `null` data with the associated key. 
+The `KeyProtoValWriter` object defines a method, `Put(<key>, <value>, <variadic-options>)`, which allows the KV pair to be saved in the data store. No `Delete()` method is defined. Instead, objects can be removed by sending `null` data with the associated key.
 
 ## VPP Configuration Order
 
-A drawback of VPP is that the dependency relations of various configuration items is quite strict. The ability of VPP to manage this is limited, or not present at all. There are two problems to address:
+Successfully programming the VPP data plane can be a challenge. Dependencies between configuration items exist and there is a strict order of the programming actions that must be adhered to. This manifests itself into two distinct problems to solve:
 
-- A configuration item dependent on any other configuration item cannot be created "in advance". The dependency must be addressed first.
-- If the dependency item is removed, VPP behavior is not consistent. In other cases, the dependency item is removed as expected but VPP itself becomes unmanageable. 
+* A configuration item dependent on any other configuration item cannot be created "in advance". The dependency must be addressed first.
+* VPP data plane functions may not behave as desired or fail altogether if a dependency is removed.
 
 ### Configuration Order using VPP CLI
 
-Interfaces are the most basic type of VPP configuration. After interface creation, VPP generates an index which serves as a reference for other configuration items using interfaces (i.e. bridge domains, routes, ARP entries, ...). Other items, such as FIBs may have more complicated dependencies involving additional configuration types.
+Interfaces are the most common configuration item programmed into VPP. After interface creation, VPP generates an index, which serves as a reference, for other configuration items using an interface. Examples are bridge domains, routes, and ARP entries. Other items, such as FIBs may have more complicated dependencies involving additional configuration items.
 
-Example:
 
-Start with the empty VPP and configure an interface:
+
+Start with an empty VPP and configure an interface:
 ```bash
 vpp# create loopback interface 
 loop0
 vpp# 
 ```
 
-The interface `loop0` was added and the interface index (and name) was generated. The index can be shown by `show interfaces`. 
+The interface `loop0` was added and the interface index and name was generated. The index can be shown with the `show interfaces` command.
 
 Set the interface to the `UP` state. The interface name is required.
 ```bash
@@ -362,15 +355,15 @@ vpp# set interface l2 bridge loop0 1
 vpp#
 ``` 
 
-We set `loop0` to bridge domain with index 1. Again, we cannot use a non-existing interface since the names are generated at interface creation. We also cannot use a non-existing bridge domain.
+We set `loop0` to bridge domain with index 1. Again, we cannot use a non-existing interface because the names are generated at interface creation. We also cannot use a non-existing bridge domain.
 
-At last, let's configure the FIB table entry:
+Finally, let's configure the FIB table entry:
 ```bash
 vpp# l2fib add 52:54:00:53:18:57 1 loop0
 vpp#
 ```
 
-The call contains dependencies on the `loop0` interface and on our bridge domain with ID=1. From the example steps above, we see that the order of CLI commands must follow this strict sequence.
+This command contains dependencies on the `loop0` interface and the bridge domain with ID=1. From the example above, we see that the order of CLI commands must follow this strict sequence: interface, bridge-domain and l2fib.
 
 Now remove the interface:
 ```bash
@@ -378,15 +371,15 @@ vpp# delete loopback interface intfc loop0
 vpp#
 ```
 
-If we check the FIB table with `show l2fib details`, we will see the interface name was changed from `loop0` to `Stale`.
+The output of the `show l2fib verbose`command reveals that the interface name was changed from `loop0` to `Stale`.
 
-Remove the bridge domain. The command is:
+Remove the bridge domain.
 ```bash
 vpp# create bridge-domain 1 del
 vpp#
 ```
 
-Here is where we get into trouble, since the output of `show l2fib verbose` is still the same:
+The output of the `show l2fib verbose` is unchanged. This is problematic.
 ```bash
 vpp# sh l2fib verbose
     Mac-Address     BD-Idx If-Idx BSN-ISN Age(min) static filter bvi         Interface-Name        
@@ -394,18 +387,20 @@ vpp# sh l2fib verbose
 L2FIB total/learned entries: 2/0  Last scan time: 6.6309e-4sec  Learn limit: 4194304 
 vpp#
 ``` 
-But an attempt to remove the FIB entry is invalid:
+An attempt to remove the FIB entry is invalid:
 ```bash
 vpp# l2fib del 52:54:00:53:18:57 1 
 l2fib del: bridge domain ID 1 invalid
 vpp#
 ```
 
-So we end up with a configuration that cannot be removed until the bridge domain is re-created. To avoid similar scenarios and provide more flexibility in the configuration order, the vpp-agent uses an automatic configuration order mechanism. 
+So we end up with a configuration that cannot be removed until the bridge domain is re-created. To avoid similar scenarios and provide more flexibility in the configuration order, the vpp-agent uses an automatic configuration sequencing mechanism.
 
 ### Configuration Order using the Ligato vpp-agent
 
-The vpp-agent employs a northbound (NB) API definition for every supported configuration type (or item).  NB interface configuration through an API creates the interface itself, sets its state, MAC address, IP addresses and so on. The vpp-agent goes even further - it permits the configuration of VPP items with non-existent references. Such an item is not really configured, but the vpp-agent "remembers" it and programs VPP when possible, thus removing the strict VPP configuration ordering constraint.
+The vpp-agent employs a northbound (NB) API definition for every supported configuration item).  NB interface configuration through an API creates the interface, sets its state, MAC address, IP addresses and so on.
+
+The vpp-agent goes further by permiting the configuration of VPP items with non-existent references. Such an item is not really configured, but the vpp-agent "remembers" it and programs VPP when possible. This removes the strict VPP configuration ordering constraint.
 
 !!! note
     This part requires a basic setup to be prepared (vpp-agent + VPP + etcd). The steps to achieve this are covered in the [quick start guide][quickstart-guide].
@@ -422,14 +417,14 @@ Have a look at the vpp-agent output of `planned operations`:
   - value: { phys_address:"62:89:C6:A3:6D:5C" bridge_domain:"bd1" outgoing_interface:"if1" } 
 ```
 
-There is one `CREATE` transaction planned - our FIB entry with interface `if1` and bridge domain `bd1`. None of these exist, so the transaction was postponed, highlighting it as `[NOOP IS-PENDING]`.
+There is one `CREATE` transaction planned: the FIB entry with interface `if1`, and bridge domain `bd1`. None of these exist, so the transaction was postponed. It is flagged as `[NOOP IS-PENDING]`.
 
 Configure the bridge domain:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1 '{"name":"bd1","interfaces":[{"name":"if1"}]}'
 ```
 
-We have created a simple bridge domain with an interface. Let's parse the output:
+A simple bridge domain with an interface was created. Let's parse the output:
 ```bash
 1. CREATE:
   - key: config/vpp/l2/v2/bridge-domain/bd1
@@ -439,14 +434,14 @@ We have created a simple bridge domain with an interface. Let's parse the output
   - value: { name:"if1" }
 ```
 
-Now there are two planned operations - the first is the bridge domain `bd1` which can be created with no restrictions. The second contains the following highlight: `[DERIVED NOOP IS-PENDING]`. `DERIVED` means that this item was processed as a separate key within the vpp-agent (it is internal functionality so let's not bother with it for now). The rest of the flag is the same as before, meaning that the value `if1` is not present yet.
+Now there are two planned operations: the first is the bridge domain `bd1` which can be created with no restrictions; The second is flagged as: `[DERIVED NOOP IS-PENDING]`. `DERIVED` indicates an internal function performed by the vpp-agent. `[NOOP IS-PENDING` indicates that the interface `if1` is not present yet.
 
 Next step is to add the interface:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/tap1 '{"name":"tap1","type":"TAP","enabled":true}
 ```
 
-The output:
+vpp-agent planned operations output shows:
 ```bash
 1. CREATE:
   - key: config/vpp/v2/interfaces/tap1
@@ -459,11 +454,11 @@ The output:
   - value: { phys_address:"62:89:C6:A3:6D:5C" bridge_domain:"bd1" outgoing_interface:"if1" }
 ```
 
-There are three `planned operations` present. The first one is the interface itself, which was created and enabled. 
+There are three `planned operations` present. The first one is the interface itself that was created and enabled.
 
-The second operation is marked as `DERIVED` (again not important) and `WAS-PENDING` meaning the cached value could be resolved. This operation means that the interface was added to the bridge domain as defined in the bridge domain configuration.
+The second operation is marked as `DERIVED` (an internal vpp-agent designation) and `WAS-PENDING` meaning the cached value could be resolved. This operation shows that the interface was added to the bridge domain as defined in the bridge domain configuration.
 
-The last statement is marked `WAS-PENDING` as well and represents our FIB entry, cached until now. Since all dependencies were fulfilled (the bridge domain and the interface as a part of it), the FIB was configured.
+The last statement is marked `WAS-PENDING` as well and represents the FIB entry that was cached until now. Since the bridge domain and interface dependencies were fulfilled, the FIB was configured.
 
 Now let's try to remove the bridge domain as before:
 ```bash
@@ -483,13 +478,11 @@ The output:
   - value: { name:"bd1" interfaces:<name:"if1" > } 
 ```
 
-Notice that the first operation was the removal of the FIB entry. The value was not discarded by the vpp-agent because it still exists in the etcd data store. The vpp-agent places the value back into cache. This is an important step since the FIB entry is removed before the bridge domain. Thus it will not be accidentally mis-configured and stranded in VPP. 
+Observe that the first operation was the removal of the FIB entry. The value was not discarded by the vpp-agent because it still exists in the etcd data store. The vpp-agent returns this value to the cache. The FIB entry no longer exists in VPP and cannot really because the dependencies are not meant. This eliminates the possibility of an accidental mis-configuration or stranding the value in VPP. However, if the bridge domain reappears, the FIB entry will be added back into VPP without any external intervention.
 
-The value no longer exists in VPP since logically it is not possible without all dependencies met. But if the bridge domain reappears, the FIB will be added back in without any external intervention. 
+The second step indicates that the interface `if1` was removed from the bridge domain prior to its removal as shown in the last step of the transaction.
 
-The second step means that the interface `if1` was removed from the bridge domain prior to its removal in the last step of the transaction.
-
-The ordering and caching of the configuration described in this section is performed by the KVScheduler plugin. For more information on how this works, please refer to the discussion of the [KVScheduler][KVs].
+The ordering and caching of the configuration data described in this section is performed by the KVScheduler plugin. For more information on how this works, please refer to the discussion of the [KVScheduler][KVs].
 
 ## VPP Multi-Version Support
 

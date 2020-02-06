@@ -80,7 +80,7 @@ export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 
 ### Status Check
 
-- If injected, the etcd plugin will use the Status Check plugin to periodically issue a GET request to check connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with etcd, both the readiness and the liveness probe from the probe plugin will return a negative result (accessible only via a REST API in such cases).
+- If injected, the etcd plugin will use the Status Check plugin to periodically issue a GET request to check connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with the etcd server, both the readiness and the liveness probe from the probe plugin will return a negative result.
 
 ### Compacting
 
