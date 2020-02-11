@@ -263,12 +263,12 @@ The Consul plugin provides access to a consul key-value data store.
 
 ## FileDB
 
-The fileDB plugin uses the file system of an operating system as a key-value data store. The filesystem plugin watches for pre-defined files or directories, reads a configuration and sends response events according to changes.
+The fileDB (filesystem) plugin uses the file system of an operating system as a KV data store. The filesystem plugin watches for pre-defined files or directories, reads a configuration file, and generates events according to configuration changes.
 
-All configuration is resynced in the beginning (as for standard key-value data store). Configuration files then can be added, updated, moved, renamed or removed, plugin makes all of the necessary changes.
+All configuration data is resynced in the beginning just as it is for KV data stores. Configuration files then can be added, updated, moved, renamed or removed. The plugin performs all of the necessary changes.
 
 !!! danger "Important"
-    FileDB as datastore is read-only from the plugin perspective. Changes from within the plugin are not allowed.
+    The filesystem plugin treats the FileDB data store as `read-only`. Changes from within the plugin are not permitted.
 
 ### Configuration
 

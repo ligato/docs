@@ -1,4 +1,4 @@
-### Build the Agent and VPP without An Image
+### Build without Image
 
 This section explains how to build the VPP and VPP Agent directly (without image). This option is recommended for `development or testing only`. 
 
