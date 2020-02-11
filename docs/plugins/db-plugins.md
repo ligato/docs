@@ -4,67 +4,77 @@
 
 Datasync defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources such as data stores, message buses, or RPC-connected clients.
 
-Data synchronization is about multiple data sets that need to be synchronized whenever a particular event is published. The event can be published by:
+Data synchronization addresses the situation when multiple data sets must by synchronized as a result of a published event.
 
-- database (when particular data was changed); 
-- message bus (such as consuming messages from Kafka topics); 
-- or by RPC clients (using GRPC or REST calls ).
+Examples of components that publish events.
 
-The data synchronization APIs are centered around watching and publishing data change events. These events are processed asynchronously.
+- database upon updates to data
+- message bus consuming messages from Kafka topics
+- RPC clients using GRPC or REST API calls
 
-The data handled by one plugin can have references to the data of another plugin. Therefore, a proper time/order sequence of data resynchronization between plugins needs to be maintained. The datasync plugin initiates a full data resync in the same order as the other plugins have been registered in Init().
+The data synchronization APIs are centered around watching, and publishing data change events. These events are processed asynchronously.
+
+The data handled by one plugin can have references to the data of another plugin. Therefore, a proper time/order sequence of data resynchronization between plugins must be maintained. The datasync plugin initiates a full data resync in the same order as the other plugins have been registered in Init().
 
 !!! Note
-    In the discussions that follow, the term `agent` is used to describe a server. A KV data store holds data/configuration information for multiple agents (servers). Mechanisms are introduced to propagate  data/configurations changes from the KV data store to the different agents. In addition these changes may require a resynchronization. 
-  
-### Watch data API
+    In the discussions that follow, the term `server agent` is used to describe a server. A KV data store holds data/configuration information for multiple server agents. Mechanisms are introduced to propagate  data/configurations changes from the KV data store to the different server agents. These changes may require a resynchronization.
 
-Watch data API (see `Watch data API Functions` figure below) is used by app plugins to:
+---
 
-- Subscribe to channels for data changes using `Watch()`, while being "abstracted away" from the particular message source such as etcd.
+### Watch Data API
+
+The watch data API is used by plugins to:
+
+- Subscribe to channels for data changes using `Watch()`, while being "abstracted away" from the particular message source such as an etcd server.
 - Process a full Data RESYNC (startup & fault recovery scenarios). Feedback is provided to the user of this API (e.g. success or error) via callback.
-- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where only the minimal set of changes (deltas) needed to required to reach synchronized state is propagated to plugins. Again, feedback to the user of the API (e.g. successful configuration or an error) is returned via callback.
+- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where the minimal set of changes (deltas) to reach synchronized state are propagated to plugins. Feedback to the user of the API (e.g. successful configuration or error) is returned via callback.
 
 ![datasync][datasync-image]
 <p style="text-align: center; font-weight: bold">Watch data API Functions</p>
 
-This API define two types of events that a plugin be able to process:
+This API defines two types of events that a plugin should support:
 
-- Full Data RESYNC (resynchronization) event triggers a resync of the entire configuration. This event is used after an agent start/restart, or for a fault recovery scenario (e.g. when the agent's (i.e. server) connectivity to an external data source is lost and restored).
+- Full Data RESYNC (resynchronization) event triggers a resync of the entire configuration. This event is used after an agent start/restart, or for a fault recovery scenario (e.g. when the agent's connectivity to an external data source is lost and restored).
 - Incremental Data CHANGE event triggers incremental processing of configuration changes. Each data change event contains both the previous and the new/current value. The Data synchronization is switched to this optimized mode only after a successful Full Data RESYNC.
 
-### Publish data API
+---
 
-Publish data API (see `Publish data API Functions` figure below) is used by app plugins to asynchronously publish events with data change values and still remain abstracted away from the target data store, message bus or RPC client(s).
+### Publish Data API
+
+The publish data API is used plugins to asynchronously publish events with data change values and still remain abstracted away from the target data store, message bus or RPC client(s).
 
 ![datasync publish][datasync-publish-image]
 <p style="text-align: center; font-weight: bold">Publish data API Functions</p>
 ## Data Broker 
 
-The Data Broker abstraction (see `Broker and Watcher APIs Functions` figure below) is based on two APIs: 
+The Data Broker abstraction is based on two APIs:
 
-* **Broker** - used by app plugins to `pull` (i.e. read) data from a data store or `push` (i.e. write) data into the data store. Data can be retrieved for a specific key or by running a query. Data can be written for a specific key. Multiple writes can be executed in a transaction.
-* **Watcher** - used by app plugins to WATCH data on a specified key. Watching means to monitor for data changes and receive a notification as soon as a change occurs.
+* **Broker** - used by plugins to `pull` (i.e. read) data from a data store or `push` (i.e. write) data into the data store. Data can be retrieved for a specific key or by running a query. Data can be written for a specific key. Multiple writes can be executed in a transaction.
+* **Watcher** - used by plugins to `watch` data on a specified key. Watching means to monitor for data changes, and receive a notifications upon any change occurring.
   
 ![db][db-image]
 <p style="text-align: center; font-weight: bold">Broker and Watcher APIs Functions</p>
 
-The Broker & Watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between key-value-based & sql-based data stores. Therefore the Broker & Watcher Go interfaces are defined in each package separately; while the method names for a given operation are the same, the method arguments are different.
+The broker amd watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between KV-based and sql-based data stores. Therefore the broker and watcher Go interfaces are defined in each package separately; The method names for a given operation are the same, the method arguments are different.
 
-### KV data store
+---
 
-The `keyval` package defines the client API to access a key-value data store. It is comprised of two sub-APIs: 
+### Keyval Package
+
+The `keyval` package defines the client API for accessing a KV data store. It is comprised of two sub-APIs:
 
 - `Broker` supports reading and manipulation of key-value pairs. 
 - `Watcher` provides functions for monitoring of changes in a data store. 
 
-Both interfaces are available with arguments of type `[]bytes` (raw data) and `proto.Message` (protobuf formatted data).
+Both interfaces are available with arguments of type `bytes` (raw data) and `proto.Message` (protobuf-formatted data).
 
-The `keyval` package also provides a skeleton for a key-value plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to data stores implementing the `KvPlugin` interface.
+The `keyval` package also provides a skeleton for a KV data store plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to data stores implementing the `KvPlugin` interface.
+
+---
 
 ## etcd
 
-The etcd plugin provides access to an etcd key-value data store. The host or server where the etcd data store is running is also known as an etcd server.
+The etcd plugin provides access to an etcd KV data store. The host or server where the etcd data store is running is also known as an etcd server.
 
 ### Configuration
 
@@ -78,9 +88,11 @@ vpp-agent -etcd-config=/opt/vpp-agent/dev/etcd.conf
 export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 ```
 
+etcd config file options are located [here](../user-guide/config-files.md#etcd)
+
 ### Status Check
 
-- If injected, the etcd plugin will use the Status Check plugin to periodically issue a GET request to check connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with the etcd server, both the readiness and the liveness probe from the probe plugin will return a negative result.
+The etcd plugin will uses Status Check plugin to periodically issue a GET request to verify connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with the etcd server, both the readiness and the liveness probe from the probe plugin will return a negative result.
 
 ### Compacting
 
@@ -91,7 +103,7 @@ You can compact etcd using two ways.
 
 ### Reconnect resynchronization
 
-- If connection to the etcd is interrupted, resync can be automatically called after re-connection. This option is disabled by default but can be enabled in the `etcd.conf` file.
+If connection to the etcd server is interrupted, resync can be automatically called following reconnection. This option is disabled by default but can be enabled in the `etcd.conf` file.
   
 Set `resync-after-reconnect` to `true` to enable the feature.
   
@@ -100,7 +112,7 @@ Set `resync-after-reconnect` to `true` to enable the feature.
 
 The code snippets below provide examples to help you get started. For simplicity, error handling is omitted.
 
-### Need to import following dependencies
+### Import Dependencies
 
 ```
 import "github.com/ligato/cn-infra/db/keyval/kvproto"
@@ -109,7 +121,7 @@ import "github.com/ligato/cn-infra/utils/config"
 import "github.com/ligato/cn-infra/logging/logrus"
 ```
 
-### Define client configuration based on your Redis installation.
+### Define Client Configuration
 
 - Single Node
 var cfg redis.NodeConfig
@@ -128,14 +140,14 @@ var cfg interface{}
 cfg, err := redis.LoadConfig(configFile)
 ```
 
-### Create connection from configuration
+### Create Connection
 
 ```
 client, err := redis.CreateClient(cfg)
 db, err := redis.NewBytesConnection(client, logrus.DefaultLogger())
 ```
 
-### Create Brokers / Watchers from connection
+### Create Brokers and Watchers
 
 ```
 //create broker/watcher that share the same connection pools.
@@ -149,7 +161,7 @@ protoBroker := wrapper.NewBroker("some-prefix")
 protoWatcher := wrapper.NewWatcher("some-prefix")
 ```
 
-### Perform CRUD operations
+### Perform CRUD Operations
 
 ```
 // put
@@ -197,7 +209,7 @@ txn.Put("key103", []byte("val 103")).Put("key104", []byte("val 104"))
 err := txn.Commit()
 ```
 
-### Subscribe to key space events
+### Key Space Event Subscription
 
 ```
 watchChan := make(chan keyval.BytesWatchResp, 10)
@@ -217,7 +229,7 @@ for {
 }
 ```
 !!! note
-    You must configure Redis so it may publish key space events.
+    You must configure Redis to publish key space events.
 ```
 config SET notify-keyspace-events KA
 ```
@@ -237,7 +249,7 @@ $ docker-compose ps
 |dockerredissentinel_sentinel_2 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
 |dockerredissentinel_sentinel_3 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
 
-Redis is the implementation of the key-value Data Broker client API for the Redis key-value data store. The entity `BytesConnectionRedis` provides access to CRUD as well as event subscription API's.
+Redis is the implementation of the KV data broker client API for the Redis KV data store. The entity `BytesConnectionRedis` provides access to CRUD as well as event subscription APIs.
 ```
    +-----+   (Broker)   +------------------------+ -->  CRUD      +-------+ -->
    | app |                   |  BytesConnectionRedis  |                 | Redis |
@@ -247,42 +259,42 @@ Redis is the implementation of the key-value Data Broker client API for the Redi
 
 ## Consul
 
-The Consul plugin provides access to a consul key-value data store.
+The Consul plugin provides access to a Consul KV data store.
 
 ### Configuration
 
-- Location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
+Th location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
 
 ### Status Check
 
-- If injected, the Consul plugin will use the Status Check plugin to periodically issue a GET request to check connection status. The Consul connection state affects the global status of the agent. If the agent cannot establish a connection with Consul, both the readiness and the liveness probe from the probe plugin will return a negative result (accessible only via a REST API in such cases).
+If injected, the Consul plugin will use the Status Check plugin to periodically issue a GET request to verify connection status. The Consul connection state affects the global status of the agent. If the agent cannot establish a connection with Consul, both the readiness and the liveness probe from the probe plugin will return a negative result (accessible only via a REST API in such cases).
 
-### Reconnect resynchronization
+### Reconnect Resync
 
-- If connection to the Consul data store is interrupted, resync can be automatically called after re-connection. This option is disabled by default but can be enabled in the etcd.conf file. Set `resync-after-reconnect` to `true` to enable the feature.
+If connection to the Consul data store is interrupted, resync can be automatically called upon reconnection. This option is disabled by default but can be enabled in the consul.conf file. Set `resync-after-reconnect` to `true` to enable the feature.
 
 ## FileDB
 
-The fileDB (filesystem) plugin uses the file system of an operating system as a KV data store. The filesystem plugin watches for pre-defined files or directories, reads a configuration file, and generates events according to configuration changes.
+The fileDB plugin uses the operating system's file system as a KV data store. This plugin watches for pre-defined files or directories, reads a configuration file, and generates events according to configuration changes.
 
-All configuration data is resynced in the beginning just as it is for KV data stores. Configuration files then can be added, updated, moved, renamed or removed. The plugin performs all of the necessary changes.
-
-!!! danger "Important"
-    The filesystem plugin treats the FileDB data store as `read-only`. Changes from within the plugin are not permitted.
+All configuration data is resynced in the beginning just as it is for KV data stores. Configuration files can then be added, updated, moved, renamed or deleted. The plugin performs all of the necessary changes.
 
 ### Configuration
 
-All files/directories used as a data store must be defined in the configuration file. Location of the file can be defined either by the command line flag `filedb-config` or set via the `FILEDB_CONFIG` environment variable.
+All files or directories used as a data store must be defined in the configuration file. The location of the file can be defined either by the command line flag `filedb-config` or set using the `FILEDB_CONFIG` environment variable.
 
-### Supported formats
+### Supported Formats
+
+JSON and YAML-formatted data are supported.
 
 * JSON `(*.json)`
 * YAML `(*.yaml)`
 
-### Data structure
+### Data Structure
 
-Currently only JSON and YAML-formatted data is supported. JSON format follows:
+The structure of the configuration files conform to standard .json and.yaml syntax.
 
+JSON format example:
 ```
 {
     "data": [
@@ -304,7 +316,7 @@ Currently only JSON and YAML-formatted data is supported. JSON format follows:
 
 ``` 
 
-For YAML:
+YAML format example:
 
 ```
 
@@ -316,9 +328,11 @@ data:
 
 ```
 
-Key must contain instance prefix with a microservice label. This is so the plugin knows which portions of the configuration are applicable to it. All configuration data is stored internally in a local database. This allows one to compare events and respond with the correct `previous` value for a given key. 
+The `key` must contain a prefix with a microservice label. The fileDB plugin uses the prefix to identify the data in the configuration file it will apply to configure the system. All configuration data is stored internally in a local database. This allows a user or an application to compare events and respond with the correct `previous` value for a given key.
 
-### Data state propagation
+The `value` identifies a configuration item such as an interface.
+
+### Data State Propagation
 
 Data types supporting status propagation (e.g. interfaces or bridge domains) can store their state in the filesystem. There is a field in the configuration file called `status-path` which must be set in order to store status. Status data will be stored in JSON or YAML formats.
 
