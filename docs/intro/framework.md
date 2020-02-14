@@ -2,22 +2,13 @@
 
 ---
 
-## Context
-
-Ligato is THE software platform for building and developing VPP-based cloud native network functions (CNFs). Because VPP is the preferred dataplane (linux kernel also supported), one way to view the architecture would be through the lens of a protocol stack. Now this is not necessarily your classic 7-layer OSI model but rather one that has evolved over the last few years. Applications pass on their intent to orchestrators such as Kubernetes. The orchestrators consume the intent and in cahoots with APIs and other software collaborators (e.g. kubectl, CNI, etc.) more or less convert it into low-level commands to configure network resources. 
-
-With VPP a bit more precision and flexibility is required. This is because VPP supports a broad suite of L2/L3/L4 network functions and services. High performance L2 bridge domains interconnecting application pod via tunnels are supported. ACLs, NATs and IPsec tunnels can be provisioned and even wired up into K8s services and policies along with service functions. All with scale, performance and resiliency. Of course one size _does not fit_ all and it is a certainty that developers will build CNFs of different shapes, sizes and abilities exploiting the VPP dataplane in one way or another. 
-
-However _one size can fit all_ when talking about a software platform, toolchains, programming languages, resource models, APIs, management and control. It really makes no sense to 'one-off' the CNF software ecosystem. It just leads to a slew of avoidable challenges including pidgeon-holed resources, code duplication, closed APIs, a high degree of partial function duplication and mis-matched orchestrator/resource interactions. Survivability and evolvability are called into question.   
-
-A subtle point to note is that while all of these wonderful VPP functions are available to CNFs, the dynamics and velocity of cloud native enabled configuration starts/restarts/stops driven by available resource gravity fields requires a new configuration model. It needs to be fast, accurate, resilient, lightweight and all the while handle that delicate balancing act between application intent and run-time network configuration. Time is not our friend here. Guesswork is problematic. And an all-knowing centralized oracle is not the answer.   
 
 ## Ligato Architecture Stack
 
-As suggested, we can view and describe the Ligato framework as a protocol Stack. See the `Ligato Architecture Stack` below. At the bottom we have the VPP and Linux kernel dataplanes. 
+The Ligato framework can be viewed as a protocol Stack. See the `Ligato Architecture Stack` below. At the bottom we have the VPP and Linux kernel dataplanes.
 
-!!! Note 
-    While much of the Ligato development effort and software is focused on VPP, there is and certainly can be new CNFs (or even non-CNFs) that employ the linux kernel dataplane. The `one size can fit all` discussion applies here with respect to dataplane realities in the CNF universe.
+
+
 
 ![ligato framework][ligato-framework]
 <p style="text-align: center; font-weight: bold">Ligato Architecture Stack</p>
@@ -27,11 +18,11 @@ On the top, are the applications with the assumption that over time, they will b
 Ligato resides in the middle. Explanations follow.
 
 
-### Infra
+### cn-infra
 
-Each management/control plane app built on top of the Infra framework (also referred to as cn-infra) is a set of modules called "plugins". Each plugin provides a very specific/focused functionality. Some plugins come with the cn-infra framework; some are written by the app developers. In other words, the cn-infra framework is made up of a set of plugins that together define the framework's functional potential. In the cloud native world of software development platforms, Ligato offers tablestakes: logging, health checks, messaging (e.g. Kafka), a common front-end API and back-end connectivity to various KV data stores (etcd, Cassandra, Redis, etc. ), and REST and gRPC APIs.
+Each management/control plane app built on top of the Infra framework (also referred to as cn-infra) is a set of modules called "plugins". Each plugin provides a very specific/focused functionality. Some plugins come with the cn-infra framework; some are written by the app developers. In other words, the cn-infra framework is made up of a set of plugins that together define the framework's functional potential. In the cloud native world, Ligato offers tablestakes: logging, health checks, messaging (e.g. Kafka), a common front-end API and back-end connectivity to various KV data stores and databases (etcd, Cassandra, Redis, etc. ), and REST and gRPC APIs.
 
-Infra provides plugin lifecycle management (initialization and graceful shutdown of plugins) and a set of framework plugins exposing APIs that in turn, app plugins can employ. App plugins themselves may provide their own APIs consumed by external clients. See the `CN-infra` figure below.
+cn-infra provides plugin lifecycle management (initialization and graceful shutdown of plugins) and a set of framework plugins exposing APIs that in turn, app plugins can employ. App plugins themselves may provide their own APIs consumed by external clients. See the `CN-infra` figure below.
 
 ![cn-infra][infra]
 <p style="text-align: center; font-weight: bold">CN-infra</p>

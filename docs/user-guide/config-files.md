@@ -1,6 +1,6 @@
 # Config Files
 
-This section discusses configuration files and flags.
+This section discusses plugin configuration files and flags.
 
 ---
 

@@ -8,7 +8,7 @@ This section describes several key concepts of the vpp-agent and cn-infra.
 
 The model represents an abstraction of an object that can be managed through northbound APIs exposed by the vpp-agent. The model is used to generate a complete `key` associated with a value for the object stored in a KV data store.
 
-An example of model is a VPP route.
+
 
 ### Model Components
 
