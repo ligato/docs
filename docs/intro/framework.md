@@ -5,7 +5,7 @@
 
 ## Ligato Architecture Stack
 
-The Ligato framework can be viewed as a protocol Stack. See the `Ligato Architecture Stack` below. At the bottom we have the VPP and Linux kernel dataplanes.
+The Ligato framework can be viewed as a protocol Stack. At the bottom we have the VPP and Linux kernel data planes.
 
 
 
@@ -13,14 +13,22 @@ The Ligato framework can be viewed as a protocol Stack. See the `Ligato Architec
 ![ligato framework][ligato-framework]
 <p style="text-align: center; font-weight: bold">Ligato Architecture Stack</p>
 
-On the top, are the applications with the assumption that over time, they will be developed and deployed as microservices inside containers residing in pods deployed on VMs or bare metal servers all under the purview of Kubernetes.
+On the top, are applications that make use of the functions enabled by Ligato. From an architecture perspective, this is a _placeholder_ for any number of different application possibilities.
 
-Ligato resides in the middle. Explanations follow.
+Examples are:
+
+- Simple ACL configuration tool
+- IKE control plane for an IPsec VPN gateway
+- Order fulfillment process that constructs a service function chain delivered to a customer as a communication service.
+
+Ligato is agnostic to the make up of and the functions implemented in an application. Simply put, Ligato is composed of building blocks used by developers to assemble a solution.
+
+Returning to the stack diagram, Ligato is slotted in the middle. Explanations of its components follow.
 
 
 ### cn-infra
 
-Each management/control plane app built on top of the Infra framework (also referred to as cn-infra) is a set of modules called "plugins". Each plugin provides a very specific/focused functionality. Some plugins come with the cn-infra framework; some are written by the app developers. In other words, the cn-infra framework is made up of a set of plugins that together define the framework's functional potential. In the cloud native world, Ligato offers tablestakes: logging, health checks, messaging (e.g. Kafka), a common front-end API and back-end connectivity to various KV data stores and databases (etcd, Cassandra, Redis, etc. ), and REST and gRPC APIs.
+Each management/control plane app built on top of the Infra framework (also referred to as cn-infra) is a set of modules called "plugins". Each plugin provides a very specific/focused functionality. Some plugins come with the cn-infra framework; some are written by the app developers. In other words, the cn-infra framework is made up of a set of plugins that together define the framework's functional capabilities. In the cloud native world, Ligato offers tablestakes: logging, health checks, messaging (e.g. Kafka), a common front-end API and back-end connectivity to various KV data stores and databases (etcd, Cassandra, Redis, etc. ), and REST and gRPC APIs.
 
 cn-infra provides plugin lifecycle management (initialization and graceful shutdown of plugins) and a set of framework plugins exposing APIs that in turn, app plugins can employ. App plugins themselves may provide their own APIs consumed by external clients. See the `CN-infra` figure below.
 
