@@ -21,23 +21,23 @@ Examples are:
 - IKE control plane for an IPsec VPN gateway
 - Order fulfillment process that constructs a service function chain delivered to a customer as a communication service.
 
-Ligato is agnostic to the make up of and the functions implemented in an application. Simply put, Ligato is composed of building blocks used by developers to assemble a solution.
+Ligato is agnostic to the composition and functions implemented in an application. Simply put, Ligato is composed of building blocks used by developers to assemble a solution.
 
 Returning to the stack diagram, Ligato is slotted in the middle. Explanations of its components follow.
 
 
 ### cn-infra
 
-Each management/control plane app built on top of the Infra framework (also referred to as cn-infra) is a set of modules called "plugins". Each plugin provides a very specific/focused functionality. Some plugins come with the cn-infra framework; some are written by the app developers. In other words, the cn-infra framework is made up of a set of plugins that together define the framework's functional capabilities. In the cloud native world, Ligato offers tablestakes: logging, health checks, messaging (e.g. Kafka), a common front-end API and back-end connectivity to various KV data stores and databases (etcd, Cassandra, Redis, etc. ), and REST and gRPC APIs.
+cn-infra and the vpp-agent are the two constituent frameworks that together, form the basis of the Ligato framework. With Ligato, each management or control plane applicaton (app) can utilize one or modules called plugins. Each plugin provides a specific function or functions. Some plugins come with the cn-infra framework; Others come with the vpp-agent; Yet others can be created by app developers performing a custom task.
 
-cn-infra provides plugin lifecycle management (initialization and graceful shutdown of plugins) and a set of framework plugins exposing APIs that in turn, app plugins can employ. App plugins themselves may provide their own APIs consumed by external clients. See the `CN-infra` figure below.
+cn-infra can be decomposed into a suite of plugins supporting functions present in modern cloud-native CNFs and apps. cn-infra plugins offer logging, health checks, messaging, KV data store connectivity, and REST and gRPC APIs. Developers can implement a mix of cn-infra plugins, that together with other vpp-agent and/or custom plugins, define the CNF functionality. cn-infra provides plugin lifecycle management such as initialization and graceful shutdown.
 
 ![cn-infra][infra]
 <p style="text-align: center; font-weight: bold">CN-infra</p>
 
-The framework is modular and extensible. Plugins supporting new functionality (e.g. another KV store or another message bus) can be easily swapped or spliced in to the existing set of Infra framework plugins. Moreover, Infra-based apps can be built in layers: a set of app plugins together with new Infra plugins can form a new framework providing APIs/services to higher layer apps. This approach was used in the building the vpp-agent discussed below.
+The framework is modular and extensible. Plugins supporting new functionality (e.g. another KV store or another message bus) can be swapped in or out as needed. Moreover, cn-ifra-based apps can be built in layers; app plugins together with new cn-infra plugins can form a new foundation providing APIs or services to higher layer apps. This approach was used in constructing the vpp-agent discussed below.
 
-Extending the code base does not mean that all plugins end up in all apps - app writers can pick and choose only those framework plugins that interest them. For example, if an app does not need a KV store, the Infra framework KV data store plugins need not be included in the app. Simple - use what you need.
+Extending the code base does not mean that all plugins are present in all apps. Again, developers can cherry-pick the plugins best suited for their management or control plane app. For example, if an app does not require a KV store, cn-infra's  KV data store plugins need not be included.
 
 ### VPP Agent
 
