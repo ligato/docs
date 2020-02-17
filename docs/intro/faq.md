@@ -18,7 +18,7 @@ A [control plane agent for a VPP data plane](framework.md#vpp-agent) that reside
 No. Select Ligato components (i.e. vpp-agent, prometheus plugin, etcd connectors, etc.) are used as building blocks for CNF and/or cloud-native application implementations.
 
 
-### How are vpp-agent and cn-infra related?
+### How are the vpp-agent and cn-infra related?
 
 They compliment each other. Both provide plugins for developers to use in implementing CNFs. For example, a VPP-based CNF will use vpp-agent plugins for data plane programmability and cn-infra plugins (e.g. etcd connector, REST, gRPC, etc.) for communications with external applications.
 
@@ -57,7 +57,7 @@ Small chunk of code performing a specific function. Ligato (vpp-agent and cn-inf
 
 ### How does a Ligato-built CNF talk to external apps?
 
-Ligato provides plugins and developers can craft their own for communicating with external applications.
+Ligato provides plugins, and developers can craft their own for communicating with external applications.
 
 ### What is a Key Value (KV) Data Store?
 

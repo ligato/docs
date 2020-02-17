@@ -161,23 +161,23 @@ _**GoVPPMux Config File Options**_
 ---
 
 
-### GRPC
+### gRPC
 
 ```bash
 -grpc-config=
 ```
 
-_**GRPC Config File Options**_
+_**gRPC Config File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-|**endpoint**|_string_|0.0.0.0:9111|address of GRPC netListener|
+|**endpoint**|_string_|0.0.0.0:9111|address of gRPC netListener|
 |**permission**|_int_|000|Three or four-digit permission setup for unix domain socket file (if used)|
 |**force-socket-removal**|_bool_|false|If set and unix type network is used, the existing socket file will be always removed and re-created|
 |**network**|_string_|tcp|Available socket types: tcp, tcp4, tcp6, unix and unixpacket.|
 |**max-msg-size**|_int_|4096|Maximum message size in bytes for inbound messages|
 |**max-concurrent-streams**|_unit32_|0|returns a ServerOption that will apply a limit on the number of concurrent streams to each ServerTransport|
-**extended-logging**|_bool_|false|Enables logging additional GRPC transport messages|
+**extended-logging**|_bool_|false|Enables logging additional gRPC transport messages|
 |**insecure-transport**|_bool_|false|if true, TLS configuration will not be used|
 
 The following config file options are used if `insecure-transport` is `false`:
@@ -188,7 +188,7 @@ The following config file options are used if `insecure-transport` is `false`:
 |**key-file**|_string_||Required for creating a secure connection. example is /path/to/key.pem|
 |**ca-file**|_string_||Set custom CA to verify client's certificate. If not set, client's certificate is not required. </br></br>Examples ca-files are /path/to/ca1.pem and /path/to/ca2.pem|
 
-This flag can be used to set the GRPC port:
+This flag can be used to set the gRPC port:
 
 ```bash
 -grpc-port=

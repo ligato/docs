@@ -10,7 +10,7 @@ Cloud providers are shifting towards a cloud-native approach to application deve
 Networks play a key role in cloud-native environments. Network functions such as L2/L3 switching and routing, IPsec VPN gateways, NAT and load balancers operate in containers, and are referred to as cloud-native network functions (CNF). Applying the Kubernetes lifecycle to CNFs allows a provider to spin up different network configurations to meet their respective needs. Some examples:
 
 - Webscale services deployed on multiple application pods interconnected through a virtual overlay composed of CNF virtual switches
-- Customized service "bundles" composed of router, load balancer, firewall and NAT CNFs strung together in a service function chain (SFC)
+- Customized service "bundles" consisting of router, load balancer, firewall and NAT CNFs strung together in a service function chain (SFC)
 - VPN Interconnect employing IPsec crypto/tunnel CNFs
 
 CNF solutions must keep pace with cloud-native adoption growth. Therefore the cloud-native community requires solutions that simplify and expedite the development and implementation of customized, scalable and versatile CNFs.
@@ -40,7 +40,7 @@ _** Ligato provides a vpp-agent for programming a VPP data plane**_
 * Supplies VPP-specific plugins
 * vpp-agent and vpp packaged up in single container
 * Dependency handling between related configuration items
-* Transaction-based configuration processing
+* Transaction-based configuration processing and tracking
 * Failover synchronization mechanisms (aka resync)
 * Stateless configuration management based on KV data store "watch" paradigm
 * Direct access via REST or gRPC

@@ -89,3 +89,7 @@ code {
     border: .1px solid black;
     text-align: center;
 }
+
+.toctree-l5 {
+    width: 280px;
+}
