@@ -1,13 +1,12 @@
 # Concepts
 
-This section describes several key concepts of the vpp-agent and cn-infra.
+This section describes several important concepts of the vpp-agent and cn-infra.
 
 ---
 
 ## What is a Model?
 
 The model represents an abstraction of an object that can be managed through northbound APIs exposed by the vpp-agent. The model is used to generate a complete `key` associated with a value for the object stored in a KV data store.
-
 
 
 ### Model Components
@@ -24,27 +23,52 @@ The model specification (spec) describes the model using the module, version and
 - `version` - current version of the vpp-agent API. This value changes upon release of a new version.
 - `type` - keyword describing the given model (e.g. interfaces, bridge-domains, etc.)
 
+Model specs are defined in the `models.go` files contained in the [vpp-agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
 
-These three parts form a `model spec` like so.
+### Key Prefix
+
+The three fields of the `model spec` are used to form a `key prefix` like so.
 ```
 config/<module>/<version>/<type>/
 ```
 
-Note that a specific identifier can be appended to the end of the model prefix. This enables users and applications to hone in on the specific configuration item to work with.
+The model spec portion of a model's key prefix can be discerned by inspecting the models.go files.
 
-Here is the complete key (explained below) for a [VPP interface][vpp-keys]:
+Alternatively, the output of the [agentctl model](../user-guide/agentctl.md#model) shows the model name and corresponding key prefix.
 
+### Keys
+
+A key is used as an index for an object managed by a CNF or app. For example, there is a key associated with each object stored in a KV data store. Note that this is `NOT` the key associated with a value structured as key-value pairs contained in the KV data store.
+
+The `key prefix` is prepended to a more specific object identifier, such as an index value or name, to form a `key`. There are two types of key formats: short form key and long form key.
+
+The key difference (sorry, could not resist :) between the two is that the latter is prepended by a [microservice-label-prefix](#keys-and-microservice-label). This is identifies a specific instance of a vpp-agent. By default, long form keys are used.
+
+short form key
+```
+/config/<key prefix>/<identifier>
+```
+
+
+short form key example for a vpp interface
+```
+/config/vpp/v2/interfaces/<name>
+```
+
+long form key
+```
+/vnf-agent/<microservice label>/config/<key prefix>/<identifier>
+```
+
+
+long form key example for a vpp interface
 ```
 /vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
 ```
-Inside that key is the model spec of `../vpp/v2/interfaces` where:
-```
-Module = vpp
-version = v2
-type = interfaces
-```
 
-An example of this key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. A VPP loopback interface with the value of an IP address is inserted into an etcd KV data store.
+If the object is `read only`, then `/config/` is replaced by `/status/` in the key prefix.
+
+An example of a long form key in action was shown in [section 5.1 of the Quickstart Guide][quickstart-guide-51-keys]. A VPP loopback interface with the value of an IP address is inserted into an etcd KV data store.
 
 ```
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
@@ -52,13 +76,23 @@ $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 ``` 
 Note that the value of `loop1` is the `<name>` of the interface.
 
+Keys can also be distinguished by the composition of the identifier.
+
+* Composite keys composed of a `key prefix` and `combination of fields`. An example is a [vpp route](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go)
+* Specific keys composed of a `key prefix` and `unique parameter`. An example is an [vpp interface name](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go).
+* Global keys composed of a `key prefix` and `some constant string`. Only one message of the given type can be stored under a global key. An example is [Nat44Global](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go)
+
 ### proto.Message
 
-The proto.Message defines the structure and serialized format of the data associated with an object. In essence, the proto.Message describes the configuration or metric fields associated with an object.
+The proto.Message defines the structure and serialized format of the data associated with an object in protobuf format. More specifically, it describes an object's configuration or metric fields.
 
-If the object is a route, then the proto.Message contained in the [route.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto) file will define destination network, next_hop, outgoing interface and so on. A single protobuf message represents a single model.
+If the object is a route, then the proto.Message contained in the [route.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto) file will define destination network, next_hop, outgoing interface and so on.
 
-.proto files for the vpp-agent are contained in the [proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
+The combination of the model, and proto.Message are used to define the `protobuf APIs` supported by Ligato.
+
+![model-proto-KV-store](../img/user-guide/model-proto-KV-store.svg)
+
+If a new object and API for the CNF is required, the developer need only define the model and .proto file. Ligato will generate a key as part of a northbound API for access to the new object. Logic to process the new object in a new or existing function is required as well.
 
 ### Name Templates
 
@@ -82,37 +116,29 @@ The vpp-agent uses an external KV data store for several reasons:
  - To store and export certain VPP statistics
  - exploit the `"watch"` paradigm for stateless configuration management. This same approach is employed in other configuration systems such as [confd](https://confd.io)
 
-### Key Prefix
+### Keys and Microservice Label
 
-Each vpp-agent is defined with a construct known as the `microservice label`. Kubernetes uses [labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) attached to objects (e.g. pods) to group resources with common attributes (e.g. "these pods with this label are part of this service").
+!!! Note
+    To distinguish between the key prefix and key definitions described above, we will refer to the `/vnf-agent/<microservice label>/` value as the `microservice-label-prefix`
 
-Similarly, Ligato uses the [microservice label][microservice-label] to group vpp-agents with common attributes. In this case, the attribute is a common prefix associated with configuration items stored in the KV data store. vpp-agents configured with the same microservice label will watch or listen to configuration item changes with this common prefix. This prefix is referred to as a `key prefix`.
+Each vpp-agent is defined with a construct known as the `microservice label`. It is used to group vpp-agents with configuration items stored in the KV data store. vpp-agents configured with the same microservice label will prepend that to a `key prefix` described above to form a `microservice-label-prefix`. These vpp-agents will then watch or listen to configuration item changes indexed by the matching microservice-label-prefix.
 
-The structure of the key prefix is formed by taking `/vnf-agent/` and combining it with the microservice label (using `vpp1` as an example) to form `/vnf-agent/vpp1`. This might look familiar because it is part of the [key](../user-guide/reference.md) associated with a VPP configuration item key maintained inside a KV data store.
-
-Here again is the key for a VPP interface:
-
-```
-/vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
-```
-Next, the vpp-agent watches for any config changes in the KV data store with a matching key prefix. In the figure below, vpp-agent 1 on the left with a microservice label = `vpp1` will watch for config changes with the matching key prefix of `/vnf-agent/vpp1/`. vpp-agent 1 does not care about nor is it watching KV data store config data with a key prefix of `/vnf-agent/vpp2/`.
+In the figure below, vpp-agent 1 on the left with a microservice label = `vpp1` will watch for config changes with the microservice label prefix of `/vnf-agent/vpp1/`. vpp-agent 1 does not care about nor is it watching KV data store config data beginning with `/vnf-agent/vpp2/`.
 
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
 
 
-The vpp-agent validates the key prefix (in the format `/vnf-agent/<microservice-label>` as explained above) and if the label matches, the KV pair is passed to the vpp-agent configuration watchers.
+The vpp-agent validates microservice-label-prefix and if the label matches, the KV pair is passed to the vpp-agent configuration watchers.
 
-Additionally, if the prefix for the rest of the key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing. Programming the VPP data plane is an example of the processing that can take place.
-
-The complete `key` is formed by joining the `key prefix` to the `model spec`. The list of VPP and Linux key are found in the [reference section](reference.md).
+Additionally, if the remainder of long form key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing. Programming the VPP data plane is an example of the processing that can take place.
 
 Flexibility is extended using this architecture.
 
 - single KV data store can support multiple vpp-agent groups using the microservice label.
-- vpp-agent can receive config data from multiple sources (e.g. KV data store, GRPC, etc.). An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the vpp-agent configuration plugins.
+- vpp-agent can receive config data from multiple sources (e.g. KV data store, gRPC, etc.). An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the vpp-agent plugins.
 
-It should be noted that the vpp-agent _does not require_ a KV data store. Configuration data can be provided using GRPC, potentially REST, AgentCtl and CLI. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
+It should be noted that the vpp-agent _does not require_ a KV data store. Configuration data can be provided using gRPC, potentially REST, AgentCtl and CLI. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
 
 ### Supported KV Data Stores
 
@@ -561,9 +587,9 @@ If the JSON API was changed, it must be re-generated in the vpp-agent. All chang
 
 In order to minimize updates for various VPP versions, the vpp-agent introduced multi-version support. The vpp-agent can switch to a different VPP version with corresponding APIs without any changes to the vpp-agent itself,  without any need to rebuild the vpp-agent binary. Plugins can now obtain the version of the VPP and the vpp-agent to connect and initialize the correct set of `vppcalls`.
 
-Every `vppcalls` handler registers itself with the VPP version it will support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent performs a compatibility check with all available handlers. It is looking for a handler  compatible with the required messages. The chosen handler must be in line with all messages, as it is not possible to use multiple handlers for a single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin..
+Every `vppcalls` handler registers itself with the VPP version it will support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the vpp-agent performs a compatibility check with all available handlers, searching for one that is compatible with the required messages. The chosen handler must be in line with all messages, as it is not possible to use multiple handlers for a single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin.
 
-One small drawback of this solution is code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions. This happens to be the case in the majority of cases.
+One small drawback of this solution is code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions, which is seen in the majority of cases.
 
 ## Client v2
 

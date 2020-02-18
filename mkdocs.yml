@@ -25,7 +25,7 @@ nav:
   - USER GUIDE:
     - Quickstart Guide: user-guide/quickstart.md
     - VPP Agent Setup: user-guide/get-vpp-agent.md
-    - Reference: user-guide/reference.md
+    - Keys Reference: user-guide/reference.md
     - Concepts: user-guide/concepts.md
     - Config Files: user-guide/config-files.md
     - AgentCtl: user-guide/agentctl.md
