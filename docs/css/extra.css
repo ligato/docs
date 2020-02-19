@@ -84,3 +84,12 @@ code {
     /*box-shadow: inset 0 0 0 1px rgba(128,128,128,0);*/
     /*transition: box-shadow .2s ease-in-out;*/
 /*}*/
+
+.boxed {
+    border: .1px solid black;
+    text-align: center;
+}
+
+.toctree-l5 {
+    width: 280px;
+}

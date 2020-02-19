@@ -25,7 +25,7 @@ nav:
   - USER GUIDE:
     - Quickstart Guide: user-guide/quickstart.md
     - VPP Agent Setup: user-guide/get-vpp-agent.md
-    - Reference: user-guide/reference.md
+    - Keys Reference: user-guide/reference.md
     - Concepts: user-guide/concepts.md
     - Config Files: user-guide/config-files.md
     - AgentCtl: user-guide/agentctl.md
@@ -57,7 +57,7 @@ nav:
     - KVS Troubleshooting: developer-guide/kvs-troubleshooting.md
     - Control Flows: developer-guide/control-flows.md
     - Model Registration: developer-guide/model-registration.md
-    - Build VPP Agent + VPP with No Image: developer-guide/build-vpp-agent-no-image.md
+    - Build without Image: developer-guide/build-vpp-agent-no-image.md
     - Go Docs: developer-guide/godocs.md
   - Troubleshooting:
     - Start Up: troubleshooting/startup-ts.md

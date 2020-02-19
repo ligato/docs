@@ -204,7 +204,8 @@ func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 }
 ```
 
-The `NBKeyPrefix`, `KeyLabel`and `KeySelector` route descriptor fields are implemented in the same manner as the interface type.  but outside of the constructor as methods with `RouteDescriptor` as a pointer receiver since they are of the `func` type:
+
+In this case, the descriptor fields are defined as methods of `RouteDescriptor` using their respective function signatures:
 ```go
 func (d *RouteDescriptor) KeyLabel(key string) string {
 	return strings.TrimPrefix(key, routePrefix)

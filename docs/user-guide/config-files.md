@@ -1,6 +1,6 @@
 # Config Files
 
-This section discusses configuration files and flags.
+This section discusses plugin configuration files and flags.
 
 ---
 
@@ -11,7 +11,7 @@ This section discusses configuration files and flags.
 ```
 
 This flag is used to define the directory for loading plugin configuration files.
-Using `-<plugin>-config` for specific plugin will override this flag.  
+Using `-<plugin>-config` for a specific plugin will override this flag.
 
 ## Plugin Configs
 ---
@@ -32,7 +32,7 @@ Flag reserved for the ACL plugin, currently not in use.
 -bolt-config= 
 ```
 
-**Config**
+_**Bolt Config File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -40,31 +40,33 @@ Flag reserved for the ACL plugin, currently not in use.
 | **file-mode** | _os.FileMode_ | | File mode and permission bits in decimal format |
 | **lock-timeout** | _time.Duration_ | | Timeout duration for waiting to obtain file lock, set to zero to wait indefinitely. |
 
+[_bolt.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/bolt/bolt.conf)
+
+---
+
 ### Cassandra
 
 ```bash
 -cassandra-config= 
 ```
 
-- `endpoints`: A list of host IP addresses of Cassandra cluster nodes
-- `port`: Cassandra client port
-- `op_timeout`: Connection timeout in nanoseconds. Default is 600ms
-- `dial_timeout`: Initial session timeout in nanoseconds, used during initial dial to server. The default value is 600ms
-- `redial_interval`: If set, gocql attempt to reconnect known down nodes in every ReconnectSleep. Default is 60 seconds
-- `protocol_version`: Sets the version of the native protocol to use. This will enable features in the driver for specific protocol versions. This should be set to a known version (2,3,4) for the cluster being connected to. If it is 0 or unset (the default) then the driver will attempt to discover the highest supported protocol for the cluster. In clusters with nodes of different versions, the protocol selected is not defined (i.e. it can be any of the supported in the cluster).
-- `tls`: Transport Layer Security setup
 
-Can be used to set the common location for all configuration files.
+_**Cassandra Config File Options**_
 
-<!--
-### Configurator
+| Option | Type | Default | Description |
+|---|---|---|---|
+| **endpoints** | _string_ ||list of host IP addresses of cassandra cluster nodes |
+| **port** | _int_ |9042|Cassandra port|
+| **op_timeout** | _time.Duration_ |600ms|Connection Timeout|
+| **dial_timeout**| _time.Duration_ |600ms|initial session timeout, used during initial dial to server |
+| **redial_interval** | _time.Duration_ |60sec|Interval between gocql attempts to reconnect to known down nodes|
+| **protocol_version**|_int_|4|Sets the version of the native protocol to use. This will enable features in the driver for specific protocol versions. Generally this should be set to a known version (2,3,4) for the cluster being connected to.</br></br> If it is 0 or unset (the default), then the driver will attempt to discover the highest supported protocol for the cluster. In clusters with nodes of different versions, the protocol selected is not defined (i.e., it can be any of the supported in the cluster).|
+| **TLS Setup **|||Defines client cert, client private key, certificate authority, whether to skip verification of server name & certificate, disable TLS|
 
-```bash
--configurator-config=
-```
+[_cassandra.conf file_](https://github.com/ligato/cn-infra/blob/master/db/sql/cassandra/cassandra.conf)
 
-Flag reserved for configurator plugin, currently not in use.
--->
+
+---
 
 ### Consul
 
@@ -72,8 +74,16 @@ Flag reserved for configurator plugin, currently not in use.
 -consul-config=
 ```
 
-- `address`: IP Address of the consul server 
-- `resync-after-reconnect`: this field runs a resync procedure for all registered plugins in case the plugin is disconnected and then reconnects to the database. 
+_**Consul Config File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**address**|_string_|0.0.0.0:8500|Consul server address|
+|**resync-after-reconnect**|_bool_|false|Perform resync procedure for all registered plugins following reconnect to Consul server|
+
+[_consul.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/consul/consul.conf)
+
+---
 
 ### etcd
 
@@ -81,19 +91,28 @@ Flag reserved for configurator plugin, currently not in use.
 -etcd-config=
 ```
 
+_**etcd Config File Options**_
 
-- `endpoints`: A list of IP address and port entries in format `<ip-address>:<port>` for etcd server reachability.
-- `dial-timeout`: Timeout window in nanoseconds for connection establishment.
-- `operation-timeout`: Operation timeout in nanoseconds.
-- `insecure-transport`: If set to `true` the TLS is omitted
-- `insecure-skip-tls-verify`: Controls whether a client verifies the server's certificate chain and hostname. If InsecureSkipVerify is true, TLS accepts any certificate presented by the server and any hostname in that certificate. In this mode, TLS is susceptible to man-in-the-middle attacks. Therefore this should be used only for testing.
-- `cert-file`: Path to a TLS certification file
-- `key-file`: Path to a TLS certification key
-- `ca-file`: Path to a CA file used to create a set of x509 certificates
-- `auto-compact`: Defines interval between etcd auto-compaction cycles. Set to 0 to disable the feature
-- `resync-after-reconnect`: If the connection to the etcd server is lost, this flag set to `true` will automatically run the entire resync procedure for all registered plugins upon reconnection.
-- `allow-delayed-start`: Startup is permitted without connection to the etcd data store.The plugin will attempt to connect and if successful, a resync will be called
-- `reconnect-interval`: Interval between etcd reconnect attempts in nanoseconds. The default value is 2 seconds. Does not apply if `delayed start` is turned off.
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**endpoints**|_string_|172.17.0.1:2379|list of host IP addresses of ETCD database server|
+|**dial-timeout**|_time.Duration_|1000000000ns|timeout for connecting to etcd|
+|**operation-timeout**|_time.Duration_|3000000000ns|timeout for any request-reply etcd operation|
+|**insecure-transport**|_bool_|false|TLS not used|
+|**insecure-skip-tls-verify**|_bool_|false|Controls whether a client verifies the server's certificate chain and host name. If InsecureSkipVerify is true, TLS accepts any certificate presented by the server and any host name in that certificate. </br></br>In this mode, TLS is susceptible to man-in-the-middle attacks. This should be used only for testing.|
+|**cert-file**|_string_||TLS Certification File|
+|**key-file**|_string_||TLS certification key|
+|**ca-file**|_string_||CA file used to create a set of x509 certificates|
+|**auto-compact**|_time.Duration_|0|Interval between etcd auto compaction cycles. 0 means disabled|
+|**resync-after-reconnect**|_bool_|false|Perform resync procedure for all registered plugins following reconnect to etcd server|
+|**allow-delayed-start**|_bool_|false|Allow to start without connected ETCD database. Plugin will try to connect and if successful, overall resync will be called|
+|**reconnect-interval**|_time.Duration_|2000000000ns|Interval between attempts to reconnect to the etcd server|
+
+[_etcd.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/etcd/etcd.conf)
+
+
+
+---
 
 ### FileDB
 
@@ -101,8 +120,18 @@ Flag reserved for configurator plugin, currently not in use.
 -filedb-config=
 ```
 
-- `configuration-paths`: A set of files/directories with configuration files. If the target is a directory, all .json or .yaml files are read
-- `status-path`: Path where the status data will be stored. If this is not defined, status is not propagated. The file extension determines whether the data will be stored as .json or .yaml. The target cannot be a directory.
+_**FileDB Config File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**configuration-paths**|_string_||A set of files/directories with configuration files. Examples are `/path/to/directory/` or `/path/to/file.ext`. If the target is a directory, all .json or .yaml files are read.|
+|**status-path**|_string_||Path to the file where status data will be stored. `/path/to/status.txt` is an example. If it is not defined, status is not propagated. The file extension determines whether the data will be stored in .json or .yaml format.  The target cannot be a directory.|
+
+Note: `filesystem` refers to the name of the FileDB plugin.
+
+[_filesystem.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/filedb/filesystem.conf)
+
+---
 
 ### GoVPPMux
 
@@ -110,47 +139,82 @@ Flag reserved for configurator plugin, currently not in use.
 -govpp-config=
 ```
 
+_**GoVPPMux Config File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**binapi-socket-path**|_string_|/run/vpp-api.sock|defines path to the binapi socket file|
+|**connect-via-shm**|_bool_|false|Connect to VPP for configuration requests via the shared memory|
+|**shm-prefix**|_string_||Defines a prefix prepended to the name used for shared memory (SHM) segments. </br></br>If not set, shared memory segments are created directly in the SHM directory /dev/shm.|
+|**stats-socket-path**|_string_|/run/vpp/stats.sock|Defines path to the stats socket file|
+|**resync-after-reconnect**|_bool_|false|Perform resync procedure for all registered plugins following reconnect to VPP|
+|**retry-request-count**|_int_|0|Number of binary API request retries if VPP is suddenly disconnected|
+|**retry-request-timeout**|_time.Duration_|500ms|Interval between binary API request retries|
+|**retry-connect-count**|_int_|3|Number of connection request retries if VPP is not unreachable.|
+|**retry-connect-timeout**|_time.Duration_|1000000000ns|Interval between connection request retries|
+|**proxy-enabled**|_bool_|true|Enable VPP proxy|
 
 
-- `trace-enabled`: Enable or disable feature to measure binary API call duration. Measured time is shown directly in the log (info level). Measurements are also for certain procedures, such as resync of plugin startup. Turned off by default.
-- `binapi-socket-path`: Path to a Unix-domain socket through which configuration requests are sent to VPP. Used if `connect-via-shm` is set to false and env. variable `GOVPPMUX_NOSOCK` is not defined. Defaults to "/run/vpp-api.sock"
-- `connect-via-shm`: If enabled, GoVPP will access VPP for configuration requests via the shared memory instead of through the socket.
-- `shm-prefix`: Custom shared memory prefix for VPP. Not used by default. Relevant only when GoVPP uses shared memory to send configuration requests to VPP. This is the case when  `connect-via-shm` is enabled or the environment variable `GOVPPMUX_NOSOCK` is defined.
-- `stats-socket-path`: Socket path for reading VPP status. Default is "/run/vpp/stats.sock"
-- `resync-after-reconnect`: If the connection to VPP is lost, this flag set to `true` will automatically run the entire resync procedure for all registered plugins upon reconnection.
-- `retry-request-count`: Binary API requests failed because the temporary VPP disconnect can be re-tried. This field defines the number of retry attempts. Default is zero, meaning the feature is disabled
-- `retry-request-timeout`: Defines timeout between binary API retry attempts. The default value is 500ms. This field is not applicable if the `retry-request-count` is set to zero.
-- `retry-connect-count`: Defines the maximim number of attempts GoVPPMux tries to reach VPP. The default is 3.
-- `retry-connect-timeout`: Defines the VPP connection retry timeout in nanoseconds. The default is 1 second.
 
-### GRPC
+[govpp.conf file](https://github.com/ligato/vpp-agent/blob/master/plugins/govppmux/govpp.conf)
+
+---
+
+
+### gRPC
 
 ```bash
 -grpc-config=
 ```
 
-- `endpoint`: GRPC endpoint defines IP address and port (if TCP type) or unix domain socket file (if Unix type)
-- `permission`: If Unix domain socket file is used for GRPC communication, permissions to the file can be set here. The permission value uses the standard three-or-four number Linux binary reference.
-- `force-socket-removal`: If socket file exists in a defined path, it is not removed by default and the GRPC plugin attempts to use it. Set the force removal flag to `true` ensures that the socket file will always be recreated.
-- `network`: Available socket types are tcp, tcp4, tcp6, unix and unixpacket. If not set, defaults to TCP.
-- `max-msg-size`: Maximum message size in bytes for inbound messages. If not set, GRPC uses the default is 4096.
-- `max-concurrent-streams`: Limit of server streams to each server transport
+_**gRPC Config File Options**_
 
-This flag can be used to set the GRPC port:
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**endpoint**|_string_|0.0.0.0:9111|address of gRPC netListener|
+|**permission**|_int_|000|Three or four-digit permission setup for unix domain socket file (if used)|
+|**force-socket-removal**|_bool_|false|If set and unix type network is used, the existing socket file will be always removed and re-created|
+|**network**|_string_|tcp|Available socket types: tcp, tcp4, tcp6, unix and unixpacket.|
+|**max-msg-size**|_int_|4096|Maximum message size in bytes for inbound messages|
+|**max-concurrent-streams**|_unit32_|0|returns a ServerOption that will apply a limit on the number of concurrent streams to each ServerTransport|
+**extended-logging**|_bool_|false|Enables logging additional gRPC transport messages|
+|**insecure-transport**|_bool_|false|if true, TLS configuration will not be used|
+
+The following config file options are used if `insecure-transport` is `false`:
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**cert-file**|_string_||Required for creating a secure connection. example is /path/to/cert.pem||
+|**key-file**|_string_||Required for creating a secure connection. example is /path/to/key.pem|
+|**ca-file**|_string_||Set custom CA to verify client's certificate. If not set, client's certificate is not required. </br></br>Examples ca-files are /path/to/ca1.pem and /path/to/ca2.pem|
+
+This flag can be used to set the gRPC port:
 
 ```bash
 -grpc-port=
 ```
+
+
+[_grpc.conf file_](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/grpc.conf)
+
+---
 
 ### Kafka
 
 ```bash
 -kafka-config=
 ```
-- `addrs`: Kafka server addresses
-- `group_id`: Name of the consumer's group
-- `tls`: Crypto/TLS configuration
+_**Kafka Config File Options**_
 
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**Addrs**|_string_|127.0.0.1:9092|Kafka server addresses|
+|**group_id**|_string_||Name of the consumer's group|
+|**TLS**|||TLS Configuration|
+
+[_kafka.conf file_](https://github.com/ligato/cn-infra/blob/master/messaging/kafka/kafka.conf)
+
+---
 
 ### KV Scheduler
 
@@ -158,50 +222,82 @@ This flag can be used to set the GRPC port:
 -kvscheduler-config=
 ```
 
+_**KV Scheduler Config File Options**_
+
 | Option | Type | Default | Description |
 |---|---|---|---|
-| **record-transaction-history** | _bool_ | `true` | Enable recording history of processed transactions |
-| **transaction-history-age-limit** | _uint32_ (in minutes) | `24 * 60` | Age limit for recording transaction history |
-| **permanently-recorded-init-period** | _uint32_ (in minutes) | `60` | Duration of period from init that will be permanently recorded |
+| **record-transaction-history** | _bool_ | `true` | History of processed transactions is recorded|
+| **transaction-history-age-limit** | _uint32_ (in minutes) | 24hrs | Age limit for recording transaction history with the exception of permanently recorded init period|
+| **permanently-recorded-init-period**| _uint32_ (in minutes)| 60min | Duration of period from init that will be permanently recorded |
 | **enable-txn-simulation** | _bool_ | `false` | Enable transaction simulation |
 | **print-txn-summary** | _bool_ | `true` | Print transaction summary for each transaction |
 
-### Linux Interface plugin
+---
+
+### Linux Interface Plugin
 
 ```bash
 -linux-ifplugin-config=
 ```
+_**Linux Interface Plugin Config File Options**_
 
-- `disabled`: Used to disable Linux ifplugin. Turned off by default
-- `go-routines-count`: How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**disabled**|_bool_|false|Used to disable linux ifplugin|
+|**go-routines-count**|_int_|10|How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel|
+
+[_linux-ifplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/ifplugin/linux-ifplugin.conf)
+
+---
+
 
 ### Linux IP Tables
 
 ```bash
 -linux-iptables-config=
 ```
+_**Linux IP Tables Plugin Config File Options**_
 
-- `disabled`: Used to disable Linux iptables plugin. Turned off by default
-- `go-routines-count`: How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel.
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**disabled**|_bool_|false|Used to disable linux iptables plugin|
+|**go-routines-count**|_int_|10|How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel|
+
+[_linux-iptablesplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/iptablesplugin/linux-iptablesplugin.conf)
+
+---
+
 
 ### Linux L3
 
 ```bash
 -linux-l3plugin-config=
 ```
+_**Linux L3 Plugin Config File Options**_
 
-- `disabled`: Used to disable Linux l3plugin. Turned off by default
-- `go-routines-count`: How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**disabled**|_bool_|false|Used to disable linux L3 plugin|
+|**go-routines-count**|_int_|10|How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel|
+
+[_linux-l3plugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/l3plugin/linux-l3plugin.conf)
+
+---
 
 ### Log Manager
 
 ```bash
 --logs-config=
 ```
+_**Log Manager Config File Options**_
 
-- `default-level`: Sets default config level for every plugin. Overwritten by environmental variable `INITIAL_LOGLVL`
-- `loggers`: Specifies a list of named loggers with their respective log level
-Example:
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**default-level**|_string_|info|Set default config level for every plugin. Overwritten by environmental variable 'INITIAL_LOGLVL'|
+|**loggers**|||Specifies a list of named loggers with their respective log levels. see `loggers` example below|
+|**hooks**|||Specifies a list of hooks for logging to external links. Parameters for a given hook are protocol, address, port and levels. See `hooks` example below.|
+
+Loggers example:
 ```
 loggers:
   - name: "agentcore",
@@ -211,8 +307,8 @@ loggers:
   - name: "linux-plugin",
     level: warn
 ```
-- `hooks`: Specifies a list of hooks for logging to external links. This includes parameters such as protocol, address, port and levels for a specific hook.
-Example:
+
+Hooks example:
 ```
 hooks:
   syslog:
@@ -235,13 +331,25 @@ hooks:
 #    protocol: tcp
 ```
 
+[_logs.conf file_](https://github.com/ligato/cn-infra/blob/master/logging/logmanager/logs.conf)
+
+---
+
 ### Namespace
 
 ```bash
 -linux-nsplugin-config=
 ```
 
-- `disabled`: Used to disable Linux nsplugin. Turned off by default
+_**Linux Namespace Plugin Config File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**disabled**|_bool_|false|Used to disable namespace plugin|
+
+[_linux-nsplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/nsplugin/linux-nsplugin.conf)
+
+---
 
 ### Process Manager
 
@@ -249,7 +357,15 @@ hooks:
 -process-manager-config=
 ```
 
-- `template-path`: Path where the templates will be stored in the filesystem
+_**Process Manager Config File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**template-path**|_string_||path where process templates will be stored|
+
+[_pm.conf file_](https://github.com/ligato/cn-infra/blob/master/exec/processmanager/pm.conf)
+
+---
 
 ### REST
 
@@ -257,26 +373,30 @@ hooks:
 -http-config=
 ```
 
-- `endpoint`: Address of the HTTP server
-- `read-timeout`: Maximum amount of time for reading the entire request, including the body. Because read timeout does not let handlers make per-request decisions on each request body's acceptable deadline or upload rate, most users will prefer to use read-header-timeout. It is valid to use both. `read-timeout` is set in nanoseconds.
-- `read-header-timeout`: Maximum amount of time to read request headers. The connection's read deadline is reset after reading the headers and the Handler can decide what is considered too slow for the body. `read-header-timeout` is set in nanoseconds.
-- `write-timeout`: Maximum amount of time before timing out writes to a response. It is reset whenever a new request's header is read. It does not let Handlers make decisions on a per-request basis. Write timeout is set in nanoseconds.
-- `idle-timeout`: Maximum amount of time to wait for the next request when keepalives are enabled. If the idle timeout is zero,  the value of ReadTimeout is used. If both are zero, there is no timeout. Idle timeout is set in nanoseconds.
-- `max-header-bytes`: Maximum number of bytes the server will read parsing the request header's keys and values, including the request line. It does not limit the size of the request body.
-- `enable-token-auth`: Enables or disables HTTP token authentication
-- `users`: Registers additional users with permissions. Admin with full access to every permission group is registered automatically. Password must be in hashed form.
+_**REST Plugin Config File Options**_
 
-Format:
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**endpoint**|_string_|0.0.0.0:9191|Address of the HTTP server|
+|**read-timeout**|_time.Duration_|0|Maximum amount of time (in nanoseconds) for reading the entire request, including the body. </br></br>Read-timeout does not let handlers make per-request decisions on each request body's acceptable deadline or upload rate. Therefore most users will prefer to use read-header-timeout. It is valid to use both.|
+|**read-header-timeout**|_time.Duration_|0|Maximum amount of time (in nanoseconds) to read request headers. The connection's read deadline is reset after reading the headers and the Handler can decide what is considered too slow for the body.|
+|**write-timeout**|_time.Duration_|0|Maximum amount of time (in nanoseconds) before timing out writes to a response. It is reset whenever a new request's header is read. It does not let Handlers make decisions on a per-request basis.|
+|**idle-timeout**|_time.Duration_|0|Maximum amount of time (in nanoseconds) to wait for the next request when keepalives are enabled. If the idle timeout is zero, the value of read-timeout is used. If both are zero, there is no timeout.|
+|**max-header-bytes**|_int_|0|Maximum number of bytes the server will read parsing the request header's keys and values, including the request line. It does not limit the size of the request body.|
+|**enable-token-auth**|_bool_|false|Enables or disables HTTP token authentication|
+|**users**|||Registers additional users with permissions. Admin with full access to every permission group is registered automatically. Password must be in hashed form. See `users` format example below.|
+|**password-hash-cost**|_int_|7|Number in range 4-31 used as a parameter for hashing passwords. Large numbers require more CPU time and memory to process.|
+|**token-expiration**|_time.Duration_|60000000000ns|Token expiration time in nanoseconds. Zero means no expiration time|
+|**token-signature**|_string_||string value used as key to sign a tokens|
+
+User format example:
 ```
 users:
    - name: <name>
      password_hash: <hash>
      permissions: [<group1>, <group2>, ...]
+`
 ```
-
-- `token-expiration`: Token expiration time in nanoseconds. Zero means no expiration time
-- `password-hash-cost`: Number in range between 4 and 31 used as a parameter for hashing passwords. Large numbers require more CPU time and memory to process.
-- `token-signature`: A string value used as a key to sign tokens
 
 This flag can be used to set the HTTP port:
 
@@ -284,13 +404,23 @@ This flag can be used to set the HTTP port:
 -http-port=
 ```
 
+
+[_http.conf file_](https://github.com/ligato/cn-infra/blob/master/rpc/rest/http.conf)
+
+---
+
 ### Service Label
 
-Flag to set the microservice label for a given vpp-agent.
 
 ```bash
 --microservice-label=
 ```
+
+_**Service Label Plugin Config File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**microservice-label**|_string_||Identifies a particular instance of a vpp-agent. Used to form a key prefix associated with the vpp-agent's config data contained in an etcd data store.|
 
 ### VPP Interface
 
@@ -298,8 +428,14 @@ Flag to set the microservice label for a given vpp-agent.
 -vpp-ifplugin-config=
 ```
 
-- `mtu`: Default maximum transmission unit (MTU) size. The value is used if an interface without an MTU is created. Note that the MTU in the interface configuration is preferred.
-- `status-publishers`: enables the vpp-agent to send status data back to etcd. To allow it, add the desired status publishers. Currently supported for `etcd` and `redis` and both options can be chosen together.
+_**VPP Interface Plugin Config File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**MTU**|_unit32_|0|Default maximum transmission unit (MTU) size. The value is used if an interface without an MTU is created. Note that the MTU in the interface configuration is preferred.|
+|**status-publishers**|_string_||Enables the vpp-agent to send status data back to a KV data store. etcd, redis or both are supported.|
+
+[_vpp-ifplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf)
 
 
 *[ACL]: Access Control List
