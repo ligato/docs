@@ -6,7 +6,7 @@ Datasync defines the interfaces for the abstraction of data synchronization betw
 
 Data synchronization addresses the situation when multiple data sets must by synchronized as a result of a published event.
 
-Examples of components that publish events.
+Examples of components that publish events:
 
 - database upon updates to data
 - message bus consuming messages from Kafka topics
@@ -263,7 +263,7 @@ The Consul plugin provides access to a Consul KV data store.
 
 ### Configuration
 
-Th location of the Consul configuration file can be defined either by the command line flag `consul-config` or set via the `CONSUL_CONFIG` environment variable.
+The location of the Consul configuration file can be defined by the command line flag `consul-config`, or set via the `CONSUL_CONFIG` environment variable.
 
 ### Status Check
 

@@ -83,7 +83,7 @@ The idxmap package provides a mapping structure to support the following use-cas
 * Secondary indexing
 * Data caching for a key-value store (such as etcd)
 
-For more detailed description see the godoc reference [here][idxmap-godoc].
+For a more detailed description, see the godoc reference [here][idxmap-godoc].
 
 ### Exposing plugin local data Use-Case
 

@@ -92,7 +92,7 @@ The combination of the model, and proto.Message are used to define the `protobuf
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KV-store.svg)
 
-If a new object and API for the CNF is required, the developer need only define the model and .proto file. Ligato will generate a key as part of a northbound API for access to the new object. Logic to process the new object in a new or existing function is required as well.
+If a new object and API for the CNF is required, the developer need only define the model and .proto file, and then register the model. Ligato will generate a key as part of a northbound API for access to the new object. Logic to process the new object in a new or existing function is required as well.
 
 ### Name Templates
 
