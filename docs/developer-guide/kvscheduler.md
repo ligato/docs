@@ -12,19 +12,19 @@ The KVScheduler addresses several challenges encountered in the original vpp-age
 
 * `vpp` and `linux` plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
 
-* `configurators` - i.e. components of `vpp` and `linux` plugins, each processing a specific configuration item type (e.g. interface, route, etc.) - were built from scratch, solving the same set of problems again and again with frequent code duplication.
+* `configurator` components of `vpp` and `linux` plugins, each processing a specific configuration item type (e.g. interface, route, etc.) were built from scratch, solving the same set of problems again and again with frequent code duplication.
 
-* configurators would communicate with each through notifications, and react to changes asynchronously to ensure proper operational sequence. Dependency resolution was distributed across all configurators, making it very difficult to understand, predict and stabilize the system behavior.
+* plugin configurators would communicate with each other through notifications, and react to changes asynchronously to ensure proper operational sequence. Dependency resolution was distributed across all configurators, making it difficult to understand, predict and stabilize the system behavior.
 
 The result was an unreliable and unpredictable re-synchronization (resync) occurring between the desired configuration state and the runtime configuration state.
 
 
 !!! Note
-    Northbound (NB) describes the desired or intended configuration state. Southbound (SB) describes the actual run-time configuration state. Resync is also known as state reconciliation.
+    Northbound (NB) describes the desired or intended configuration state. Southbound (SB) describes the actual run-time configuration state. Resync is also referred to as state reconciliation.
 
 ### Basic concepts
 
-KVScheduler uses graph theory concepts to manage dependencies between configuration items and the order by which they are programmed into the network. A level of abstraction is build on top of the plugins, where the state of the system is modeled as a graph; Configuration items are represented as vertices and relationship between them are represented as edges. The graph is then walked through to generate transaction plans, refresh the state, and perform resync.
+The KVScheduler uses graph theory concepts to manage dependencies between configuration items and the order by which they are programmed into the network. A level of abstraction is built on top of the plugins, where the state of the system is modeled as a graph. Configuration items are represented as vertices and the relationship between them are represented as edges. The graph is then walked through to generate transaction plans, refresh the state, and perform resync.
 
 The transaction plan that is prepared using the graph representation consists of a series of CRUD operations that can be executed on graph vertices. To abstract away from specific configuration items and accompanying details, graph vertices are "described" to the KVScheduler using [KVDescriptors][kvdescriptor-guide]. KVDescriptors are basically handlers, each assigned to a distinct subset of graph vertices. They provide the KVScheduler with pointers to callbacks that implement CRUD operations.
 
@@ -36,22 +36,23 @@ Plugins need only provide CRUD callbacks, and describe their dependencies on oth
 
 The graph-based representation uses new terminology as higher level abstractions of specific objects.
 
-* **Model** builds a representation of a single item type (e.g. interface, route, bridge domain, etc.). More details on models and the specification that includes proto.Message can be found [here](../user-guide/concepts.md#what-is-a-model). As examples, the Bridge Domain model can be found [here][bd-model-example]). More details about the model registration can be found [here][model-registration].
+* **Model** builds a representation of a single configuration item type such as interface, route, and bridge domain. Details on models and the model specification that includes proto.Messages can be found [here](../user-guide/concepts.md#what-is-a-model). The [bridge domain model][bd-model-example] is an example. More details regarding model registration can be found [here][model-registration].
   
-* **Value** (`proto.Message`) is a run-time instance of a given model. More details on proto.Message can be found [here](../user-guide/concepts.md)
+* **Value** (`proto.Message`) is a run-time instance of a given model. Details on proto.Message can be found [here](../user-guide/concepts.md)
 
 * **Key** (`string`) identifies a specific value that is built using the model specification and value attributes that uniquely identify the instance. More on keys can be found  [here](../user-guide/concepts.md#keys)
 
-* **Label** (`string`) provides an identifier unique only across value of the same type (e.g. interface name). It is generated from the model specification and primary value fields.
+* **Label** (`string`) provides an identifier unique only across the value of the same type (e.g. interface name). It is generated from the model specification and primary value fields.
 
-* **Value State** (`enum ValueState`) is the operational state of a value. For example, a value can be successfully `CONFIGURED`, `PENDING` due to unmet dependencies, or in a `FAILED` state after the last CRUD operation returned an error. The set of value states is defined using the protobuf enumerated type [here][value-states].
+* **Value State** (`enum ValueState`) is the operational state of a value. For example, a value can be successfully `CONFIGURED`, `PENDING` due to unmet dependencies, or `FAILED` after the last CRUD operation returned an error. The set of value states is defined using the protobuf enumerated type [here][value-states].
 
-* **Value Status** (`struct BaseValueStatus`): Value State includes additional details such as the last executed operation, the last returned error, or the list of unmet dependencies. The status of one or more values and their updates can be read and watched for via the [KVScheduler API][value-states-api]. More information on this API can be found [below](#API).
+* **Value Status** (`struct BaseValueStatus`) includes additional details such as the last executed operation, the last returned error, or the list of unmet dependencies. The status of one or more values and their updates can be read and watched for via the [KVScheduler API][value-states-api]. More information on this API can be found [below](#api).
 
-* **Metadata** (`interface{}` is additional run-time information (of undefined type) assigned to a value. It is typically updated after a CRUD operation or after agent restart. An example of metadata is the [sw_if_index][vpp-iface-idx], which is kept for every interface alongside its value.
-* **Metadata Map**, also known as index-map, implements the mapping between a value label and its metadata for a given value type. It is typically exposed in read-only mode to allow other plugins to read and reference metadata. For example, the interface plugin exposes its metadata map [here][vpp-iface-map]; it is used by the ARP Plugin, the Route Plugin, and other plugins to read the sw_if_index of target interfaces. Metadata maps are automatically created and updated by the KVScheduler, and exposed to other plugins in read-only mode.
+* **Metadata** (`interface{}` is additional run-time information of undefined type assigned to a value. It is updated after a CRUD operation, or after agent restart. An example of metadata is the [sw_if_index][vpp-iface-idx], which is maintained for every interface alongside its value.
 
-* **[Value origin][value-origin]** defines where the value came from - whether it was received as configuration from the NB or whether it was automatically created in the SB plane (e.g. default routes, the loop0 interface, etc.).
+* **Metadata Map**, also known as index-map, implements the mapping between a value label and its metadata for a given value type. It is exposed in read-only mode to allow other plugins to read and reference metadata. For example, the interface plugin exposes its metadata map [here][vpp-iface-map]. It is used by the ARP plugin, the route plugin, and other plugins to read the sw_if_index of target interfaces. Metadata maps are automatically created and updated by the KVScheduler.
+
+* **[Value origin][value-origin]** defines the source of the value. For example, it could be configuration data received from the NB, or data that was automatically created in the SB plane such as default routes and the loop0 interface.
 
 * **Key-value pairs** are operated on through CRUD operations: **C**reate, **R**etrieve, **U**pdate and **D**elete.
 
@@ -64,9 +65,9 @@ The graph-based representation uses new terminology as higher level abstractions
 !!! note    
     Configurators (plugins) no longer have to implement their own caches for pending values.
   
-* **Graph Refresh** is the process of updating the graph content to reflect the real SB state. This is achieved by calling the `Retrieve` function of every descriptor that supports the `Retrieve` operation, and adding/updating graph vertices with the retrieved values. Refresh is performed just before the [Full or Downstream resync](#resync). Or after a failed C(R)UD operation(s), but only for vertices impacted by the failure.
+* **Graph Refresh** is the process of updating the graph content to reflect the real SB state. This is achieved by calling the `Retrieve` function of every descriptor that supports the `Retrieve` operation, and adding/updating graph vertices with the retrieved values. Refresh is performed just before the [Full or Downstream resync](#resync). Or after a failed CRUD operation for only those vertices impacted by the failure.
 
-* **KVDescriptor** provides implementations of CRUD operations for a single value type and registers them with the KVScheduler. It also defines derived values and dependencies for the value type. KVDescriptors are at the core of configurators (plugins)- to learn more, please read how to [implement your own KVDescriptor][kvdescriptor.md].
+* **KVDescriptor** provides implementations of CRUD operations for a single value type and registers them with the KVScheduler. It also defines derived values and dependencies for the value type. KVDescriptors are at the core of plugin configurators. To learn more, please read how to [implement your own KVDescriptor](kvdescriptor.md).
 
 ### Dependencies
 
@@ -155,7 +156,7 @@ x-------------------------------------------------------------------------------
 
 ### API
 
-The KVScheduler API is defined ine a separate [sub-package "api"][kvscheduler-api-dir] of the [plugin][plugin]. The interfaces that constitute the KVScheduler API are defined
+The KVScheduler API is defined in a separate [sub-package "api"][kvscheduler-api-dir] of the [plugin][plugin]. The interfaces that constitute the KVScheduler API are defined
 in multiple files:
 
  * `errors.go`: definitions of errors that can be returned from within the KVScheduler; additionally the `InvalidValueError` error wrapper is defined to allow plugins to further specify the reason for a validation error, which is then exposed through the [value status][value-states].
