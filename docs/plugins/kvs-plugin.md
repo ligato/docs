@@ -2,7 +2,7 @@
 
 ---
 
-The KVScheduler plugin provides transaction-based configuration processing based on a generic mechanism for dependency resolution between different configuration items. KVScheduler is a core component around which all VPP and Linux configurator (plugin) have been built.
+The KVScheduler plugin provides transaction-based configuration processing based on a generic mechanism for dependency resolution between different configuration items. KVScheduler is a core component which all VPP and Linux plugin configurators are now using.
 
 More Detail: [KVScheduler Discussion in the Developer Guide][kvs-dev-guide]
 
