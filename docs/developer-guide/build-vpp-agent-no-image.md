@@ -1,20 +1,23 @@
 ### Build without Image
 
-This section explains how to build the VPP and VPP Agent directly (without image). This option is recommended for `development or testing only`. 
+This section explains how to build VPP and and the vpp-agent directly without an image.
+
+!!! Note
+    This option is recommended for **development or testing purposes only**.
 
 Start with cloning the VPP Agent code:
 
- ```
- git clone git@github.com:ligato/vpp-agent.git
- ``` 
+```
+git clone git@github.com:ligato/vpp-agent.git
+```
 
 **Build VPP**
 
-The VPP should be built first in order to provide required libraries for the host OS.
+VPP should be built first in order to provide required libraries for the host OS.
 
-1. Clone the VPP code (described above) and checkout to the defined commit. Use the `vpp.env` as a source (in the Agent repo root). Building different VPP commit/version can cause the VPP Agent to fail at startup due to incompatibilities.
+1. Clone the VPP code (described above) and checkout the defined commit. Use the `vpp.env` as a source. It can be found in the ligato/vpp-agent folder. Building different VPP commit/versions can cause the vpp-agent to fail at startup due to incompatibilities.
 
-2. Use the following commands to build the VPP:
+2. Use the following commands to build VPP:
 
 ```bash
 make install-dep 
@@ -23,7 +26,7 @@ make build-release
 make pkg-deb
 ```
 
-Then in the `build-root` directory unpack `*.deb` package files with `dpkg -i`
+Next, in the `build-root` directory, unpack `*.deb` package files with `dpkg -i`.
 
 **Build the VPP Agent**
 
@@ -31,4 +34,4 @@ Then in the `build-root` directory unpack `*.deb` package files with `dpkg -i`
 
 
 
-2. Start the VPP and verify the VPP Agent can connect to it.
+2. Start VPP and verify the vpp-agent can connect to it.
