@@ -1,58 +1,41 @@
-# Control flows
+# Control Flows
 
 ---
 
-This guide aims to explain the key-value scheduling algorithm using examples
-with UML control-flow diagrams, each covering a specific scenario using real
-configuration items from vpp and linux plugins of the agent. The control-flow
-diagrams are structured to describe all the interactions between KVScheduler, NB
-plane and KVDescriptor-s during transactions. To improve readability, the examples
-use shortened keys (without prefixes) or even alternative and more descriptive
-aliases as object identifiers. For example, `my-route` is used as a placeholder
-for user-defined route, which otherwise would be identified by key composed
-of destination network, outgoing interface and next hop address. Moreover, most
-of the configuration items that are automatically pre-created in the SB plane
-(i.e. `OBTAINED`), normally retrieved from VPP and Linux during the first resync
-(e.g. default routes, physical interfaces, etc.), are omitted from the diagrams
-since they do not play any role in the presented scenarios.
+This section describes the behavior of the KV Scheduler system using examples accompanied by UML control flow diagrams. Each example covers a specific scenario using
+configuration items supported by the VPP and Linux plugins. The diagrams illustrate the interactions between the KV Scheduler, NB plane and KV Descriptors for an executed configuration transaction.
 
-The UML diagrams are plotted as SVG images, also containing links to images
-presenting the state of the graph with values at the end of every transaction.
-But to be able to access these links, the UML diagrams have to be clicked at
-to open them as standalone inside another web browser tab. From within github
-web-UI the links are not directly accessible.
+To improve readability, the examples use shortened keys without prefixes, or in some cases, more descriptive aliases, as object identifiers. For example, `my-route` is used as a placeholder for a user-defined route, which otherwise would be identified by a [key](../user-guide/reference.md#vpp-keys) composed of a destination network, outgoing interface and next hop address. In addition, most of the configuration items that are automatically created in the SB plane are omitted from the diagrams since they do not play any role in the scenarios described below. These items are retrieved from the VPP and Linux plugins during the first resync. Examples include routes and physical interfaces.
+
+
+!!! Note
+    The UML diagrams are plotted as SVG images. They also contain links to diagrams
+    presenting the state of the graph with values at the end of every transaction.
+    To access these links, the UML diagrams must be opened as standalone inside another web browser tab.
 
 ### Example: AF-Packet interface
 
-`AF-Packet` is VPP interface type attached to a host OS interface, capturing
-all its incoming traffic and also allowing to inject Tx packets through a special
-type of socket.
+`AF-Packet` is a VPP interface type attached to a host OS interface. It captures all incoming traffic, and permits Tx packet injection through a socket interface.
 
-The requirement is that the host OS interface exists already before the `AF-Packet`
-interface gets created. The challenge is that the host interface may not be
-from the scope of items configured by the agent. Instead, it could be
-a pre-existing physical device or interface created by an external process or
-an administrator during the agent run-time. In such cases, however, there would
-be no key-value pair to reference from within `AF-Packet` dependencies. Therefore,
-KVScheduler allows to notify about external objects through 
-`PushSBNotification(key, value, metadata)` method. Values received through
-notifications are denoted as `OBTAINED` and will not be removed by resync even
-though they are not requested to be configured by NB. Obtained values are
-allowed to have their own descriptors, but from the CRUD operations only
-`Retrieve()` is ever called to refresh the graph. `Create`, `Delete` and `Update`
-are never used, since obtained values are updated externally and the agent is
-only notified about the changes *after* they have already happened.
+The host OS interface must exist before the `AF-Packet` interface is created. This could be problematic because the vpp-agent does not control or configure the host OS interface. Instead, this task could be handled by an external process or
+an administrator during vpp-agent run-time. In this situation, there is no key-value pair to resolve `AF-Packet` dependencies.
 
-Linux interface plugin ships with `InterfaceWatcher` descriptor, which retrieves
-and notifies about Linux interfaces in the network namespace of the agent
-(so-called default network namespace). Linux interfaces are assigned unique
-keys using their host names, e.g.: `linux/interface/host-name/eth1`
-The `AF-Packet` interface then defines dependency referencing the key with the
-host name of the interface it is supposed to attach to (cannot attach
-to interfaces from other namespaces).
+The KV Scheduler solves this problem by supporting external object notifications through the use of the `PushSBNotification(key, value, metadata)` method. Values received through notifications are denoted as `OBTAINED`. They cannot be removed by a resync even
+though they are not explicitly configured by NB. Obtained values are allowed to have their own descriptors. The `Retrieve()` operation is called to refresh the graph.
+ `Create`, `Delete` and `Update` are never used because:
 
-In this example, the host interface gets created after the request to configure
-`AF-Packet` is received. Therefore, the scheduler keeps the `AF-Packet` in the
+ - obtained values are updated externally.
+ - vpp-agent is notified about any changes _after_ they have occurred.
+
+The Linux plugin support an `InterfaceWatcher` descriptor. It retrieves
+and generates notifications regarding Linux interfaces in the default network namespace of the vpp-agent. Linux interfaces are assigned unique
+keys using their host names with `linux/interface/host-name/eth1` serving as an example.
+The `AF-Packet` interface then defines the dependency referencing the key with the
+host name of the interface it is supposed to attach to. Note that it cannot attach
+to interfaces from other namespaces.
+
+In this example, the host OS interface is created after the request to configure
+`AF-Packet` is received. Therefore, the KV Scheduler holds the `AF-Packet` in the
 `PENDING` state until the notification is received. 
 
 ![CFD][cfd-af-packet]
