@@ -30,7 +30,7 @@ The transaction plan that is prepared using the graph representation consists of
 
 ### Mediator Pattern
 
-KVDescriptors are based on the [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern), where plugins are decoupled and no longer communicate directly with each other. Instead, interactions between plugins are handled through the KV Scheduler mediator.
+KV Descriptors are based on the [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern), where plugins are decoupled and no longer communicate directly with each other. Instead, interactions between plugins are handled through the KV Scheduler mediator.
 
 Plugins need only provide CRUD callbacks, and describe their dependencies on other plugins through one or more KVDescriptors. The KV Scheduler is then able to plan operations without knowing what the graph vertices represent in the configured system. Furthermore, the set of supported configuration items can be extended without altering the transaction processing engine or increasing the complexity of any of the components. All that is required is to implement and register new KVDescriptors.
 
@@ -69,11 +69,11 @@ The graph-based representation uses the following terminology to describe the hi
   
 * **Graph Refresh** is the process of updating the graph content to reflect the real SB state. This is achieved by calling the `Retrieve` function of every descriptor that supports this operation, and adding/updating graph vertices with the retrieved values. Refresh is performed just before the [Full or Downstream resync](#resync). Or after a failed CRUD operation for only those vertices impacted by the failure.
 
-* **KVDescriptor** implements CRUD operations and defines derived values and dependencies for a single value type. To learn more, please read how to [implement your own KVDescriptor](kvdescriptor.md).
+* **KV Descriptor** implements CRUD operations and defines derived values and dependencies for a single value type. To learn more, please read how to [implement your own KVDescriptor](kvdescriptor.md).
 
 ### Dependencies
 
-The scheduler must learn about two types of relationships between values utilized by the scheduling algorithm.
+The KV Scheduler must learn about two types of relationships between values utilized by the scheduling algorithm.
 
 1. `A` **depends on** `B`:
 
@@ -97,7 +97,7 @@ The following diagram shows the interactions between the KV Scheduler and the la
 
 ### Resync
 
-Plugins no longer need to implement their own resync mechanisms. By providing a KVDescriptor with CRUD operation callbacks to the KV Scheduler, a plugin "teaches" the KV Scheduler how to handle the plugin's configuration items. The KV Scheduler can determine and execute the set of operations needed to perform complete resynchronization.
+Plugins no longer need to implement their own resync mechanisms. By providing a KV Descriptor with CRUD operation callbacks to the KV Scheduler, a plugin "teaches" the KV Scheduler how to handle the plugin's configuration items. The KV Scheduler can determine and execute the set of operations needed to perform complete resynchronization.
 
 The KV Scheduler further enhances the concept of state reconciliation by defining three resync types:
 
@@ -112,7 +112,7 @@ The KV Scheduler can group related changes and apply them as a transaction. This
 Inside the KV Scheduler, transactions are queued and executed synchronously to simplify the algorithm and avoid concurrency issues. The processing of a transaction is split into two stages:
 
 * **Simulation**: set of sequenced operations (so-called *transaction plan*), without actually calling any CRUD callbacks from the descriptors. This assumes no failures.
-* **Execution**: executing the operations in the correct order. If any operation fails, applied changes are reverted, unless the `BestEffort` mode is enabled. In this case, the KV Scheduler attempts to apply the maximum possible set of required changes. `BestEffort` is default for resync.
+* **Execution**: executing the operations in the correct order. If any operation fails, applied changes are reverted, unless the `BestEffort` mode is enabled. In this case, the KV Scheduler attempts to apply the maximum possible set of required changes. `BestEffort` is the  default for resync.
 
 Following simulation, transaction metadata (sequence number printed as `#xxx`, description, values to apply, etc.) is generated, together with the transaction plan. This is done before execution, so that the user is informed of pending operations. This occurs even if any of the operations cause the agent to crash. After the transaction has executed, the set of completed operations and encountered errors is printed.
 
@@ -157,14 +157,13 @@ x-------------------------------------------------------------------------------
 
 ### API
 
-The KV Scheduler API is defined in a separate [sub-package "api"][kvscheduler-api-dir] of the [plugin][plugin]. The interfaces that constitute the KV Scheduler API are defined
-in multiple files:
+The KV Scheduler API is defined in a separate [sub-package "api"][kvscheduler-api-dir] of the [plugin][plugin]. The interfaces that constitute the KV Scheduler API are defined in multiple files:
 
  * `errors.go`: definitions of errors that can be returned from within the KV Scheduler; additionally the `InvalidValueError` error wrapper is defined to allow plugins to further specify the reason for a validation error, which is then exposed through the [value status][value-states].
 
  * `kv_scheduler_api.go`: the KV Scheduler API used by: NB to commit a transaction, or to read and watch for value status updates; SB to push notifications regarding values that are, automatically or externally, created and/or updated.
 
- * `kv_descriptor_api.go`: defines the KVDescriptor interface. The detailed description can be found [here][kvdescriptor-guide].
+ * `kv_descriptor_api.go`: defines the KV Descriptor interface. The detailed description can be found [here][kvdescriptor-guide].
 
  * `txn_options.go`: a set of available options for transactions. For example, a transaction can be customized to permit retries of failed operations. Retry delay period and maximum retry attempts can be configured.
 

@@ -64,65 +64,49 @@ The control-flow diagram shows that the bridge domain is created even if an inte
 
 ### Example: Interface Re-creation
 
-The example uses VPP interface with attached route to outline the control-flow
-of item re-creation. A specific configuration update may not be supported by SB
-to perform incrementally - instead the given item may need to be deleted and
-re-created with the new configuration. Using `UpdateWithRecreate()` method,
-a descriptor is able to tell the KVScheduler if the given item requires
-full re-creation for the configuration update to be applied.
+Incremental configuration updates for some items are not supported by the SB. Instead, the given item may need to be deleted and re-created with the new configuration. The KV Scheduler supports this scenario using the `UpdateWithRecreate()` method. It enables a descriptor to inform the KV Scheduler if an item requires
+   full re-creation for the configuration update to be applied.
 
 This example demonstrates re-creation using a VPP TAP interface and a NB request
-to change the RX ring size, which is not supported for an already created
-interface. Furthermore, the interface has an L3 route attached to it. The route
-cannot exists without the interface, therefore it must be deleted and moved into
-the `PENDING` state before interface re-creation, and configured back again once
-the re-creation procedure has finalized.
+to modify the RX ring size. Modifying this configuration item is not supported for an interface that has already been created. In addition, an L3 route is attached to the interface. The route
+cannot exist without the interface. Therefore, the route must be deleted and moved into
+the `PENDING` state before interface re-creation. The route configuration can then be performed once the interface re-creation process has completed.
 
 
 ![CFD][cfd-interface-recreation]
 
-### Example: Retry of failed operation
+### Example: Retry of Failed Operation
 
-This example demonstrates that for `best-effort` transactions (e.g. every resync),
-the KVScheduler allows to enable automatic and potentially repeated *retry*
-of failed operations.
+Transactions can run in `BestEffort` mode meaning that the KV Scheduler will _retry_ failed operations rather than reverting back to previously applied configuration operations.
 
-In this case, a TAP interface `my-tap` fails to get created. Before terminating
-the transaction, the scheduler retrieves the current value of `my-value`, the
-state of which cannot be assumed since the creation failed somewhere in-progress.
-Then it schedules a so-called *retry transaction*, which will attempt to fix
+In this example, the create() operation for the TAP interface `my-tap` fails. Before terminating
+the transaction, the KV Scheduler retrieves the current value of `my-value`. It cannot assume this is the current state because the create() operation failed somewhere in-progress.
+
+The KV Scheduler then schedules a *retry transaction*. This will attempt to repair
 the failure by re-applying the same configuration. Since the value retrieval
 has not found `my-tap` to be configured, the retry transaction will repeat
-the `Create(my-tap)` operation and succeed in our example.
+the `Create(my-tap)` operation and ultimately succeed as shown.
 
 
 ![CFD][cfd-retry-failed]
 
-### Example: Transaction revert
+### Example: Transaction Revert
 
-An update transaction (i.e. not resync) can be configured to run in either
-[best-effort mode][retry-failed], allowing partial completion,
-or to terminate upon first failure and revert already applied changes so that no
-visible effects are left in the system (i.e. the true transaction definition).
-This behaviour is only supported with GRPC or localclient as the agent NB
-interface. With KVDB, the agent will run in the best-effort mode to get as close
-to the desired configuration as it is possible.
+A update transaction can be configured to run in either best-effort mode supporting partial completion,
+or to terminate upon first failure and revert back to successfully applied changes. The latter ensures there are no visible effects of the failure remaining in the system.  This behaviour is only supported with gRPC or localclient serving as the NB. With a KV data sore, best-effort mode will run to attempt to arrive as close as possible to the desired configuration.
 
 In this example, a transaction is planned and executed to create a VPP interface
-`my-tap` with an attached route `my-route`. While the interface is successfully
-created, the route, on the other hand, fails to get configured. The scheduler
-then triggers the *revert procedure*. First the current value of `my-route` is
-retrieved, the state of which cannot be assumed since the creation failed
-somewhere in-progress. The route is indeed not found to be configured, therefore
-only the interface must be deleted to undo already executed changes. Once
-the interface is removed, the state of the system is back to where it was before
-the transaction started. Finally, the transaction error is returned back to the
-northbound plane.
+`my-tap` with an attached route `my-route`. The interface configuration succeeds but the route configuration fails.
+
+The KV Scheduler then triggers the `revert procedure`. First, the current value of `my-route` is
+retrieved. It cannot assume this is the current state because the create() operation failed somewhere in-progress. Second, it is determined that the route has not been configured. Therefore,
+only the interface must be deleted to undo any executed changes. Once
+the interface is removed, the system is returned to its pre-transaction state. Finally, the transaction error is returned back to NB.
 
 
 ![CFD][cfd-transaction-revert]
 
-### Example: Unnumbered interface
+### Example: Unnumbered Interface
 
 Turning interface into unnumbered allows to enable IP processing without assigning
 it an explicit IP address. An unnumbered interface can "borrow" an IP address
