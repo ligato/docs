@@ -108,67 +108,71 @@ the interface is removed, the system is returned to its pre-transaction state. F
 
 ### Example: Unnumbered Interface
 
-Turning interface into unnumbered allows to enable IP processing without assigning
-it an explicit IP address. An unnumbered interface can "borrow" an IP address
-of another interface, already configured on VPP, which conserves network and
-address space.
+An unnumbered interface is an interface that has not been configured with an IP address. It can borrow an IP address from another interface. This can conserve network address space.
 
-The requirement is that the interface from which the IP address is supposed
-to be borrowed has to be already configured with at least one IP address assigned.
-Normally, the agent represents a given VPP interface using a single key-value
-pair. Depending on this key alone would only ensure that the target interface is
-already configured when a dependent object is being created. In order to be able
-to restrict an object existence based on the set of assigned IP addresses to
-an interface, every VPP interface value must `derive` single (and unique)
-key-value pair for each assigned IP address. This will enable to reference IP
+The interface that will "loan" IP addresses to unnumbered interfaces must be configured with at least one IP address. Normally, the vpp-agent represents a given VPP interface using a single key-value
+pair. Depending on this key alone would only ensure that the target interface, is already configured when a dependent object is being created.
+
+!!! Note
+    The paragragh above only refers to a VPP interface. It is not referring to a VPP interface configured with an IP address.
+
+In order to restrict an object's existence based on the set of assigned IP addresses to
+an interface, every VPP interface value must `derive` a unique
+key-value pair for each assigned IP address. This enables the KV Scheduler to reference IP
 address assignments and build dependencies around them.
 
-For unnumbered interfaces alone it would be sufficient to derive single value
-from every interface, with key that would allow to determine if the interface
-has at least one IP address assigned,
-something like: `vpp/interface/<interface-name>/has-ip/<true/false>`.
-Dependency for an unnumbered interface could then reference key of this value:
-`vpp/interface/<interface-name-to-borrow-IP-from>/has-ip/true`
+An unnumbered interface can derive a single value from every interface, with key that would allow it to determine if the interface has at least one assigned IP address.
+
+Here is an example:
+```
+vpp/interface/<interface-name>/has-ip/<true/false>
+```
+
+Dependency for an unnumbered interface could reference this key:
+```
+vpp/interface/<interface-name-to-borrow-IP-from>/has-ip/true
+```
+
 
 For more complex cases, which are outside of the scope of this example, it may
-be desirable to define dependency based not only on the presence but also on the
-value of an assigned IP address. Therefore we derive (empty) value for each
-assigned IP address with key template:
-`"vpp/interface/address/<interface-name>/<address>"`.
-This complicates situation for unnumbered interfaces a bit, since they are not
-able to reference key of a specific value. Instead, what they would need is to
-match any address-representing key, so that the dependency gets satisfied when
-at least one of them exists for a given interface. With wildcards this could
-be expressed as: `"vpp/interface/address/<interface-name>/*`.
-The KVScheduler offers even more generic (i.e. expressive) solution than
-wildcards: dependency expressed using callback denoted as `AnyOf`. The callback
+be desirable to define a dependency based on the presence and value of an assigned IP address. To achieve this, we could derive an empty value for each
+assigned IP address with key template like so:
+```
+vpp/interface/address/<interface-name>/<address>
+```
+
+This complicates the situation for unnumbered interfaces. They are not
+able to reference a key of a specific value. Instead, they would need to
+match any address-representing key, so that the dependency is satisfied with at least one match.
+
+With wildcards this could be expressed like so:
+```
+vpp/interface/address/<interface-name>/*
+```
+
+The KV Scheduler offers a more generic solution than
+wildcards. The dependency is expressed using a callback denoted as `AnyOf`. The callback
 is a predicate, returning `true` or `false` for a given key. The semantics is
-similar to that of the wildcards. The dependency is considered satisfied, when
-for at least one of the existing (configured/derived) keys, the callback returns
-`true`.
+similar to that of the wildcards. The dependency is considered satisfied, when the callback,
+for at least one of the existing configured or derived keys, returns `true`.
 
-Lastly, to allow a (to-be-)unnumbered interface to exist even if the IP address(es)
-to borrow are not available yet, the call to turn interface into unnumbered is
-derived from the interface value and processed by a separate descriptor:
-`UnnumberedIfDescriptor`. It is this derived value that uses `AnyOf` callback
-to trigger IP address borrowing only once the IP addresses become available.
-For the time being, the interface is available at least in the L2 mode.
+Lastly, it is possible for an unnumbered interface to exist even if the IP address(es)
+to borrow are not available. In this case, an unnumbered interface is
+derived from the interface value and processed by a separate `UnnumberedIfDescriptor` descriptor. It is this derived value that uses the `AnyOf` callback to trigger an IP address borrow action once the IP addresses become available.
 
-The example also demonstrates that when the borrowed IP address is being removed,
-the unnumbered interface will not get un-configured, instead it will only return
-the address before it is unassigned and turn back into the L2 mode.  
+The example also demonstrates that when the borrowed IP address is removed,
+the configuration of the unnumbered interface will not be impacted. It will only return
+the address before it is unassigned, and becomes an interface in L2 mode.
 
 
 ![CFD][cfd-unnumbered]
 
-### Scenario: Create VPP interface via KVDB
+### Scenario: Create VPP interface via KV Data Store
 
-This is the most basic scenario covered in the guide. On the other hand,
-the attached control-flow diagram is the most verbose - it includes all the
-interacting components (listed from the top to the bottom layer):
+This is the most basic scenario one will encounter. The control-flow diagram is detailed. It includes all of interacting components consisting of:
 
- * `NB (KVDB)`: contains configuration of a single `my-tap` interface
- * `Orchestrator`: listing KVDB and propagating the configuration to the KVScheduler
+ * `NB (KVDB)`: contains the configuration of a single `my-tap` interface
+ * `Orchestrator`: listing KVDB and propagating the configuration to the KV Scheduler
  * `KVScheduler`: planning and executing the transaction operations
  * `Interface Descriptor`: implementing CRUD operations for VPP interfaces
  * `Interface Model`: builds and parses keys identifying VPP interfaces
@@ -176,17 +180,13 @@ interacting components (listed from the top to the bottom layer):
 
 ![CFD][cfd-create-vpp-interface-kvdb]
 
-### Scenario: Create VPP interface via GRPC
+### Scenario: Create VPP Interface via gRPC
 
-Variant of [this][vpp-interface] example, with GRPC used as the NB interface
-for the agent instead of KVDB. The transaction control-flow is collapsed, however,
-since there are actually no differences between the two cases. For KVScheduler
-it is completely irrelevant how the desired configuration gets conveyed
-into the agent. The advantage of GRPC over KVDB is that the transaction error
-value gets propagated back to the client, which is then able to react to it
-accordingly. On the other hand, with KVDB the client does not have to maintain
-a connection with the agent and the configuration can be submitted even when
-the agent is restarting or not running at all.
+In this example, gRPC is used as the vpp-agent's NB instead of the KV data store. The transaction control-flow is collapsed because there are essentially no differences between the two cases. The KV Scheduler is not concerned how the desired configuration is conveyed to the vpp-agent.
+
+The advantage of the gRPC approach is that the transaction error
+value is propagated back to the client, which is then able to react to it
+accordingly. On the other hand, with the KV data store approach, there is no client-to-agent connection required. The configuration can be submitted even when the vpp-agent is restarting or not running at all.
 
 
 
@@ -194,10 +194,7 @@ the agent is restarting or not running at all.
 
 ### Example: Route waiting for the associated interface
 
-This example shows how route, received from KVDB before the associated
-interface, gets delayed and stays in the `PENDING` state until the interface
-configuration is received and applied. This is achieved simply by listing the
-key representing the interface among the dependencies for the route.
+This example shows how a route, received from the KV data store, is placed in a `PENDING` state until the interface is configured. This is achieved by listing the interface key among the dependencies for the route.
 
 ![CFD][cfd-route-waiting]
 
