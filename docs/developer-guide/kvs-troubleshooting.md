@@ -1,16 +1,16 @@
 # KVS Troubleshooting
 
-This page contains troubleshooting information for KVScheduler.
+This page contains troubleshooting information for KV Scheduler.
 
 ---
 
 ### Value entered via NB was not configured in SB
 
-[Read transaction logs][understand-transaction-logs], printed
-by the agent into `stdout` and try to locate the transaction triggered
+[Look over the transaction logs][understand-transaction-logs], printed
+by the agent into `stdout`, and locate the transaction triggered
 to configure the value:
 
-1. **transaction is not triggered** (not found in the logs) or the **value is
+1. **Transaction is not triggered** (not found in the logs) or the **value is
    missing** in the transaction input
    - make sure the model is registered
    
@@ -20,9 +20,11 @@ to configure the value:
 - [check if the plugin implementing the value is loaded][debug-plugin-lookup]
 - [check if the descriptor associated with the value is registered][how-to-descriptors]
 - [check if the key prefix is being watched][how-to-descriptors]
-- for NB KVDB make sure the key under which the value was put is correct
-   - could be a bad key prefix (bad suffix would make the value `UNIMPLEMENTED`, but otherwise included in the transaction input)
-- [debug logs][debug-logs] of the Orchestrator (NB of KVScheduler), can also be used to learn the set of key-values received with each event from NB - following are examples for RESYNC and CHANGE events:
+- for NB KV data store, verify the key used to put the value is correct
+- check if an incorrect key prefix is used. Note that an incorrect suffix renders the value `UNIMPLEMENTED`, but it is included in the transaction input.
+- [check the debug logs][debug-logs] of the Orchestrator (NB of KV Scheduler). These can also be used to learn the set of key-value pairs received with each event from NB.
+
+Here is a RESYNC example:
 ```
 DEBU[0005] => received RESYNC event (1 prefixes)         loc="orchestrator/orchestrator.go(150)" logger=orchestrator.dispatcher
 DEBU[0005]  -- key: config/mock/v1/interfaces/tap1       loc="orchestrator/orchestrator.go(168)" logger=orchestrator.dispatcher
@@ -35,31 +37,39 @@ DEBU[0005] Pushing data with 2 KV pairs (source: watcher)  loc="orchestrator/dis
 DEBU[0005]  - PUT: "config/mock/v1/interfaces/tap1"      loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
 DEBU[0005]  - PUT: "config/mock/v1/interfaces/loopback1"   loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
 ```
-
+Here is a CHANGE example:
 ```
 DEBU[0012] => received CHANGE event (1 changes)          loc="orchestrator/orchestrator.go(121)" logger=orchestrator.dispatcher
 DEBU[0012] Pushing data with 1 KV pairs (source: watcher)  loc="orchestrator/dispatcher.go(67)" logger=orchestrator.dispatcher
 DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispatcher.go(93)" logger=orchestrator.dispatcher
 ```
 
-2. **transaction containing the value was triggered**, yet the value is not configured in SB - the issue could be one of the following:
+2. **Transaction containing the value was triggered**, yet the value is not configured in SB. This could be the result of one of the following:
 
-* the value is *pending*
-  - [display graph][how-to-graph] and check the state of dependencies (follow black arrows coming out of the value)
-  - dependency is either missing (state = `NONEXISTENT`) or in a failed state (state = `INVALID`/`FAILED`/`RETRYING`)
-  - could be also that the plugin implementing the dependency [is not loaded][debug-plugin-lookup] (state of a dependency = `UNIMPLEMENTED`)
-  - perhaps an unintended dependency was added - double-check the implementation of the Dependencies method of the value descriptor
-* the value is in the `UNIMPLEMENTED` state
-  - with KVDB NB, could be that the suffix of the key under which the value was put is incorrect
-    - i.e. the prefix is valid and watched by the agent, but the suffix, normally composed of value primary fields, is malformed and not matched by the descriptor's `KeySelector`
-    - could be that `KeySelector` or `NBKeyPrefix` of the descriptor do not use the model or use it incorrectly
-         - e.g. `NBKeyPrefix` of this or another descriptor selects the value, but `KeySelector` does not
-* the value *failed* to get applied
-  - [display the graph after txn][how-to-graph] and check the state of the value - as long as it is `FAILED`, `RETRYING` or `INVALID`, it cannot be assumed to be properly applied SB
-  - check for common error `value has invalid type for key`, usually caused by a mismatch between the descriptor and the model
-  - could be that the set of value dependencies as listed by the descriptor is not actually complete (i.e. logical error) - check docs for SB (VPP/Linux/...) to learn if there are any additional dependencies needed for the value to be applied properly
-* derived value is treated as `PROPERTY` when it should have CRUD operations assigned
-  - we do not yet provide tools to define models for derived values, therefore developers have to implement their own key building/parsing methods which, unless diligently covered by UTs, are easy to get wrong, especially in corner cases, and cause mismatch in the assignment of derived values to descriptors
+* Value is `PENDING`
+
+    - [display the graph][how-to-graph] and check the state of dependencies, by following the black arrows originating from the value
+    - dependency is missing so state is `NONEXISTENT`), or in a failed state indicated by `INVALID`/`FAILED`/`RETRYING`)
+    - plugin implementing the dependency [is not loaded][debug-plugin-lookup], thus the dependency state is `UNIMPLEMENTED`)
+    - unintended dependency was added. Verify the implementation of the dependencies method of the value descriptor
+
+---
+
+* Value in the `UNIMPLEMENTED` state
+    - for NB KV data store, verify the key suffix used to put the value is correct. The prefix is valid and watched by the vpp-agent, but the suffix, normally composed of value primary fields, is malformed. There is a mismatch with the descriptor's `KeySelector`
+    - `KeySelector` or `NBKeyPrefix` of the descriptor do not use the model, or does use it, but incorrectly. `NBKeyPrefix` of this or another descriptor selects the value, but `KeySelector` does not
+
+---
+
+* Value *failed* to be applied
+    - [display the graph after txn][how-to-graph] and check the state of the value. As long as it is `FAILED`, `RETRYING` or `INVALID`, it is not assumed to be applied properly to SB
+    - common error `value has invalid type for key` appears.  This is usually caused by a mismatch between the descriptor and the model
+    - set of value dependencies as listed by the descriptor is not complete. Look over the descriptor/ folders of the respective VPP or Linux plugins for any additional dependencies needed for the value to be applied properly to SB
+
+---
+
+* Derived Value is treated as `PROPERTY` when it should have CRUD operations assigned
+    - we do not yet provide tools to define models for derived values. Developers must implement their own key building/parsing methods which, unless diligently covered by UTs, are prone to error. In corner cases, a mismatch in the assignment of derived values to descriptors could occur
 
 ### Resync triggers some operations even if the SB is in fact in-sync with NB
 
