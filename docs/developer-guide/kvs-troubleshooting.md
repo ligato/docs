@@ -4,7 +4,7 @@ This page contains troubleshooting information for KV Scheduler.
 
 ---
 
-### Value entered via NB was not configured in SB
+### NB value not configured in SB
 
 [Look over the transaction logs][understand-transaction-logs], printed
 by the agent into `stdout`, and locate the transaction triggered
@@ -69,76 +69,89 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
 ---
 
 * Derived Value is treated as `PROPERTY` when it should have CRUD operations assigned
-    - we do not yet provide tools to define models for derived values. Developers must implement their own key building/parsing methods which, unless diligently covered by UTs, are prone to error. In corner cases, a mismatch in the assignment of derived values to descriptors could occur
+    - we do not yet provide tools to define models for derived values. Developers must implement their own key building/parsing methods which, unless diligently covered by UTs, are prone to error. In corner cases, a mismatch in the assignment of derived values to descriptors could occur.
 
-### Resync triggers some operations even if the SB is in fact in-sync with NB
+---
 
-- [consider running the KVScheduler in the verification mode][crud-verification] to check for CRUD inconsistencies
-- descriptors of values unnecessarily updated by every resync often forget to consider equivalency between some attribute values inside `ValueComparator` \- for example, interface defined by NB with MTU 0 is supposed to be configured in SB with the default MTU, which, for most of the interface types, means that MTU 0 should be considered as equivalent to 1500 (i.e. not needing to trigger the `Update` operation to go from 0 to 1500 or vice-versa)
-- also, if `ValueComparator` is implemented as a separate method and not as a function literal inside the descriptor structure, make sure to not forget to plug it in via reference then
+### Resync triggers operations with SB in-sync with NB
+
+- [Run KV Scheduler in verification mode][crud-verification] to check for CRUD inconsistencies
+- descriptors of values unnecessarily updated by every resync forget to consider equivalency between attribute values inside [ValueComparator](kvdescriptor.md#descriptor-api). For example, NB defined interface with MTU 0 should be configured in SB with default MTU. For most interface types, this means MTU 0 is equivalent to MTU 1500. This avoids an `update` operation trigger to go from 0 to 1500 or vice-versa.
+- if `ValueComparator` is implemented as a separate method, and not as a function literal inside the descriptor structure, don't forget to plug it in via reference
+
+---
 
 ### Resync tries to create objects which already exist
 
-- most likely you forgot to implement the `Retrieve` method for the descriptor of duplicately created objects, or the method has returned an error:
+- verify `Retrieve` method is implemented for the descriptor of the created objects duplicates, or the method has returned an error:
 ```
  ERRO[0005] failed to retrieve values, refresh for the descriptor will be skipped  descriptor=mock-interface loc="kvscheduler/refresh.go(104)" logger=kvscheduler
 ```
-- make sure to avoid a common mistake of implementing empty Retrieve method when the operation is not supported by SB
+- avoid implementing an empty Retrieve method when the operation is not supported by SB
+
+---
 
 ### Resync removes item not configured by NB
 
-- objects not configured by the agent, but instead created in SB automatically (e.g. default routes) should be Retrieved with Origin `FromSB`
-- `UnknownOrigin` can also be used and the scheduler will search through the history of transactions to see if the given value has been configured by the agent
-- defaults to `FromSB` when history is empty (first resync)
+- use Retrieved with Origin `FromSB` for objects automatically created in SB such as default routes. N
+- `UnknownOrigin` can be used and the KV Scheduler will search the transactions history of transactions to see if the given value has been configured by the vpp-agent
+- defaults to `FromSB` when the first resync and transactions history is empty
 
-### Retrieve fails to find metadata for a dependency
+---
 
-- for example, when VPP routes are being retrieved, the Route descriptor must also read metadata of interfaces to translate `sw_if_index` from the dump of routes into the logical interface names as used in NB models, meaning that interfaces must be dumped first to have their metadata up-to-date for the retrieval of routes
-- while the descriptor method `Dependencies` is used to restrict ordering of `Create`, `Update` and `Delete` operations between values,`RetrieveDependencies` is used to determine the ordering for the `Retrieve` operations between descriptors
-- if your implementation of the `Retrieve` method reads metadata of another descriptor, it must be mentioned inside `RetrieveDependencies`
+### Retrieve cannot find dependency metadata
 
-### Value re-created when just Update should be called instead
+- for example, when VPP routes are retrieved, the route descriptor must read the interfaces metadata to translate `sw_if_index` from the routes dump into logical interface names used in NB models. This means interfaces must be dumped first so current metadata is present for the routes retrieval
+- `Dependencies` descriptor method is used to for ordering of `Create`, `Update` and `Delete` operations between values. The `RetrieveDependencies` method determines the ordering for the `Retrieve` operations between descriptors
+- if the implementation of the `Retrieve` method reads the metadata of another descriptor, it must be mentioned inside `RetrieveDependencies`
 
-- check that the implementation of the `Update` method is indeed plugged into the descriptor structure (without `Update`, the re-creation becomes the only way to apply changes)
-- double-check your implementation of `UpdateWithRecreate` - perhaps you unintentionally requested the re-creation for the given update
+---
 
-### Metadata passed to `Update` or `Delete` are unexpectedly nil
+### Value re-created when Update should be called
 
-- could be that descriptor attribute `WithMetadata` is not set to `true` (it is not enough to just define the factory with `MetadataMapFactory`)
-- metadata for derived values are not supported (so don't expect to receive anything else than nil)
-- perhaps you forgot to return the new metadata in `Update` even if they have not changed
+- verify implementation of the `Update` method is plugged into the descriptor structure. Without `Update`, re-creation becomes the only way to apply changes
+- verify implementation of `UpdateWithRecreate`. This will result in an unintentional re-creation for the given update
+
+---
+
+### Metadata passed to `Update` or `Delete` is nil
+
+- descriptor attribute `WithMetadata` is not set to `true`. It is not enough to just define the factory with `MetadataMapFactory`)
+- metadata for derived values is not supported
+- return new metadata in `Update` even if unchanged
+
+---
 
 ### Unexpected transaction plan (wrong ordering, missing operations)
 
-- [display the graph visualization][how-to-graph] and check:
-  - if derived values and dependencies (relations, i.e. graph edges) are as expected
-    - if the value states before and after the transaction are as expected
-  - as a last resort, [follow the scheduler as it walks through the graph][graph-walk] during the transaction processing and try to localize the point where it diverges from the expected path - descriptor of the value where it happens is likely to have some bug(s)
+* [display the graph visualization][how-to-graph] and check:
+     - derived values and dependencies (relations, i.e. graph edges) are correct
+     - value states before and after the transaction are correct
+  - as a last resort, [follow the KV Scheduler as it walks through the graph][graph-walk] during the transaction processing. Attempt to locate the point where it diverges from the expected path. The descriptor of the value where this occurs is likely to have bug(s)
+
+---
 
 ### Commonly returned errors
 
- * <a name="value-invalid-type"></a>
-   `value (...) has invalid type for key: ...` (transaction error)
+* `value (...) has invalid type for key: ...`; **Transaction Error**
     - mismatch between the proto message registered with the model and the value type name defined for the [descriptor adapter][descriptor-adapter]
 
- * <a name="retrieve-failed"></a>
-   `failed to retrieve values, refresh for the descriptor will be skipped` (logs)
+* `failed to retrieve values, refresh for the descriptor will be skipped`; **Logs**
     - `Retrieve` of the given descriptor has failed and returned an error
-    - the scheduler treats failed retrieval as non-fatal - the error is printed to the log as a warning and the graph refresh is skipped for the values of that particular descriptor
-    - if this happens often for a given descriptor, double-check its implementation of the `Retrieve` operation and also make sure that `RetrieveDependencies` properly mentions all the dependencies
+    - KV Scheduler treats failed retrieval as non-fatal. The error is printed to the log as a warning and graph refresh is skipped for the values of the descriptor
+    - if this occurs often for a given descriptor, verify implementation of the `Retrieve` operation, ensure  `RetrieveDependencies` mentions all of the dependencies
 
- * <a name="unimplemented-create"></a>
-   `operation Create is not implemented` (transaction error)
-    - descriptor of the value for which this error was returned is missing implementation of the `Create` method - perhaps the method is implemented, but it is not plugged into the descriptor structure?
+ * `Create operation is not implemented`; **Transaction Error**
+    - descriptor of the value for which this error was returned is missing the `Create` method. Or it is not plugged into the descriptor structure
 
- * <a name="unimplemented-delete"></a>
-   `operation Delete is not implemented` (transaction error)
-    - descriptor of the value for which this error was returned is missing implementation of the `Delete` method - perhaps the method is implemented, but it is not plugged into the descriptor structure?
+ * `Delete operation is not implemented`; **Transaction error**
+    - descriptor of the value for which this error was returned is missing the `Delete` method. Or it is not plugged into the descriptor structure?
 
- * <a name="descriptor-exists"></a>
-  `descriptor already exist` (returned by `KVScheduler.RegisterKVDescriptor()`)
-    - returned when the same descriptor is being registered more than once
-    - make sure the `Name` attribute of the descriptor is unique across all descriptors of all initialized plugins
+ * `descriptor already exists` returned by `KVScheduler.RegisterKVDescriptor()`
+    - same descriptor is being registered more than once
+    - verify the `Name` attribute of the descriptor is unique across all descriptors of all initialized plugins
+
+---
 
 ### Common programming mistakes / bad practises
 
