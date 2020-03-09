@@ -131,33 +131,46 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
 
 ---
 
-### Commonly returned errors
+### Commonly Returned Errors
 
-* `value (...) has invalid type for key: ...`; **Transaction Error**
-    - mismatch between the proto message registered with the model and the value type name defined for the [descriptor adapter][descriptor-adapter]
+ * <a name="retrieve-failed"></a>
+   **`value (...) has invalid type for key: ...`;Transaction Error**
+      - mismatch between the proto message registered with the model and the value type name defined for the [descriptor adapter][descriptor-adapter]
 
-* `failed to retrieve values, refresh for the descriptor will be skipped`; **Logs**
+---
+
+ * <a name="retrieve-failed"></a>
+   **`failed to retrieve values, refresh for the descriptor will be skipped`; Logs**
     - `Retrieve` of the given descriptor has failed and returned an error
     - KV Scheduler treats failed retrieval as non-fatal. The error is printed to the log as a warning and graph refresh is skipped for the values of the descriptor
     - if this occurs often for a given descriptor, verify implementation of the `Retrieve` operation, ensure  `RetrieveDependencies` mentions all of the dependencies
 
- * `Create operation is not implemented`; **Transaction Error**
+---
+
+ * <a name="unimplemented-create"></a>
+   **`Create operation is not implemented`; Transaction Error**
     - descriptor of the value for which this error was returned is missing the `Create` method. Or it is not plugged into the descriptor structure
 
- * `Delete operation is not implemented`; **Transaction error**
+---
+
+ * <a name="unimplemented-delete"></a>
+   **`Delete operation is not implemented`; Transaction error**
     - descriptor of the value for which this error was returned is missing the `Delete` method. Or it is not plugged into the descriptor structure?
 
- * `descriptor already exists` returned by `KVScheduler.RegisterKVDescriptor()`
+---
+
+ * <a name="descriptor-exists"></a>
+   **`descriptor already exists` returned by `KVScheduler.RegisterKVDescriptor()`**
     - same descriptor is being registered more than once
     - verify the `Name` attribute of the descriptor is unique across all descriptors of all initialized plugins
 
 ---
 
-### Common programming mistakes / bad practises
+### Common Programming Mistakes / Bad Practices
 
  * <a name="changing-value"></a>
-   **changing the value content inside descriptor methods**
-    - values should be manipulated as if they were mutable, otherwise it could confuse the scheduling algorithm and lead to incorrect transaction plans
+   **changing value content inside descriptor methods**
+    - values should be treated as if they were mutable, otherwise it could confuse the scheduling algorithm and lead to incorrect transaction plans
     - for example, this is a bug:
 ``` golang
     func (d *InterfaceDescriptor) Create(key string, iface *interfaces.Interface) (metadata *ifaceidx.IfaceMetadata, err error) {
@@ -168,7 +181,7 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
         //...
     }
 ```
-   - the only exception when input argument can be edited in-place are metadata passed to the `Update` method, which are allowed to be re-used, e.g.:
+   - only exception in which an input argument can be edited in place is metadata passed to the `Update` method, and are allowed to be re-used. Here is an example:
 ```
     func (d *InterfaceDescriptor) Update(key string, oldIntf, newIntf *interfaces.Interface, oldMetadata *ifaceidx.IfaceMetadata) (newMetadata *ifaceidx.IfaceMetadata, err error) {
         // ...
@@ -180,14 +193,16 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
     }
 ```
 
+---
+
  * <a name="stateful-descriptor"></a>
    **implementing stateful descriptors**
-    - descriptors are meant to be stateless and inside callbacks should operate only with method input arguments, as received from the scheduler (i.e. key, value, metadata)
-    - it is still allowed (and very common) to implement CRUD operations as methods of a structure, but the structure should only act as a "static
-      context" for the descriptor, storing for example references to the logger, SB handler(s), etc. - things that do not change once the descriptor is constructed (typically received as input arguments for the descriptor constructor)
-    - to maintain an extra run-time data alongside values, use metadata and not context
-    - all key-value pairs and the associated metadata are already stored inside the graph and fully exposed through transaction logs and REST APIs, therefore if descriptors do not hide any state internally, the system state will be fully visible from the outside and issues will be easier to reproduce
-    - this would be considered bad practice:
+    - descriptors are meant to be stateless. Inside callbacks, they should operate only with method input arguments, as received from the scheduler (i.e. key, value, metadata)
+    - it is still permitted to implement CRUD operations as methods of a structure. But the structure should only act as a "static context" for the descriptor. Storing references to the logger and SB handler(s) are examples. These are items that do not change once the descriptor is constructed, and typically received as input arguments for the descriptor constructor
+    - all key-value pairs and the associated metadata are stored inside the graph, and exposed through transaction logs and REST APIs. If descriptors do not hide any state internally, the system state will be visible from the outside, and issues will be easier to reproduce
+    - use metadata to maintain an extra run-time data alongside values. Do `NOT` use context
+    - this is considered bad practice:
+
 ``` golang
 func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (metadata *ifaceidx.IfaceMetadata, err error) {
 
@@ -202,20 +217,27 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 }
 ```
 
- * <a name="metadata-with-derived"></a>
-   **trying to use metadata with derived values**
-    - it is not supported to associate metadata with a derived value - use the parent value instead
-    - the limitation is due to the fact that derived values cannot be retrieved directly (and have metadata received from the `Receive` callback) - instead, they are derived from already retrieved parent values, which effectively means that they cannot carry additional state-data, beyond what is already included in the metadata of their parent values
+---
+
+* <a name="metadata-with-derived"></a>
+  **using metadata with derived values NOT supported**
+    - associating metadata with a derived value is not supported. Use the parent value instead
+    - limitation exists because derived values cannot be retrieved directly. They are derived from from parent values that have already been retrieved. Parent values may have metadata for additional run-time state. Derived values cannot carry additional state-data, beyond what is already included in the metadata of their parent values
+
+---
 
  * <a name="derived-key-collision"></a>
    **deriving the same key from different values**
-    - make sure to include the parent value ID inside a derived key, to ensure that derived values do not collide across all key-value pairs
+    - include the parent value ID inside a derived key, so that derived values do not collide with key-value pairs across the entire system
+
+---
 
  * <a name="models-bad-usage"></a>
-   **not using models for non-derived values or mixing them with custom key building/parsing methods**
-      - it is true that models are work-in-progress and not yet supported with derived values
-      - for non-derived values, however, the models are already mandatory and should be used to define these four descriptor fields: `NBKeyPrefix`, `ValueTypeName`, `KeySelector`, `KeySelector` - eventually these fields will all be replaced with a single `Model` reference, hence it is recommended to have the models prepared and already in-use for an easy transition
-      - it is also a very bad practise to use a model only partially, e.g.:
+   **not using models for non-derived values; mixing with custom key building/parsing methods**
+      - models are `NOT` supported with derived values at this time
+      - for non-derived values, the models are mandatory and should be used to define these four descriptor fields: `NBKeyPrefix`, `ValueTypeName`, `KeySelector`, `KeySelector`
+      - eventually these fields will all be replaced with a single `Model` reference. It is recommended to prepare and use the models prepared for an easy transition to new release
+      - it is bad practice to use a model, only partially, like so:
 ```
     descriptor := &adapter.InterfaceDescriptor{
 		Name:               InterfaceDescriptorName,
@@ -227,45 +249,61 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 	}
 ```
 
+---
+
   * <a name="empty-descriptor-methods"></a>
-    **leaving descriptor methods which are not needed defined**
-      - relying too much on copy-pasting from [prepared skeletons][descriptor-skeleton] can lead to having unused callback skeleton leftovers - for example, if the `Update` method is not needed (update is always handled via full-recreation), then simply do not define the method instead of leaving it empty
-      - descriptors are defined as structures and not as interfaces exactly for this reason - to allow the unused methods to remain undefined instead of being just empty, avoiding what would be otherwise nothing but a boiler-plate code
+    **defining unused descriptor methods**
+      - over-relying on copy-pasting from [prepared skeletons][descriptor-skeleton] can lead to unused callback skeleton leftovers
+      - for example, if the `Update` method is not required, then do not define the method. There is no value in retaining the method, even if empty, in the code
+      - descriptors are defined as structures and not as interfaces. This allows unused methods to remain undefined, rather than defined and empty
+
+---
 
   * <a name="empty-retrieve"></a>
-    **unsupported `Retrieve` defined to always return empty set of values**
-      - if the `Retrieve` operation is not supported by SB for a particular value type, then simply leave the callback undefined in the descriptor
-      - the scheduler skips refresh for values which cannot be retrieved (undefined `Retrieve`) and will assume that what has been set through previous transactions exactly corresponds with the current state of SB
-      - if instead, `Retrieve` always return empty set of values, then the scheduler will re-Create every value defined by NB with each resync, thinking that they are all missing, which is likely to end with duplicate-value kind of errors
+    **using unsupported `Retrieve` to return empty set of values**
+      - if the `Retrieve` operation is not supported by SB for a particular value type, then leave the callback undefined in the descriptor
+      - KV Scheduler skips refresh for values which cannot be retrieved (undefined `Retrieve`). It assumes that what has been set through previous transactions corresponds with current SB state
+      - if instead, `Retrieve` always returns an empty set of values, then the KV Scheduler will re-create every value defined by NB with each resync under the belief the values are missing. This could result in duplicate-value errors
+
+---
 
   * <a name="manipulating-with-derived"></a>
-    **manipulating with value attributes which were derived out**
-      - value attribute derived into a separate key-value pair and handled by CRUD operations of another descriptor, can be imagined as a slice of the original value that was split away - it still has an implicit dependency on its original value, but should no longer be considered as a part of it
-      - for example, [if we would define a separate derived value for every IP address to be assigned to an interface][derived-if-img], and there would be another descriptor which implements these assignments (i.e. `Create` = add IP, `Delete` = unassign IP, etc.), then the descriptor for interfaces should no longer:
+    **manipulating (derived) value attributes**
+      - value attribute derived into a separate key-value pair and handled by CRUD operations of another descriptor, can be imagined as a slice of the original value that was "split off". An implicit dependency on its original value remains, but should no longer be considered as a part of it
+      - for example, [if we define a separate derived value for every IP address to be assigned to an interface][derived-if-img], and a separate descriptor which implements these assignments (i.e. `Create` = add IP, `Delete` = unassign IP, etc.), then the descriptor for interfaces should no longer:
          - consider IP addresses when comparing interfaces in `ValueComparator`
          - (un)assign IP addresses in `Create`/`Update`/`Delete`
          - consider IP addresses for interface dependencies
-         - etc.
+
+---
 
   * <a name="retrieve-derived"></a>
     **implementing Retrieve method for descriptor with only derived values in the scope**
-      - derived values should never be Retrieved directly (returned by `Retrieve`), but always only returned by `DerivedValues()` of the descriptor with retrieved parent values
+      - derived values should never be Retrieved directly (returned by `Retrieve`), but only returned by `DerivedValues()` of the descriptor with retrieved parent values
+
+---
 
   * <a name="obtained-without-retrieve"></a>
-    **not implementing Retrieve method for values announced to KVScheduler as `OBTAINED` via notifications**
-      - it is a common mistake to forget that `OBTAINED` values also need to be refreshed, even though they are not touched by the resync
-      - it is because NB-defined values may depend on `OBTAINED` values, and the scheduler therefore needs to know their state to determine if the dependencies are satisfied and plan the resync accordingly
+    **not implementing Retrieve() method for values announced to KV Scheduler as `OBTAINED` via notifications**
+      - note that  `OBTAINED` values need to be refreshed, even though they are not touched by the resync
+      - this is because NB-defined values may depend on `OBTAINED` values. The KV Scheduler needs to know their state to determine if the dependencies are satisfied and plan the resync accordingly
+
+---
 
   * <a name="blocking-crud"></a>
     **sleeping/blocking inside descriptor methods**
-     - transaction processing is synchronous and sleeping inside a CRUD method would not only delay the remaining operations of the transactions, but other queued transactions as well
-     - if a CRUD operation needs to wait for something, then express that "something" as a separate key-value pair and add it into the list of dependencies - then, when it becomes available, send notification using `KVScheduler.PushSBNotification()` and the scheduler will automatically apply pending operations which became ready for execution
-     - in other words - do not hide any dependencies inside CRUD operations, instead use the framework to express them in a way that is visible to the scheduling algorithm
+     - transaction processing is synchronous. Sleeping inside a CRUD method would not only delay the remaining operations of the transactions, but other queued transactions as well
+     - if a CRUD operation needs to wait for "something", then express that "something" as a separate key-value pair and add it into the list of dependencies. When it becomes available, send notifications using `KVScheduler.PushSBNotification()` and the KV Scheduler will automatically apply pending operations ready for execution
+     - in other words, do not hide dependencies inside CRUD operations. Instead, use the framework to express them in a way that is visible to the scheduling algorithm
+
+---
 
   * <a name="metadata-map-with-write"></a>
     **exposing metadata map with write access**
-      - the KVScheduler is the owner of metadata maps, making sure they are always up-to-date - this is why custom metadata maps are not created by descriptors, but instead given to the scheduler in the form of factories (`KVDescriptor.MetadataMapFactory`)
-      - maps retrieved from the scheduler using `KVScheduler.GetMetadataMap()` should remain read-only and exposed to other plugins as such
+      - KV Scheduler is the owner of metadata maps, making sure they are current. This is why custom metadata maps are not created by descriptors, but instead given to the scheduler in the form of factories (`KVDescriptor.MetadataMapFactory`)
+      - maps retrieved from the KV Scheduler using `KVScheduler.GetMetadataMap()` should remain read-only and exposed to other plugins as such
+
+---
 
 ## Debugging
 
