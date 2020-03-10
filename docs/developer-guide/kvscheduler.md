@@ -6,6 +6,8 @@
 
 The KV Scheduler is a transaction-based configuration processing system. It includes a generic mechanism for dependency resolution between configuration items. The KV Scheduler is shipped as a separate [plugin], and is a core component used by all VPP and Linux plugins.
 
+---
+
 ### Motivation
 
 The KV Scheduler addresses several challenges encountered in the original vpp-agent design, which became apparent as the variety and complexity of different configuration items increased.
@@ -18,9 +20,12 @@ The KV Scheduler addresses several challenges encountered in the original vpp-ag
 
 The result was an unreliable and unpredictable re-synchronization (resync) occurring between the desired configuration state and the runtime configuration state.
 
+---
 
 !!! Terminology
     `Northbound (NB)` describes the desired or intended configuration state. `Southbound (SB)` describes the actual run-time configuration state. `Resync` is also referred to as state reconciliation. `CRUD` stands for create, read, update and delete. It standard nomenclature describing the basic actions performed by APIs. The KV Scheduler is referred to as the scheduler. KV Descriptors are also referred to as just `descriptors`.
+
+---
 
 ### Basic concepts
 
@@ -28,11 +33,15 @@ The KV Scheduler uses graph theory concepts to manage dependencies between confi
 
 The transaction plan that is prepared using the graph representation consists of a series of CRUD operations that can be executed on graph vertices. To abstract away from specific configuration items and accompanying details, graph vertices are "described" to the KV Scheduler using [KVDescriptors][kvdescriptor-guide]. KVDescriptors are basically handlers, each assigned to a distinct subset of graph vertices. They provide the KV Scheduler with pointers to callbacks that implement CRUD operations.
 
+---
+
 ### Mediator Pattern
 
 KV Descriptors are based on the [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern), where plugins are decoupled and no longer communicate directly with each other. Instead, interactions between plugins are handled through the KV Scheduler mediator.
 
 Plugins need only provide CRUD callbacks, and describe their dependencies on other plugins through one or more KVDescriptors. The KV Scheduler is then able to plan operations without knowing what the graph vertices represent in the configured system. Furthermore, the set of supported configuration items can be extended without altering the transaction processing engine or increasing the complexity of any of the components. All that is required is to implement and register new KVDescriptors.
+
+---
 
 ### Terminology
 
@@ -71,6 +80,8 @@ The graph-based representation uses the following terminology to describe the hi
 
 * **KV Descriptor** implements CRUD operations and defines derived values and dependencies for a single value type. To learn more, please read how to [implement your own KVDescriptor](kvdescriptor.md).
 
+---
+
 ### Dependencies
 
 The KV Scheduler must learn about two types of relationships between values utilized by the scheduling algorithm.
@@ -89,11 +100,15 @@ The KV Scheduler must learn about two types of relationships between values util
 - a derived value `B` exists for only as long as its base `A` exists. It is removed immediately when the base value `A` disappears.
 - a derived value may be represented by a descriptor different from the base value. It usually represents some property of the base value that other values may depend on, or an extra action to be taken when additional dependencies are met.
 
+---
+
 ### Diagram
 
 The following diagram shows the interactions between the KV Scheduler and the layers above and below. Using [Bridge Domain][bd-cfd] as an example, it depicts both the dependency and the derivation relationships, together with a pending value (of unspecified type) waiting for an interface to be created first.
 
 ![KVScheduler diagram](../img/developer-guide/kvscheduler.svg)
+
+---
 
 ### Resync
 
@@ -104,6 +119,8 @@ The KV Scheduler further enhances the concept of state reconciliation by definin
 * **Full resync**: the intended configuration is re-read from NB, the view of SB is refreshed via one or more `Retrieve` operations. Inconsistencies are resolved using `Create`\\`Delete`\\`Update` operations.
 * **Upstream resync**: a partial resync, similar to the Full resync, except the view of SB state is not refreshed. It is either assumed to be up-to-date and/or is not required in the resync. This is because it may be easier to re-calculate the intended state rather than determine the minimal difference.
 * **Downstream resync**: a partial resync, similar to the Full resync, except the intended configuration is assumed to be up-to-date and will not be re-read from the NB. Downstream resync can be used periodically to resync, even without interacting with the NB.
+
+---
 
 ### Transactions
 
@@ -155,6 +172,8 @@ x #5                                                                            
 x----------------------------------------------------------------------------------------------------------------------x
 ```
 
+---
+
 ### API
 
 The KV Scheduler API is defined in a separate [sub-package "api"][kvscheduler-api-dir] of the [plugin][plugin]. The interfaces that constitute the KV Scheduler API are defined in multiple files:
@@ -175,6 +194,7 @@ The KV Scheduler API is defined in a separate [sub-package "api"][kvscheduler-ap
 
  * `value_status.go`: further extends `value_status.pb.go` to implement proper (un)marshalling for proto.Messages.
 
+---
 
 ### REST API
 
@@ -183,7 +203,7 @@ The KV Scheduler exposes the state of the system and the history of operations t
 * **graph visualization**: `GET /scheduler/graph`
     - returns a graph visualization plotted into an SVG image using [Graphviz](http://graphviz.org/). This can be displayed using any modern web browser.
     - example: [graph][graph-example] rendered for the [Contiv-VPP][contiv-vpp] project.
-    - *requirements*: `dot` renderer; can be installed on Ubuntu with: `apt-get install graphviz`. This not needed when argument `format=dot` is used.
+    - *requirements*: `dot` renderer; can be installed on Ubuntu with: `apt-get install graphviz`. This is not needed when the argument `format=dot` is used.
     - args:
         - `format=dot`: if defined, the API returns a plain graph description in the DOT format, which is available for further processing and customized rendering.
         - `txn=<txn-number>`: visualize the state of the graph as it was at the time when the given transaction had just completed. Vertices updated by the transaction are highlighted using a colored border.

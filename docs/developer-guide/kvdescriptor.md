@@ -13,6 +13,8 @@ KV Descriptors are based on the _mediator pattern_, where plugins are decoupled 
 !!! Terminology
     `Northbound (NB)` describes the desired or intended configuration state. `Southbound (SB)` describes the actual run-time configuration state. `Resync` is also referred to as state reconciliation. `CRUD` stands for create, read, update and delete. It standard nomenclature describing the basic actions performed by APIs. The KV Scheduler is referred to as the scheduler. KV Descriptors are also referred to as just `descriptors`.
 
+---
+
 ### Descriptor API
 
 A KV Descriptor is a structure that must be initialized with correct attribute values, and callbacks to CRUD operations. This approach was taken to reinforce the notion that descriptors are meant to be `stateless`. The state of values is instead maintained by the scheduler. To add and maintain extra run-time attributes alongside a value, the scheduler allows descriptors to append metadata. The state of the graph, with specific values and associated metadata determines what is executed in the SB plane. The complete system state is visible through REST APIs and formatted logs. More details can be found in the [Descriptor API][descriptor-api] definition.
@@ -74,6 +76,8 @@ The following describes the descriptor attributes. Optional fields can be left u
       - list of descriptors to be dumped ahead of others
       - [for example][dump-deps-example], in order to dump routes, interfaces must be dumped first, to learn the mapping between interface names (NB ID) and their indexes (SB ID) from the metadata map of the interface plugin.
 
+---
+
 ### Descriptor Adapter
 
 One inconvenience that you will quickly discover when using this generalized approach,  of value description, is that the KVDescriptor API uses a bare `proto.Message` interface for values. This means you cannot define callbacks including add, modify, and delete for your model. Instead you must use `proto.Message` for input and output parameters, and perform all re-typing inside the callbacks.
@@ -92,6 +96,8 @@ To generate an adapter for your descriptor, put the `go:generate` command for `d
 For example, `go:generate` for the VPP interface can be found [here][vpp-iface-adapter].
 The import paths must include packages with your own value's data type definitions and any metadata, if used. The import path can be relative to the file with the `go:generate` command, hence the plugin's root folder is prefered.
 Running `go generate <your-plugin-path>` will generate the adapter for your descriptor and place it into the `adapter` sub-directory.
+
+---
 
 ### Registering Descriptor
 
@@ -151,6 +157,8 @@ func NewPlugin(opts ...Option) *<your-plugin> {
 
 In order to obtain and expose the metadata map (if used), call [KV Scheduler.GetMetadataMap(< Descriptor-Name >)][get-metadata-map], after the descriptor has been registered. This will provide a map reference that can be exposed by the plugin's own API for other plugins to access read-only. An example for VPP interface metadata map can be found [here][get-metadata-map-example].
 
+---
+
 ### Plugin Directory Layout
 
 While it is not mandatory, we recommend that you follow the the directory layout used for all vpp-agent plugins:
@@ -181,6 +189,8 @@ While it is not mandatory, we recommend that you follow the the directory layout
 
 It is an un-written rule to place the plugin constructor, some default options, and default dependency injections into the `<options.go>` file. For example, this [option.go][options-example] file can be found in the root folder of the VPP ifplugin plugin.
 
+---
+
 ## Descriptor examples
 
 ### Descriptor skeletons
@@ -194,6 +204,8 @@ descriptor, available in two variants:
 !!! Note
     It is strongly recommended to use the prepared skeletons as reference only.
 
+---
+
 ### Mock SB
 
 We have prepared an [interactive hands-on example][mock-plugins-example],
@@ -201,6 +213,8 @@ demonstrating the KV Scheduler framework in action. It uses replicated `vpp/ifpl
 `vpp/l2plugin` plugins under various scenarios. The models are simplified and VPP
 is replaced with a mock SB plane. The triggered CRUD operations are printed to
 the stdout and not executed. The example is focused on the scheduler and descriptors. It also illustrates that with this level of abstraction, the makeup of the actual SB plane is not required.
+
+---
 
 ### Real-world Examples
 
@@ -221,7 +235,7 @@ Finally, check out the
 the graph even from below as SB notifications, and used as [targets for dependencies][afpacket-dep]
 by other objects.
 
-These descriptors cover most of the features and should help you to get started
+These descriptors cover most of the features and should help you get started
 implementing your own.
 
 [afpacket-dep]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/vpp/ifplugin/descriptor/interface.go#L421-L426
