@@ -307,16 +307,23 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 
 ## Debugging
 
-You can change the agent's log level globally or individually per logger via the configuration file `logging.conf`, the environment variable `INITIAL_LOGLVL=<level>`
-or during run-time through the Agent's REST API: `POST /log/<logger-name>/<log-level>`. Detailed info about setting log levels in the Agent can be found in the [documentation for the logmanager plugin][logmanager-readme].
+You can change the agent's log level globally, or individually per logger
 
-The KVScheduler prints most of its interesting data, such as [transaction logs][understand-transaction-logs] or [graph walk logs][graph-walk] directly to `stdout`. This output is concise and easy to read, providing enough information and visibility to debug and resolve most of the issues that are in some way related to the KVScheduler framework. These transaction logs are not dependent on any KVScheduler implementation details, and therefore not expected to change much between releases.
+ - via the `logging.conf` configuration file
+ - environment variable `INITIAL_LOGLVL=<level>`
+ - during run-time through the agent's REST API: `POST /log/<logger-name>/<log-level>`.
 
-KVScheduler-internal debug messages, which require some knowledge of the underlying implementation, are logged using the logger named `kvscheduler`.
+ Detailed info about setting log levels in the agent can be found in the [logmanager plugin documentation][logmanager-readme].
+
+The KV Scheduler prints [transaction logs][understand-transaction-logs] or [graph walk logs][graph-walk] directly to `stdout`. The output is intended to provide sufficient information and visibility to debug and resolve KV Scheduler issues.
+
+KV Scheduler-internal debug messages, which require some knowledge of the underlying implementation, are logged to `kvscheduler` logger.
+
+---
 
 ### How-to debug agent plugin lookup
 
-The easiest way to determine if your plugin has been found and properly initialized by the Agent's plugin lookup procedure is to enable verbose lookup logs. Before the agent
+The easiest way to determine if your plugin has been found and properly initialized by the plugin lookup procedure is to enable verbose lookup logs. Before the agent
 is started, set the `DEBUG_INFRA` environment variable as follows:
 ``` 
 export DEBUG_INFRA=lookup
@@ -325,9 +332,12 @@ export DEBUG_INFRA=lookup
 Then search for `FOUND PLUGIN: <your-plugin-name>` in the logs. If you do not find a log entry for your plugin, it means that it is either not listed among 
 the agent dependencies or it does not implement the [plugin interface][plugin-interface].
 
+---
+
 ### How-to list registered descriptors and watched key prefixes
 
-The easiest way to determine what descriptors are registered with the KVScheduler is to use the REST API `GET /scheduler/dump` without any arguments.
+To determine what descriptors are registered with the KV Scheduler, use the REST API `GET /scheduler/dump` without any arguments.
+
 For example:
 ```
 $ curl localhost:9191/scheduler/dump
@@ -355,30 +365,43 @@ $ curl localhost:9191/scheduler/dump
 }
 ```
 
-Moreover, with this API you can also find out which key prefixes are being watched for in the agent NB. This is particularly useful when some value requested by
-NB is not being applied into SB. If the value key prefix or the associated descriptor are not registered, the value will not be even delivered into the KVScheduler. 
+With this API, you can also find out which key prefixes are being watched for in the agent NB. This is useful when a value requested by NB is not being applied to SB. If the value key prefix or the associated descriptor are not registered, the value will not be delivered to the KV Scheduler.
 
-### Understanding the KVScheduler transaction log
+---
 
-The KVScheduler prints well-formatted and easy-to-read summary of every executed transaction to `stdout`. The output describes the transaction type, the
-assigned sequence number, the values to be changed, the transaction plan prepared by the scheduling algorithm and finally the actual sequence of executed operations,
-which may differ from the plan if there were any errors.
+### Understanding the KV Scheduler transaction log
+
+The KV Scheduler prints a summary of every executed transaction to `stdout`. The output describes
+
+- transaction type
+- assigned sequence number
+- values to be changed
+- transaction plan prepared by the scheduling algorithm
+- actual sequence of executed operations, which may differ from the plan if there were any errors.
  
-Screenshot of an actual transaction output with explanation:
+transaction log output with explanations:
 
 ![NB transaction][txn-update-img]
 
-Screenshot of a resync transaction that failed to apply one value:
+---
+
+resync transaction that failed to apply one value:
 
 ![Full Resync with error][resync-with-error-img]
 
-Retry transaction automatically triggered for the failed operation from the resync transaction shown above:
+---
+
+Retry transaction automatically triggered for the failed operation from the resync transaction shown above
 
 ![Retry of failed operations][retry-txn-img]
 
-Furthermore, before a [Full or Downstream Resync][resync] (not for Upstream Resync), or after a transaction error, the KVScheduler dumps the state of the graph to `stdout` *after* it was refreshed:
+---
+
+In addition, before a [Full or Downstream Resync][resync] (not for Upstream Resync), or after a transaction error, the KV Scheduler dumps the state of the graph to `stdout` *after* it was refreshed:
 
 ![Graph dump][graph-dump-img]
+
+---
 
 ### CRUD verification mode
 
