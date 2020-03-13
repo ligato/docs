@@ -6,22 +6,20 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 
 ## About Ligato
 
-- [Overview](intro/overview.md) gives overview for Ligato projects.
-- [Releases](https://github.com/ligato/vpp-agent/releases) contains list of Agent releases.
+- [Overview](intro/overview.md): high-level overview
+- [Releases](https://github.com/ligato/vpp-agent/releases): release info for VPP Agent
 
 ## Using Ligato
 
-- [Quickstart](user-guide/quickstart.md) is the best place to start for users.
-- [Concepts](user-guide/concepts.md) will teach you about some Ligato concepts.
-- [FAQ](intro/faq.md) provides answers to common questions.
-
-See **User Guide** section to get more information for users.
+- [Quickstart](user-guide/quickstart.md) - build, run and interface with a vpp-agent/vpp container
+- [Concepts](user-guide/concepts.md) - important concepts including models, keys and KV data store
+- [FAQ](intro/faq.md) - simple answers to common questions
 
 ## Developing with Ligato
 
-- [Hello World](tutorials/01_hello-world.md) is the first tutorial that will help you start developing with Ligato.
-- [KVScheduler](developer-guide/kvscheduler.md) and [KVDescriptors](developer-guide/kvdescriptor.md) will teach you about the KVScheduler and its components.
-- [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) provides documentation for code.
+- [Hello World](tutorials/01_hello-world.md) - first in a series of Ligato programming tutorials
+- [KVScheduler](developer-guide/kvscheduler.md) and [KVDescriptors](developer-guide/kvdescriptor.md) - detailed architecture, behavior and troubleshooting aspects of the KV Scheduler framework
+- [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) - code documentation
 
-See **Developer Guide** section to get more information for developers.
+See the **Developer Guide** section for more information.
 
