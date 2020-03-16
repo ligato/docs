@@ -27,7 +27,7 @@ docker exec -it vpp agentctl -e 172.17.0.1:2379 show
 docker exec -it vpp vppctl -s localhost:5002
 ```
 
-## AMD64 Images
+## ARM64 Images
 
 The VPP Agent can be successfully built also for the ARM64 platform.
 
@@ -52,9 +52,9 @@ the [official image for ARM64 platform][ligato-arm64-image].
 docker pull ligato/vpp-agent-arm64
 ```
 
-### ARM64 and ETCD Server
+### ARM64 and etcd Server
 
-You can run the ETCD server in a separate container on your local host as follows:
+Start the etcd server in a separate container on your local host:
 ```
 sudo docker run -p 2379:2379 --name etcd -e ETCDCTL_API=3 -e ETCD_UNSUPPORTED_ARCH=arm64 \
     quay.io/coreos/etcd:v3.3.8-arm64 /usr/local/bin/etcd \
@@ -62,7 +62,9 @@ sudo docker run -p 2379:2379 --name etcd -e ETCDCTL_API=3 -e ETCD_UNSUPPORTED_AR
     -listen-client-urls http://0.0.0.0:2379
 ```
 
-The ETCD server will be available on your host OS IP `172.17.0.1` (by default) and port `2379`. Call the agent via ETCD using the [agentctl testing client][agentctl]:
+The etcd server docker image is downloaded (if it does not exist already) and started, ready to serve requests. The etcd server will be available on your host OS IP `172.17.0.1` (by default) and port `2379`.
+
+Use the [agentctl tool][agentctl] to put configuration information into the etcd server:
 ```
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/192.168.1.13 '{
     "dst_network": "10.1.1.3/32",

@@ -645,6 +645,8 @@ type Config struct {
 
 The conf file contains multiple fields of various types together with the JSON struct tag. Lists and maps are also allowed. All fields do not necessarily need to be defined in the file. Empty fields are set to default values, or treated as not set.
 
+The majority of plugins support `.conf` files. However, some plugins cannot be loaded without a `.conf` file even if defined as part of the plugin feature set. Other plugins load `.conf` files as the default value. This makes it easy to use `.conf` files to modify certain plugin behavior.
+
 A list of supported configuration files can be found [here][config-files].
 
 [client-v2]: ../user-guide/concepts.md#client-v2

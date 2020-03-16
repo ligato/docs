@@ -10,165 +10,196 @@ This section explains how to prepare and run an environment supporting the vpp-a
 
 ## Set Up Your Environment
 
-There are two options here: 
+There are two options:
 
-* Pre-built docker image pull from [dockerhub](https://hub.docker.com/u/ligato)
- * Build a Local Image
+* Pre-built docker image pull from [dockerhub][dockerhub]
+* Build a Local Image
 
-The simplest one is to pull a pre-built docker image. The local build option has a couple of extra steps but is straightforward.
+The simplest option is to pull a pre-built docker image. The local build option has a couple of extra steps but is straightforward.
   
 !!! note
-    Docker ce 17.05 or higher is required.
+    Docker 19.03.5 was used in preparing these instructions. Use the `docker --version` command to determine which version is running.
+
+---
 
 ### Docker Image Pull
 
-The docker image exists in two versions: production and development (which can be also used for debugging). The production image is a lightweight version of the development image.
+The docker image exists in two versions: production and development. The development version supports a debug mode. The production image is a lightweight version of the development image.
 
 Supported architectures:
 
-* AMD64 (a.k.a. x86_64)
-* ARM64 (a.k.a. aarch64) - [see documentation for ARM][arm-doc]
+* AMD64 (x86_64)
+* ARM64 (AArch64)
 
-** What is included in the pre-built production image:**
+!!! Note
+    Details and procedures for working with ARM64 images are found [here](arm64.md). The steps covered in this section are based on the AMD64 x86_64 images.
+
+** Included in the pre-built production image:**
 
 - Binaries for the vpp-agent with default config files
 - Installation of the compatible VPP
 
-**What is included in the pre-built development image:**
+Pull the `pre-built production image` from [DockerHub][dockerhub].
+
+```
+docker pull ligato/vpp-agent
+```
+
+After the pull, follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install, configure and run the vpp-agent.
+
+
+**Included in the pre-built development image:**
 
 - vpp-agent with default config files including source code
 - Compatible VPP installation including source code and build artifacts
 - Development environment with all requirements to build the vpp-agent and the VPP
 - Tools to generate code (proto models, binary APIs)
 
-Command to pull the docker image:
+Pull the `pre-built development image` from [DockerHub][dockerhub].
+
 ```
 docker pull ligato/dev-vpp-agent
 ```
 
+After the pull, follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install, configure and run the vpp-agent.
 
 ---
 
 
-
 ### Local Image Build
 
-First clone the vpp-agent repository:
+Clone the vpp-agent repository:
 
 ```
 git clone git@github.com:ligato/vpp-agent.git
 ```
 
-Next, navigate to the [docker][docker] folder. Inside, choose either the production or development image to work with. 
+Navigate to the [docker][docker] folder. Inside, choose either the production or development image to work with.
 
-    
-Command to build the `production image`:
+Build the `production image`:
 ```
 make prod-image
 ```    
-<br/>
-Command to build the `development image`:
+
+Build the `development image`:
 
 ```
 make dev-image 
 ```
-<br/>
-Command to build both the `production and development images`:
+Build both the `production and development images`:
 
 ```
 make images 
 ```
 
-The development option constructs an image using the `dev_vpp-agent` image; the production option is built with files taken from the `vpp-agent` image.
+The production option is built with files taken from the `vpp-agent` image. The development option is built with files taken from the `dev_vpp-agent` image.
 
-The scripts also recognizes the architecture. The correct VPP code source URL and commit ID is taken from the [vpp.env][vpp-env] file located inside the vpp-agent repository.
+The scripts also recognize the architecture. The correct VPP code source URL and commit ID is taken from the [vpp.env][vpp-env] file located inside the vpp-agent repository.
 
 
 **Image in debug mode**
+
 The development image can be built in `DEBUG` mode. 
 
 ```
 $ VPP_DEBUG_DEB=y ./build.sh
 ```
 
-This only builds the image with debug mode support. Use `RUN_VPP_DEBUG=y` to start the image in debug mode.
+This builds an image with debug mode support. Use `RUN_VPP_DEBUG=y` to start the image in debug mode.
 
 ---
 
 
 ### Start the Image
 
-Command to start the vpp-agent:
+Start the vpp-agent:
 
 ```
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
 ```
 
-Note that the vpp-agent is executed in `privileged` mode. Several vpp-agent operations (e.g. Linux namespace handling) require permissions on the target host instance. Running in non-privileged mode may cause the vpp-agent to fail to start. [More information here][interface-plugin].
+Note that the vpp-agent is executed in `privileged` mode. Several vpp-agent operations such as Linux namespace handling require permissions on the target host instance. Running in non-privileged mode may cause the vpp-agent to fail to start.
 
-Open another terminal and run the following command:
-```
-sudo docker exec -it vpp_agent bash
-```
+The vpp-agent and VPP are started automatically by default.
 
-The vpp-agent and VPP are started automatically by default. 
-
-Image-specific environment variables available that can be assigned with `docker -e` on image start:
+The following are image-specific environment variables that can be assigned with `docker -e` on image start:
 
 - `OMIT_AGENT` - do not start the vpp-agent together with the image
-- `RETAIN_SUPERVISOR` - unexpected vpp-agent or VPP shutdown causes the supervisor to quit. This setting prevents that.
+- `RETAIN_SUPERVISOR` - prevents the situation where an unexpected vpp-agent or VPP causes the supervisor to quit.
 
 ---
 
-## Start VPP and the vpp-agent
+## Start VPP and the VPP Agent
 
 !!! note
     The vpp-agent will terminate if unable to connect to the VPP, a database or the Kafka message server. 
 
 **Start VPP**:
 
-Command to start VPP:  
+Open a terminal and run the following command:
+```
+sudo docker exec -it vpp_agent bash
+```
+
+There are two options for starting VPP.
+
+Start VPP:
 ```
 vpp unix { interactive } dpdk { no-pci }
 ```
 
-Command to start VPP without DPDK:
+Start VPP without DPDK.
 ```
 vpp unix { interactive } plugins { plugin dpdk_plugin.so { disable } }
 ```
 
+The first option could result in errors and VPP fails to start. Use the second option if that is the case.
+
 ---
 
-**Start the vpp-agent**
+**Start the VPP Agent**
 
-Command to start the vpp-agent
+Open a terminal and run the following command:
+```
+sudo docker exec -it vpp_agent bash
+```
+
+Start the vpp-agent
 
 ```
 vpp-agent
 ```
 
-To enable certain features (database connection, messaging), the vpp-agent requires static [configuration files][config-files] referred to as `.conf` files. Quick notes on conf files:
+Check the status using [agentctl][agentctl]:
+```
+agentctl status
+```
 
-- majority of plugins support .conf files. 
-- Some plugins cannot be loaded without a `.conf` file even if defined as part of the plugin feature set (e.g. Kafka). 
-- Other plugins load `.conf` files as the default value. This makes it easy to use `.conf` files to modify certain plugin behavior.
+Access the VPP CLI
+```
+vppctl -s localhost:5002
+```
+
+
+The vpp-agent can be augmented with additional functions and features through the use of [plugins](..plugins/plugin-overview.md). To enable certain plugin features such as database connectivity or messaging, the vpp-agent requires plugin-specific static configuration files referred to as `.conf` files.
+
+List the plugin .conf files and optional ENV variable configuration options:
+```
+vpp-agent -h
+```
+
+Details on .conf files can be found [here][config-files].
 
 ---
 
 
-### Connect vpp-agent to the Key-Value Data Store
+### Connect VPP Agent to the Key-Value Data Store
 
-!!! Note
-    There are a number of similar terms in this documentation and elsewhere used to define what is essentially a data store or database of key-value (KV) pairs or more generally structured data objects. These terms include but are not limited to KV database, KVDB, KV store and so on. Unless otherwise noted, we will use the term `KV data store` in the documentation text in this section and elsewhere in the documentation. The term `KVDB` might appear in the code examples and this will remain as is.
-
-
-Configuration information is stored in a KV data store. The vpp-agent needs to know how to connect to a particular instance of a KV data store so that it can listen for and receive config data. The connection information (IP address, port) is provided via a .conf file. Every KV data store plugin defines its own config file. 
-
-Click [KV data store][kv-overview] for more information.
+Configuration information is stored in a [KV data store](concepts.md#key-value-data-store) as key-value pairs. The vpp-agent connects to a particular instance of a KV data store, such as etcd, so that it can listen for and receive configuration updates.
 
 **Start etcd:**
 
-The etcd server is started in its own container on a local host. The command is as follows:
+Start the etcd server in a separate container on a local host:
 
 ```
 docker run -p 2379:2379 --name etcd --rm quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
@@ -176,9 +207,9 @@ docker run -p 2379:2379 --name etcd --rm quay.io/coreos/etcd:v3.1.0 /usr/local/b
 
 The etcd server docker image is downloaded (if it does not exist already) and started, ready to serve requests. In the default docker environment, the etcd server will be available on the IP `172.17.0.1` on port `2379`. The command above can be edited to run a version other than `3.1.0`, or change the listen or advertise addresses. 
 
-The vpp-agent defines a flag for the etcd plugin called `--etcd-config`. It points to the location of the `etcd.conf` file that holds static config information used by the etcd plugin upon startup. The most important is the IP address(es) of etcd enpodint(s)). 
+The vpp-agent defines a flag for the etcd plugin called `--etcd-config`. It points to the location of the `etcd.conf` file that contains static config information used by the etcd plugin upon startup. The most important is the IP address(es) of etcd enpodint(s)).
 
-Here is an example configuration:
+An example configuration contained in the etcd.conf file:
 
 ```
 insecure-transport: true
@@ -191,29 +222,32 @@ Start the vpp-agent with the config flag (default path to the etcd.conf file is 
 ```
 vpp-agent --etcd-config=/opt/vpp-agent/dev/etcd.conf
 ```
-<br/>
+
+More information on the etcd plugin configuration options can be found [here](config-files.md#etcd).
 
 **Example with Kafka (optional):**
 
-The Kafka server is started in a separate container. The command fetches the Kafka container (if missing) and starts the Kafka server:
+Start the Kafka server in a separate container on a local host:
 
 ```
 docker run -p 2181:2181 -p 9092:9092 --name kafka --rm --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
 ```
 
-The vpp-agent needs to know the IP address and port of the Kafka server. This information is defined in the `kafka.conf` file, which is provided using the flag `--kafka-conf`. 
+The Kafka server docker image is downloaded (if it does not exist already) and started, ready to serve requests. The vpp-agent needs the IP address and port of the Kafka server. This information is defined in the `kafka.conf` file, which is provided using the flag `--kafka-conf`.
 
-An example config:
+An example configuration contained in the kafka.conf file::
 
 ```
 addrs:
  - "172.17.0.1:9092"
 ```
 
-Start the vpp-agent with the config flag using the default path to the `kafka.conf` file which is `/opt/vpp-agent/dev`): 
+Start the vpp-agent with the config flag using the default path to the `kafka.conf` file, which is `/opt/vpp-agent/dev`):
 ```
 vpp-agent --kafka-config=/opt/vpp-agent/dev/kafka.conf
 ```
+
+More information on the Kafka plugin configuration can be found [here](config-files.md#kafka).
 
 ---
 
@@ -226,9 +260,10 @@ The `/cmd` package groups executables that can be built from sources in the vpp-
   executable (i.e. no app or extension plugins) that can be bundled with
   an off-the-shelf VPP to form a simple cloud-native VNF,
   such as a vswitch.
-- **[agentctl][agentctl]** - CLI tool that allows to show
+- **[agentctl][agentctl]** - CLI tool to show
   the state and to configure vpp-agents connected to etcd
 
+Both have been used in the steps above.
 
 ---
 
@@ -236,9 +271,9 @@ The `/cmd` package groups executables that can be built from sources in the vpp-
 
 **1. Microservice Label**
 
-Currently, a single instance of a `vpp-agent` can serve a single `VPP` instance, while multiple vpp-agents can use (or listen to) the same KV data store. vpp-agent instances (there is an analogy to a microservice) are distinguished with the microservice label. The label is a part of the KV data store key to make clear which part of configuration belongs to which vpp-agent. Note that every vpp-agent only watches keys associated with its own microservice label. 
+Currently, a single instance of a `vpp-agent` can serve a single `VPP` instance, while multiple vpp-agents can interact with the same KV data store. vpp-agent instances are distinguished with the `microservice label`. The label is a part of the KV data store key to make clear which part of configuration data belongs to which vpp-agent. Note that every vpp-agent watches keys associated with its own microservice label.
 
-The default microservice label is `vpp1`. It can be changed with the environment variable `MICROSERVICE_LABEL`, or using the `-microservice-label` flag.
+The default microservice label is `vpp1`. It can be changed with the environment variable `MICROSERVICE_LABEL`, or using the [`-microservice-label`](config-files.md#service-label) flag.
 
 It is possible to use the same label to "broadcast" shared configuration data to multiple vpp-agents. However, this approach is generally not recommended.
 
@@ -255,26 +290,40 @@ Running multiple `VPPs` on the same host requires a different shared memory pref
 
 **Put the configuration into the KV data store:**
 
-Store the values following the given model with the proper key to the KV data store. We recommend the use of etcd as the KV data store and the 'etcdctl` tool as the CLI.
+Store the values following the given model with the proper key to the KV data store. We recommend the use of etcd as the KV data store.
 
-Information about keys and data structures can be found [here][references].
+Information about models, keys and KV data stores can be found [here](concepts.md).
 
-An example of how to perform this task is shown in [section 5.1][quickstart-guide-51-keys] of the Quickstart Guide.
+An example using the etcdctl tool to perform put the configuration task can be found [here.](quickstart.md#5-managing-the-vpp-agent)
+
+Here is an example using [agentctl][agentctl]:
+
+- put a route into the etcd server
+- delete the route from the etcd server
+```
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/192.168.1.13 '{
+    "dst_network": "10.1.1.3/32",
+	"next_hop_addr": "192.168.1.13"
+}'
+
+agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/192.168.1.13
+```
 
 **Use clientv2**
 
-The [clientv2][clientv2] package contains API definitions for every supported configuration item and can be used to pass data without an external database (e.g. etcd)
+The [clientv2][clientv2] package contains API definitions for every supported configuration item and can be used to pass data without an external database such as etcd.
 
 [arm-doc]: https://github.com/ligato/vpp-agent/blob/master/docs/arm64/README.md
 [clientv2]: ../user-guide/concepts.md#client-v2
 [docker]: https://github.com/ligato/vpp-agent/tree/master/docker
+[dockerhub]: https://hub.docker.com/u/ligato
 [govppmux-plugin]: ../plugins/vpp-plugins.md#govppmux-plugin
 [interface-plugin]: ../plugins/linux-plugins.md#interface-plugin
 [kv-overview]: ../user-guide/concepts.md#key-value-data-store-overview
 [references]: ../user-guide/reference.md
 [vpp-env]: https://github.com/ligato/vpp-agent/blob/master/vpp.env
 [agentctl]: ../user-guide/agentctl.md#AgentCTL
-[config-files]: ../user-guide/config-files.md
+[config-files]: ../user-guide/concepts.md#plugin-config-files
 [concepts]: ../user-guide/concepts.md
 [quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent   
 

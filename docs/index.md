@@ -12,7 +12,7 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 ## Using Ligato
 
 - [Quickstart](user-guide/quickstart.md) - build, run and interface with a vpp-agent/vpp container
-- [Concepts](user-guide/concepts.md) - important concepts including models, keys and KV data store
+- [Concepts](user-guide/concepts.md) - explains models, keys and KV data store
 - [FAQ](intro/faq.md) - simple answers to common questions
 
 ## Developing with Ligato
