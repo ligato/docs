@@ -2,10 +2,10 @@
 
 ---
 
-This [folder][vpp-agent-examples-folder] in the vpp-agent repo contains several examples that illustrate aspects of vpp-agent functionality. Each example is structured as an individual executable with its own `main.go` file. Each example focuses on a simple use case. 
+This [folder][vpp-agent-examples-folder] in the vpp-agent repo contains several examples that illustrate vpp-agent functionality. Each example is structured as an individual executable with its own `main.go` file. Each example focuses on a simple use case. 
 
 !!! note
-    All examples use etcd, GoVPP and Kafka. Please make sure there are running instances of etcd, Kafka and VPP before running through an example. The [quickstart guide][quickstart-guide] can guide you through a setup or use the [instructions][setup-instructions] below.
+    All examples use etcd, GoVPP and Kafka. Please make sure there are running instances of etcd, Kafka and VPP before running through an example. The [quickstart guide][quickstart-guide] can guide you through a setup, or follow the [instructions][setup-instructions] below using the pre-built docker image.
 
 Current examples:
 
@@ -47,18 +47,21 @@ Current examples:
   
 ## How to run an example
  
- **1. Start the ETCD server on localhost**
+**1. Download Image**
+
+```
+docker pull ligato/vpp-agent
+```
  
-  ```
-  sudo docker run -p 2379:2379 --name etcd --rm 
-  quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd \
-  -advertise-client-urls http://0.0.0.0:2379 \
-  -listen-client-urls http://0.0.0.0:2379
-  ```
+
+**2. Start etcd server on localhost**
+ 
+```
+docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
+```
   </br>
  
   
-  Note: **For ARM64 see the information for [etcd][3]**.
   
  **2. (Optional) start Kafka on localhost**
 
@@ -79,11 +82,12 @@ Note: **For ARM64 see the information for [kafka][kafka-arm64]**.
  **4. Start desired example**
 
  Example can be started now from particular directory.
- ```
- go run main.go  \
- --etcd-config=/opt/vpp-agent/dev/etcd.conf \
- --kafka-config=/opt/vpp-agent/dev/kafka.conf
- ```
+ 
+```
+go run main.go  \
+--etcd-config=/opt/vpp-agent/dev/etcd.conf \
+--kafka-config=/opt/vpp-agent/dev/kafka.conf
+```
 [cn-infra-examples]: https://github.com/ligato/cn-infra/tree/master/examples 
 [example-govpp-call]: https://github.com/ligato/vpp-agent/tree/master/examples/govpp_call
 [example-grpc-vpp-notifications]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/notifications

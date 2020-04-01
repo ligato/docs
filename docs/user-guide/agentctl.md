@@ -1,64 +1,113 @@
-# AgentCTL
+# Agentctl
 
 ---
 
-## Intro
+## Introduction
 
-Agentctl is a command line client to manage not only vpp-agent, but any agent built with Ligato framework.
+Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. It provides a simple and intuitive CLI that enables the operator to check status, control VPP, view models and protos, set and view logs, and includes a dump command  
+
+Agentctl provides an etcdctl-like feature for interacting with the KV data store, and a command for importing configuration data from an external file.
 
 ![agentctl](../img/tools/agentctl.png)
 
-## Install
+## Installation
 
-### Build from source
+### Docker Image Pull
 
-The agentctl can also be installed using make target `make agentctl` in vpp-agent repo.
+Agentctl is included in the official docker images for the vpp-agent. The Quickstart Guide covers the steps in detail from initial image pull to executing agentctl commands. 
 
-### Pull docker image
+For convenience, here are the commands only.
 
-The agentctl is also available in the official docker images for vpp-agent.
+Pull the vpp-agent image from dockerhub:
+```
+docker pull ligato/vpp-agent
+```
+Start etcd:
+```
+docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
+```
+Start VPP Agent:
+```
+docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
+``` 
+Agentctl help to get started:
+```
+docker exec -it vpp-agent agentctl --help
+```
+
+### Build from Source
+
+A local image can be built from the vpp-agent repository.
+
+Follow the Local Image Build instructions contained in the VPP Agent Setup section of the User Guide. 
+
+After the "Start the VPP Agent" command of:
+```
+vpp-agent
+```
+
+Run Agentctl help to get started
+```
+agentctl --help
+```
+
 
 ## Usage
 
+Run Agentctl:
 ```
-➤ agentctl
+agentctl
+```
+Output:
+
+```
+
      ___                    __  ________  __
     /   | ____ ____  ____  / /_/ ____/ /_/ /
    / /| |/ __ '/ _ \/ __ \/ __/ /   / __/ /
-  / ___ / /_/ /  __/ / / / /_/ /___/ /_/ /  
- /_/  |_\__, /\___/_/ /_/\__/\____/\__/_/   
+  / ___ / /_/ /  __/ / / / /_/ /___/ /_/ /
+ /_/  |_\__, /\___/_/ /_/\__/\____/\__/_/
        /____/
 
-Usage:
-  agentctl [OPTIONS] COMMAND
-
-Commands:
+COMMANDS
+  config      Manage agent configuration
   dump        Dump running state
   generate    Generate config samples
-  help        Help about any command
   import      Import config data from file
   kvdb        Manage agent data in KVDB
   log         Manage agent logging
+  metrics     Get runtime metrics
   model       Manage known models
+  service     Manage agent services
   status      Retrieve agent status
+  values      Retrieve values from scheduler
   vpp         Manage VPP instance
 
-Options:
+OPTIONS:
+      --config-dir string        Path to directory with config file.
   -D, --debug                    Enable debug mode
-  -e, --etcd-endpoints strings   Etcd endpoints to connect to, default from ETCD_ENDPOINTS env var (default [127.0.0.1:2379])
-      --grpc-port string         gRPC server port (default "9111")
-  -h, --help                     help for agentctl
-  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var (default "127.0.0.1")
-      --http-port string         HTTP server port (default "9191")
-      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL env var
-      --version                  version for agentctl
+  -e, --etcd-endpoints strings   Etcd endpoints to connect to, default from ETCD_ENDPOINTS env var (default
+                                 [127.0.0.1:2379])
+      --grpc-port int            gRPC server port (default 9111)
+  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var
+                                 (default "127.0.0.1")
+      --http-basic-auth string   Basic auth for HTTP connection in form "user:pass"
+      --http-port int            HTTP server port (default 9191)
+      --insecure-tls             Use TLS without server's certificate validation
+  -l, --log-level string         Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")
+      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL
+                                 env var
+  -v, --version                  Print version info and quit
 
-Run "agentctl COMMAND --help" for more information about a command.
+Run 'agentctl COMMAND --help' for more information on a command.
 ```
+!!! note
+    Bears worth repeating: Use `agentctl <ANY COMMAND> --help` for explanations and in some cases, examples for any of the agentctl commands and sub-commands. 
+
 
 ### Setup
 
-The agentctl currently uses various NB access provided by Ligato agents:
+Agentctl currently uses various NB access methods provided by the Ligato agents. The default values can be modified as needed.
 
 - Agent host instance running on `127.0.0.1` by default
     * use option `-H`/`--host` or env var `AGENT_HOST` to change this
@@ -74,6 +123,7 @@ The agentctl currently uses various NB access provided by Ligato agents:
 
 List of agentctl subcommands:
 
+- [config](#config)
 - [model](#model)
 - [dump](#dump)
 - [status](#status)
@@ -83,13 +133,50 @@ List of agentctl subcommands:
 - [generate](#generate)
 - [log](#log)
 
-### Model
+### Config
 
-<details>
-<summary>The <code>model</code> subcommand provides information about models.</summary>
-<p>
+Performs a configuration resync action used to reconcile NB and SB information
 
 ```
+Usage:	agentctl config [options] COMMAND
+
+Manage agent configuration
+
+COMMANDS
+  resync      Run config resync in agent
+```
+
+Perform resync
+```
+agentctl config resync
+```
+Sample output:
+```
+{
+  "Start": "2020-04-01T23:28:21.3068686Z",
+  "Stop": "2020-04-01T23:28:21.5081483Z",
+  "SeqNum": 2,
+  "TxnType": "NBTransaction",
+  "ResyncType": "DownstreamResync"
+}
+```
+
+### Model
+
+This subcommand provides information about models.
+
+```
+Usage:	agentctl model [options] COMMAND
+
+Manage known models
+
+COMMANDS
+  inspect     Display detailed information on one or more models
+  ls          List models
+```
+
+
+
 Manage known models
 
 Usage:

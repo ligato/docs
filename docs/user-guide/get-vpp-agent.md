@@ -185,7 +185,7 @@ vppctl -s localhost:5002
 ```
 
 
-The vpp-agent can be augmented with additional functions and features through the use of [plugins](..plugins/plugin-overview.md). To enable certain plugin features such as database connectivity or messaging, the vpp-agent requires plugin-specific static configuration files referred to as `.conf` files.
+The vpp-agent can be augmented with additional functions and features through the use of [plugins](../plugins/plugin-overview.md). To enable certain plugin features such as database connectivity or messaging, the vpp-agent requires plugin-specific static configuration files referred to as `.conf` files.
 
 List the plugin .conf files and optional ENV variable configuration options:
 ```
