@@ -114,7 +114,7 @@ The vpp-agent uses an external KV data store for several reasons:
  
  - persist the desired state of the VPP/Linux configuration
  - To store and export certain VPP statistics
- - exploit the `"watch"` paradigm for stateless configuration management. This same approach is employed in other configuration systems such as [confd](https://confd.io)
+ - exploit the `"watch"` paradigm for stateless configuration management. This same approach is employed in other configuration systems such as [confd.](https://confd.io)
 
 ### Keys and Microservice Label
 
@@ -626,7 +626,7 @@ Another option is to set the related environment variable:
 export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 ```
 
-The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so the plugin can be successfully started without it.
+The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so the plugin can be successfully started without the conf file.
 
 An example config file (in yaml format):
 ```bash

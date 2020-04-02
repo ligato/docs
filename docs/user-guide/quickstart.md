@@ -398,19 +398,16 @@ Use the `quit` command to exit the VPP CLI.
 
 More information on VPP CLI commands is available [here](https://wiki.fd.io/view/VPP/Command-line_Interface_(CLI)_Guide).
 
-### 5.4 AgentCtl
+### 5.4 Agentctl
 
-AgentCtl is a CLI tool designed to manage not only a vpp-agent, but any software agent built with the Ligato framework.
+Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework.
 
-agentctl help:
+Agentctl help:
 ```
 docker exec -it vpp-agent agentctl --help
 ```
 Output:
 ```
-Usage:	agentctl [options] COMMAND
-
-
      ___                    __  ________  __
     /   | ____ ____  ____  / /_/ ____/ /_/ /
    / /| |/ __ '/ _ \/ __ \/ __/ /   / __/ /
@@ -419,6 +416,7 @@ Usage:	agentctl [options] COMMAND
        /____/
 
 COMMANDS
+  config      Manage agent configuration
   dump        Dump running state
   generate    Generate config samples
   import      Import config data from file
@@ -434,22 +432,20 @@ COMMANDS
 OPTIONS:
       --config-dir string        Path to directory with config file.
   -D, --debug                    Enable debug mode
-  -e, --etcd-endpoints strings   Etcd endpoints to connect to, default from ETCD_ENDPOINTS env var (default [127.0.0.1:2379])
+  -e, --etcd-endpoints strings   Etcd endpoints to connect to, default from ETCD_ENDPOINTS env var (default
+                                 [127.0.0.1:2379])
       --grpc-port int            gRPC server port (default 9111)
-  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var (default "127.0.0.1")
+  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var
+                                 (default "127.0.0.1")
       --http-basic-auth string   Basic auth for HTTP connection in form "user:pass"
       --http-port int            HTTP server port (default 9191)
       --insecure-tls             Use TLS without server's certificate validation
   -l, --log-level string         Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")
-      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL env var
+      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL
+                                 env var
   -v, --version                  Print version info and quit
 
 Run 'agentctl COMMAND --help' for more information on a command.
-```
-
-show vpp interfaces:
-```
-docker exec -it vpp-agent agentctl vpp cli show interface
 ```
 
 The [Agentctl](agentctl.md) section of this user guide contains more information and examples.

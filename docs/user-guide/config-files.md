@@ -437,6 +437,51 @@ _**VPP Interface Plugin Config File Options**_
 
 [_vpp-ifplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf)
 
+---
+
+## vpp-agent -h command
+
+Use this command to display flag, conf file name, and env variable information for all config files.
+
+```json
+vpp-agent -h
+```
+
+Output:
+```json
+                                      __
+  _  _____  ___ _______ ____ ____ ___ / /_
+ | |/ / _ \/ _ /___/ _ '/ _ '/ -_/ _ / __/  vpp-agent v3.2.0-alpha-1-g615f9fd36
+ |___/ .__/ .__/   \_'_/\_' /\__/_//_\__/   Wed Mar 18 17:59:27 UTC 2020 (15 days ago)
+    /_/  /_/           /___/                root@67748e05ef29 (go1.14 linux/amd64)
+
+Usage of vpp-agent:
+  -config-dir=".": Location of the config files; can also be set via 'CONFIG_DIR' env variable.
+  -configurator-config="configurator.conf": Location of the "configurator" plugin config file; can also be set via "CONFIGURATOR_CONFIG" env variable.
+  -consul-config="consul.conf": Location of the "consul" plugin config file; can also be set via "CONSUL_CONFIG" env variable.
+  -etcd-config="etcd.conf": Location of the "etcd" plugin config file; can also be set via "ETCD_CONFIG" env variable.
+  -govpp-config="govpp.conf": Location of the "govpp" plugin config file; can also be set via "GOVPP_CONFIG" env variable.
+  -grpc-config="grpc.conf": Location of the "grpc" plugin config file; can also be set via "GRPC_CONFIG" env variable.
+  -grpc-port="": Configure "grpc" server port
+  -http-config="http.conf": Location of the "http" plugin config file; can also be set via "HTTP_CONFIG" env variable.
+  -http-port="9191": Configure "http" server port
+  -kafka-config="kafka.conf": Location of the "kafka" plugin config file; can also be set via "KAFKA_CONFIG" env variable.
+  -kvscheduler-config="kvscheduler.conf": Location of the "kvscheduler" plugin config file; can also be set via "KVSCHEDULER_CONFIG" env variable.
+  -linux-ifplugin-config="linux-ifplugin.conf": Location of the "linux-ifplugin" plugin config file; can also be set via "LINUX-IFPLUGIN_CONFIG" env variable.
+  -linux-iptablesplugin-config="linux-iptablesplugin.conf": Location of the "linux-iptablesplugin" plugin config file; can also be set via "LINUX-IPTABLESPLUGIN_CONFIG" env variable.
+  -linux-l3plugin-config="linux-l3plugin.conf": Location of the "linux-l3plugin" plugin config file; can also be set via "LINUX-L3PLUGIN_CONFIG" env variable.
+  -linux-nsplugin-config="linux-nsplugin.conf": Location of the "linux-nsplugin" plugin config file; can also be set via "LINUX-NSPLUGIN_CONFIG" env variable.
+  -logs-config="logs.conf": Location of the "logs" plugin config file; can also be set via "LOGS_CONFIG" env variable.
+  -microservice-label="vpp1": microservice label; also set via 'MICROSERVICE_LABEL' env variable.
+  -msgsync-config="msgsync.conf": Location of the "msgsync" plugin config file; can also be set via "MSGSYNC_CONFIG" env variable.
+  -orchestrator-config="orchestrator.conf": Location of the "orchestrator" plugin config file; can also be set via "ORCHESTRATOR_CONFIG" env variable.
+  -redis-config="redis.conf": Location of the "redis" plugin config file; can also be set via "REDIS_CONFIG" env variable.
+  -restpapi-config="restpapi.conf": Location of the "restpapi" plugin config file; can also be set via "RESTPAPI_CONFIG" env variable.
+  -telemetry-config="telemetry.conf": Location of the "telemetry" plugin config file; can also be set via "TELEMETRY_CONFIG" env variable.
+  -vpp-aclplugin-config="vpp-aclplugin.conf": Location of the "vpp-aclplugin" plugin config file; can also be set via "VPP-ACLPLUGIN_CONFIG" env variable.
+  -vpp-ifplugin-config="vpp-ifplugin.conf": Location of the "vpp-ifplugin" plugin config file; can also be set via "VPP-IFPLUGIN_CONFIG" env variable.
+
+```
 
 *[ACL]: Access Control List
 *[HTTP]: Hypertext Transfer Protocol
