@@ -2,10 +2,10 @@
 
 In this guide you will learn how to:
 
-- Install the vpp-agent
+- Install the VPP agent
 - Install and Start etcd
-- Run the vpp-agent container
-- Interact with the vpp-agent using REST, CLI, etcdctl and the agentctl interfaces.
+- Run the VPP agent container
+- Interact with the VPP agent using REST, CLI, etcdctl and the agentctl interfaces.
 
 The figure below illustrates our quickstart guide environment.
 
@@ -27,7 +27,7 @@ The figure below illustrates our quickstart guide environment.
 
 ## 2. Download Image
 
-Pull the vpp-agent image from [DockerHub][dockerhub]. This image contains the vpp-agent and a compatible VPP dataplane.
+Pull the VPP agent image from [DockerHub][dockerhub]. This image contains the vpp-agent and a compatible VPP dataplane.
 
 ```
 docker pull ligato/vpp-agent
@@ -57,9 +57,9 @@ Sample output:
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 ```
 
-### 3. etcd
+## 3. etcd
 
-[etcd][etcd] is a key-value store that containing VPP configuration information structured as key-value pairs.
+[etcd][etcd] is a key-value store containing VPP configuration information structured as key-value pairs.
 
 ### 3.1 Start etcd
 
@@ -99,7 +99,7 @@ $ apt-get install etcd-client
 $ brew install etcd
 ```
 
-However, it's easier (and `recommended`) to use the one that comes with the etcd image:
+However, it's easier and `recommended` to use the one that comes with the etcd image:
 
 ```
 docker exec etcd etcdctl version
@@ -111,9 +111,9 @@ API version: 3.3
 ```
 
 
-## 4. Start vpp-agent
+## 4. Start VPP Agent
 
-Open a new terminal session. Start the vpp-agent together with the compatible version of the VPP dataplane in a new docker container.
+Open a new terminal session. Start the VPP agent together with the compatible version of the VPP dataplane in a new docker container.
 ```
 docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ``` 
@@ -133,14 +133,14 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 
 
 
-## 5. Managing the vpp-agent
+## 5. Managing the VPP Agent
 
 This section will explain:
 
 - How to configure the VPP dataplane through the etcd data store and vpp-agent using etcdctl
-- How to read VPP configuration data with a vpp-agent REST API
+- How to read VPP configuration data with a VPP agent REST API
 - How to connect to the VPP CLI and show the configuration
-- How to use agentCtl to manage the vpp-agent and Ligato components
+- How to use agentctl to manage the VPP agent and Ligato components
 
 ### 5.1 etcdctl
 
@@ -218,7 +218,7 @@ Sample output:
 ```
 
 
-### 5.2 vpp-agent REST API
+### 5.2 REST API
 
 !!! Note
     We will use cURL to run REST APIs.
@@ -448,7 +448,7 @@ OPTIONS:
 Run 'agentctl COMMAND --help' for more information on a command.
 ```
 
-The [Agentctl](agentctl.md) section of this user guide contains more information and examples.
+The [agentctl](agentctl.md) section of this user guide contains more information and examples.
 
 
 ## Troubleshooting
@@ -462,7 +462,7 @@ The etcdctl command returns "Error:  100: Key not found".
 - The etcdctl API version was not correctly set. Check the output of the appropriate environment variable with command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
 
 
-The cURL or postman command to access vpp-agent REST APIs does not work (connection refused).
+The cURL or postman command to access VPP agent REST APIs does not work (connection refused).
 
 - The command starting the docker container exports port 9191 to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 9191:9191`. Run the `Restart vpp-agent steps`  shown below to modify port numbers.
 
