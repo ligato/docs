@@ -45,14 +45,14 @@ Pull the `pre-built production image` from [DockerHub][dockerhub].
 docker pull ligato/vpp-agent
 ```
 
-After the pull, follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install, configure and run the vpp-agent.
+After the pull, follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install, configure and run the VPP agent.
 
 
 **Included in the pre-built development image:**
 
-- vpp-agent with default config files including source code
+- vpp-agent code with default config files including source code
 - Compatible VPP installation including source code and build artifacts
-- Development environment with all requirements to build the vpp-agent and the VPP
+- Development environment with all requirements to build the VPP agent and VPP
 - Tools to generate code (proto models, binary APIs)
 
 Pull the `pre-built development image` from [DockerHub][dockerhub].
@@ -61,7 +61,7 @@ Pull the `pre-built development image` from [DockerHub][dockerhub].
 docker pull ligato/dev-vpp-agent
 ```
 
-After the pull, follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install, configure and run the vpp-agent.
+After the pull, follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install, configure and run the VPP agent.
 
 ---
 

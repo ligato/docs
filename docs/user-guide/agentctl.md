@@ -526,7 +526,7 @@ vpp.vrf-table          id/0/protocol/IPV6                                  obtai
 
 ### KVDB
 
-Use this command to perform get, put, del or list operations against the KV data store. It is similar to using etcdctl, but supports short keys, which require setting the `--service-label` option.
+Use this command to perform get, put, del or list operations against the KV data store. It is similar to using etcdctl, but supports short keys, which requires setting the `--service-label` in the specific command.
 
 ```
 Usage:	agentctl kvdb [options] COMMAND
@@ -542,6 +542,55 @@ COMMANDS
   list        List key-value entries
   put         Put key-value entry
 ```
+List command:
+```json
+agentctl kvdb list
+```
+Sample Output:
+```json
+/vnf-agent/vpp1/check/status/v1/agent
+{"build_version":"v3.2.0-alpha-1-g615f9fd36","build_date":"Wed Mar 18 17:59:27 UTC 2020","state":"OK","start_time":"1586275960","last_change":"1586275967","last_update":"1586280942","commit_hash":"615f9fd","plugins":[{"name":"govpp","state":"OK"},{"name":"VPPAgent","state":"OK"},{"name":"etcd","state":"OK"},{"name":"vpp-ifplugin","state":"OK"}]}
+/vnf-agent/vpp1/check/status/v1/plugin/VPPAgent
+{"state":"OK","last_change":"1586275962","last_update":"1586280942"}
+...
+```
+Depending on the number of entries in the KV data store, the output could be massive and difficult to read. You can whittle this down by using a less specific key.
+
+For example, use this command to list only the configured interfaces:
+```json
+agentctl kvdb list /vnf-agent/vpp1/config/vpp/v2/interfaces/ 
+``` 
+Sample output:
+```json
+/vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}
+/vnf-agent/vpp1/config/vpp/v2/interfaces/tap
+{“name”:”tap1”,”type”:”TAP”,”enabled”:true,”ip_addresses”:[“192.168.1.1/24”]}
+```
+
+Put command example using a loopback interface
+```json
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
+```
+Response is `OK`.
+
+Get command example for the loopback interface using the long-form key:
+```
+agentctl kvdb get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+```
+Sample output:
+```json
+{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}
+```
+Delete command example for the loopback interface using the long-form key:
+```
+agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+```
+Response is `OK`
+
+Attempting to `get` the deleted entry will result in a `key not found` message. 
+
+
 
 ---
 

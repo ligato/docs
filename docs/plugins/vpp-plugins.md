@@ -1,4 +1,4 @@
-# VPP plugins
+# VPP Plugins
 
 ---
 
@@ -17,7 +17,7 @@ Tho GoVPP multiplexer supports two connection types:
     
 By default the GoVPP connects using the `socket client`. This option can be changed using the environment variable `GOVPPMUX_NOSOCK` with a fallback to `shared memory`. In that case, the plugin connects to that VPP instance which uses the default shared memory segment prefix.
  
-The default behaviour assumes that there is only a single VPP running in a sand-boxed environment together with the vpp-agent. In the case where VPP runs with a customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the prefix in order to connect to the desired VPP 
+The default behaviour assumes that there is only a single VPP running in a sand-boxed environment together with the VPP agent. In the case where VPP runs with a customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the prefix in order to connect to the desired VPP 
 instance. The prefix must be included in the GoVPPMux configuration file `govpp.conf` with the key `shm-prefix` and the value matching the VPP shared memory prefix name.
 
 ### Multiplexing
@@ -48,25 +48,29 @@ The trace plugin supports several configuration items for the VPP health-check p
   
 ## Interface plugin
 
-The VPP interface plugin is used to setup `VPP Interfaces`, manage interface status as well as interface and DHCP lease notifications. VPP can support multiple interface types with the following supported by the vpp-agent:
+The VPP interface plugin is used to setup `VPP Interfaces`, manage interface status, and interface and DHCP lease notifications. VPP can support multiple interface types with the following supported by the VPP agent:
 
-  - Sub-interface
-  - Software loopback
-  - DPDK (physical) interface
-  - Memory interface (memif)
-  - Tap (version 1 and 2)
-  - Af-packet interface
-  - VxLAN tunnel
-  - IPSec tunnel
-  - VmxNet3 interface
-  - Bond interfaces
+- UNDEFINED_TYPE
+- SUB_INTERFACE
+- SOFTWARE_LOOPBACK
+- DPDK
+- MEMIF
+- TAP
+- AF_PACKET
+- VXLAN_TUNNEL
+- IPSEC_TUNNEL = 8 [deprecated=true]; // Deprecated in VPP 20.01+. Use IPIP_TUNNEL + ipsec.TunnelProtection instead.
+- VMXNET3_INTERFACE
+- BOND_INTERFACE
+- GRE_TUNNEL
+- GTPU_TUNNEL
+- IPIP_TUNNEL
+
 
 Other types are specified as undefined.
 
-  
 All the interface types except DPDK (physical) can be created or removed directly in the VPP if all necessary conditions are met. For example an Af-packet interface requires a VEth as a host in order to attach to it. The DPDK interfaces (PCI, physical) can be only configured. They cannot be added or removed.
   
-VPP uses multiple commands and/or binary APIs to create and configure shared binaries. The vpp-agent simplifies this processes by providing a single model with specific extensions depending on the interface type. 
+VPP uses multiple commands and/or binary APIs to create and configure shared binaries. The VPP agent simplifies this processes by providing a single model with specific extensions depending on the interface type. 
 The northbound configuration demands are translated to a sequence of binary API calls using the GoVPP library for eventual programming of the interface VPP.
 
 The interface plugin defines following [interface model][interface-model] and is divided into two parts:
@@ -87,9 +91,9 @@ A key is defined for every interface type. Here is an example of a VPP interface
 
 See the [key reference][key-reference] to learn more about the interface keys. 
 
-The interface's logical name is for use by the vpp-agent. It serves as a reference for other models (e.g. bridge domains). VPP works with indexes, which are generated when the new interface instance is created. 
+The interface's logical name is for use by the VPP agent. It serves as a reference for other models (e.g. bridge domains). VPP works with indexes, which are generated when the new interface instance is created. 
 
-The index is a unique integer for identification and future VPP internal references. In order to parse the name and index, the vpp-agent uses a corresponding tag in the VPP binary API. This "name-to-index" mapping entry enables the vpp-agent to locate the interface name and and the corresponding index. 
+The index is a unique integer for identification and future VPP internal references. In order to parse the name and index, the VPP agent uses a corresponding tag in the VPP binary API. This "name-to-index" mapping entry enables the VPP agent to locate the interface name and and the corresponding index. 
 
 ### Unnumbered interfaces
 
@@ -103,7 +107,7 @@ must exist and if it does not, the unnumbered interface will be postponed and co
 
 The MTU is the size of the largest protocol data unit that can be sent on the "wire". A custom MTU size for the interface can be set using the `mtu` value in the interface definition. If the field is left empty, VPP uses a default MTU size.
 
-The vpp-agent provides an option to automatically set the MTU size for an interface using a [config file] [interface-config-file]. If the global MTU size is set to a non-zero value, but interface definition contains 
+The VPP agent provides an option to automatically set the MTU size for an interface using a [config file] [interface-config-file]. If the global MTU size is set to a non-zero value, but interface definition contains 
 a different local value, the local value take precedence over the global value.
 
 !!! note
@@ -114,7 +118,7 @@ a different local value, the local value take precedence over the global value.
 !!! Note
     In the brief descriptions below, reference will be made to interface `links` or `structures` along with the contents defining various properties and functions specific to the respective interface type. Those details are contained in a file called [`interface.proto`][links].
 
-Interface type-specific fields supported by the vpp-agent are defined in special structures called [links][links]. Observations on specific interface types follow:
+Interface type-specific fields supported by the VPP agent are defined in special structures called [links][links]. Observations on specific interface types follow:
 
 - **Bond** was created to support the Link Aggregation Control Protocol (LACP). Network bonding is the process of combining or joining two or more network interfaces together into to form a single interface. It can support various modes of operation and load balancing across the different member interfaces of the bond interface. 
 
@@ -122,17 +126,17 @@ Interface type-specific fields supported by the vpp-agent are defined in special
 
 - **Software** loopback does not have any special fields.
 
-- **DPDK** and physical interfaces cannot be created or removed directly by the vpp-agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The vpp-agent can configure the interface IP and MAC address information or set it as enabled. No special configuration fields are defined.
+- **DPDK** and physical interfaces cannot be created or removed directly by the VPP agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The VPP agent can configure the interface IP and MAC address information or set it as enabled. No special configuration fields are defined.
 
-- **Memory interface** or shared memory packet interface (memif for short) types provides high-performance send and receive functions between VPP instances. Additional fields are defined in `MemifLink`. The most important of these is the socket filename. The default uses a default socket filename with zero index which can be used to create memif interfaces. Note that the vpp-agent needs to be resynced to register the new memif interface. 
+- **Memory interface** or shared memory packet interface (memif for short) types provides high-performance send and receive functions between VPP instances. Additional fields are defined in `MemifLink`. The most important of these is the socket filename. The default uses a default socket filename with zero index which can be used to create memif interfaces. Note that the VPP agent needs to be resynced to register the new memif interface. 
 
 - **Tap interface** exists in two versions, TAPv1 and TAPv2 but only the latter can be configured. TAPv2 is based on [virtio][virtio] which means it knows that it runs in a virtual environment and cooperate with the hypervisor. The `TapLink` provides several setup options available for TAPv2. 
 
 !!! danger "important"
-    The first version of the Tap interface is no longer supported by VPP. It cannot be managed by the vpp-agent. 
+    The first version of the Tap interface is no longer supported by VPP. It cannot be managed by the VPP agent. 
 
 
-- **Af-packet interface** is the VPP "host" interface. Its primary function in life is to connect to the host via the OS VEth interface. Because of this, the Af-packet interface cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, the vpp-agent "un-configures" and caches related Af-packet information 
+- **Af-packet interface** is the VPP "host" interface. Its primary function in life is to connect to the host via the OS VEth interface. Because of this, the Af-packet interface cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, the VPP agent "un-configures" and caches related Af-packet information 
 The `AfpacketLink` contains only one field with the name of the host interface as defined in the [Linux interface plugin][linux-interface-plugin-guide].
 
 - **VxLan tunnel** endpoint (VTEP) defines a `VxlanLink` with source and destination addresses, a VXLan network identifier (VNI) and a name of the optional multicast interface.
@@ -265,7 +269,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 Interface status is a **collection of interface data** that can be stored in an external database or sent as a notification.
 
-The vpp-agent waits on several types of VPP events such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the vpp-agent builds a notification which is sent to all registered publishers (databases). Any errors that occurred are also stored. The statistics readout is performed every second.
+The VPP agent waits on several types of VPP events such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the VPP agent builds a notification which is sent to all registered publishers (databases). Any errors that occurred are also stored. The statistics readout is performed every second.
 
 !!! danger "Important"
     The interface status is disabled by default, since no default publishers are defined. Use the interface plugin config file to enable interface status. (see the [example config file][interface-config-file])   
@@ -282,7 +286,7 @@ Keys used for interface status and errors:
 /vnf-agent/<label>/vpp/status/v2/interface/errors/<name>
 ```
 
-The interface status is meant to be read-only and published only by the vpp-agent.
+The interface status is meant to be read-only and published only by the VPP agent.
 
 Data provided by interface status:
 
@@ -440,7 +444,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Forwarding tables  
 
-An L2 forwarding information base (FIB) can be used in network bridging or routing. Inbound packets are forwarded to the output interface defined in the FIB table. FIB entries are created by VPP just as are interfaces within the bridge domain enabled with MAC learning. The vpp-agent enables configuration of static FIB entries with a combination of interface and bridge domain values.
+An L2 forwarding information base (FIB) can be used in network bridging or routing. Inbound packets are forwarded to the output interface defined in the FIB table. FIB entries are created by VPP just as are interfaces within the bridge domain enabled with MAC learning. The VPP agent enables configuration of static FIB entries with a combination of interface and bridge domain values.
 
 A FIB entry is defined in the following [model][fib-model]. To configure a FIB entry, a MAC address, interface and bridge domain must be provided. The condition that the interface is part of the bridge domain must be fulfilled. The interface and the bridge domain are referenced with logical names. Note that the FIB entry will not appear in the VPP until all conditions are met.  
 
@@ -518,7 +522,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Cross connects
 
-The vpp-agent supports the L2 cross connect feature which sets an interface pair to cross connect (xconnect) mode. All packets received on the first interface are transmitted out the second interface. This mode is not bidirectional by default. If required both interfaces in each direction must be set.
+The VPP agent supports the L2 cross connect feature which sets an interface pair to cross connect (xconnect) mode. All packets received on the first interface are transmitted out the second interface. This mode is not bidirectional by default. If required both interfaces in each direction must be set.
 
 The cross-connect mode uses a very simple [xconnect model][xc-model] that references the transmit and receive interfaces. Both interfaces are mandatory fields and must exist in order to set the mode successfully. If one or both are missing, the configuration is postponed. 
 
@@ -956,7 +960,7 @@ The IPSec plugin handles the configuration of **security policy databases** (SPD
 
 Security policy database (SPD) specifies policies that determine the disposition of all the inbound or outbound IP traffic from either the host or the security gateway. The SPD is bound to an SPD interface and contains a list of policy entries in a table. Every policy entry points to a VPP security association. SPD is defined in the common [IPSec model][ipsec-model]. 
 
-The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the vpp-agent as it is a part of the SPD key. 
+The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent as it is a part of the SPD key. 
 
 !!! Note
     Pay special attention when defining an index in the model. Despite the fact the field uses a `string` format, it only accepts plain numbers. Attempts to set any non-numeric characters will result in an error.     
@@ -1175,7 +1179,7 @@ will be punted to the host. If an optional Unix domain socket path is defined, t
 
 The punt plugin conform with the [punt model][punt-model] which grants support for two main configuration items defined by different northbound keys. L3/L4 protocol in the key is defined as a `string` value. However that value is transformed to a numeric representation in the VPP binary API call. 
 
-The usage of the L3 protocol `ALL` is exclusive for IP punt to host (without socket registration) in the VPP binary VPP API. If used for the IP punt with socket registration, the vpp-agent calls the VPP binary API twice with the same parameters for both, IPv4 and IPv6.
+The usage of the L3 protocol `ALL` is exclusive for IP punt to host (without socket registration) in the VPP binary VPP API. If used for the IP punt with socket registration, the VPP agent calls the VPP binary API twice with the same parameters for both, IPv4 and IPv6.
 
 !!! danger "Important"
     In order to configure a punt to host via a Unix domain socket, a specific VPP startup-config is required. The attempt to set punt without it results in errors in VPP. This is an example startup-config `punt { socket /tmp/socket/punt }`. The path must match with the one in the northbound data. 
@@ -1329,14 +1333,14 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 Current limitations for a punt to host:
 
 - UDP configuration cannot be shown (or even configured) via the VPP CLI.
-- VPP does not provide an API to dump configuration. Thus the vpp-agent does not have the opportunity to read existing entries and this may cause certain issues with resync.
-* Although the vpp-agent supports the TCP protocol as the L4 protocol to filter incoming traffic, the current VPP dataplane version does not.
+- VPP does not provide an API to dump configuration. Thus the VPP agent does not have the opportunity to read existing entries and this may cause certain issues with resync.
+* Although the VPP agent supports the TCP protocol as the L4 protocol to filter incoming traffic, the current VPP dataplane version does not.
 * Configured punt to host entry cannot be removed since VPP does not support this option. Any attempt to do so exits with an error.
 
 Current limitations for a punt to host via unix domain socket:
 
 - Configuration cannot be shown (or even configured) in the VPP CLI.
-- vpp-agent cannot read registered entries since the VPP does not provide an API to do so.
+- VPP agent cannot read registered entries since the VPP does not provide an API to do so.
 - The VPP startup config punt section requires a defined unix domain socket path. The VPP limitation is that only one path can be defined at any one time.
 
 Current limitations for IP redirect:
@@ -1351,9 +1355,9 @@ Current limitations for IP redirect:
 
 Access Control Lists (ACL) filter network traffic by controlling whether packets are forwarded (permitted) or blocked (deny) at the router’s interfaces based on the criteria specified in the access list.
 
-The vpp-agent ACL plugin uses the binary API of the VPP (dataplane) ACL plugin. The version of the VPP ACL plugin is displayed at vpp-agent startup (currently at 1.3). Every ACL consists of `match` rules that classify the packets to be acted upon and  `action` rules (or actions) to be applied to those packets. The ACL is defined in the vpp-agent northbound API [model][acl-model].
+The VPP agent ACL plugin uses the binary API of the VPP (dataplane) ACL plugin. The version of the VPP ACL plugin is displayed at VPP agent startup (currently at 1.3). Every ACL consists of `match` rules that classify the packets to be acted upon and  `action` rules (or actions) to be applied to those packets. The ACL is defined in the VPP agent northbound API [model][acl-model].
 
-The vpp-agent defines an access list with a unique name. VPP generates an index, but the association is under the purview of the vpp-agent. Every ACL must contain match rules and action rules. 
+The VPP agent defines an access list with a unique name. VPP generates an index, but the association is under the purview of the VPP agent. Every ACL must contain match rules and action rules. 
 
 The IP match (called IP rule) can be specified for a variety of protocols, each with their own parameters. For example, the IP rule for the IP protocol can define the source and destination network addresses the packet must match in order to execute the defined action. Other supported protocols are TCP, UDP and ICMP. 
 
@@ -1630,7 +1634,7 @@ The config data can be combined with any other VPP or Linux configuration.
 
 ## NAT plugin
 
-Network address translation, or NAT is a method for translating IP addresses belonging to different address domains by modifying the address information in the packet header. The vpp-agent NAT plugin provides control plane functionality for the VPP dataplane NAT implementation of NAT44. The NAT plugin is dependent on the [interface plugin][interface-plugin-guide].
+Network address translation, or NAT is a method for translating IP addresses belonging to different address domains by modifying the address information in the packet header. The VPP agent NAT plugin provides control plane functionality for the VPP dataplane NAT implementation of NAT44. The NAT plugin is dependent on the [interface plugin][interface-plugin-guide].
 
 ### NAT global config 
 
@@ -1776,7 +1780,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### DNAT44
 
-Destination network address translation (DNAT) translates the destination IP address of a packet in one direction and performs the inverse NAT function for packets returning in the opposite direction. In the vpp-agent, the DNAT configuration is composed of a list of static and/or identity mappings labelled under a single key.
+Destination network address translation (DNAT) translates the destination IP address of a packet in one direction and performs the inverse NAT function for packets returning in the opposite direction. In the VPP agent, the DNAT configuration is composed of a list of static and/or identity mappings labelled under a single key.
 
 The DNAT44 consists from two main parts: static mappings and identity mappings.
 
@@ -2139,7 +2143,7 @@ The telemetry plugin configuration file allows one to change the polling interva
 [fib-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/fib.proto
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [interface-config-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
-[interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
+[interface-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/interface.proto
 [interface-state-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/state.proto
 [ipsec-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/ipsec/ipsec.proto
 [key-reference]: ../user-guide/reference.md

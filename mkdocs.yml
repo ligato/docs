@@ -25,11 +25,11 @@ nav:
   - USER GUIDE:
     - Quickstart Guide: user-guide/quickstart.md
     - VPP Agent Setup: user-guide/get-vpp-agent.md
+    - ARM64: user-guide/arm64.md
     - Keys Reference: user-guide/reference.md
     - Concepts: user-guide/concepts.md
     - Config Files: user-guide/config-files.md
-    - AgentCtl: user-guide/agentctl.md
-    - ARM64: user-guide/arm64.md
+    - Agentctl: user-guide/agentctl.md
     - Examples: user-guide/examples.md
     - VPP CLI: user-guide/vpp-cli.md
   - TUTORIALS:

@@ -23,11 +23,11 @@ The figure below illustrates our quickstart guide environment.
 - **Postman** or **cURL** tool (postman [installation manual][postman-install])  
 
 !!! note
-    This quickstart guide example use Docker 19.03.5. Use the `docker --version` command to determine which version you are running.
+    The steps described in this quickstart guide use Docker 19.03.5. Use the `docker --version` command to determine which version you are running.
 
 ## 2. Download Image
 
-Pull the VPP agent image from [DockerHub][dockerhub]. This image contains the vpp-agent and a compatible VPP dataplane.
+Pull the VPP agent image from [DockerHub][dockerhub]. This image contains the VPP agent and a compatible VPP data plane.
 
 ```
 docker pull ligato/vpp-agent
@@ -68,12 +68,6 @@ The following command starts etcd in a docker container. If the image is not pre
 ```
 docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
-The print stdout output should show that the etcd server is ready to accept requests from an etcd client. To verify, look for this message:
-```
-...
-etcdserver: advertise client URLs = http://0.0.0.0:2379
-...
-```
 
 Open a new terminal session and verify the etcd container is running:
 ```sh
@@ -100,14 +94,21 @@ $ brew install etcd
 ```
 
 However, it's easier and `recommended` to use the one that comes with the etcd image:
-
 ```
-docker exec etcd etcdctl version
+docker exec -it etcd etcdctl version
 ```
-output:
+Sample output:
 ```
 etcdctl version: 3.3.8
 API version: 3.3
+```
+Use this command to verify etcd server endpoint health:
+```json
+docker exec -it etcd etcdctl endpoint health
+```
+Sample output:
+```json
+127.0.0.1:2379 is healthy: successfully committed proposal: took = 1.6141ms
 ```
 
 
@@ -118,13 +119,13 @@ Open a new terminal session. Start the VPP agent together with the compatible ve
 docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ``` 
 
-Open a new terminal session. Verify the container called vpp-agent is running:
+Open a new terminal session. Verify the container called `vpp-agent` is running:
 
 ```
 docker ps -f name=vpp-agent
 ```
 
-sample output
+Sample output:
 ```
 CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                                            NAMES
 66556668533d        ligato/vpp-agent    "/bin/sh -c 'rm -f /…"   19 seconds ago      Up 19 seconds       0.0.0.0:5002->5002/tcp, 0.0.0.0:9191->9191/tcp   vpp-agent
@@ -137,7 +138,7 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 
 This section will explain:
 
-- How to configure the VPP dataplane through the etcd data store and vpp-agent using etcdctl
+- How to configure the VPP dataplane through the etcd data store and VPP agent using etcdctl
 - How to read VPP configuration data with a VPP agent REST API
 - How to connect to the VPP CLI and show the configuration
 - How to use agentctl to manage the VPP agent and Ligato components
@@ -149,9 +150,9 @@ The etcd data store contains configuration information in the form of key-value 
 !!! Note
     We will use etcdctl to interface to the etcd data store.
 
-List all key-value pairs related to the vpp-agent:
+VPP agent entries in the etcd data store use a prefix of `/vnf-agent`. List those key-value pairs using this command:
 ```
-docker exec etcd etcdctl get --prefix /vnf-agent/
+docker exec -it etcd etcdctl get --prefix /vnf-agent/
 ```
 Sample output:
 ```
@@ -309,7 +310,7 @@ Get bridge domain configuration information:
 ```
 curl -X GET http://localhost:9191/dump/vpp/v2/bd
 ```
-sample output:
+Sample output:
 ```
 [
   {
@@ -337,7 +338,7 @@ URLs to read the same data using postman:
 http://localhost:9191/dump/vpp/v2/interfaces
 http://localhost:9191/dump/vpp/v2/bd
 ```
-View index of the vpp-agent REST APIs:
+View index of the VPP Agent REST APIs:
 ```
 curl -X GET http://localhost:9191/
 ```
@@ -370,7 +371,9 @@ local0                            0     down          0/0/0/0
 loop0                             1      up          9000/0/0/0
 ```
 
-We can see the default `local0` interface and `loop0` configured by the vpp-agent.
+We can see the default `local0` interface, and `loop0` which was the one we configured above. 
+
+Note that the output of this command uses the `internal_name`of the interface contained in the metadata. You can confirm this by looking at the REST API response from above.
 
 Show bridge domains:
 ```
@@ -449,7 +452,7 @@ Run 'agentctl COMMAND --help' for more information on a command.
 ```
 
 The [agentctl](agentctl.md) section of this user guide contains more information and examples.
-
+ 
 
 ## Troubleshooting
 
@@ -457,19 +460,44 @@ The vpp-agent container was started and immediately closed.
   
 - The etcd container is not running. Please verify it is running using the `docker ps` command.
 
+---
+
 The etcdctl command returns "Error:  100: Key not found".
 
 - The etcdctl API version was not correctly set. Check the output of the appropriate environment variable with command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
 
+---
 
 The cURL or postman command to access VPP agent REST APIs does not work (connection refused).
 
 - The command starting the docker container exports port 9191 to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 9191:9191`. Run the `Restart vpp-agent steps`  shown below to modify port numbers.
 
+---
 
 The cURL or postman command to access VPP CLI does not work (connection refused)
 
 - The command starting the docker container exports port 5002 (the VPP default port) to allow access from the host. Make sure that the vpp-agent docker container is started with parameter `-p 5002:5002`. Run the `Restart vpp-agent steps` shown below to modify port numbers.
+
+---
+
+Agentctl kvdb `Failed to connect to Etcd` problem.
+
+- Agentctl uses `127.0.0.1:2379 as the etcd server address. But in the examples above, etcd is running in a separate container. To resolve:
+
+Use this command obtain the IP address of the etcd server:
+```json
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' etcd
+``` 
+Output:
+```json
+172.17.0.2
+```
+Then pass this address to agentctl using the `-e` or `--etcd-endpoints` flag like so:
+```json
+docker exec -it vpp-agent agentctl -e 172.17.0.2:2379 kvdb list
+```
+
+---
 
 Restart vpp-agent steps:
 

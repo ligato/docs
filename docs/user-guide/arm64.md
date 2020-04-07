@@ -74,13 +74,16 @@ sudo docker run -p 2379:2379 --name etcd -e ETCDCTL_API=3 -e ETCD_UNSUPPORTED_AR
     -listen-client-urls http://0.0.0.0:2379
 ```
 
-Use agentctl to verify the etcd server is running:
+Use etcdctl to verify the etcd server is running:
 ```json
-docker exec -it vpp agentctl -e 172.17.0.1:2379 show
+docker exec -it etcd etcdctl endpoint health
 ```
-Use the agentctl kvdb command to show the contents of the etcd data store:
+!!! Note
+    Agentctl uses `127.0.0.1:2379` as the default address of the etcd server. If the etcd server is running in a separate container, then its configured address must be passed to agentctl as an argument. This is accomplished using the `-e` or `--etcd-endpoints` flags. 
+
+Use the agentctl kvdb list command to show the contents of the etcd data store:
 ```json
-docker exec -it vpp agentctl kvdb list
+docker exec -it vpp-agent agentctl -e 172.17.0.1:2379 akvdb list
 ```
 Alternatively, you can use [etcdctl](quickstart.md#51-etcdctl) to interact with the etcd data store. 
 
