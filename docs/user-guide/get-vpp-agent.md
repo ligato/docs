@@ -115,7 +115,7 @@ This builds an image with debug mode support. Use `RUN_VPP_DEBUG=y` to start the
 
 ### Start the Image
 
-Start the vpp-agent:
+Start the VPP agent:
 
 ```
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
@@ -185,7 +185,7 @@ vppctl -s localhost:5002
 ```
 
 
-The vpp-agent can be augmented with additional functions and features through the use of [plugins](../plugins/plugin-overview.md). To enable certain plugin features such as database connectivity or messaging, the vpp-agent requires plugin-specific static configuration files referred to as `.conf` files.
+The VPP agent can be augmented with additional functions and features through the use of [plugins](../plugins/plugin-overview.md). To enable certain plugin features such as database connectivity or messaging, the vpp-agent requires plugin-specific static configuration files referred to as `.conf` files.
 
 List the plugin .conf files and optional ENV variable configuration options:
 ```
@@ -203,14 +203,14 @@ Configuration information is stored in a [KV data store](concepts.md#key-value-d
 
 **Start etcd:**
 
-The following command starts etcd in a docker container. If the image is not present on your localhost, docker will download it first.
+The following command starts the etcd server in a docker container. If the image is not present on your localhost, docker will download it first.
 ```
-docker run -p 2379:2379 --name etcd --rm quay.io/coreos/etcd:v3.1.0 /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
+docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
 
-In the default docker environment, the etcd server will be available at `172.17.0.1:2379`. The command above can be edited to run a version other than `3.1.0`, or change the listen or advertise addresses. More on the etcd command flags can be found [here.](https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/configuration.md)
+In the default docker environment, the etcd server will be available at `172.17.0.1:2379`. It is possible to change some of the command flags such as the advertise or listen client URLs. More on the etcd command flags can be found in the [etcd configuration guide](https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/configuration.md).
 
-The vpp-agent defines a flag for the etcd plugin called `--etcd-config`. It points to the location of the `etcd.conf` file that contains static config information used by the etcd plugin upon startup. The most important item contained is the etcd.conf is the endpoints IP address:port number.
+The VPP agent defines a flag for the etcd plugin called `--etcd-config`. It points to the location of the `etcd.conf` file that contains static config information used by the etcd plugin upon startup. The most important item contained is the etcd.conf is the endpoints IP address:port number.
 
 An example configuration contained in the etcd.conf file:
 
@@ -321,6 +321,7 @@ Examples of localclient functions in action can be found in the [examples](examp
 [clientv2]: ../user-guide/concepts.md#client-v2
 [docker]: https://github.com/ligato/vpp-agent/tree/master/docker
 [dockerhub]: https://hub.docker.com/u/ligato
+[etcd configuration guide]: https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/configuration.md
 [govppmux-plugin]: ../plugins/vpp-plugins.md#govppmux-plugin
 [interface-plugin]: ../plugins/linux-plugins.md#interface-plugin
 [kv-overview]: ../user-guide/concepts.md#key-value-data-store-overview

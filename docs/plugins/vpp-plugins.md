@@ -2,11 +2,38 @@
 
 ---
 
-## GoVPPMux plugin
+## GoVPPMux Plugin
 
-The `govppmux` plugin allows other plugins to access VPP independently by means of connection multiplexing.
+The `govppmux` plugin allows any VPP agent plugin to access VPP through its own dedicated communication channel. This is accomplished using connection multiplexing.
 
-Any plugin that interacts with VPP can ask `govppmux` to obtain its own communication channel to access a running VPP instance. Behind the scenes, all channels share the same connection created during the plugin initialization using `govpp` core function.
+A specific plugin interacts with VPP by requesting the `govppmux` plugin to obtain its own dedicated communication channel. Behind the scenes, all channels share the same connection between the `govpp core` and the VPP process. This channel-to-multiplexed connection is created during the plugin initialization using `govpp` core function. 
+
+The notion of channel multiplexing is illustrated from this figure extracted from the [fd.io/govpp repository][fdio-govpp-repo].  
+
+
+```
+                                       +--------------+
+    +--------------+                   |              |
+    |              |                   |    plugin    |
+    |              |                   |              |
+    |     App      |                   +--------------+
+    |              |            +------+  GoVPP API   |
+    |              |            |      +--------------+
+    +--------------+   GoVPP    |
+    |              |  channels  |      +--------------+
+    |  GoVPP core  +------------+      |              |
+    |              |            |      |    plugin    |
+    +------+-------+            |      |              |
+           |                    |      +--------------+
+           |                    +------+  GoVPP API   |
+           | binary API                +--------------+
+           |
+    +------+-------+
+    |              |
+    |  VPP process |
+    |              |
+    +--------------+
+```
 
 ### Connection
 
@@ -15,21 +42,21 @@ Tho GoVPP multiplexer supports two connection types:
   - socket client
   - shared memory
     
-By default the GoVPP connects using the `socket client`. This option can be changed using the environment variable `GOVPPMUX_NOSOCK` with a fallback to `shared memory`. In that case, the plugin connects to that VPP instance which uses the default shared memory segment prefix.
+By default, GoVPP connects to VPP using the `socket client`. This option can be changed using the environment variable of `GOVPPMUX_NOSOCK`, with a fallback to `shared memory`. In the shared memory case, the plugin connects to the VPP instance that uses the default shared memory segment prefix.
  
-The default behaviour assumes that there is only a single VPP running in a sand-boxed environment together with the VPP agent. In the case where VPP runs with a customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the prefix in order to connect to the desired VPP 
-instance. The prefix must be included in the GoVPPMux configuration file `govpp.conf` with the key `shm-prefix` and the value matching the VPP shared memory prefix name.
+The default behaviour assumes that there is only a single VPP running in an environment together with the VPP agent. In the case where VPP runs with a customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the SHM prefix in order to connect to the desired VPP 
+instance. The prefix must be included in the GoVPPMux configuration file, [govpp.conf][govppmux-conf-file], with the key `shm-prefix`, and the value matching the VPP shared memory prefix name.
 
 ### Multiplexing
 
 The `NewAPIChannel` call returns a new API channel for communication with VPP via the `GoVPP` core. It uses default buffer sizes for the request and reply go channels. By default both are 100 messages long.
 
-A user plugin could blast configuration requests in bulk mode which could overload VPP. To avoid these situations, it is recommended one use `NewAPIChannelBuffered` and increase the buffer size for requests. This is useful since the buffer for responses is also used to carry VPP notifications and statistics which can burst in size and frequency on occassion. By increasing the reply channel buffer size, the probability of dropping messages from VPP decreases at the cost of an increased memory footprint. 
+A user plugin could blast configuration requests in bulk mode which could overload VPP. To avoid these situations, it is recommended that one use `NewAPIChannelBuffered`, and increase the buffer size for requests. This is useful since the buffer for responses is also used to carry VPP notifications and statistics, which can burst in size and frequency on occasion. By increasing the reply channel buffer size, the probability of dropping messages from VPP decreases at the cost of an increased memory footprint. 
 
 
 ### Trace
  
-The duration of a VPP binary API call can be measured using the trace feature. Data is logged after every event (e.g. resynchronization, new interfaces, bridge domains, fib entries etc.). 
+The duration of a VPP binary API call can be measured using the trace feature. Data is logged after every event such as resynchronization, new interfaces, bridge domains, and fib entries. 
 
 Enable trace in the `govpp.conf`: 
  
@@ -46,7 +73,7 @@ The trace plugin supports several configuration items for the VPP health-check p
   - `shm-prefix`: used for connection to a VPP instance not using default shared memory prefix
   - `resync-after-reconnect`: resync after the VPP reconnection
   
-## Interface plugin
+## Interface Plugin
 
 The VPP interface plugin is used to setup `VPP Interfaces`, manage interface status, and interface and DHCP lease notifications. VPP can support multiple interface types with the following supported by the VPP agent:
 
@@ -68,47 +95,47 @@ The VPP interface plugin is used to setup `VPP Interfaces`, manage interface sta
 
 Other types are specified as undefined.
 
-All the interface types except DPDK (physical) can be created or removed directly in the VPP if all necessary conditions are met. For example an Af-packet interface requires a VEth as a host in order to attach to it. The DPDK interfaces (PCI, physical) can be only configured. They cannot be added or removed.
+All of the interface types, except DPDK, can be created or removed directly in VPP, if all necessary conditions are met. For example, an AF_PACKET interface requires a VEth on a host in order to attach to it. The PCI and physical DPDK interfaces can be only configured. They cannot be added or removed.
   
 VPP uses multiple commands and/or binary APIs to create and configure shared binaries. The VPP agent simplifies this processes by providing a single model with specific extensions depending on the interface type. 
-The northbound configuration demands are translated to a sequence of binary API calls using the GoVPP library for eventual programming of the interface VPP.
+The NB configuration demands are translated to a sequence of binary API calls using the GoVPP library. The binary API calls are used to program a VPP interface.
 
-The interface plugin defines following [interface model][interface-model] and is divided into two parts:
+The interface plugin follows models and structure defined in the [interface proto][interface.proto] file. Note that he actual file is the `interface.proto` file. 
+
+It is divided into two parts:
  
  - data common to all interface types.
  - data for a specific interface type.
   
-Note that there are exceptions in the common part, where not all fields can be defined on every interface type. For example, a physical address cannot be set to Af-packet or to DPDK interface despite the presence of the field in the definition. If set, the value is silently ignored.
+Note that there are exceptions in the common part, where not all fields can be defined on every interface type. For example, a physical address cannot be set to an AF_PACKET or DPDK interface despite the presence of the field in the definition. If set, the value is silently ignored.
 
 Mandatory fields are `interface type` and `logical name`. The name is limited to 63 characters. The interface may define unique fields for the given type.
 
-A key is defined for every interface type. Here is an example of a VPP interface key with `<name>` being unique for a particular instance of the interface:
+A key is defined for every interface type. Here is an example of a VPP interface key, with `<name>` being unique for a particular instance of the interface:
 
 ```
 /vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
 
 ```
 
-See the [key reference][key-reference] to learn more about the interface keys. 
+See the [keys concepts][concept-keys] and the [keys reference][key-reference] to learn more about the interface keys. 
 
 The interface's logical name is for use by the VPP agent. It serves as a reference for other models (e.g. bridge domains). VPP works with indexes, which are generated when the new interface instance is created. 
 
 The index is a unique integer for identification and future VPP internal references. In order to parse the name and index, the VPP agent uses a corresponding tag in the VPP binary API. This "name-to-index" mapping entry enables the VPP agent to locate the interface name and and the corresponding index. 
 
-### Unnumbered interfaces
+### Unnumbered Interfaces
 
 An interface can be assigned with IPv4 or IPv6 addresses or some combination thereof. A VPP 
-interface can also be set as unnumbered. It this scenario it "borrows" the IP address of another interface, the so called "target" interface. 
+interface can also be set as unnumbered. In this scenario, the VPP interface "borrows" the IP address of another interface, which is called the target interface. 
 
-To set an interface as unnumbered, omit `ip_addresses` and set `interface_with_ip`. The target interface 
-must exist and if it does not, the unnumbered interface will be postponed and configured later when the required target interface appears. The target interface must be configured with at least one IP address. 
+To set an interface as unnumbered, omit `ip_addresses` and set `interface_with_ip`. The target interface must exist. If the target interface does not exit, the unnumbered interface will be configured later when the required target interface appears. The target interface must be configured with at least one IP address. 
 
-### Maximum transmission unit
+### Maximum Transmission Unit
 
-The MTU is the size of the largest protocol data unit that can be sent on the "wire". A custom MTU size for the interface can be set using the `mtu` value in the interface definition. If the field is left empty, VPP uses a default MTU size.
+The MTU is the size of the largest protocol data unit (PDU) that can be transmitted on the "wire". A custom MTU size for the interface can be set using the `mtu` value in the interface definition. If the field is left empty, VPP uses a default MTU size of 0.
 
-The VPP agent provides an option to automatically set the MTU size for an interface using a [config file] [interface-config-file]. If the global MTU size is set to a non-zero value, but interface definition contains 
-a different local value, the local value take precedence over the global value.
+The VPP agent provides an option to automatically set the MTU size for an interface using the [interface conf file][interface-config-file]. If the global MTU size is set to a non-zero value, but interface definition contains a different local value, the local value take precedence over the global value.
 
 !!! note
     MTU is not available for VxLan or IPSec tunnel interfaces.
@@ -116,39 +143,30 @@ a different local value, the local value take precedence over the global value.
 ### Interface types
 
 !!! Note
-    In the brief descriptions below, reference will be made to interface `links` or `structures` along with the contents defining various properties and functions specific to the respective interface type. Those details are contained in a file called [`interface.proto`][links].
+    In the brief descriptions below, reference will be made to interface `links` or `structures` along with the contents defining various properties and functions specific to the respective interface type. Those details are contained file called [`interface.proto`][interface.proto].
+ 
+| Type| Description |
+| --- | ---|   
+| UNDEFINED_TYPE | |
+| SUB_INTERFACE | Physical interfaces that cannot be added or removed by the VPP agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The VPP agent can configure the interface IP and MAC address information or set it as enabled. No special configuration fields are defined.|
+| SOFTWARE_LOOPBACK| internal software interface|
+| DPDK | Physical interfaces that cannot be added or removed by the VPP agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The VPP agent can configure the interface IP and MAC address information or set it as enabled. No special configuration fields are defined. |
+| MEMIF | shared memory packet interface types provides high-performance send and receive functions between VPP instances. Additional fields are defined in `MemifLink`. The most important is the socket filename. The default uses a default socket filename with zero index which can be used to create memif interfaces. Note that the VPP agent needs to be resynced to register the new memif interface. |
+| TAP |exists in two versions, TAPv1 and TAPv2 but only the latter can be configured. TAPv2 is based on [virtio][virtio] which means it knows that it runs in a virtual environment and cooperate with the hypervisor. The `TapLink` provides several setup options available for TAPv2.|
+| AF_PACKET |the VPP "host" interface. Its primary function in life is to connect to the host via the OS VEth interface. Because of this, the Af-packet interface cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, the VPP agent "un-configures" and caches related Af-packet information. The `AfpacketLink` contains only one field with the name of the host interface as defined in the [Linux interface plugin][linux-interface-plugin-guide].|
+| VXLAN_TUNNEL | |
+| IPSEC_TUNNEL | Deprecated in VPP 20.01+. Use IPIP_TUNNEL + ipsec.TunnelProtection instead|
+| VMXNET3_INTERFACE | interface is a virtual network adapter for delivering high performance in virtual environments. VmxNet3 requires VMware tools to be used. Setup options are described in `VmxNet3Link`.|
+| BOND_INTERFACE | Support the Link Aggregation Control Protocol (LACP). Network bonding is the process of combining or joining two or more network interfaces together into to form a single interface. |
+| GRE_TUNNEL |
+| GTPU_TUNNEL ||
+|IPIP_TUNNEL ||   
+ 
 
-Interface type-specific fields supported by the VPP agent are defined in special structures called [links][links]. Observations on specific interface types follow:
 
-- **Bond** was created to support the Link Aggregation Control Protocol (LACP). Network bonding is the process of combining or joining two or more network interfaces together into to form a single interface. It can support various modes of operation and load balancing across the different member interfaces of the bond interface. 
+**Configuration Example**
 
-- **Sub-interface** is derived from other interfaces by adding VLAN ID to it. The sub-interface link of type `SubInterface` requires a name of the parent interface, and the ID of the VLAN.
-
-- **Software** loopback does not have any special fields.
-
-- **DPDK** and physical interfaces cannot be created or removed directly by the VPP agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The VPP agent can configure the interface IP and MAC address information or set it as enabled. No special configuration fields are defined.
-
-- **Memory interface** or shared memory packet interface (memif for short) types provides high-performance send and receive functions between VPP instances. Additional fields are defined in `MemifLink`. The most important of these is the socket filename. The default uses a default socket filename with zero index which can be used to create memif interfaces. Note that the VPP agent needs to be resynced to register the new memif interface. 
-
-- **Tap interface** exists in two versions, TAPv1 and TAPv2 but only the latter can be configured. TAPv2 is based on [virtio][virtio] which means it knows that it runs in a virtual environment and cooperate with the hypervisor. The `TapLink` provides several setup options available for TAPv2. 
-
-!!! danger "important"
-    The first version of the Tap interface is no longer supported by VPP. It cannot be managed by the VPP agent. 
-
-
-- **Af-packet interface** is the VPP "host" interface. Its primary function in life is to connect to the host via the OS VEth interface. Because of this, the Af-packet interface cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, the VPP agent "un-configures" and caches related Af-packet information 
-The `AfpacketLink` contains only one field with the name of the host interface as defined in the [Linux interface plugin][linux-interface-plugin-guide].
-
-- **VxLan tunnel** endpoint (VTEP) defines a `VxlanLink` with source and destination addresses, a VXLan network identifier (VNI) and a name of the optional multicast interface.
-
-- **IPSec virtual tunnel** interface (VTI) provides a routable interface type for terminating IPSec tunnels. `IPSecLink` describes IPsec tunnel setup options including local and remote IP addresses, local and remote security parameter index (SPI) values and crypto algorithms for encryption and authentication. The choice of crypto algorithms are determined by those supported by VPP.
-
-- **VmxNet3** interface is a virtual network adapter for delivering high performance in virtual environments. 
-VmxNet3 requires VMware tools to be used. Setup options are described in `VmxNet3Link`.
-
-**Configuration example**
-
-**1. Using key-value database** (etcd in our example) put the interface config data using the correct [interface key][key-reference]).
+**1. Using a KV data store** (etcd in our example), put the interface config data using the correct [interface key][key-reference]).
 
 Example data:
 ```json
@@ -165,9 +183,9 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put the compacted software_loopback interface key-value entry:
+Use `agentctl` to put the software_loopback interface key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
 ```
 
 Another example with a memif type interface. Note the memif-specific fields in the `memif` section:
@@ -190,14 +208,14 @@ Another example with a memif type interface. Note the memif-specific fields in t
 }
 ```
 
-Use `etcdctl` to put the compacted memif interface key-value entry:
+Use `agentctl` to put the memif interface key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memif1","type":"MEMIF","enabled":true,"phys_address":"4E:93:2A:38:A7:77","ip_addresses":["172.125.40.1/24"],"mtu":1478,"memif":{"master":true,"id":1,"socket_filename":"/tmp/memif1.sock","secret":"secret"}}'
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memif1","type":"MEMIF","enabled":true,"phys_address":"4E:93:2A:38:A7:77","ip_addresses":["172.125.40.1/24"],"mtu":1478,"memif":{"master":true,"id":1,"socket_filename":"/tmp/memif1.sock","secret":"secret"}}'
 ```
 
 **2. Using REST:**
 
-Currently REST only supports retrieval of the existing configuration. The following command can be used to read all interfaces via cURL:
+Currently REST only supports retrieval of the existing configuration. Use this cURL command to read all interfaces:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
@@ -213,7 +231,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/vxlan
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/afpacket
 ```
 
-**3. Using GRPC:**
+**3. Using gRPC:**
 
 Prepare the interface data:
 ```go
@@ -237,7 +255,7 @@ memoryInterface := &vpp.Interface{
     }
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC config data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -256,7 +274,7 @@ config := &configurator.Config{
 
 The config data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data via the gRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -269,12 +287,15 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 Interface status is a **collection of interface data** that can be stored in an external database or sent as a notification.
 
-The VPP agent waits on several types of VPP events such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the VPP agent builds a notification which is sent to all registered publishers (databases). Any errors that occurred are also stored. The statistics readout is performed every second.
+The VPP agent waits on several types of VPP events such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the VPP agent builds a notification which is sent to all registered publishers or databases. Any errors that occurred are also stored. The statistics readout is performed every second.
 
 !!! danger "Important"
-    The interface status is disabled by default, since no default publishers are defined. Use the interface plugin config file to enable interface status. (see the [example config file][interface-config-file])   
+    The interface status is disabled by default, since no default publishers are defined. The interface status can be set in the [interface conf file][interface-config-file].   
 
-The [interface state model][interface-state-model] is represented by two objects: `InterfaceState` containing status data, and `InterfaceNotification` which is a wrapper around the state with additional information required to send a status notification.
+The [interface state model][interface-state-model] is represented by two objects:
+
+ - InterfaceState - containing status data
+ - InterfaceNotification -  a wrapper around the state with additional information required to send a status notification.
 
 Keys used for interface status and errors:
 
@@ -286,7 +307,7 @@ Keys used for interface status and errors:
 /vnf-agent/<label>/vpp/status/v2/interface/errors/<name>
 ```
 
-The interface status is meant to be read-only and published only by the VPP agent.
+The interface status is read-only and published only by the VPP agent.
 
 Data provided by interface status:
 
@@ -298,20 +319,20 @@ Data provided by interface status:
 
 **Interface status usage**
 
-To read status data, use any tool with access to a given database (**etcdctl** for etcd, **redis-cli** for Redis, **boltbrowser** for BoltDB, etc). 
+To read status data, use any tool with access to a given database (**etcdctl** for **agentctl** for etcd, **redis-cli** for Redis, **boltbrowser** for BoltDB). 
 
-Let's read interface status data with `etcdctl`:
+Use this `agentctl` command to read interface status for all interfaces:
 ```
-etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/
+agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/
 ```
 
-The command above returns status for all interfaces that published to and stored in etcd. To read the status for just a single interface, append its name to the end of etcdctl command as so:
+Specific interfaces can be identified by appending their name to the end of the key. Use these `agentctl` commands to read the status of the loop1 and memif1 interfaces respectively:
 ```
-etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/loop1
-etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/memif1
+agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/loop1
+agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/memif1
 ```
 !!! note
-    Do not forget to enable status in the config file. Otherwise, the status will not be published to the database.
+    Do not forget to enable status in the conf file. Otherwise, the status will not be published to the database.
 
 ## L2 plugin
 
@@ -2137,22 +2158,26 @@ vpp_node_counter_count{agent="agent1",item="ipsec-output-ip4",reason="IPSec poli
 
 The telemetry plugin configuration file allows one to change the polling interval, or turn polling off. The `polling-interval` is the time in nanoseconds between reads from the VPP. The parameter `disabled` can be set to `true` in order to disable the telemetry plugin.
 
-[acl-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/acl/acl.proto
-[arp-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/arp.proto
-[bd-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/bridge-domain.proto
+[acl-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/acl/acl.proto
+[arp-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/arp.proto
+[bd-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/bridge_domain.proto
+[concept-keys]: ../user-guide/concepts.md#keys
+[fdio-govpp-repo]: https://github.com/FDio/govpp
 [fib-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/fib.proto
+[govppmux-conf-file]: ../user-guide/config-files.md#govppmux
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [interface-config-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
 [interface-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/interface.proto
-[interface-state-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/state.proto
+[interface.proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/interface.proto
+[interface-state-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/state.proto
 [ipsec-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/ipsec/ipsec.proto
 [key-reference]: ../user-guide/reference.md
 [l3-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/l3.proto
 [linux-interface-plugin-guide]: linux-plugins.md#interface-plugin
-[punt-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/punt/punt.proto
-[route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/route.proto
+[punt-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/punt/punt.proto
+[route-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto
 [src6-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/srv6/srv6.proto
-[xc-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/xconnect.proto
+[xc-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/xconnect.proto
 [links]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
 [vpp-nat-lb]: https://jira.fd.io/browse/VPP-954
 [prometheus]: https://prometheus.io/
