@@ -153,7 +153,9 @@ _**GoVPPMux Config File Options**_
 |**retry-connect-count**|_int_|3|Number of connection request retries if VPP is not unreachable.|
 |**retry-connect-timeout**|_time.Duration_|1000000000ns|Interval between connection request retries|
 |**proxy-enabled**|_bool_|true|Enable VPP proxy|
-
+|**health-check-probe-interval**|_time.Duration_||time between health check probes|
+|**health-check-reply-timeout**|_time.Duration_||if this timer pops, probe is considered failed|
+|**health-check-threshold**|_int_||number of consecutive failed health checks until an error is reported|
 
 
 [govpp.conf file](https://github.com/ligato/vpp-agent/blob/master/plugins/govppmux/govpp.conf)

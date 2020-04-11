@@ -14,11 +14,11 @@ Agentctl provides an etcdctl-like feature for interacting with the KV data store
 
 ### Docker Image Pull
 
-Agentctl is included in the official docker images for the vpp-agent. The [Quickstart Guide](quickstart.md) covers the steps, in detail, from initial image pull to agentctl command execution. 
+Agentctl is included in the official docker images for the VPP agent. The [Quickstart Guide](quickstart.md) covers the steps, in detail, from initial image pull to agentctl command execution. 
 
-For convenience, here are the commands for image pull, etcd start, vpp-agent start and agentctl help. 
+For convenience, here are the commands for image pull, start etcd, start VPP agent, and agentctl help. 
 
-Pull the vpp-agent image from dockerhub:
+Pull the VPP agent image from dockerhub:
 ```
 docker pull ligato/vpp-agent
 ```
@@ -37,7 +37,7 @@ docker exec -it vpp-agent agentctl --help
 
 ### Build from Source
 
-A local image can be built from the vpp-agent repository. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide. 
+A local image can be built from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide. 
 
 After the `Start the VPP Agent` command of:
 ```
@@ -437,7 +437,7 @@ Sample Output:
 
 ### Status
 
-Use this command to return the status of the vpp-agent.
+Use this command to return the status of the VPP agent.
 
 ```
 Usage:	agentctl status
@@ -479,7 +479,7 @@ PLUGINS
 
 ### Values
 
-Use this command to retrieve current vpp-agent status from the KV Scheduler, and list all of the key-value pairs inside the agent, including derived keys.
+Use this command to retrieve the key-value pairs and derived keys from the KV scheduler.
 
 ```
 Usage:	agentctl values [MODEL]
@@ -885,3 +885,5 @@ Sample Output:
   "requests_sent": 78
 }
 ```
+
+[ligato-vpp-agent-repo]: https://github.com/ligato/vpp-agent
