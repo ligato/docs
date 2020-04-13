@@ -23,7 +23,7 @@ The model specification (spec) describes the model using the module, version and
 - `version` - current version of the vpp-agent API. This value changes upon release of a new version.
 - `type` - keyword describing the given model (e.g. interfaces, bridge-domains, etc.)
 
-Model specs are defined in the `models.go` files contained in the [vpp-agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
+Model specs are defined in the `models.go` files contained in the [VPP agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
 
 ### Key Prefix
 
@@ -84,11 +84,14 @@ Keys can also be distinguished by the composition of the identifier.
 
 ### proto.Message
 
-The proto.Message defines the structure and serialized format of the data associated with an object in protobuf format. More specifically, it describes an object's configuration or metric fields.
+The proto.Message defines the structure and serialized format of the data associated with an object in protobuf format. It serves two purposes in the Ligato framework:
+
+- Describes an object's configuration or metric fields.
+- Generates northbound `protobuf APIs` used by applications and components to interact with the configured objects. Agentctl, etcdctl and REST are component examples.
 
 If the object is a route, then the proto.Message contained in the [route.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto) file will define destination network, next_hop, outgoing interface and so on.
 
-The combination of the model, and proto.Message are used to define the `protobuf APIs` supported by Ligato.
+The combination of the model, and proto.Message are used to define the northbound `protobuf APIs` 
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KV-store.svg)
 

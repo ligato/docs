@@ -2,7 +2,7 @@
 
 ---
 
-## Interface plugin
+## Interface Plugin
 
 The Linux interface plugin manages linux-based host OS interfaces. Currently it only supports VETH and TAP interface types.  
 
