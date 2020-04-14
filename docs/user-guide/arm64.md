@@ -2,59 +2,71 @@
 
 ---
 
-## Quick start
+This section outlines the procedures for installing an ARM64-compatible version of the VPP agent. The same procedures described in the the [Quickstart](quickstart.md) and [VPP Agent Setup](get-vpp-agent.md) sections of the User Guide apply here, except ARM64 images are used.  
 
-For a quick start with the VPP Agent, you can use pre-built Docker images with the Agent and VPP on [Dockerhub][dockerhub].
+---
 
-1. Start the ETCD (and optionally Kafka) on your host (see below). 
+## ARM64 Docker Image Pull
+
+Pre-built production and development images supporting ARM64 are available from [Dockerhub](https://hub.docker.com/u/ligato).
+
+### Production Image
+
+** Included in the pre-built ARM64 production image:**
+
+- Binaries for the vpp-agent with default config files
+- Installation of the compatible VPP
+
+Pull the pre-built ARM64 production image:
+```json
+docker pull ligato/vpp-agent-arm64
+```
+
+### Development Image
+
+**Included in the pre-built ARM64 development image:**
+
+- vpp-agent with default config files including source code
+- Compatible VPP installation including source code and build artifacts
+- Development environment with all requirements to build the vpp-agent and the VPP
+- Tools to generate code (proto models, binary APIs)
+
+Pull the pre-built ARM64 development image:
+```json
+docker pull ligato/dev-vpp-agent-arm64
+```
+---
+
+## Start VPP Agent
+
+Start Production Image
+```json
+docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent-arm64
+```
+Start Development Image
+```json
+docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/dev-vpp-agent-arm64
+```
+
+Check that the vpp-agent is running using [Agentctl](agentctl.md)
+
+Agentctl help:
+```
+docker exec -it vpp-agent agentctl --help
+```
+Agentctl Status:
+```json
+docker exec -it vpp-agent agentctl status
+```
+
+---
+
+## Start etcd
+
 !!! note
-    The Agent in the pre-built Docker image will not start if it can't connect to both ETCD and Kafka, if used.
+    Check for the proper etcd ARM64 docker image in the [official repository][etcd]. Currently, you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
 
-2. Run VPP + VPP Agent in the Docker image:
-```
-docker pull ligato/vpp-agent-arm64
-docker run -it --name vpp --rm ligato/vpp-agent-arm64
-```
-
-3. Configure the VPP agent using agentctl:
-```
-docker exec -it vpp agentctl -h
-```
-
-3. Check the configuration (using agentctl or directly using VPP console):
-```
-docker exec -it vpp agentctl -e 172.17.0.1:2379 show
-docker exec -it vpp vppctl -s localhost:5002
-```
-
-## ARM64 Images
-
-The VPP Agent can be successfully built also for the ARM64 platform.
-
-### Development images
-
-For a quick start with the development image, you can download the [official image for ARM64 platform][ligato-arm64-image] from **DockerHub**.
-
-```sh
-// latest release (stable)
-$ docker pull docker.io/ligato/dev-vpp-agent-arm64
-
-// bleeding edge (unstable)
-$ docker pull docker.io/ligato/dev-vpp-agent-arm64:pantheon-dev	# 
-```
-
-List of all available docker image tags for development image can be found [here for ARM64][ligato-arm64-image-tags].
-
-### Production images
-For a quick start with the VPP Agent, you can use pre-build Docker images with the Agent and VPP on Dockerhub:
-the [official image for ARM64 platform][ligato-arm64-image].
-```
-docker pull ligato/vpp-agent-arm64
-```
-
-### ARM64 and etcd Server
-
-Start the etcd server in a separate container on your local host:
+The following command starts etcd for ARM64 in a docker container. If the image is not present on your local machine, docker will download it first.
 ```
 sudo docker run -p 2379:2379 --name etcd -e ETCDCTL_API=3 -e ETCD_UNSUPPORTED_ARCH=arm64 \
     quay.io/coreos/etcd:v3.3.8-arm64 /usr/local/bin/etcd \
@@ -62,24 +74,26 @@ sudo docker run -p 2379:2379 --name etcd -e ETCDCTL_API=3 -e ETCD_UNSUPPORTED_AR
     -listen-client-urls http://0.0.0.0:2379
 ```
 
-The etcd server docker image is downloaded (if it does not exist already) and started, ready to serve requests. The etcd server will be available on your host OS IP `172.17.0.1` (by default) and port `2379`.
-
-Use the [agentctl tool][agentctl] to put configuration information into the etcd server:
+Use etcdctl to verify the etcd server is running:
+```json
+docker exec -it etcd etcdctl endpoint health
 ```
-agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/192.168.1.13 '{
-    "dst_network": "10.1.1.3/32",
-	"next_hop_addr": "192.168.1.13"
-}'
+!!! Note
+    Agentctl uses `127.0.0.1:2379` as the default address of the etcd server. If the etcd server is running in a separate container, then its configured address must be passed to agentctl as an argument. This is accomplished using the `-e` or `--etcd-endpoints` flags. 
 
-agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/192.168.1.13
+Use the agentctl kvdb list command to show the contents of the etcd data store:
+```json
+docker exec -it vpp-agent agentctl -e 172.17.0.1:2379 akvdb list
 ```
+Alternatively, you can use [etcdctl](quickstart.md#51-etcdctl) to interact with the etcd data store. 
 
-!!! note
-    For ARM64: Check for proper ETCD ARM64 docker image in the [official repository][etcd]. Currently you must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64`.
+---
 
-### ARM64 and Kafka
+## Kafka and ARM64
 
-There is no official spotify/kafka image for ARM64 platform. You can build an image following steps at the [repository][kafka]. However you need to modify the Kafka/Dockerfile before building like this:
+There is no official spotify/kafka image for the ARM64 platform. You can build an image following the steps contained in the [repository][kafka]. 
+
+However, you will need to modify the Kafka/Dockerfile before building the image like so:
 ```
 //FROM java:openjdk-8-jre
 FROM openjdk:8-jre
@@ -88,7 +102,7 @@ FROM openjdk:8-jre
 ENV KAFKA_VERSION 0.10.2.1
 ...
 ```
-For preparing kafka-arm64 image use:
+For preparing the kafka-arm64 image, use:
 
 ```
 git clone https://github.com/spotify/docker-kafka.git

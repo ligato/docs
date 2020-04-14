@@ -1,12 +1,45 @@
-# VPP plugins
+# VPP Plugins
+
+This section describes the VPP agent plugins. Each plugin section provides:
+
+- Short description
+- Pointers to the `*.proto` containing configuration/NB protobuf API definitions, the 'models.go' file defining the model, and the conf file if one is available.  
+- Example configuration interactions using an etcd data store, REST and gPRC.  
 
 ---
 
-## GoVPPMux plugin
+## GoVPPMux Plugin
 
-The `govppmux` plugin allows other plugins to access VPP independently by means of connection multiplexing.
+The GoVPPMux plugin allows a VPP agent plugin to access VPP through its own dedicated communication channel. This is accomplished using connection multiplexing.
 
-Any plugin that interacts with VPP can ask `govppmux` to obtain its own communication channel to access a running VPP instance. Behind the scenes, all channels share the same connection created during the plugin initialization using `govpp` core function.
+A specific plugin interacts with VPP by requesting the GoVPPMux plugin to obtain its own dedicated communication channel. Behind the scenes, all channels share the same connection between the GoVPP core and the VPP process. This channel-to-multiplexed connection is created during the plugin initialization using the GoVPP core function. 
+
+The notion of channel multiplexing is illustrated from this figure extracted from the [fd.io/govpp repository][fdio-govpp-repo].  
+
+
+```
+                                       +--------------+
+    +--------------+                   |              |
+    |              |                   |    plugin    |
+    |              |                   |              |
+    |     App      |                   +--------------+
+    |              |            +------+  GoVPP API   |
+    |              |            |      +--------------+
+    +--------------+   GoVPP    |
+    |              |  channels  |      +--------------+
+    |  GoVPP core  +------------+      |              |
+    |              |            |      |    plugin    |
+    +------+-------+            |      |              |
+           |                    |      +--------------+
+           |                    +------+  GoVPP API   |
+           | binary API                +--------------+
+           |
+    +------+-------+
+    |              |
+    |  VPP process |
+    |              |
+    +--------------+
+```
 
 ### Connection
 
@@ -15,136 +48,130 @@ Tho GoVPP multiplexer supports two connection types:
   - socket client
   - shared memory
     
-By default the GoVPP connects using the `socket client`. This option can be changed using the environment variable `GOVPPMUX_NOSOCK` with a fallback to `shared memory`. In that case, the plugin connects to that VPP instance which uses the default shared memory segment prefix.
+By default, GoVPP connects to VPP using the `socket client`. This option can be changed using the environment variable of `GOVPPMUX_NOSOCK`, with a fallback to `shared memory`. In the shared memory case, the plugin connects to the VPP instance that uses the default shared memory segment prefix.
  
-The default behaviour assumes that there is only a single VPP running in a sand-boxed environment together with the vpp-agent. In the case where VPP runs with a customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the prefix in order to connect to the desired VPP 
-instance. The prefix must be included in the GoVPPMux configuration file `govpp.conf` with the key `shm-prefix` and the value matching the VPP shared memory prefix name.
+The default behaviour assumes that there is only a single VPP running in an environment together with the VPP agent. In the case where VPP runs with a customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the SHM prefix in order to connect to the desired VPP 
+instance. The prefix must be included in the GoVPPMux conf file, [govpp.conf][govppmux-conf-file], with the key `shm-prefix`, and the value matching the VPP shared memory prefix name.
 
 ### Multiplexing
 
-The `NewAPIChannel` call returns a new API channel for communication with VPP via the `GoVPP` core. It uses default buffer sizes for the request and reply go channels. By default both are 100 messages long.
+The `NewAPIChannel` call returns a new API channel for communication with VPP using the GoVPP core. It uses default buffer sizes for the request and reply Go channels. By default, both are 100 messages long.
 
-A user plugin could blast configuration requests in bulk mode which could overload VPP. To avoid these situations, it is recommended one use `NewAPIChannelBuffered` and increase the buffer size for requests. This is useful since the buffer for responses is also used to carry VPP notifications and statistics which can burst in size and frequency on occassion. By increasing the reply channel buffer size, the probability of dropping messages from VPP decreases at the cost of an increased memory footprint. 
+A user plugin could blast configuration requests in bulk mode which could overload VPP. To avoid these situations, it is recommended that one use `NewAPIChannelBuffered`, and increase the requests buffer size. This is useful since the buffer for responses is also used to carry VPP notifications and statistics, which can burst in size and frequency on occasion. By increasing the reply channel buffer size, the probability of dropping messages from VPP decreases at the cost of an increased memory footprint. 
 
+**References:**
 
-### Trace
- 
-The duration of a VPP binary API call can be measured using the trace feature. Data is logged after every event (e.g. resynchronization, new interfaces, bridge domains, fib entries etc.). 
+- [GoVPPMux metrics proto][govppmux-metrics-proto] 
+- [GoVPPux metrics model][govppmux-metrics-models]
+- [GoVPPMux conf file][govppmux-conf-file] 
 
-Enable trace in the `govpp.conf`: 
- 
-`trace-enabled: true` or  `trace-enabled: false`
+---
+
+### Health Checks
   
-The trace feature is disabled by default. 
+There are several health check mechanisms associated with the GoVPPMUX plugin. Health check timeouts, retry, intervals and reconnects options can be set in the [govpp.conf][govppmux-conf-file].
 
-The trace plugin supports several configuration items for the VPP health-check probe:
+For convenience, here are those options: 
 
   - `health check probe interval`: time between health check probes
   - `health check reply timeout`: if this timer pops, probe is considered failed
   - `health check threshold`: number of consecutive failed health checks until an error is reported
-  - `reply timeout`: if the reply from a channel does not arrive until timeout elapses, the request fails
-  - `shm-prefix`: used for connection to a VPP instance not using default shared memory prefix
+  - `reply timeout`: if the reply from a channel does not arrive until the timeout elapses, the request fails
+  - `shm-prefix`: used for the connection to VPP that is not using the default shared memory prefix
   - `resync-after-reconnect`: resync after the VPP reconnection
+
+!!! Note
+    `TraceEnabled` is obsolete and used only in older versions.
+
+**References**
+    
+- [GoVPPMux Conf File][govppmux-conf-file]
+
+---  
+
+## Interface Plugin
+
+The interface plugin is used to set up `VPP Interfaces`, manage interface status, and handle both interface and DHCP lease notifications. The interface plugin supports a number of [interface types](#interface-types), all of which correspond to a subset of all interfaces that can be configured in the VPP data plane.   
+
+All of the interface types, except DPDK, can be created or removed directly in VPP, if all necessary conditions are met. For example, an AF_PACKET interface requires a virtual ethernet interface (VEth) on a host in order to attach to it. The PCI and physical DPDK interfaces can be only configured. They cannot be added or removed.
   
-## Interface plugin
+VPP uses multiple commands and/or binary APIs to create and configure shared binaries. The VPP agent simplifies this processes by providing a single model with specific extensions depending on the interface type. 
+The NB configuration demands are translated to a sequence of binary API calls using the GoVPP library. The binary API calls are used to program a VPP interface.
 
-The VPP interface plugin is used to setup `VPP Interfaces`, manage interface status as well as interface and DHCP lease notifications. VPP can support multiple interface types with the following supported by the vpp-agent:
+**References:**
 
-  - Sub-interface
-  - Software loopback
-  - DPDK (physical) interface
-  - Memory interface (memif)
-  - Tap (version 1 and 2)
-  - Af-packet interface
-  - VxLAN tunnel
-  - IPSec tunnel
-  - VmxNet3 interface
-  - Bond interfaces
+- [Interface proto][interface-proto] 
+- [Interface models][interface-models]
+- [Interface conf file][interface-conf-file] 
 
-Other types are specified as undefined.
-
-  
-All the interface types except DPDK (physical) can be created or removed directly in the VPP if all necessary conditions are met. For example an Af-packet interface requires a VEth as a host in order to attach to it. The DPDK interfaces (PCI, physical) can be only configured. They cannot be added or removed.
-  
-VPP uses multiple commands and/or binary APIs to create and configure shared binaries. The vpp-agent simplifies this processes by providing a single model with specific extensions depending on the interface type. 
-The northbound configuration demands are translated to a sequence of binary API calls using the GoVPP library for eventual programming of the interface VPP.
-
-The interface plugin defines following [interface model][interface-model] and is divided into two parts:
+The interface proto file is divided into two parts:
  
  - data common to all interface types.
  - data for a specific interface type.
   
-Note that there are exceptions in the common part, where not all fields can be defined on every interface type. For example, a physical address cannot be set to Af-packet or to DPDK interface despite the presence of the field in the definition. If set, the value is silently ignored.
+Note that there are exceptions in the common part, where not all fields can be defined on every interface type. For example, a physical address cannot be set to an AF_PACKET or DPDK interface despite the presence of the field in the definition. If set, the value is silently ignored.
 
 Mandatory fields are `interface type` and `logical name`. The name is limited to 63 characters. The interface may define unique fields for the given type.
 
-A key is defined for every interface type. Here is an example of a VPP interface key with `<name>` being unique for a particular instance of the interface:
+A key is defined for every interface type. Here is an example of a VPP interface key, with `<name>` being unique for a particular instance of the interface:
 
 ```
 /vnf-agent/vpp1/config/vpp/v2/interfaces/<name>
-
 ```
 
-See the [key reference][key-reference] to learn more about the interface keys. 
+See the [keys concepts][concept-keys] and the [keys reference][key-reference] to learn more about the interface keys. 
 
-The interface's logical name is for use by the vpp-agent. It serves as a reference for other models (e.g. bridge domains). VPP works with indexes, which are generated when the new interface instance is created. 
+The interface's logical name is for use by the VPP agent. It serves as a reference for other models (e.g. bridge domains). VPP works with indexes, which are generated when the new interface instance is created. 
 
-The index is a unique integer for identification and future VPP internal references. In order to parse the name and index, the vpp-agent uses a corresponding tag in the VPP binary API. This "name-to-index" mapping entry enables the vpp-agent to locate the interface name and and the corresponding index. 
+The index is a unique integer for identification and VPP internal references. In order to parse the name and index, the VPP agent uses a corresponding tag in the VPP binary API. This "name-to-index" mapping entry enables the VPP agent to locate the interface name and and the corresponding index. 
 
-### Unnumbered interfaces
+---
 
-An interface can be assigned with IPv4 or IPv6 addresses or some combination thereof. A VPP 
-interface can also be set as unnumbered. It this scenario it "borrows" the IP address of another interface, the so called "target" interface. 
+### Unnumbered Interfaces
 
-To set an interface as unnumbered, omit `ip_addresses` and set `interface_with_ip`. The target interface 
-must exist and if it does not, the unnumbered interface will be postponed and configured later when the required target interface appears. The target interface must be configured with at least one IP address. 
+An interface can be assigned with an IPv4 address, an IPv6 address, or both. A VPP 
+interface can be set as unnumbered. In this scenario, the VPP interface "borrows" the IP address of from another interface, which is called the target interface. 
 
-### Maximum transmission unit
+To set an interface as unnumbered, omit `ip_addresses` and set `interface_with_ip`. The target interface must exist. If the target interface does not exit, the unnumbered interface will be configured later when the required target interface appears. The target interface must be configured with at least one IP address. 
 
-The MTU is the size of the largest protocol data unit that can be sent on the "wire". A custom MTU size for the interface can be set using the `mtu` value in the interface definition. If the field is left empty, VPP uses a default MTU size.
+### Maximum Transmission Unit
 
-The vpp-agent provides an option to automatically set the MTU size for an interface using a [config file] [interface-config-file]. If the global MTU size is set to a non-zero value, but interface definition contains 
-a different local value, the local value take precedence over the global value.
+The MTU is the size of the largest protocol data unit (PDU) that can be transmitted on the "wire". A custom MTU size for the interface can be set using the `mtu` value in the interface definition. If the field is left empty, VPP uses a default MTU size of 0.
 
-!!! note
-    MTU is not available for VxLan or IPSec tunnel interfaces.
+The VPP agent provides an option to automatically set the MTU size for an interface using the [interface conf file][interface-config-file]. If the global MTU size is set to a non-zero value, but the interface configuration contains a different local value, the local value take precedence over the global value.
 
-### Interface types
+---
+
+### Interface Types
 
 !!! Note
-    In the brief descriptions below, reference will be made to interface `links` or `structures` along with the contents defining various properties and functions specific to the respective interface type. Those details are contained in a file called [`interface.proto`][links].
+    In the brief descriptions below, reference will be made to interface `links` or `structures` along with the contents defining various properties and functions specific to the respective interface type. Those details are contained file called [`interface.proto`][interface-proto] file.
+ 
+| Type| Description |
+| --- | ---|   
+| UNDEFINED_TYPE | |
+| SUB_INTERFACE | Derived from other interfaces by adding a VLAN ID. The sub-interface link of type `SubInterface` requires a name of the parent interface, and the VLAN ID.|
+| SOFTWARE_LOOPBACK| internal software interface|
+| DPDK | Physical interfaces cannot be added or removed by the VPP agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The VPP agent can configure the interface IP and MAC address information or set it as enabled. No special configuration fields are defined. |
+| MEMIF | Shared memory packet interface types provide high-performance send and receive functions between VPP instances. Additional fields are defined in `MemifLink`. The most important is the socket filename. The default uses a default socket filename with a zero index which can be used to create memif interfaces. Note that the VPP agent needs to be resynced to register the new memif interface. |
+| TAP |exists in two versions, TAPv1 and TAPv2, but only the latter can be configured. TAPv2 is based on [virtio][virtio] which means it runs in a virtual environment, and cooperates with the hypervisor. The `TapLink` provides several setup options available for TAPv2.|
+| AF_PACKET |VPP "host" interface. Its primary function is to connect to the host via the OS VEth interface. The af-packet interface cannot exist without its host interface. If the VEth is missing, the configuration is postponed. If the host interface was removed, the VPP agent "un-configures" and caches related af-packet information. The `AfpacketLink` contains only one field with the name of the host interface as defined in the [Linux interface plugin][linux-interface-plugin-guide].
+| VXLAN_TUNNEL |Tunneling protocol for encapsulating L2 frames in IP/UDP packets. |
+| IPSEC_TUNNEL | Deprecated in VPP 20.01+. [Use IPIP_TUNNEL + ipsec.TunnelProtection] [ipsec-model] instead. See [PR #1638][ipip-tunn-prot-pr] for details.|
+| VMXNET3_INTERFACE | High performance virtual network adapter used in VMware networks.  VmxNet3 requires VMware tools to be used. Setup options are described in `VmxNet3Link`.|
+| BOND_INTERFACE | Support the Link Aggregation Control Protocol (LACP). Bonding is the process of combining or joining two or more network interfaces together into a single logical interface. |
+| GRE_TUNNEL | IP encapsulation protocol defined in RFC2784|
+| GTPU_TUNNEL |GPRS Tunneling  Protocol (GTP) for user data (U) employed in GPRS networks|
+|IPIP_TUNNEL |IP encapsulation of IP packets defined in RFC1853. Used with ipsec.TunnelProtection as replacement for IPSEC_TUNNEL interface. See [PR #1638][ipip-tunn-prot-pr] for details.|   
+ 
 
-Interface type-specific fields supported by the vpp-agent are defined in special structures called [links][links]. Observations on specific interface types follow:
+---
 
-- **Bond** was created to support the Link Aggregation Control Protocol (LACP). Network bonding is the process of combining or joining two or more network interfaces together into to form a single interface. It can support various modes of operation and load balancing across the different member interfaces of the bond interface. 
+### Interface Configuration Examples
 
-- **Sub-interface** is derived from other interfaces by adding VLAN ID to it. The sub-interface link of type `SubInterface` requires a name of the parent interface, and the ID of the VLAN.
-
-- **Software** loopback does not have any special fields.
-
-- **DPDK** and physical interfaces cannot be created or removed directly by the vpp-agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. The vpp-agent can configure the interface IP and MAC address information or set it as enabled. No special configuration fields are defined.
-
-- **Memory interface** or shared memory packet interface (memif for short) types provides high-performance send and receive functions between VPP instances. Additional fields are defined in `MemifLink`. The most important of these is the socket filename. The default uses a default socket filename with zero index which can be used to create memif interfaces. Note that the vpp-agent needs to be resynced to register the new memif interface. 
-
-- **Tap interface** exists in two versions, TAPv1 and TAPv2 but only the latter can be configured. TAPv2 is based on [virtio][virtio] which means it knows that it runs in a virtual environment and cooperate with the hypervisor. The `TapLink` provides several setup options available for TAPv2. 
-
-!!! danger "important"
-    The first version of the Tap interface is no longer supported by VPP. It cannot be managed by the vpp-agent. 
-
-
-- **Af-packet interface** is the VPP "host" interface. Its primary function in life is to connect to the host via the OS VEth interface. Because of this, the Af-packet interface cannot exist without its host interface. If the desired VEth is missing, the configuration is postponed. If the host interface was removed, the vpp-agent "un-configures" and caches related Af-packet information 
-The `AfpacketLink` contains only one field with the name of the host interface as defined in the [Linux interface plugin][linux-interface-plugin-guide].
-
-- **VxLan tunnel** endpoint (VTEP) defines a `VxlanLink` with source and destination addresses, a VXLan network identifier (VNI) and a name of the optional multicast interface.
-
-- **IPSec virtual tunnel** interface (VTI) provides a routable interface type for terminating IPSec tunnels. `IPSecLink` describes IPsec tunnel setup options including local and remote IP addresses, local and remote security parameter index (SPI) values and crypto algorithms for encryption and authentication. The choice of crypto algorithms are determined by those supported by VPP.
-
-- **VmxNet3** interface is a virtual network adapter for delivering high performance in virtual environments. 
-VmxNet3 requires VMware tools to be used. Setup options are described in `VmxNet3Link`.
-
-**Configuration example**
-
-**1. Using key-value database** (etcd in our example) put the interface config data using the correct [interface key][key-reference]).
+**KV Data Store**
+ 
+Put the interface configuration data into an etcd data store using the correct [interface key][key-reference].
 
 Example data:
 ```json
@@ -161,9 +188,9 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put the compacted software_loopback interface key-value entry:
+Use `agentctl` to put the software_loopback interface key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
 ```
 
 Another example with a memif type interface. Note the memif-specific fields in the `memif` section:
@@ -186,20 +213,20 @@ Another example with a memif type interface. Note the memif-specific fields in t
 }
 ```
 
-Use `etcdctl` to put the compacted memif interface key-value entry:
+Use `agentctl` to put the memif interface key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memif1","type":"MEMIF","enabled":true,"phys_address":"4E:93:2A:38:A7:77","ip_addresses":["172.125.40.1/24"],"mtu":1478,"memif":{"master":true,"id":1,"socket_filename":"/tmp/memif1.sock","secret":"secret"}}'
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memif1","type":"MEMIF","enabled":true,"phys_address":"4E:93:2A:38:A7:77","ip_addresses":["172.125.40.1/24"],"mtu":1478,"memif":{"master":true,"id":1,"socket_filename":"/tmp/memif1.sock","secret":"secret"}}'
 ```
 
-**2. Using REST:**
+**REST**
 
-Currently REST only supports retrieval of the existing configuration. The following command can be used to read all interfaces via cURL:
+REST only supports retrieval of the existing configuration. Use this cURL command to read all interfaces:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
 
-The interface type-specific calls:
+Interface type-specific calls:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/loopback
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/ethernet
@@ -209,7 +236,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/vxlan
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/afpacket
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the interface data:
 ```go
@@ -233,7 +260,7 @@ memoryInterface := &vpp.Interface{
     }
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -250,9 +277,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -261,16 +288,27 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-### Interface status
+---
+
+### Interface Status
 
 Interface status is a **collection of interface data** that can be stored in an external database or sent as a notification.
 
-The vpp-agent waits on several types of VPP events such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the vpp-agent builds a notification which is sent to all registered publishers (databases). Any errors that occurred are also stored. The statistics readout is performed every second.
+The VPP agent waits on several types of VPP events such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the VPP agent builds a notification which is sent to all registered publishers or databases. Any errors that occurred are also stored. The statistics readout is performed every second.
 
 !!! danger "Important"
-    The interface status is disabled by default, since no default publishers are defined. Use the interface plugin config file to enable interface status. (see the [example config file][interface-config-file])   
+    The interface status is disabled by default, since no default publishers are defined. The interface status can be set in the [interface conf file][interface-config-file].   
 
-The [interface state model][interface-state-model] is represented by two objects: `InterfaceState` containing status data, and `InterfaceNotification` which is a wrapper around the state with additional information required to send a status notification.
+**References**
+
+- [Interface status proto][interface-state-proto]
+- [Interface status models][interface-models]
+- [Interface status conf file][interface-conf-file]
+
+The interface status proto defines two objects:
+
+ - InterfaceState - containing status data
+ - InterfaceNotification -  a wrapper around the state with additional information required to send a status notification.
 
 Keys used for interface status and errors:
 
@@ -282,7 +320,7 @@ Keys used for interface status and errors:
 /vnf-agent/<label>/vpp/status/v2/interface/errors/<name>
 ```
 
-The interface status is meant to be read-only and published only by the vpp-agent.
+The interface status is read-only and published only by the VPP agent.
 
 Data provided by interface status:
 
@@ -292,42 +330,58 @@ Data provided by interface status:
   * used duplex 
   * statistics (received, transmitted or dropped packets, bytes, error count, etc.)
 
-**Interface status usage**
+---
 
-To read status data, use any tool with access to a given database (**etcdctl** for etcd, **redis-cli** for Redis, **boltbrowser** for BoltDB, etc). 
+**Interface Status Usage**
 
-Let's read interface status data with `etcdctl`:
+To read status data, use any tool with access to a given database (**etcdctl** or **agentctl** for etcd, **redis-cli** for Redis, **boltbrowser** for BoltDB). 
+
+Use this `agentctl` command to read interface status for all interfaces:
 ```
-etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/
+agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/
 ```
 
-The command above returns status for all interfaces that published to and stored in etcd. To read the status for just a single interface, append its name to the end of etcdctl command as so:
+Specific interfaces can be identified by appending their name to the end of the key. Use these `agentctl` commands to read the status of the loop1 and memif1 interfaces respectively:
 ```
-etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/loop1
-etcdctl get --prefix /vnf-agent/vpp1/vpp/status/v2/interface/memif1
+agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/loop1
+agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/memif1
 ```
 !!! note
-    Do not forget to enable status in the config file. Otherwise, the status will not be published to the database.
+    Do not forget to enable status in the conf file. Otherwise, the status will not be published to the database.
 
-## L2 plugin
+---
 
-The VPP L2 plugin is used to configure VPP link-layer configuration items, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**.  
+## L2 Plugin
 
-### Bridge domains
+The L2 plugin is used to configure VPP link-layer configuration items, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**.  
 
-The L2 bridge domain is a set of interfaces that belong to the same flooding or broadcast domain. Every bridge domain contains several attributes (MAC learning, unicast forwarding, flooding, ARP termination table) which can be enabled or disabled. The bridge domain is identified by a unique ID, which is managed by the plugin and cannot be externally configured.   
+### Bridge Domains
 
-The L2 plugin defines an individual model for every configuration item and the [bridge domain][bd-model] is no exception. The definition consists of common bridge domain fields (forwarding, learning...), a list of assigned interfaces and an ARP termination table. Bridge domain interfaces are only referenced - the configuration of the interface itself is handled by the interface plugin. Every referenced interface also contains bridge domain-specific fields (BVI and split horizon group). Note that **only one BVI interface is allowed per bridge domain**.
+The L2 bridge domain (BD) is a set of interfaces that belong to the same flooding or broadcast domain. Every BD contains several attributes including MAC learning, unicast forwarding, flooding, and an ARP termination table, which all can be enabled or disabled. The BD is identified by a unique ID, which is managed by the plugin and cannot be externally configured. 
 
-The bridge domain does not have any mandatory fields except a logical name. The bridge domain logical name can be used as a reference for other configuration types configured as part of  the specific bridge domain. 
+**References**
 
-The bridge domain index can be obtained via the usual retrievel methods (e.g. etcdctl get, REST, etc.), but the value is only informative since it cannot be changed, set or referenced.
+- [BD proto][bd-proto]
+- [BD model][bd-model]  
 
-**Configuration example**
+The BD proto consists of the standard bridge domain configuration parameters including forwarding, learning, assigned interfaces and an ARP termination table. BD interfaces are only referenced. 
 
-**1. Using the key-value database** (etcd in our example) put the interface config data using the correct [bridge domain key][key-reference]).
+The configuration of the interface itself is handled by the interface plugin. Every referenced interface also contains the bridge domain-specific fields consisting of a bridged virtual interface (BVI) and a split horizon group. 
 
-Example data:
+!!! Note
+    Only one BVI is allowed per bridge domain.
+
+The mandatory field for the BD is a logical name. This logical name can be used as a reference for other configuration types, that are configured as part of the specific BD. 
+
+The BD index can be obtained using the standard retrieval methods such as etcdctl get, REST, and agentctl and VPP CLI. Note this value is informative only, since it cannot be changed, set or referenced.
+
+**BD Configuration Examples**
+
+**KV Data Store** 
+ 
+Put the BD configuration data into an etcd data store using the [bridge domain key][key-reference].
+
+Example Data:
 
 ```json
 {
@@ -365,29 +419,29 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1 '{"name":"bd1","learn":true,"flood":true,"forward":true,"unknown_unicast_flood":true,"arp_termination":true,"interfaces":[{"name":"if1","split_horizon_group":0,"bridged_virtual_interface":true},{"name":"if2","split_horizon_group":0},{"name":"if2","split_horizon_group":0}],"arp_termination_table":[{"ip_address":"192.168.10.10","phys_address":"a7:65:f1:b5:dc:f6"},{"ip_address":"10.10.0.1","phys_address":"59:6C:45:59:8E:BC"}]}'
 ```
 
-To remove the configuration:
+Use this command to remove the configuration:
 
 ```bash
 etcdctl del /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 ```
 
-**2. Using REST:**
+**REST**
 
-Currently REST only supports the retrieval of the existing configuration. The following command can be used to read all bridge domains via cURL:
+Currently REST only supports the retrieval of the existing configuration. Use this cURL command to read all bridge domains:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/bd
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
-Prepare the bridge domain data:
+Prepare the BD data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/models/vpp"
@@ -410,7 +464,7 @@ bd := &l2.BridgeDomains_BridgeDomain{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -427,9 +481,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -438,17 +492,26 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-### Forwarding tables  
+---
 
-An L2 forwarding information base (FIB) can be used in network bridging or routing. Inbound packets are forwarded to the output interface defined in the FIB table. FIB entries are created by VPP just as are interfaces within the bridge domain enabled with MAC learning. The vpp-agent enables configuration of static FIB entries with a combination of interface and bridge domain values.
+### L2 Forwarding Tables  
 
-A FIB entry is defined in the following [model][fib-model]. To configure a FIB entry, a MAC address, interface and bridge domain must be provided. The condition that the interface is part of the bridge domain must be fulfilled. The interface and the bridge domain are referenced with logical names. Note that the FIB entry will not appear in the VPP until all conditions are met.  
+An L2 forwarding information base (FIB) can be used in network bridging or routing. Inbound packets are forwarded to an outbound interface defined in the FIB table. The VPP agent enables the configuration of static FIB entries with a combination of interface and bridge domain values.
 
-**Configuration example**
+**References**
 
-**1. Using the key-value database** put the proto-modelled data with the correct FIB key to the database ([key reference][key-reference]).
+- [FIB proto][bd-proto]
+- [FIB model][bd-model] 
 
-Example data:
+To configure a FIB entry, a MAC address, interface and bridge domain must be provided, with the condition that the interface is part of the BD. The interface and the BD are referenced with logical names. Note that the FIB entry will not appear in VPP until all conditions are met.  
+
+**FIB Configuration Examples**
+
+**KV Data Store**
+
+Put the FIB configuration data into an etcd data store using the [FIB key][key-reference]
+
+Example Data:
 ```json
 {
     "bridge_domain": "bd1",
@@ -460,21 +523,21 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C '{"phys_address":"62:89:C6:A3:6D:5C","bridge_domain":"bd1","outgoing_interface":"tap1","action":"FORWARD","static_config":true,"bridged_virtual_interface":false}'
 ```
 
-**2. Using REST:**
+**REST**
 
-Currently REST only supports the retrieval of the existing configuration. The following command can be used to read all FIBs via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read all L2 FIBs:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/fib
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
-Prepare the FIB data:
+Prepare the L2 FIB data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/models/vpp"
@@ -489,7 +552,7 @@ fib := &l2.FIBEntry{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -505,9 +568,10 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
+
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -516,17 +580,26 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-### Cross connects
+---
 
-The vpp-agent supports the L2 cross connect feature which sets an interface pair to cross connect (xconnect) mode. All packets received on the first interface are transmitted out the second interface. This mode is not bidirectional by default. If required both interfaces in each direction must be set.
+### L2 Cross Connects
 
-The cross-connect mode uses a very simple [xconnect model][xc-model] that references the transmit and receive interfaces. Both interfaces are mandatory fields and must exist in order to set the mode successfully. If one or both are missing, the configuration is postponed. 
+The VPP agent supports the L2 cross connect (xconnect) feature which sets an interface pair to cross connect (xconnect) mode. All packets received on the first interface are transmitted out the second interface. This mode is not bidirectional by default. If required both interfaces in each direction must be set.
 
-**Configuration example**
+**References**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for cross connect to the database ([key reference][key-reference]).
+- [xconnect proto][xc-proto]
+- [xconnect model][bd-model]
 
-Example data:
+The xconnect proto references the transmit and receive interfaces. Both interfaces are mandatory fields and must exist in order to set the mode successfully. If one or both are missing, the configuration is postponed. 
+
+**Cross Connect Configuration Examples**
+
+**KV Data Store**
+
+Put the cross connect data into an etcd data store using the [cross connect key][key-reference].
+
+Example Data:
 ```json
 {
     "receive_interface": "if1",
@@ -534,19 +607,19 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/xconnect/if1 '{"receive_interface":"if1","transmit_interface":"if2"}'
 ```
-**2. Using REST:**
+**REST**
 
-Currently REST only supports the retrieval of the existing configuration. The following command can be used to read all cross-connects via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read all L2 FIBs:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/xc
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the cross-connect data:
 ```go
@@ -561,7 +634,7 @@ xc := &l2.XConnectPair{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -577,9 +650,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -588,19 +661,28 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-## L3 plugin
+---
 
-The VPP L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes** and the **IP neighbor** feature. 
+## L3 Plugin
 
-### ARP entries  
+The L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes**, **IP neighbor** functions, **L3 cross connects**, and **VRFs**.
 
-The L3 plugin works with the VPP implementation of the address resolution protocol. **ARP is a communication protocol for discovering the MAC address associated with a given IP address**. In terms of the plugin, the ARP entry is uniquely identified by the interface and IP address.
+### ARP  
 
-The northbound plugin API defines ARP in the following [model][arp-model]. Every ARP entry includes a MAC address, IP address and an interface. The two latter values are a part of the key.
+The address resolution protocol (ARP) is a communication protocol for discovering the MAC address associated with a given IP address. The L3 plugin works with the VPP implementation of ARP. The ARP entry is uniquely identified by the interface and IP address.
 
-**Configuration example**
+The structure of an ARP entry is defined in the [ARP proto][arp-proto]. Every ARP entry includes a MAC address, IP address and an interface. The two latter values are a part of the [ARP entries key][key reference].
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for ARP to the database ([key reference][key-reference]).
+**References**
+
+- [ARP proto][arp-proto]
+- [ARP model][L3-models]
+
+**ARP Configuration Example**
+
+**KV Data Store**
+
+Put the ARP data into an etcd data store using the [ARP entry key][key-reference].
 
 Example data:
 ```json
@@ -611,27 +693,26 @@ Example data:
     "static":true
 }
 ```
-
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/arp/tap1/192.168.10.21 '{"interface":"tap1","ip_address":"192.168.10.21","phys_address":"59:6C:45:59:8E:BD","static":true}'
 ```
 
-To remove configuration:
+Use this command to remove the configuration:
 
 ```bash
 etcdctl del /vnf-agent/vpp1/config/vpp/v2/arp/tap1/192.168.10.21
 ```
 
-**2. Using REST:**
+**REST**
 
-REST currently only supports the retrieval of the existing configuration. The following command can be used to read all ARP entries via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read all ARP entries:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/arps
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the ARP data:
 ```go
@@ -647,7 +728,7 @@ arp := &l3.ARPEntry{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -663,9 +744,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial])):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -674,17 +755,26 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
+---
+
 ### Proxy ARP
 
-Proxy ARP is a technique where a proxy device on a subnet answers ARP queries for an IP address of a host on a different network. Proxy ARP IP address ranges are defined via the respective binary API call. In addition, the desired interfaces must be enabled for the proxy ARP feature.    
+Proxy ARP is a technique whereby a device on a subnet responds to ARP queries for the IP address of a host on a different network. Proxy ARP IP address ranges are defined via the respective binary API call. In addition, the desired interfaces must be enabled for the proxy ARP feature.  
 
-The Proxy ARP model is defined in the [common L3 model][l3-model] file. It lays out a list of IP address ranges and another list of interfaces. Naturally, the interface must exist in order for it to be enabled for proxy ARP. 
+**References**
 
-**Configuration example**  
+- [Proxy ARP proto][arp-proto]
+- [Proxy ARP model][L3-models]  
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for proxy ARP to the database ([key reference][key-reference]).
+The Proxy ARP model is contained within the [common L3 model][l3-model] file. It lays out a list of IP address ranges, and another for interfaces. The interface must exist in order for it to be enabled for proxy ARP. 
 
-Example data:
+**Proxy ARP Configuration Examples**  
+
+**KV Data Store**
+
+Put the ARP data into an etcd data store using the [ARP entry key][key-reference].
+
+Example Data:
 ```json
 {  
     "interfaces":[  
@@ -704,14 +794,14 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/proxyarp-global/settings '{"interfaces":[{"name":"tap1"},{"name":"tap2"}],"ranges":[{"first_ip_addr":"10.0.0.1","last_ip_addr":"10.0.0.3"}]}'
 ```
 
-**2. Using REST:**
+**REST**
 
-Currently REST only supports the retrieval of the existing configuration. Proxy ARP uses two cURL commands to obtain interfaces and ranges: 
+REST only supports the retrieval of the existing configuration. Use these two cURL commands to read the entries for the interfaces and address ranges supported by proxy ARP:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/interfaces
@@ -719,9 +809,9 @@ curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/ranges
 
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
-Prepare the Proxy-ARP data:
+Prepare the proxy ARP data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/models/vpp"
@@ -734,7 +824,7 @@ xc := &l2.XConnectPair{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -756,9 +846,9 @@ proxyArp := &l3.ProxyARP{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -767,13 +857,21 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
+
+---
+
 ### Routes 
 
 The VPP routing table contains destination network prefixes, a corresponding next_hop IP address and the outbound interface. Routes are grouped in virtual routing and forwarding (VRF) tables, with a default table of index 0.
 
-The VPP [route model][route-model] explains the basic routing table fields (i.e. destination network, next_hop, etc.) as well as additional fields including weight and preference. 
+**References**
 
-The model also defines several route types:
+- [Routes proto][route-proto]
+- [Routes model][L3-models]
+
+The VPP routes proto explains the standard routing table fields such a destination network, next_hop IP address. Weight and preference fields are included to assist in path selection.  
+
+The proto defines several route types:
 
 - Intra-VRF route: forwarding is done by a lookup in the local VRF table.
 
@@ -781,12 +879,13 @@ The model also defines several route types:
  
 - Drop route: drops network communication destined for specified IP address.
   
-**Configuration example**
+**Route Configuration Examples**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for routes to the database 
-([key reference][key-reference]).
+**KV Data Store**
 
-Example data (intra-VRF route):
+Put the route data into an etcd data store using the [route key][key-reference].
+
+Example data for an `intra-VRF route`:
 ```json
 {  
     "type": "INTRA_VRF",
@@ -797,12 +896,12 @@ Example data (intra-VRF route):
 }
 ```
 
-Use `etcdctl` to put compacted intra-VRF route:
+Use the `etcdctl` command to put an `intra-VRF route`:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/route/vrf/0/dst/10.1.1.3/32/gw/192.168.1.13 '{"type":"INTRA_VRF","dst_network":"10.1.1.3/32","next_hop_addr":"192.168.1.13","outgoing_interface":"tap1","weight":6}'
 ```
 
-Another example (inter-VRF route)
+Example data for `inter-VRF route`:
 ```json
 {  
     "type":"INTER_VRF",
@@ -811,20 +910,21 @@ Another example (inter-VRF route)
 }
 ```
 
-Use `etcdctl` to put compacted inter-VRF route:
+Use this `etcdctl` command to put an inter-VRF route:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/route/vrf/0/dst/1.2.3.4/32/gw '{"type":"INTER_VRF","dst_network":"1.2.3.4/32","via_vrf_id":1}'
 ```
 
-**2. Using REST:**
 
-The following command can be used to read all routes via cURL:
+**REST**
+
+REST only supports the retrieval of the existing configuration. Use this cURL command to read all route entries:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/routes
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the VPP route data:
 ```go
@@ -842,7 +942,7 @@ route := &l3.Route{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -858,9 +958,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -869,13 +969,22 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
  
-### IP scan-neighbor
+---
+ 
+### IP Scan-Neighbor
 
-The VPP IP scan-neighbor feature is used to enable or disable periodic IP neighbor scans. The [model][l3-model] supports scan intervals, timers, delays, IPv4 mode, IPv6 mode or dual-stack. 
+The VPP IP scan-neighbor feature is used to enable or disable periodic IP neighbor scans. The IP scan-neighbor proto defines scan intervals, timers, delays, IPv4 mode, IPv6 mode or dual-stack.
 
-**Configuration example**  
+**References**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for IP scan neighbor to the database ([key reference][key-reference]).
+- [IP scan-neighbor proto][L3-proto]
+- [IP scan-neighbor][L3-models] 
+
+**IP Scan-Neighbor Configuration Examples**  
+
+**KV Data Store**
+
+Put the IP scan-neighbor data into an etcd data store using the [IP Scan Neighbor][key-reference].
 
 Example data:
 ```json
@@ -889,20 +998,20 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted data:
+Use this `etcdctl` command to put IP scan-neighbor data:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/ipscanneigh-global/settings '{"mode":"BOTH","scan_interval":11,"max_proc_time":36,"max_update":5,"scan_int_delay":16,"stale_threshold":26}'
 ```
 
-**2. Using REST:**
+**REST**
 
-The following command can be used to read IP scan neighbor configuration via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read IP scan-neighbor configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/ipscanneigh
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the IP scan neighbor data:
 ```go
@@ -921,7 +1030,7 @@ ipScanNeigh := &l3.IPScanNeighbor{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -937,9 +1046,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -948,29 +1057,70 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-## IPSec plugin
+---
 
-The IPSec plugin handles the configuration of **security policy databases** (SPD) and **security associations** (SA) in VPP. Note that the IPSec tunnel interfaces are not part of the IPSec plugin but instead are supported by the [VPP interface plugin][interface-model].
+### L3 Cross Connects
 
-### Security policy database
+The VPP agent supports the L3 cross connect (L3xc) feature. It applies the xconnect paradigm for IPv4 or IPv6 packets by cross connecting all ingress traffic received on an L3-configured interface to an outbound L3 FIB path.
 
-Security policy database (SPD) specifies policies that determine the disposition of all the inbound or outbound IP traffic from either the host or the security gateway. The SPD is bound to an SPD interface and contains a list of policy entries in a table. Every policy entry points to a VPP security association. SPD is defined in the common [IPSec model][ipsec-model]. 
+**References**
 
-The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the vpp-agent as it is a part of the SPD key. 
+- [L3xc Proto][l3xc-proto]
+- [l3xc model][l3-models]  
+
+The L3xc proto references an ingress IP interface, and outbound path composed of an outgoing interface, next_hop IP address, weight and preference. 
+
+Note that the same function could be achieved with a dedicated VRF table with a default route. The L3xc is more efficient in both memory and CPU consumption.
+
+---
+
+### VRF
+
+The L3 plugin supports a special VRF table for use in controlling flow-based forwarding.   
+
+**References**
+
+- [VRF table proto][vrf-proto]
+- [VRF table model][L3-models]
+
+The VRF table proto defines an ID, protocol setting for IPv4 or IPv6, optional label description, and flow hashing settings.
+
+---
+
+## IPSec Plugin
+
+The IPSec plugin handles the configuration of **Security Policy Databases** (SPD) and **Security Associations** (SA) in VPP. 
 
 !!! Note
-    Pay special attention when defining an index in the model. Despite the fact the field uses a `string` format, it only accepts plain numbers. Attempts to set any non-numeric characters will result in an error.     
-
-Every policy entry has field `sa_index`. This is the SA reference in the SPD. The field is mandatory and a missing value will generate a configuration error.
-
-The SPD defines two bindings: SA and the interface. The interface binding is important since VPP needs to create an empty SPD first and this cannot be done without it. All the policy entries are configured after that, where the SA is expected to exist. 
+ The IPsec plugin does not handle IPSec tunnel programming. This supported by the IPIP_TUNNEL with ipsec.TunnelProtection. The IPSEC_TUNNEL interface has been deprecated.
  
+--- 
 
-**Configuration example**
+### Security Policy Database
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for security policy databases to the database ([key reference][key-reference]).
+The SPD specifies the policies that determine the disposition of all the inbound or outbound IP traffic from either the host or the security gateway. The SPD is bound to an SPD interface and contains a list of policy entries in a table. Every policy entry points to an IPsec security association (SA). 
 
-Example data:
+**References**
+
+- [SPD Proto][ipsec-proto]
+- [SPD Model][ipsec-model]
+
+The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent as it is a part of the SPD key. 
+
+!!! Note
+    Pay special attention when defining an index in the model. Despite the fact the field uses a `string` format, it only accepts plain numbers. Attempts to set non-numeric characters will result in an error.     
+
+Every policy entry field includes `sa_index` used in the SPD for reference to the SPD. The field is mandatory and a missing value will generate a configuration error.
+
+The SPD defines two bindings: SA and the interface. The interface binding is important since VPP needs to create an empty SPD first. This requires an interface binding. After that, all policy entries are configured, where the SA is expected to exist. 
+ 
+**SPD Configuration Examples**
+
+**KV Data Store**
+
+Put the SPD data into an etcd data store using the [SPD key][key-reference].
+
+Example Data:
 ```json
 {
   "index":"1",
@@ -1002,20 +1152,20 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/spd/1 '{"index":"1","interfaces":[{"name":"tap1"}],"policy_entries":[{"priority":10,"is_outbound":false,"remote_addr_start":"10.0.0.1","remote_addr_stop":"10.0.0.1","local_addr_start":"10.0.0.2","local_addr_stop":"10.0.0.2","action":3,"sa_index":"20"},{"priority":10,"is_outbound":true,"remote_addr_start":"10.0.0.1","remote_addr_stop":"10.0.0.1","local_addr_start":"10.0.0.2","local_addr_stop":"10.0.0.2","action":3,"sa_index":"10"}]}'
 ```
 
-**2. Using REST:**
+**REST**
 
-REST currently only supports the retrieval of the existing configuration. The following command can be used to read all security policy databases via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read SPD configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/spds
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the IPSec SPD data:
 ```go
@@ -1046,7 +1196,7 @@ spd := ipsec.SecurityPolicyDatabase{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1062,9 +1212,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1073,17 +1223,27 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-### Security associations
+---
 
-The VPP security association (SA) is a set of IPSec specifications negotiated between devices establishing a secure IPSec connection. The SA includes preferences for the authentication type, IPSec protocol (AH or ESP) and the encryption methods used when the IPSec connection is established.
+### Security Associations
 
-SA is defined in the common [IPSec model][ipsec-model]. 
+An IPsec security association (SA) is a set of security behaviors negotiated between two or more devices for the purpose of communicating in a secure fashion. The SA includes the agreed upon crypto methods for authentication, encryption and extended sequence number. The IPsec tunnel encapsulation type of authentication header (AH), or encapsulating security protocol (ESP) is established as well. 
 
-The SA uses the same indexing system as SPD. The index is a user-defined unique identifier in the `uint32` range. Like the SPD, the SA index is defined as `string` type field in the model but can be set only to numerical values. Attempts to use values other than numerical will cause errors. The SA has no dependencies on other configuration types.
+**References**
 
-**Configuration example**
+- [SA Proto][ipsec-proto]
+- [SA Model][ipsec-model] 
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for security associations to the database ([key reference][key-reference]).
+!!! Note
+ The SPD and SA are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
+
+The SA uses the same indexing system as SPD. The index is a user-defined unique identifier in the `uint32` range. Like the SPD, the SA index is defined as `string` type field in the proto but can be set only to numerical values. Attempts to use values other than numerical will cause errors. The SA has no dependencies on other configuration types.
+
+**SA Configuration Examples**
+
+**KV Data Store**
+
+Put the SA configuration data into an etcd data store using the [SA key][key-reference]
 
 Example data:
 ```json
@@ -1098,20 +1258,20 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/sa/1 '{"index":"1","spi":1001,"protocol":1,"crypto_alg":1,"crypto_key":"4a506a794f574265564551694d653768","integ_alg":2,"integ_key":"4339314b55523947594d6d3547666b45764e6a58"}'
 ```
 
-**2. Using REST:**
+**REST**
 
-REST currently only supports the retrieval of the existing configuration. The following command can be used to read all security associations via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read SA configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sas
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the IPSec SA data:
 ```go
@@ -1132,7 +1292,7 @@ sa := ipsec.SecurityAssociation{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1148,9 +1308,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1159,30 +1319,41 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-## Punt plugin
+---
+
+## Punt Plugin
 
 The punt plugin is used to configure VPP to punt (re-direct) packets to the TCP/IP host stack. The plugin supports `punt to the host` either directly, or via a Unix domain socket.
 
-### Punt to host stack
+**References**
 
-All incoming traffic:
+- [Punt proto][punt-proto]
+- [Punt model][punt-model]
+
+---
+
+### Punt to Host Stack
+
+All incoming traffic that match the following criteria will be punted to the host:
  
 - matching one of the VPP interface addresses
 - matching a defined L3 protocol, L4 protocol, and port
 - and would otherwise be dropped
 
-will be punted to the host. If an optional Unix domain socket path is defined, traffic will be punted via that socket. All the fields which serve as a traffic filter are mandatory.
+If an optional Unix domain socket path is defined, traffic will be punted using that socket. All fields which serve as a traffic filter are mandatory.
 
-The punt plugin conform with the [punt model][punt-model] which grants support for two main configuration items defined by different northbound keys. L3/L4 protocol in the key is defined as a `string` value. However that value is transformed to a numeric representation in the VPP binary API call. 
+The punt plugin supports two configuration items defined by different keys: L3/L4 protocol and IP redirect. The former in the key is defined as a `string` value. However, that value is transformed to a numeric representation in the VPP binary API call. 
 
-The usage of the L3 protocol `ALL` is exclusive for IP punt to host (without socket registration) in the VPP binary VPP API. If used for the IP punt with socket registration, the vpp-agent calls the VPP binary API twice with the same parameters for both, IPv4 and IPv6.
+The usage of the L3 protocol, `ALL`, is exclusive for IP punt to host (without socket registration) in the VPP binary VPP API. If used for the IP punt with socket registration, the VPP agent calls the VPP binary API twice with the same parameters for both, IPv4 and IPv6.
 
 !!! danger "Important"
-    In order to configure a punt to host via a Unix domain socket, a specific VPP startup-config is required. The attempt to set punt without it results in errors in VPP. This is an example startup-config `punt { socket /tmp/socket/punt }`. The path must match with the one in the northbound data. 
+    In order to configure a punt to host via a Unix domain socket, a specific VPP startup-config is required. The attempt to set punt without this results in errors in VPP. This is an example startup-config `punt { socket /tmp/socket/punt }`. The path must match with the one in the northbound data. 
 
-**Configuration example**
+**Punt to Host Configuration Examples**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for punt to host to the database ([key reference][key-reference]). 
+**KV Data Store**
+
+Put the punt configuration data into an etcd data store using the [punt key][key-reference] 
 
 Example data:
 ```json
@@ -1194,20 +1365,20 @@ Example data:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/tohost/l3/IPv4/l4/UDP/port/9000 {"l3_protocol":"IPv4","l4_protocol":"UDP","port":9000,"socket_path":"/tmp/socket/path"}
 ```
 
-**2. Using REST:** 
+**REST** 
 
-REST currently only supports the retrieval of the registered punt to host entries with socket. Passive punt to host cannot be retrieved:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read punt configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/punt/sockets
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the Punt data:
 ```go
@@ -1224,7 +1395,7 @@ punt := &punt.ToHost{
 }
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1240,9 +1411,9 @@ config := &configurator.Config{
 }
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1251,17 +1422,26 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-### IP redirect
+---
 
-IP redirect enables traffic matching a given IP protocol (e.g. v4) to be punted to the defined TX interface and next_hop IP address. The IP protocol, TX and next_hop fields must be defined in the northbound API. Optionally, the RX interface can be defined as an input filter.  
+### IP Redirect
 
-IP redirect is defined as the `IpRedirect` object in the generated proto model. L3 protocol is defined as a `string` value (transformed to numeric in the VPP binary API call). The table is the same as before.
+IP redirect enables traffic that arrives on an interface, and matching a given IP protocol, to be punted (redirect) to a transmit (TX) interface and next_hop IP address. The IP protocol can be IPv4 or IPv6. The IP protocol, TX, and next_hop fields are defined in the ip redirect proto. Optionally, the received interface (RX) interface can be used to redirect traffic only received on that interface. 
+
+**References**
+
+- [IP redirect proto][punt-proto]
+- [IP redirect model][punt-model] 
+
+IP redirect is defined as the `IpRedirect` object in the proto file. The L3 protocol is defined as a `string` value that is transformed to numeric in the VPP binary API call. 
 
 If L3 protocol is set to `ALL`, the respective API is called for IPv4 and IPv6 separately.
 
-**Configuration example**
+**IP Redirect Configuration Example**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for the IP redirect to the database ([key reference][key-reference]). 
+**KV Data Store**
+
+Put the IP redirct configuration data into an etcd data store using the [ip redirect key][key-reference] 
 
 Example value:
 ```json
@@ -1272,16 +1452,16 @@ Example value:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/ipredirect/l3/IPv4/tx/tap1 '{"l3_protocol":"IPv4","tx_interface":"tap1","next_hop":"192.168.0.1"}'
 ```
 
-**2. Using REST:** 
+**REST** 
 
-Punt IP redirect currently does not support REST.
+There is no Punt IP redirect REST API. 
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the IP redirect data:
 ```go
@@ -1297,7 +1477,7 @@ punt := &punt.IPRedirect{
 }
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1313,9 +1493,9 @@ config := &configurator.Config{
 }
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1324,44 +1504,55 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
+---
+
 ### Limitations
 
-Current limitations for a punt to host:
+Current limitations for punt to host:
 
-- UDP configuration cannot be shown (or even configured) via the VPP CLI.
-- VPP does not provide an API to dump configuration. Thus the vpp-agent does not have the opportunity to read existing entries and this may cause certain issues with resync.
-* Although the vpp-agent supports the TCP protocol as the L4 protocol to filter incoming traffic, the current VPP dataplane version does not.
-* Configured punt to host entry cannot be removed since VPP does not support this option. Any attempt to do so exits with an error.
+- UDP configuration cannot be shown or even configured using the VPP CLI.
+- VPP does not provide an API to dump configuration. Thus the VPP agent does not have the opportunity to read existing entries and this may cause certain issues with resync.
+* Although the VPP agent supports the L4 TCP  protocol to filter incoming traffic, the VPP data plane version does not.
+* Configured punt to host entry cannot be removed because VPP does not support this option. Any attempt to do so exits with an error.
 
 Current limitations for a punt to host via unix domain socket:
 
-- Configuration cannot be shown (or even configured) in the VPP CLI.
-- vpp-agent cannot read registered entries since the VPP does not provide an API to do so.
-- The VPP startup config punt section requires a defined unix domain socket path. The VPP limitation is that only one path can be defined at any one time.
+- Configuration cannot be shown or even configured using in the VPP CLI.
+- VPP agent cannot read registered entries since the VPP does not provide an API to do so.
+- The VPP startup configuration punt section requires a defined unix domain socket path. The VPP limitation is that only one path can be defined at any one time.
 
 Current limitations for IP redirect:
 
 - VPP does not provide API calls to dump existing IP redirect entries. This may cause resync problems.
 
-### Known issues
+### Known Issues
 
-- VPP issue: if the Unix domain socket path is defined in the startup config, the path `must exist`, otherwise VPP fails to start. 
+- If the Unix domain socket path is defined in the startup config, the path `must exist`. Otherwise, VPP will fail to start. 
 
-## Access Control Lists plugin
+---
+
+## ACL Plugin
 
 Access Control Lists (ACL) filter network traffic by controlling whether packets are forwarded (permitted) or blocked (deny) at the router’s interfaces based on the criteria specified in the access list.
 
-The vpp-agent ACL plugin uses the binary API of the VPP (dataplane) ACL plugin. The version of the VPP ACL plugin is displayed at vpp-agent startup (currently at 1.3). Every ACL consists of `match` rules that classify the packets to be acted upon and  `action` rules (or actions) to be applied to those packets. The ACL is defined in the vpp-agent northbound API [model][acl-model].
+**References**
 
-The vpp-agent defines an access list with a unique name. VPP generates an index, but the association is under the purview of the vpp-agent. Every ACL must contain match rules and action rules. 
+- [ACL proto][acl-proto]
+- [ACL model][acl-model]
 
-The IP match (called IP rule) can be specified for a variety of protocols, each with their own parameters. For example, the IP rule for the IP protocol can define the source and destination network addresses the packet must match in order to execute the defined action. Other supported protocols are TCP, UDP and ICMP. 
+The VPP agent ACL plugin uses the binary API of the VPP (data plane) ACL plugin. The version of the VPP ACL plugin is displayed at VPP agent startup. Every ACL consists of  `match` rules that classify the packets to be acted upon, and  `action` rules (actions) to be applied to those packets.
 
-A single ACL rule can define multiple protocol-based rules. The MAC-IP match (MACIP rule) defines IP address + mask and MAC address + mask as filtering rules. Note that the IP rules and MACIP rules cannot be combined in the same ACL.
+The VPP agent defines an access list with a unique name. VPP generates an index, but the association is under the purview of the VPP agent. Every ACL must contain match rules, and action rules. 
 
-**Configuration example**
+The IP match rule can be specified for a variety of protocols, each with their own parameters. For example, the IP rule for the IP protocol can define the source and destination network addresses the packet must match in order to execute the defined action. Other supported protocols are TCP, UDP and ICMP. 
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for ACL entries to the database ([key reference][key-reference]).
+A single ACL rule can cover multiple protocol-based rules. The MAC-IP match (MACIP rule) defines IP address + mask and MAC address + mask as filtering rules. Note that the IP rules and MACIP rules cannot be combined in the same ACL.
+
+**ACL Configuration Examples**
+
+**KV Data Store**
+
+Put the ACL configuration data into an etcd data store using the [ACL key][key-reference]
 
 Example configuration:
 ```json
@@ -1403,21 +1594,21 @@ Example configuration:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```
 etcdctl put /vnf-agent/vpp1/config/vpp/acls/v2/acl/acl1 '{"name":"acl1","interfaces":{"egress":["tap1","tap2"],"ingress":["tap3","tap4"]},"rules":[{"action":1,"ip_rule":{"ip":{"destination_network":"10.20.1.0/24","source_network":"192.168.1.2/32"},"tcp":{"destination_port_range":{"lower_port":1150,"upper_port":1250},"source_port_range":{"lower_port":150,"upper_port":250},"tcp_flags_mask":20,"tcp_flags_value":10}}}]}'
 ```
 
-**2. Using REST:**
+**REST**
 
-Use following commands to obtain IP or MACIP based Access lists:
+Use these cURL commands to obtain IP or MACIP based Access lists:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/acl/ip
 curl -X GET http://localhost:9191/dump/vpp/v2/acl/macip
 
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the ACL data:
 ```go
@@ -1495,7 +1686,7 @@ acl := &acl.ACL{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1511,9 +1702,9 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1522,13 +1713,24 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-## ACL-based forwarding (ABF) plugin
+---
 
-The ACL-based forwarding plugin is an implementation of policy-based routing (PBR). With ABF, packets are forwarded based on user-defined fields expressed by ACLs rather than by the results of a longest match lookup in a routing table. 
+## ABF Plugin
 
-The ABF entry is defined by a numeric index. The data consists of a list of interfaces the ABF is attached to, the forwarding paths and the name of the associated ACL. The ACL represents a dependency for the given ABF - if the ACL is not present, the ABF configuration will be cached until created. Same applies for ABF interfaces.   
+The ACL-based forwarding plugin is an implementation of policy-based routing (PBR). With ABF, packets are forwarded based on user-defined fields expressed by ACLs, rather than by a longest match lookup in a routing table. ACL is defined in the [ABF model][abf-model]. 
 
-**Configuration example**
+**References**
+
+- [ABF proto][abf-proto]
+- [ABF model][abf-model]
+
+The ABF entry is identifed by a numeric index. ABF data consists of a list of interfaces the ABF is attached to, the forwarding paths, and the name of the associated ACL. The ACL represents a dependency for the given ABF; If the ACL is not present, the ABF configuration will be cached until created. The same applies for ABF interfaces.   
+
+**ABF Configuration Examples**
+
+**KV Data Store**
+
+Put the ABF configuration data into an etcd data store using the [ABF key][key-reference]
 
 Example value:
 ```json
@@ -1556,7 +1758,7 @@ Example value:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/abfs/v2/abf/1 '{"index":1,"acl_name":"aclip1","attached_interfaces":[{"input_interface":"tap1","priority":40},{"input_interface":"memif1","priority":60}],"forwarding_paths":[{"next_hop_ip":"10.0.0.10","interface_name":"loop1","weight":20,"preference":25}]}'
 ```
@@ -1566,14 +1768,14 @@ To remove the configuration:
 etcdctl del /vnf-agent/vpp1/config/vpp/abfs/v2/abf/1
 ``` 
 
-**2. Using REST:**
+**REST**
 
-Use following commands to obtain configured ABF entry:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read ABF configuration data:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/abf
 ```
 
-**3. Using GRPC:**
+**gRPC**
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/models/vpp"
@@ -1610,7 +1812,7 @@ abfData := vpp.ABF{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1626,27 +1828,47 @@ config := &configurator.Config{
 	}
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-## NAT plugin
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
+```go
+import (
+	"github.com/ligato/vpp-agent/api/configurator"
+)
 
-Network address translation, or NAT is a method for translating IP addresses belonging to different address domains by modifying the address information in the packet header. The vpp-agent NAT plugin provides control plane functionality for the VPP dataplane NAT implementation of NAT44. The NAT plugin is dependent on the [interface plugin][interface-plugin-guide].
+response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
+```
 
-### NAT global config 
+---
 
-The global NAT configuration is a special case of data grouped under single key. This means there is no unique character as a part of the key, so there is only one global NAT configuration. Interfaces marked as NAT-enabled  should be present in the VPP but if not, the KV scheduler plugin caches the configuration for later use when the interface becomes available.
+## NAT Plugin
+
+Network address translation (NAT) is a method for translating IP addresses belonging to different address domains by modifying the address information in the packet header. The NAT plugin provides control plane functionality for the VPP data plane implementation of NAT44. 
+
+---
+
+### NAT Global Configuration
+
+The global NAT configuration is a special case of data grouped under single key. This means there is no unique character as a part of the key, so there is only one global NAT configuration. Interfaces marked as NAT-enabled should be present in VPP but if not, the KV scheduler caches the configuration for later use when the interface becomes available. 
+
+**References**
+
+- [NAT global proto][nat-proto]
+- [NAT global model ][nat-model]
 
 
 The NAT global configuration is divided into several independent parts pertaining to specific VPP NAT features:
 
-  - **Forwarding** is a boolean field enabling or disabling forwarding.
-  - **NAT interfaces** represents a list of interfaces which will be enabled for NAT. If the interface does not exist in the VPP, it is cached and potentially configured later. Every interface is defined by its logical name and whether it is an `inside` or an `outside` interface. The output feature is also defined here.
+  - **Forwarding** is a boolean field to enable or disable forwarding.
+  - **NAT interfaces** represents a list of interfaces enabled for NAT. If the interface does not exist in VPP, it is cached and potentially configured later. Every interface is defined by its logical name and whether it is an `inside` or an `outside` interface. The enable or disable output feature is also defined here.
   - **Address pools** is a list of "NAT-able" IP addresses for a given VRF table. Despite the name, only one address is defined in the single "pool" entry.
-  - **Virtual reassembly** provides support for datagram fragmentation handling to allow correct recalculation of higher-level checksums.
+  - **Virtual reassembly** support for datagram fragmentation handling to allow the correct recalculation of higher-level checksums.
 
-**Configuration example**
+**NAT Global Configuration Examples**
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for nat global config to the database ([key reference][key-reference]).
+**KV Data Store**
+
+Put the NAT global configuration data into an etcd data store using the [NAT key][key-reference]
 
 Example value:
 ```json
@@ -1684,7 +1906,7 @@ Example value:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings {"nat_interfaces":[{"name":"tap1"},{"name":"tap2","output_feature":true},{"name":"tap3","is_inside":true}],"address_pool":[{"address":"192.168.0.1"},{"address":"175.124.0.1"},{"address":"10.10.0.1"}],"virtual_reassembly":{"timeout":10,"max_reassemblies":20,"max_fragments":10,"drop_fragments":true}}
 ```
@@ -1694,15 +1916,15 @@ To remove the configuration:
 etcdctl del /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings
 ```
 
-**2. Using REST:**
+**REST**
 
-REST currently only supports retrieval of the existing configuration. The following command can be used to read the NAT global config via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read NAT global configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/nat/global
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the global NAT data:
 ```go
@@ -1746,7 +1968,7 @@ natGlobal := &nat.Nat44Global{
 	}
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1765,7 +1987,7 @@ config := &configurator.Config{
 
 The config data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1774,20 +1996,29 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
+---
+
 ### DNAT44
 
-Destination network address translation (DNAT) translates the destination IP address of a packet in one direction and performs the inverse NAT function for packets returning in the opposite direction. In the vpp-agent, the DNAT configuration is composed of a list of static and/or identity mappings labelled under a single key.
+Destination network address translation (DNAT) translates the destination IP address of a packet in one direction and performs the inverse NAT function for packets returning in the opposite direction. In the VPP agent, the DNAT configuration is composed of a list of static and/or identity mappings labelled under a single key. DNAT44 configuration is defined in the [NAT model][nat-model].
 
-The DNAT44 consists from two main parts: static mappings and identity mappings.
+**References**
 
-- static mapping is the case where a single external interface, IP address and port number is mapped to one or more local IP address and port numbers in a static configuration. When packets arrive on the external interface, the DNAT44 can load balance packets across two or more local IP address and port number entries present in the static mapping (by load probability if needed). In other words, if more than one local IP address is defined for single static mapping, the [VPP NAT load balancer][vpp-nat-lb] is automatically allowed to kick in. 
+- [DNAT44 proto][nat-proto]
+- [DNAT44 model][nat-model]
 
+DNAT44 consists from two main parts: static mappings and identity mappings.
 
-THe DNAT44 contains a unique label serving as an identifier. However, the DNAT configuration is not limited. An arbitrary number of static and identity mappings can be listed under a single label. 
+- static mapping is the case where a single external interface, IP address and port number is mapped to one or more local IP address and port numbers in a static configuration. When packets arrive on the external interface, DNAT44 can load balance packets across two or more local IP address and port number entries present in the static mapping. In other words, if more than one local IP address is defined for single static mapping, the [VPP NAT load balancer][vpp-nat-lb] is automatically invoked.
+- Identity mapping defines the interface and IP address from which packets originated from.   
 
-**Configuration example**
+DNAT44 contains a unique label serving as an identifier. However, the DNAT44 configuration is not limited. An arbitrary number of static and identity mappings can be listed under a single label. 
 
-**1. Using the key-value database** put the proto-modelled data with the correct key for nat44 to the database ([key reference][key-reference]).
+**DNAT44 Configuration Examples**
+
+**KV Data Store**
+
+Put the DNAT44 configuration data into an etcd data store using the [DNAT44 key][key-reference].
 
 Example value:
 ```json
@@ -1823,7 +2054,7 @@ Example value:
 }
 ```
 
-Use `etcdctl` to put compacted key-value entry:
+Use this `etcdctl` command to put the key-value entry:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/nat/v2/dnat44/dnat1 {"label":"dnat1","st_mappings":[{"external_interface":"tap1","external_ip":"192.168.0.1","external_port":8989,"local_ips":[{"local_ip":"172.124.0.2","local_port":6500,"probability":40},{"local_ip":"172.125.10.5","local_port":2300,"probability":40}],"protocol":"UDP","twice_nat":"ENABLED"}],"id_mappings":[{"ip_address":"10.10.0.1","port":2525}]}
 ```
@@ -1834,15 +2065,15 @@ To remove the configuration:
 etcdctl del /vnf-agent/vpp1/config/vpp/nat/v2/dnat44/dnat1
 ```
 
-**2. Using REST:**
+**REST**
 
-REST currently only supports the retrieval of the existing configuration. The following command can be used to read the NAT global config via cURL:
+REST only supports the retrieval of the existing configuration. Use this cURL command to read IP DNAT44 configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/nat/dnat
 ```
 
-**3. Using GRPC:**
+**gRPC**
 
 Prepare the DNAT data:
 ```go
@@ -1882,7 +2113,7 @@ dNat := &nat.DNat44{
 }
 ```
 
-Prepare the GRPC config data:
+Prepare the gRPC configuration data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1899,9 +2130,9 @@ config := &configurator.Config{
 }
 ```
 
-The config data can be combined with any other VPP or Linux configuration.
+The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data via the GRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -1910,12 +2141,18 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-## SR plugin
+---
+
+## SR Plugin
 
 The `srplugin` is designed to configure Segment Routing for IPv6 (SRv6) in VPP.
-Configuration managed by this plugin is modelled in the [srv6 proto file][src6-model].
 
-All configuration data must be stored in etcd using the srv6 key:
+**References**
+
+- [SRv6 proto][srv6-proto]
+- [SRv6 model][srv6-model]
+
+SRv6 configuration data must be stored in etcd using the srv6 key:
  
 ```
 /vnf-agent/<agent-label>/config/vpp/srv6/v2/
@@ -1944,11 +2181,26 @@ The steering (the VPP's policy for steering traffic into SR policy) can be confi
 ```
 where ```<name>``` is a unique name of steering.
 
-## Telemetry
+---
 
-The `telemetry` plugin is used for exporting telemetry statistics from the VPP to [Prometheus][prometheus]. Statistics are published via the registry path `/vpp` on port `9191` and updated every 30 seconds.
+## STN Plugin
 
-**Exported data**
+In some deployments, a host is outfitted with two NICs: one controlled by VPP and the other controlled by the host stack for K8s control plane communications. 
+
+The steal-the-NIC (STN) plugin is used when only a single NIC is supported on the host. In this [single-NIC setup][stn-contiv-vpp], the interface will be “stolen” from the host network stack just before starting the VPP and configured with the same IP address on VPP. The same VPP interface IP address will also be used on the host-to-VPP interconnect TAP interface.
+
+**References**
+
+- [STN proto][stn-proto]
+- [STN-model][stn-model] 
+
+---
+
+## Telemetry Plugin
+
+The Telemetry plugin is used for exporting telemetry statistics from VPP to [Prometheus][prometheus]. Statistics are published via the registry path `/vpp` on port `9191` and updated every 30 seconds.
+
+**Exported Data**
 
 - VPP runtime (`show runtime`)
 
@@ -2069,7 +2321,7 @@ vpp_buffers_size{agent="agent1",index="1",item="lacp-ethernet",threadID="0"} 256
 ...
 ```
 
-- VPP memory (`show memory`)
+- VPP Memory (`show memory`)
 
 ```bash
 Thread 0 vpp_main
@@ -2129,30 +2381,53 @@ vpp_node_counter_count{agent="agent1",item="ipsec-input-ip4",reason="IPSEC pkts 
 vpp_node_counter_count{agent="agent1",item="ipsec-output-ip4",reason="IPSec policy protect"} 124669
 ```
     
-**Configuration file**
+**Configuration File**
 
-The telemetry plugin configuration file allows one to change the polling interval, or turn polling off. The `polling-interval` is the time in nanoseconds between reads from the VPP. The parameter `disabled` can be set to `true` in order to disable the telemetry plugin.
+The telemetry plugin conf file allows one to change the polling interval, or turn polling off. The `polling-interval` is the time in nanoseconds between reads from the VPP. The parameter `disabled` can be set to `true` in order to disable the telemetry plugin.
 
-[acl-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/acl/acl.proto
-[arp-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/arp.proto
-[bd-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/bridge-domain.proto
-[fib-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/fib.proto
+[abf-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/abf/models.go
+[abf-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/abf/abf.proto
+[acl-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/acl/models.go
+[acl-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/acl/acl.proto
+[arp-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/arp.proto
+[bd-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/models.go
+[bd-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/bridge_domain.proto
+[concept-keys]: ../user-guide/concepts.md#keys
+[fdio-govpp-repo]: https://github.com/FDio/govpp
+[fib-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/fib.proto
+[fdio-vpp-features]: https://fd.io/vppproject/vppfeatures/
+[govppmux-conf-file]: ../user-guide/config-files.md#govppmux
+[govppmux-metrics-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/govppmux/models.go
+[govppmux-metrics-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/govppmux/metrics.proto 
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
-[interface-config-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
-[interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
-[interface-state-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/state.proto
-[ipsec-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/ipsec/ipsec.proto
+[interface-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
+[interface-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go
+[interface-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/interface.proto
+[interface-state-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/state.proto
+[ipip-tunn-prot-pr]: https://github.com/ligato/vpp-agent/pull/1638
+[ipsec-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/ipsec/models.go
+[ipsec-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/ipsec/ipsec.proto
 [key-reference]: ../user-guide/reference.md
-[l3-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/l3.proto
+[L3-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go
+[l3-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/l3.proto
+[l3xc-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/l3xc.proto
 [linux-interface-plugin-guide]: linux-plugins.md#interface-plugin
-[punt-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/punt/punt.proto
-[route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l3/route.proto
-[src6-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/srv6/srv6.proto
-[xc-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/xconnect.proto
+[nat-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go
+[nat-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/nat.proto
+[punt-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/punt/models.go
+[punt-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/punt/punt.proto
+[route-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto
+[srv6-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/srv6/models.go
+[srv6-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/srv6/srv6.proto
+[xc-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/xconnect.proto
 [links]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
 [vpp-nat-lb]: https://jira.fd.io/browse/VPP-954
 [prometheus]: https://prometheus.io/
-[virtio]: https://wiki.libvirt.org/page/Virtio  
+[stn-contiv-vpp]: https://github.com/contiv/vpp/blob/master/docs/setup/SINGLE_NIC_SETUP.md
+[stn-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/stn/models.go
+[stn-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/stn/stn.proto
+[virtio]: https://wiki.libvirt.org/page/Virtio
+[vrf-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/vrf.proto  
 
 *[ABF]: ACL-Based Forwarding
 *[ACL]: Access Control List

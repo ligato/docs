@@ -1,375 +1,733 @@
-# AgentCTL
+# Agentctl
 
 ---
 
-## Intro
+## Introduction
 
-Agentctl is a command line client to manage not only vpp-agent, but any agent built with Ligato framework.
+Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. It provides a simple and intuitive CLI that enables the developer or operator to check status, control VPP, view models, configure logs, gather metrics, and includes commands for a select or complete system dump.   
+
+Agentctl provides an etcdctl-like feature for interacting with the KV data store. A command is also available to import configuration data from an external file.
 
 ![agentctl](../img/tools/agentctl.png)
 
-## Install
+## Installation
 
-### Build from source
+### Docker Image Pull
 
-The agentctl can also be installed using make target `make agentctl` in vpp-agent repo.
+Agentctl is included in the official docker images for the VPP agent. The [Quickstart Guide](quickstart.md) covers the steps, in detail, from initial image pull to agentctl command execution. 
 
-### Pull docker image
+For convenience, here are the commands for image pull, start etcd, start VPP agent, and agentctl help. 
 
-The agentctl is also available in the official docker images for vpp-agent.
-
-## Usage
-
+Pull the VPP agent image from dockerhub:
 ```
-➤ agentctl
+docker pull ligato/vpp-agent
+```
+Start etcd:
+```
+docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
+```
+Start VPP Agent:
+```
+docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
+``` 
+Agentctl help to get started:
+```
+docker exec -it vpp-agent agentctl --help
+```
+
+### Build from Source
+
+A local image can be built from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide. 
+
+After the `Start the VPP Agent` command of:
+```
+vpp-agent
+```
+
+Run Agentctl help to get started
+```
+agentctl --help
+```
+
+
+## Setup
+
+Run Agentctl:
+```
+agentctl
+```
+Output:
+```json
      ___                    __  ________  __
     /   | ____ ____  ____  / /_/ ____/ /_/ /
    / /| |/ __ '/ _ \/ __ \/ __/ /   / __/ /
-  / ___ / /_/ /  __/ / / / /_/ /___/ /_/ /  
- /_/  |_\__, /\___/_/ /_/\__/\____/\__/_/   
+  / ___ / /_/ /  __/ / / / /_/ /___/ /_/ /
+ /_/  |_\__, /\___/_/ /_/\__/\____/\__/_/
        /____/
 
-Usage:
-  agentctl [OPTIONS] COMMAND
-
-Commands:
+COMMANDS
+  config      Manage agent configuration
   dump        Dump running state
   generate    Generate config samples
-  help        Help about any command
   import      Import config data from file
   kvdb        Manage agent data in KVDB
   log         Manage agent logging
+  metrics     Get runtime metrics
   model       Manage known models
+  service     Manage agent services
   status      Retrieve agent status
+  values      Retrieve values from scheduler
   vpp         Manage VPP instance
 
-Options:
+OPTIONS:
+      --config-dir string        Path to directory with config file.
   -D, --debug                    Enable debug mode
-  -e, --etcd-endpoints strings   Etcd endpoints to connect to, default from ETCD_ENDPOINTS env var (default [127.0.0.1:2379])
-      --grpc-port string         gRPC server port (default "9111")
-  -h, --help                     help for agentctl
-  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var (default "127.0.0.1")
-      --http-port string         HTTP server port (default "9191")
-      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL env var
-      --version                  version for agentctl
+  -e, --etcd-endpoints strings   Etcd endpoints to connect to, default from ETCD_ENDPOINTS env var (default
+                                 [127.0.0.1:2379])
+      --grpc-port int            gRPC server port (default 9111)
+  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var
+                                 (default "127.0.0.1")
+      --http-basic-auth string   Basic auth for HTTP connection in form "user:pass"
+      --http-port int            HTTP server port (default 9191)
+      --insecure-tls             Use TLS without server's certificate validation
+  -l, --log-level string         Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")
+      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL
+                                 env var
+  -v, --version                  Print version info and quit
 
-Run "agentctl COMMAND --help" for more information about a command.
+Run 'agentctl COMMAND --help' for more information on a command.
 ```
+!!! note
+    Bears worth repeating: Use `agentctl <ANY COMMAND> --help` for explanations and in some cases, examples for any of the agentctl commands and subcommands. 
 
-### Setup
 
-The agentctl currently uses various NB access provided by Ligato agents:
+### NB Access Methods
+
+Agentctl currently uses various NB access methods provided by the Ligato agents. The default values can be modified as needed.
 
 - Agent host instance running on `127.0.0.1` by default
     * use option `-H`/`--host` or env var `AGENT_HOST` to change this
-    * this is used for both GRPC and REST access
-- GRPC running on port `9111` by default
+    * this is used for both gRPC and REST access
+- gRPC running on port `9111` by default
     * use option `--grpc-port` to change this
 - REST running on port `9191` by default
     * use option `--http-port` to change this
-- ETCD datastore used by the agent on `127.0.0.1:2379 `by default 
+- etcd datastore used by the agent on `127.0.0.1:2379 `by default 
     * use option `--etcd-endpoints` or env var `ETCD_ENDPOINTS` to change this
 
-## Subcommands
+---
 
-List of agentctl subcommands:
+## Commands
 
-- [model](#model)
+Agentctl subcommands:
+
+- [config](#config)
 - [dump](#dump)
-- [status](#status)
-- [kvdb](#kvdb)
-- [vpp](#vpp)
-- [import](#import)
 - [generate](#generate)
+- [import](#import)
+- [kvdb](#kvdb)
 - [log](#log)
+- [metrics](#metrics)
+- [model](#model)
+- [service](#service)
+- [status](#status)
+- [values](#values)
+- [vpp](#vpp)
 
-### Model
+---
 
-<details>
-<summary>The <code>model</code> subcommand provides information about models.</summary>
-<p>
+### Config
 
-```
-Manage known models
-
-Usage:
-  agentctl model [OPTIONS] COMMAND
-
-Commands:
-  inspect     Display detailed information on one or more models
-  ls          List models
-
-Options:
-  -h, --help   help for model
-```
-
-</p>
-</details>
-</br>
-
-To list all supported models, run:
+Use this command to perform a configuration [resync](../developer-guide/kvscheduler.md#resync) action.
 
 ```
-➤ agentctl model list
-MODEL                       KEY PREFIX                             PROTO NAME                        
-linux.interfaces.interface  config/linux/interfaces/v2/interface/  linux.interfaces.Interface        
-linux.l3.arp                config/linux/l3/v2/arp/                linux.l3.ARPEntry                 
-linux.l3.route              config/linux/l3/v2/route/              linux.l3.Route                    
-netalloc.ip                 config/netalloc/v1/ip/                 netalloc.IPAllocation             
-vpp.abfs.abf                config/vpp/abfs/v2/abf/                vpp.abf.ABF                       
-vpp.acls.acl                config/vpp/acls/v2/acl/                vpp.acl.ACL                       
-vpp.arp                     config/vpp/v2/arp/                     vpp.l3.ARPEntry                   
-vpp.dhcp-proxy              config/vpp/v2/dhcp-proxy/              vpp.l3.DHCPProxy                  
-vpp.exception               config/vpp/v2/exception/               vpp.punt.Exception                
-vpp.interfaces              config/vpp/v2/interfaces/              vpp.interfaces.Interface          
-vpp.ipredirect              config/vpp/v2/ipredirect/              vpp.punt.IPRedirect               
-vpp.ipscanneigh-global      config/vpp/v2/ipscanneigh-global       vpp.l3.IPScanNeighbor             
-vpp.ipsec.sa                config/vpp/ipsec/v2/sa/                vpp.ipsec.SecurityAssociation     
-vpp.ipsec.spd               config/vpp/ipsec/v2/spd/               vpp.ipsec.SecurityPolicyDatabase  
-vpp.l2.bridge-domain        config/vpp/l2/v2/bridge-domain/        vpp.l2.BridgeDomain               
-vpp.l2.fib                  config/vpp/l2/v2/fib/                  vpp.l2.FIBEntry                   
-vpp.l2.xconnect             config/vpp/l2/v2/xconnect/             vpp.l2.XConnectPair               
-vpp.nat.dnat44              config/vpp/nat/v2/dnat44/              vpp.nat.DNat44                    
-vpp.nat.nat44-global        config/vpp/nat/v2/nat44-global         vpp.nat.Nat44Global               
-vpp.proxyarp-global         config/vpp/v2/proxyarp-global          vpp.l3.ProxyARP                   
-vpp.route                   config/vpp/v2/route/                   vpp.l3.Route                      
-vpp.span                    config/vpp/v2/span/                    vpp.interfaces.Span               
-vpp.srv6.localsid           config/vpp/srv6/v2/localsid/           vpp.srv6.LocalSID                 
-vpp.srv6.policy             config/vpp/srv6/v2/policy/             vpp.srv6.Policy                   
-vpp.srv6.steering           config/vpp/srv6/v2/steering/           vpp.srv6.Steering                 
-vpp.stn.rule                config/vpp/stn/v2/rule/                vpp.stn.Rule                      
-vpp.tohost                  config/vpp/v2/tohost/                  vpp.punt.ToHost                   
-vpp.vrf-table               config/vpp/v2/vrf-table/               vpp.l3.VrfTable                   
+Usage:	agentctl config [options] COMMAND
+
+Manage agent configuration
+
+COMMANDS
+  resync      Run config resync in agent
 ```
 
-To show details about specific model, run:
+Command:
+```
+agentctl config resync
+```
+Sample output:
+```json
+{
+  "Start": "2020-04-01T23:28:21.3068686Z",
+  "Stop": "2020-04-01T23:28:21.5081483Z",
+  "SeqNum": 2,
+  "TxnType": "NBTransaction",
+  "ResyncType": "DownstreamResync"
+}
+```
 
-```
-➤ agentctl model inspect vpp.interfaces
-[
-  {
-    "Name": "vpp.interfaces",
-    "Module": "vpp",
-    "Type": "interfaces",
-    "Version": "v2",
-    "KeyPrefix": "config/vpp/v2/interfaces/",
-    "ProtoName": "vpp.interfaces.Interface",
-    "Location": "models/vpp/interfaces/interface.proto"
-  }
-]
-```
+---
 
 ### Dump
 
-<details>
-<summary>The <code>dump</code> subcommand dumps running state from the scheduler.</summary>
-<p>
+Use this command to dump the running state from the KV Scheduler.
 
 ```
+Usage:	agentctl dump MODEL
+
 Dump running state
 
-Usage:
-  agentctl dump MODEL
+EXAMPLES
 
-Aliases:
-  dump, d
+ To dump all data:
+  $ agentctl dump all
 
-Examples:
-
- To dump VPP interfaces run:
-  $ agentctl dump vpp.interfaces
+ To dump all VPP data in json format run:
+  $ agentctl dump -f json vpp.*
 
  To use different dump view use --view flag:
   $ agentctl dump --view=NB vpp.interfaces
 
- For a list of all supported models that can be dumped run:
-  $ agentctl model list
-
- To specify the HTTP address of the agent use --host flag:
-  $ agentctl --host 172.17.0.3 dump vpp.interfaces
-
-
-Options:
-  -h, --help          help for dump
-  -v, --view string   Dump view type: cached, NB, SB (default "cached")
+OPTIONS:
+  -f, --format string   Format output
+      --view string     Dump view type: cached, NB, SB (default "cached")
 ```
 
-</p>
-</details>
-</br>
 
-Model name should be used to specify what to dump. Dump supports 3 view types (<code>cached</code> view is used by default).
+Dump all:
+```
+agentctl dump all
+```
 
-To dump VPP interfaces, run:
+Sample Output:
+```
+KEY                                                           VALUE                               ORIGIN    METADATA
+config/vpp/l2/v2/bridge-domain/bd1                            [ligato.vpp.l2.BridgeDomain]        from-NB   map[Index:1]
+                                                              name: "bd1"
+                                                              forward: true
+                                                              learn: true
+                                                              interfaces: <
+                                                                name: "loop1"
+                                                              >
+
+config/vpp/nat/v2/nat44-global                                [ligato.vpp.nat.Nat44Global]        from-SB
+
+config/vpp/v2/interfaces/UNTAGGED-local0                      [ligato.vpp.interfaces.Interface]   from-SB   map[IPAddresses:<nil> SwIfIndex:0 TAPHostIfName: Vrf:0]
+                                                              name: "UNTAGGED-local0"
+                                                              type: SOFTWARE_LOOPBACK
+                                                              phys_address: "00:00:00:00:00:00"
+
+config/vpp/v2/interfaces/loop1                                [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
+                                                              name: "loop1"
+                                                              type: SOFTWARE_LOOPBACK
+                                                              enabled: true
+                                                              ip_addresses: "192.168.1.1/24"
+
+config/vpp/v2/proxyarp-global                                 [ligato.vpp.l3.ProxyARP]            from-SB
+
+config/vpp/v2/route/vrf/0/dst/0.0.0.0/0/gw/0.0.0.0            [ligato.vpp.l3.Route]               from-SB
+                                                              type: DROP
+                                                              dst_network: "0.0.0.0/0"
+                                                              next_hop_addr: "0.0.0.0"
+                                                              weight: 1
+
+config/vpp/v2/route/vrf/0/dst/0.0.0.0/32/gw/0.0.0.0           [ligato.vpp.l3.Route]               from-SB
+                                                              type: DROP
+                                                              dst_network: "0.0.0.0/32"
+                                                              next_hop_addr: "0.0.0.0"
+                                                              weight: 1
+
+config/vpp/v2/route/vrf/0/dst/224.0.0.0/4/gw/0.0.0.0          [ligato.vpp.l3.Route]               from-SB
+                                                              type: DROP
+                                                              dst_network: "224.0.0.0/4"
+                                                              next_hop_addr: "0.0.0.0"
+                                                              weight: 1
+
+config/vpp/v2/route/vrf/0/dst/240.0.0.0/4/gw/0.0.0.0          [ligato.vpp.l3.Route]               from-SB
+                                                              type: DROP
+                                                              dst_network: "240.0.0.0/4"
+                                                              next_hop_addr: "0.0.0.0"
+                                                              weight: 1
+
+config/vpp/v2/route/vrf/0/dst/255.255.255.255/32/gw/0.0.0.0   [ligato.vpp.l3.Route]               from-SB
+                                                              type: DROP
+                                                              dst_network: "255.255.255.255/32"
+                                                              next_hop_addr: "0.0.0.0"
+                                                              weight: 1
+
+config/vpp/v2/route/vrf/0/dst/::/0/gw/::                      [ligato.vpp.l3.Route]               from-SB
+                                                              type: DROP
+                                                              dst_network: "::/0"
+                                                              next_hop_addr: "::"
+                                                              weight: 1
+
+config/vpp/v2/route/vrf/0/dst/fe80::/10/gw/::                 [ligato.vpp.l3.Route]               from-SB
+                                                              dst_network: "fe80::/10"
+                                                              next_hop_addr: "::"
+                                                              weight: 1
+
+config/vpp/v2/vrf-table/id/0/protocol/IPV4                    [ligato.vpp.l3.VrfTable]            from-SB   map[Index:0 Protocol:0]
+                                                              label: "ipv4-VRF:0"
+
+config/vpp/v2/vrf-table/id/0/protocol/IPV6                    [ligato.vpp.l3.VrfTable]            from-SB   map[Index:0 Protocol:1]
+                                                              protocol: IPV6
+                                                              label: "ipv6-VRF:0"
+```
+
+Dump the `vpp.interfaces` model:
+```
+agentctl dump vpp.interfaces
+```
+Sample Output:
+```
+KEY                                        VALUE                               ORIGIN    METADATA
+config/vpp/v2/interfaces/UNTAGGED-local0   [ligato.vpp.interfaces.Interface]   from-SB   map[IPAddresses:<nil> SwIfIndex:0 TAPHostIfName: Vrf:0]
+                                           name: "UNTAGGED-local0"
+                                           type: SOFTWARE_LOOPBACK
+                                           phys_address: "00:00:00:00:00:00"
+
+config/vpp/v2/interfaces/loop1             [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
+                                           name: "loop1"
+                                           type: SOFTWARE_LOOPBACK
+                                           enabled: true
+                                           ip_addresses: "192.168.1.1/24"
+```
+
+Dump the `vpp.interfaces` model using a NB view:
+```
+agentctl dump --view=NB vpp.interfaces
+```
+Sample Output:
+```
+KEY                              VALUE                               ORIGIN    METADATA
+config/vpp/v2/interfaces/loop1   [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
+                                 name: "loop1"
+                                 type: SOFTWARE_LOOPBACK
+                                 enabled: true
+                                 ip_addresses: "192.168.1.1/24"
+```
+
+Dump the `vpp.interfaces` model using json format:
 
 ```
-➤ agentctl dump vpp.interfaces
-KEY                                        VALUE                        ORIGIN    METADATA                                                  
-config/vpp/v2/interfaces/UNTAGGED-local0   [vpp.interfaces.Interface]   from-SB   map[IPAddresses:<nil> SwIfIndex:0 TAPHostIfName: Vrf:0]   
-                                           name: "UNTAGGED-local0"                                                                          
-                                           type: SOFTWARE_LOOPBACK                                                                          
+agentctl dump -f json vpp.interfaces
 ```
+Sample Output:
+```json
+[
+  {
+    "Key": "config/vpp/v2/interfaces/UNTAGGED-local0",
+    "Value": {
+      "name": "UNTAGGED-local0",
+      "type": "SOFTWARE_LOOPBACK",
+      "physAddress": "00:00:00:00:00:00"
+    },
+    "Metadata": {
+      "IPAddresses": null,
+      "SwIfIndex": 0,
+      "TAPHostIfName": "",
+      "Vrf": 0
+    },
+    "Origin": 2
+  },
+  {
+    "Key": "config/vpp/v2/interfaces/loop1",
+    "Value": {
+      "name": "loop1",
+      "type": "SOFTWARE_LOOPBACK",
+      "enabled": true,
+      "ipAddresses": [
+        "192.168.1.1/24"
+      ]
+    },
+    "Metadata": {
+      "IPAddresses": [
+        "192.168.1.1/24"
+      ],
+      "SwIfIndex": 1,
+      "TAPHostIfName": "",
+      "Vrf": 0
+    },
+    "Origin": 1
+  }
+]
+```
+
+---
+
+### Model
+
+Use this command to gather information about models.
+
+```
+Usage:	agentctl model [options] COMMAND
+
+Manage known models
+
+COMMANDS
+  inspect     Display detailed information on one or more models
+  ls          List models
+```
+
+List all supported models:
+```
+agentctl model ls
+```
+Sample Output:
+```
+MODEL                       CLASS    PROTO MESSAGE                            KEY PREFIX
+govppmux.stats              metrics  ligato.govppmux.Metrics                  metrics/govppmux/v0/stats
+linux.interfaces.interface  config   ligato.linux.interfaces.Interface        config/linux/interfaces/v2/interface/
+linux.iptables.rulechain    config   ligato.linux.iptables.RuleChain          config/linux/iptables/v2/rulechain/
+linux.l3.arp                config   ligato.linux.l3.ARPEntry                 config/linux/l3/v2/arp/
+linux.l3.route              config   ligato.linux.l3.Route                    config/linux/l3/v2/route/
+netalloc.ip                 config   ligato.netalloc.IPAllocation             config/netalloc/v1/ip/
+vpp.abfs.abf                config   ligato.vpp.abf.ABF                       config/vpp/abfs/v2/abf/
+vpp.acls.acl                config   ligato.vpp.acl.ACL                       config/vpp/acls/v2/acl/
+vpp.arp                     config   ligato.vpp.l3.ARPEntry                   config/vpp/v2/arp/
+vpp.dhcp-proxy              config   ligato.vpp.l3.DHCPProxy                  config/vpp/v2/dhcp-proxy/
+vpp.exception               config   ligato.vpp.punt.Exception                config/vpp/v2/exception/
+vpp.interfaces              config   ligato.vpp.interfaces.Interface          config/vpp/v2/interfaces/
+vpp.ipredirect              config   ligato.vpp.punt.IPRedirect               config/vpp/v2/ipredirect/
+vpp.ipscanneigh-global      config   ligato.vpp.l3.IPScanNeighbor             config/vpp/v2/ipscanneigh-global
+vpp.ipsec.sa                config   ligato.vpp.ipsec.SecurityAssociation     config/vpp/ipsec/v2/sa/
+vpp.ipsec.spd               config   ligato.vpp.ipsec.SecurityPolicyDatabase  config/vpp/ipsec/v2/spd/
+vpp.ipsec.tun-protect       config   ligato.vpp.ipsec.TunnelProtection        config/vpp/ipsec/v2/tun-protect/
+vpp.l2.bridge-domain        config   ligato.vpp.l2.BridgeDomain               config/vpp/l2/v2/bridge-domain/
+vpp.l2.fib                  config   ligato.vpp.l2.FIBEntry                   config/vpp/l2/v2/fib/
+vpp.l2.xconnect             config   ligato.vpp.l2.XConnectPair               config/vpp/l2/v2/xconnect/
+vpp.l3xconnect              config   ligato.vpp.l3.L3XConnect                 config/vpp/v2/l3xconnect/
+vpp.nat.dnat44              config   ligato.vpp.nat.DNat44                    config/vpp/nat/v2/dnat44/
+vpp.nat.nat44-global        config   ligato.vpp.nat.Nat44Global               config/vpp/nat/v2/nat44-global
+vpp.nat.nat44-interface     config   ligato.vpp.nat.Nat44Interface            config/vpp/nat/v2/nat44-interface/
+vpp.nat.nat44-pool          config   ligato.vpp.nat.Nat44AddressPool          config/vpp/nat/v2/nat44-pool/
+vpp.proxyarp-global         config   ligato.vpp.l3.ProxyARP                   config/vpp/v2/proxyarp-global
+vpp.route                   config   ligato.vpp.l3.Route                      config/vpp/v2/route/
+vpp.span                    config   ligato.vpp.interfaces.Span               config/vpp/v2/span/
+vpp.srv6.localsid           config   ligato.vpp.srv6.LocalSID                 config/vpp/srv6/v2/localsid/
+vpp.srv6.policy             config   ligato.vpp.srv6.Policy                   config/vpp/srv6/v2/policy/
+vpp.srv6.srv6-global        config   ligato.vpp.srv6.SRv6Global               config/vpp/srv6/v2/srv6-global
+vpp.srv6.steering           config   ligato.vpp.srv6.Steering                 config/vpp/srv6/v2/steering/
+vpp.stn.rule                config   ligato.vpp.stn.Rule                      config/vpp/stn/v2/rule/
+vpp.tohost                  config   ligato.vpp.punt.ToHost                   config/vpp/v2/tohost/
+vpp.vrf-table               config   ligato.vpp.l3.VrfTable                   config/vpp/v2/vrf-table/                   
+```
+
+Show details about a specific model using `vpp.interfaces` as an example:
+```
+agentctl model inspect vpp.interfaces
+```
+Sample Output:
+```
+[
+  {
+    "Name": "vpp.interfaces",
+    "Class": "config",
+    "Module": "vpp",
+    "Type": "interfaces",
+    "Version": "v2",
+    "KeyPrefix": "config/vpp/v2/interfaces/",
+    "NameTemplate": "{{.Name}}",
+    "ProtoName": "ligato.vpp.interfaces.Interface",
+    "ProtoFile": "ligato/vpp/interfaces/interface.proto",
+    "GoType": "*vpp_interfaces.Interface",
+    "PkgPath": "go.ligato.io/vpp-agent/v3/proto/ligato/vpp/interfaces"
+  }
+]
+```
+---
 
 ### Status
 
-This command retrieves agent current status from the scheduler and lists all the key-values inside the agent, including derived keys.
+Use this command to return the status of the VPP agent.
 
 ```
-➤ agentctl status
-MODEL                    NAME                                            STATE        DETAILS            LAST OP   ERROR                                             
-vpp.l2.bridge-domain     bd1                                             CONFIGURED                      UPDATE                                                      
-                         vpp/bd/bd1/interface/loop1                      CONFIGURED                      UPDATE                                                      
-                         vpp/bd/bd1/interface/loop2                      PENDING      interface-exists   CREATE                                                      
-vpp.nat.nat44-global                                                     obtained                                                                                    
-vpp.interfaces           UNTAGGED-local0                                 obtained                                                                                    
-vpp.interfaces           loop1                                           CONFIGURED                      UPDATE                                                      
-vpp.interfaces           loop2                                           INVALID                         CREATE    VPP interface type MEMIF must have link defined   
-vpp.ipscanneigh-global                                                   obtained                                                                                    
-vpp.proxyarp-global                                                      obtained                                                                                    
-vpp.route                vrf/0/dst/0.0.0.0/0/gw/0.0.0.0                  obtained                                                                                    
-vpp.route                vrf/0/dst/0.0.0.0/32/gw/0.0.0.0                 obtained                                                                                    
-vpp.route                vrf/0/dst/224.0.0.0/4/gw/0.0.0.0                obtained                                                                                    
-vpp.route                vrf/0/dst/240.0.0.0/4/gw/0.0.0.0                obtained                                                                                    
-vpp.route                vrf/0/dst/255.255.255.255/32/gw/0.0.0.0         obtained                                                                                    
-vpp.route                vrf/0/dst/::/0/gw/::                            obtained                                                                                    
-vpp.route                vrf/0/dst/fe80::/10/gw/::                       obtained                                                                                    
-vpp.vrf-table            id/0/protocol/IPV4                              obtained                                                                                    
-vpp.vrf-table            id/0/protocol/IPV6                              obtained                                                                                    
-                         linux/interface/host-name/eth0                  obtained                                                                                    
-                         linux/interface/host-name/lo                    obtained                                                                                    
-                         linux/microservice/agent1                       obtained                                                                                    
-                         linux/microservice/myagent                      obtained                                                                                    
-                         vpp/interface/UNTAGGED-local0/link-state/DOWN   obtained                                                                                    
-                         vpp/interface/loop1/link-state/DOWN             obtained                                                                                    
+Usage:	agentctl status
+
+Retrieve agent status
+
+OPTIONS:
+  -f, --format string   Format output
 ```
+
+Command
+```
+agentctl status
+```
+Sample Output:
+```
+AGENT
+       State: OK
+     Version: v3.2.0-alpha-1-g615f9fd36
+     Started: 2020-04-02 00:47:40 +0000 UTC (14h21m45s ago)
+
+ Last change: 14h21m39s
+ Last update: 5s
+
+PLUGINS
+   VPPAgent: OK
+   etcd: OK
+   govpp: OK
+   vpp-abfplugin: INIT
+   vpp-aclplugin: INIT
+   vpp-ifplugin: OK
+   vpp-ipsec-plugin: INIT
+   vpp-l2plugin: INIT
+   vpp-l3plugin: INIT
+   vpp-natplugin: INIT
+   vpp-srplugin: INIT
+
+```
+
+### Values
+
+Use this command to retrieve the key-value pairs and derived keys from the KV scheduler.
+
+```
+Usage:	agentctl values [MODEL]
+
+Retrieve values from scheduler
+
+OPTIONS:
+  -f, --format string   Format output
+
+```
+Command:
+```
+agentctl values
+```
+
+Sample Output:
+```
+MODEL                  NAME                                                STATE        DETAILS   LAST OP   ERROR
+vpp.l2.bridge-domain   bd1                                                 CONFIGURED             CREATE
+                       vpp/bd/bd1/interface/loop1                          CONFIGURED             CREATE
+vpp.nat.nat44-global                                                       obtained
+vpp.interfaces         UNTAGGED-local0                                     obtained
+vpp.interfaces         loop1                                               CONFIGURED             CREATE
+                       vpp/interface/loop1/address/static/192.168.1.1/24   CONFIGURED             CREATE
+                       vpp/interface/loop1/has-IP-address                  CONFIGURED             CREATE
+                       vpp/interface/loop1/vrf/0/ip-version/v4             CONFIGURED             CREATE
+vpp.proxyarp-global                                                        obtained
+vpp.route              vrf/0/dst/0.0.0.0/0/gw/0.0.0.0                      obtained
+vpp.route              vrf/0/dst/0.0.0.0/32/gw/0.0.0.0                     obtained
+vpp.route              vrf/0/dst/224.0.0.0/4/gw/0.0.0.0                    obtained
+vpp.route              vrf/0/dst/240.0.0.0/4/gw/0.0.0.0                    obtained
+vpp.route              vrf/0/dst/255.255.255.255/32/gw/0.0.0.0             obtained
+vpp.route              vrf/0/dst/::/0/gw/::                                obtained
+vpp.route              vrf/0/dst/fe80::/10/gw/::                           obtained
+vpp.vrf-table          id/0/protocol/IPV4                                  obtained
+vpp.vrf-table          id/0/protocol/IPV6                                  obtained
+                       linux/interface/host-name/eth0                      obtained
+                       linux/interface/host-name/lo                        obtained
+                       vpp/interface/UNTAGGED-local0/link-state/DOWN       obtained
+                       vpp/interface/loop1/link-state/UP                   obtained
+```
+
+---
 
 ### KVDB
 
-<details>
-<summary>The <code>kvdb</code> subcommand managed data stored in KV datastore.</summary>
-<p>
+Use this command to perform get, put, del or list operations against the KV data store. It is similar to using etcdctl, but supports short keys, which requires setting the `--service-label` in the specific command.
 
 ```
+Usage:	agentctl kvdb [options] COMMAND
+
 Manage agent data in KVDB
 
-Usage:
-  agentctl kvdb [OPTIONS] COMMAND
-
-Aliases:
+ALIASES
   kvdb, kv
 
-Commands:
-  del         Delete key-value entry from KVDB
-  get         Get key-value entry from KVDB
-  list        List key-value entries from KVDB
-  put         Put key-value entry into KVDB
+COMMANDS
+  del         Delete key-value entry
+  get         Get key-value entry
+  list        List key-value entries
+  put         Put key-value entry
+```
+!!! Note
+    Attempts to interact with the etcd data store using the `agentctl kvdb` command could encounter a `Failed to connect to Etcd` message. This is because the VPP agent that includes `agentctl` is started in one container, and etcd is started another. Agentctl uses a default address of `127.0.0.1` to reach the etcd server; The etcd server is started with a default address of `172.17.0.2:2379`. The solution is to pass the etcd server address to agentctl using the `e` or `--etcd-endpoints` flags like so: `agentctl -e 172.17.0.2:2379 kvdb <command>`.
 
-Options:
-  -h, --help   help for kvdb
+List command:
+```json
+agentctl kvdb list
+```
+Sample Output:
+```json
+/vnf-agent/vpp1/check/status/v1/agent
+{"build_version":"v3.2.0-alpha-1-g615f9fd36","build_date":"Wed Mar 18 17:59:27 UTC 2020","state":"OK","start_time":"1586275960","last_change":"1586275967","last_update":"1586280942","commit_hash":"615f9fd","plugins":[{"name":"govpp","state":"OK"},{"name":"VPPAgent","state":"OK"},{"name":"etcd","state":"OK"},{"name":"vpp-ifplugin","state":"OK"}]}
+/vnf-agent/vpp1/check/status/v1/plugin/VPPAgent
+{"state":"OK","last_change":"1586275962","last_update":"1586280942"}
+...
+```
+Depending on the number of entries in the KV data store, the output could be massive and difficult to read. You can whittle this down by using a less specific key.
+
+For example, use this command to list only the configured interfaces:
+```json
+agentctl kvdb list /vnf-agent/vpp1/config/vpp/v2/interfaces/ 
+``` 
+Sample output:
+```json
+/vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}
+/vnf-agent/vpp1/config/vpp/v2/interfaces/tap
+{“name”:”tap1”,”type”:”TAP”,”enabled”:true,”ip_addresses”:[“192.168.1.1/24”]}
 ```
 
-</p>
-</details>
+Put command example using a loopback interface
+```json
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
+```
+Response is `OK`.
 
-The `kvdb` command is similar to using etcdctl, but supports short keys (which require setting `--service-label` option).
+Get command example for the loopback interface using the long-form key:
+```
+agentctl kvdb get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+```
+Sample output:
+```json
+{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}
+```
+Delete command example for the loopback interface using the long-form key:
+```
+agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+```
+Response is `OK`
+
+Attempting to `get` the deleted entry will result in a `key not found` message. 
+
+
+
+---
 
 ### VPP
 
-<details><summary>The <code>vpp</code> subcommand manages the connected VPP instance.</summary>
-<p>
+Use this command to manage the connected VPP instance. The CLI option saves time for the developer or operator by avoiding the need to "jump to" the actual VPP command line interface. 
 
 ```
+Usage:	agentctl vpp [options] COMMAND
+
 Manage VPP instance
 
-Usage:
-  agentctl vpp [OPTIONS] COMMAND
-
-Commands:
+COMMANDS
   cli         Execute VPP CLI command
   info        Retrieve info about VPP
-
-Options:
-  -h, --help   help for vpp
+```
+Example using the `CLI` option to run the VPP `show version` command:
+```
+agentctl vpp cli show version
+```
+Sample output:
+```
+vpp# show version
+vpp v20.01-rc2~11-gfce396738~b17 built by root on b81dced13911 at 2020-01-29T21:07:15
 ```
 
-</p>
-</details>
-</br>
-
-To run VPP CLI command, run:
-
+Use the `info` option to show VPP information:
 ```
-➤ agentctl vpp cli show version
-# show version
-vpp v19.08-rc2~12-g1c586de48~b37 built by root on 9ce218d4b187 at Wed Aug 21 17:50:31 UTC 2019
+agentctl vpp info
 ```
+Sample Output:
+```
+VERSION:
+Version:                  v20.01-rc2~11-gfce396738~b17
+Compiled by:              root
+Compile host:             b81dced13911
+Compile date:             2020-01-29T21:07:15
+Compile location:         /w/workspace/vpp-merge-2001-ubuntu1804
+Compiler:                 GCC 8.3.0
+Current PID:              15
+
+CONFIG:
+Command line arguments:
+  /usr/bin/vpp
+  unix
+    {
+    nodaemon
+    cli-listen
+    0.0.0.0:5002
+    cli-no-pager
+    }
+  plugins
+    {
+    plugin
+    dpdk_plugin.so
+      {
+      disable
+      }
+    }
+  socksvr
+    {
+    default
+    }
+  statseg
+    {
+    default
+    per-node-counters
+    on
+    }
+```
+
+---
 
 ### Import
 
-<details>
-<summary>The <code>import</code> subcommand can be used to import config data from file using GRPC or ETCD.</summary>
-<p>
+Use this command to import configuration data from an external file using etcd or gRPC.  
+
+
 
 ```
+Usage:	agentctl import file
+
 Import config data from file
 
-Usage:
-  agentctl import file [flags]
-
-Examples:
+EXAMPLES
 
  To import file contents into Etcd, run:
   $ cat input.txt
   config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
   config/vpp/l2/v2/bridge-domain/bd1 {"name":"bd1"}
+
   $ agentctl import input.txt
 
  To import it via gRPC, include --grpc flag:
   $ agentctl import --grpc=localhost:9111 input.txt
 
-FILE FORMAT
-
- Contents of the import file must contain single key-value pair per line:
+ FILE FORMAT
+    Contents of the import file must contain single key-value pair per line:
 
     <key1> <value1>
     <key2> <value2>
     ...
     <keyN> <valueN>
 
- Empty lines and lines starting with '#' are ignored.
+    Empty lines and lines starting with '#' are ignored.
 
-KEY FORMAT
-
- Keys can be defined in two ways:
+ KEY FORMAT
+    Keys can be defined in two ways:
 
     - full: 	/vnf-agent/vpp1/config/vpp/v2/interfaces/iface1
     - short:	config/vpp/v2/interfaces/iface1
- 
- For short keys, the import command uses microservice label defined with --service-label.
 
+    For short keys, the import command uses microservice label defined with --service-label.
 
-Options:
+OPTIONS:
       --grpc         Enable to import config via gRPC
-  -h, --help         help for import
   -t, --time uint    Timeout (in seconds) to wait for server response (default 30)
       --txops uint   Number of ops per transaction (default 128)
-```
-
-</p>
-</details>
-</br>
-
-The import command supports importing via GRPC which can be enabled with `--grpc` option.
-
-To import config data from file, run:
 
 ```
-➤ cat ./myconfig
+
+Here is another example using short keys with the microservice label. The contents of the `myconfig` configuration data file are:
+```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
 config/vpp/v2/interfaces/loop2 {"name":"loop2","type":"MEMIF"}
 config/vpp/l2/v2/bridge-domain/bd1 {"name":"bd1","interfaces":[{"name":"loop1"},{"name":"loop2"}]}
+```
 
-➤ agentctl --service-label=agent1 import ./myconfig
+Import command:
+```
+agentctl --service-label=agent1 import ./myconfig
+```
+Results:
+```
 importing 3 key vals
  - /vnf-agent/agent1/config/vpp/v2/interfaces/loop1
  - /vnf-agent/agent1/config/vpp/v2/interfaces/loop2
@@ -377,37 +735,34 @@ importing 3 key vals
 commiting tx with 3 ops
 ```
 
-The import file supports full version of keys including agent namespace (microservice label) or short keys which require setting `--service-label` option.
+---
 
 ### Generate
 
-<details>
-<summary>The <code>generate</code> subcommand can be used to generate config samples for models.</summary>
-<p>
+Use this command to generate a configuration sample for a model.
+
 
 ```
+Usage:	agentctl generate MODEL
+
 Generate config samples
 
-Usage:
-  agentctl generate MODEL
-
-Aliases:
+ALIASES
   generate, gen
 
-Options:
+OPTIONS:
   -f, --format string   Output formats: json, yaml (default "json")
-  -h, --help            help for generate
       --oneline         Print output as single line (only json format)
 ```
 
-</p>
-</details>
-</br>
-
-To generate config sample for VPP route, run:
+Generate a configuration sample for a VPP route:
 
 ```
-➤ agentctl generate vpp.route
+agentctl generate vpp.route
+```
+
+Sample Output:
+```
 {
   "type": "INTRA_VRF",
   "vrf_id": 0,
@@ -420,35 +775,118 @@ To generate config sample for VPP route, run:
 }
 ```
 
+---
+
 ### Log
 
-<details>
-<summary>The <code>log</code> subcommand manages the logging of the agent instance.</summary>
-<p>
+
+Use this command to manage the log levels for all loggers in the system.
 
 ```
+Usage:	agentctl log [options] COMMAND
+
 Manage agent logging
 
-Usage:
-  agentctl log [OPTIONS] COMMAND
-
-Commands:
-  list        Show vppagent logs
-  set         Set vppagent logger type
-
-Options:
-  -h, --help   help for log
-```
-
-</p>
-</details>
-</br>
-
-To list current loggers and their log levels, run `log list`.
-
-To set log level for specific logger, run:
+COMMANDS
+  list        List agent loggers
+  set         Set agent logger level
 
 ```
-➤ agentctl log set kvscheduler debug
+
+List current loggers and their log levels:
+```
+agentctl log list
+```
+
+Example of setting the KV Scheduler log level to `debug`:
+```
+agentctl log set kvscheduler debug
+```
+Result:
+```
 logger kvscheduler has been set to level debug
 ```
+
+---
+
+### Service
+
+Use this command to manage services.
+
+```
+Usage:	agentctl service [options] COMMAND
+
+Manage agent services
+
+COMMANDS
+  call        Call methods on services
+  list        List remote services
+```
+List remote services including `methods` using the `-m` flag:
+```
+agentctl service list -m
+```
+Sample output:
+```
+service ligato.configurator.ConfiguratorService (ligato/configurator/configurator.proto)
+ - rpc Get (GetRequest) returns (GetResponse)
+ - rpc Update (UpdateRequest) returns (UpdateResponse)
+ - rpc Delete (DeleteRequest) returns (DeleteResponse)
+ - rpc Dump (DumpRequest) returns (DumpResponse)
+ - rpc Notify (NotifyRequest) returns (stream NotifyResponse)
+
+service ligato.configurator.StatsPollerService (ligato/configurator/statspoller.proto)
+ - rpc PollStats (PollStatsRequest) returns (stream PollStatsResponse)
+
+service ligato.generic.ManagerService (ligato/generic/manager.proto)
+ - rpc SetConfig (SetConfigRequest) returns (SetConfigResponse)
+ - rpc GetConfig (GetConfigRequest) returns (GetConfigResponse)
+ - rpc DumpState (DumpStateRequest) returns (DumpStateResponse)
+ - rpc Subscribe (SubscribeRequest) returns (stream SubscribeResponse)
+
+service ligato.generic.MetaService (ligato/generic/meta.proto)
+ - rpc KnownModels (KnownModelsRequest) returns (KnownModelsResponse)
+```
+Call service and method:
+```
+agentctl service call SERVICE METHOD
+```
+
+### Metrics
+
+Use this command to collect and view run-time metrics.
+```
+Usage:	agentctl metrics [options] COMMAND
+
+Get runtime metrics
+
+COMMANDS
+  get         Get metrics data
+  list        List metrics
+```
+
+List metrics:
+```
+agentctl metrics list
+```
+Sample output:
+```
+METRIC          PROTO MESSAGE
+govppmux.stats  ligato.govppmux.Metrics
+```
+Get metrics:
+```
+agentctl metrics get govppmux.stats
+```
+Sample Output:
+```json
+{
+  "channels_created": 35,
+  "channels_open": 35,
+  "request_replies": 41,
+  "requests_done": 78,
+  "requests_sent": 78
+}
+```
+
+[ligato-vpp-agent-repo]: https://github.com/ligato/vpp-agent

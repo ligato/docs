@@ -23,7 +23,7 @@ The model specification (spec) describes the model using the module, version and
 - `version` - current version of the vpp-agent API. This value changes upon release of a new version.
 - `type` - keyword describing the given model (e.g. interfaces, bridge-domains, etc.)
 
-Model specs are defined in the `models.go` files contained in the [vpp-agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
+Model specs are defined in the `models.go` files contained in the [VPP agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
 
 ### Key Prefix
 
@@ -84,11 +84,14 @@ Keys can also be distinguished by the composition of the identifier.
 
 ### proto.Message
 
-The proto.Message defines the structure and serialized format of the data associated with an object in protobuf format. More specifically, it describes an object's configuration or metric fields.
+The proto.Message defines the structure and serialized format of the data associated with an object in protobuf format. It serves two purposes in the Ligato framework:
+
+- Describes an object's configuration or metric fields.
+- Generates northbound `protobuf APIs` used by applications and components to interact with the configured objects. Agentctl, etcdctl and REST are component examples.
 
 If the object is a route, then the proto.Message contained in the [route.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto) file will define destination network, next_hop, outgoing interface and so on.
 
-The combination of the model, and proto.Message are used to define the `protobuf APIs` supported by Ligato.
+The combination of the model, and proto.Message are used to define the northbound `protobuf APIs` 
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KV-store.svg)
 
@@ -114,7 +117,7 @@ The vpp-agent uses an external KV data store for several reasons:
  
  - persist the desired state of the VPP/Linux configuration
  - To store and export certain VPP statistics
- - exploit the `"watch"` paradigm for stateless configuration management. This same approach is employed in other configuration systems such as [confd](https://confd.io)
+ - exploit the `"watch"` paradigm for stateless configuration management. This same approach is employed in other configuration systems such as [confd.](https://confd.io)
 
 ### Keys and Microservice Label
 
@@ -626,7 +629,7 @@ Another option is to set the related environment variable:
 export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 ```
 
-The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so the plugin can be successfully started without it.
+The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so the plugin can be successfully started without the conf file.
 
 An example config file (in yaml format):
 ```bash
