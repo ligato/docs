@@ -100,9 +100,9 @@ The NB configuration demands are translated to a sequence of binary API calls us
 
 **References:**
 
-- [Interface proto][interface-proto] 
-- [Interface models][interface-models]
-- [Interface conf file][interface-conf-file] 
+- [VPP interface proto][vpp-interface-proto] 
+- [VPP interface models][vpp-interface-model]
+- [VPP interface conf file][vpp-interface-conf-file] 
 
 The interface proto file is divided into two parts:
  
@@ -2400,9 +2400,9 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [govppmux-metrics-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/govppmux/models.go
 [govppmux-metrics-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/govppmux/metrics.proto 
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
-[interface-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
-[interface-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go
-[interface-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/interface.proto
+[vpp-interface-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
+[vpp-interface-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go
+[vpp-interface-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/interface.proto
 [interface-state-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/state.proto
 [ipip-tunn-prot-pr]: https://github.com/ligato/vpp-agent/pull/1638
 [ipsec-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/ipsec/models.go

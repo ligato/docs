@@ -1,16 +1,29 @@
-# Linux plugins
+# Linux Plugins
 
 ---
 
 ## Interface Plugin
 
-The Linux interface plugin manages linux-based host OS interfaces. Currently it only supports VETH and TAP interface types.  
+The Linux interface plugin manages linux-based host OS interfaces. Currently it only supports VETH and TAP interface types.
+
+**References**
+
+- [ proto][ proto]
+- [ model][ model]
+- [ conf files][ conf-file]
+
+
+**References**
+
+- [Linux interface proto][linux-interface-proto] 
+- [Linux interface proto][linux-interface-model]
+- [Linux inter conf file][] 
 
 The plugin watches for changes to the supported interface types. The difference between the VPP and Linux interface plugin is that the latter does not remove any "redundant" configuration. Instead, the plugin holds on to the state of all VETH and TAP interfaces present in the default namespace.
 
 Namespaces are also supported, however they are handled by a different plugin. Interfaces in namespaces other than default remain unknown if not listed in the NB configuration (i.e. they are not registered during resync). The vpp-agent uses an external library to fetch data about OS interfaces and manage them.  
 
-[The Linux interface model][linux-interface-model] describes the interface and is composed of two parts. The first part describes those items common to the supported interface types. The second part describes items specific to each interface type. The interface may have an optional namespace field. The interface name is required, and the host name can be specified. If not specified, the host name will be the same as the logical name.
+The Linux interface proto describes the interface and is composed of two parts. The first part describes those items common to the supported interface types. The second part describes items specific to each interface type. The interface may have an optional namespace field. The interface name is required, and the host name can be specified. If not specified, the host name will be the same as the logical name.
 
 ### VETH
 
@@ -188,13 +201,27 @@ The linux plugin namespace management requires that docker run in privileged mod
 
 Use the config files for Linux interfaces and the Linux l3 plugins and set both to `disabled` and `true`.
 
-## L3 plugin
+## IPTables Plugin
+
+**References**
+
+- [ proto][ proto]
+- [ model][ model]
+- [ conf files][ conf-file]
+
+## L3 Plugin
 
 The Linux L3 plugin is used to configure **Linux ARP** entries and **Linux routes**. The Linux L3 plugin is dependent on the [Linux interface plugin][linux-interface-guide]. L3 configuration items support the Linux namespace in the same manner as the Linux interfaces.  
 
 ### ARP entries
 
 ARP is a network protocol that assists in the discovery of a MAC address associated with the given IP address. The plugin makes a use of a simple proto model with interface, IP address and MAC address fields. All fields are mandatory.
+
+**References**
+
+- [ proto][ proto]
+- [ model][ model]
+- [ conf files][ conf-file]
 
 The namespace resolution is automatic and is of no concern to the user. Since the ARP entry is dependent on the associated Linux interface, the configuration is postponed until  the moment the interface appears. Target namespace is derived from the interface identified by the unique name. The interface host name must be unique within the namespace 
 scope.   
@@ -276,6 +303,12 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 A routing table lists the routes to network destinations, metrics (i.e. distances, link costs, etc.) associated with said routes and an outbound interface pointing to the gateway (next_hop) router. The route interface is mandatory (the namespace is derived from the interface, the same principle as for the Linux ARP). If the source and gateway (next_hop router) IP addresses are set, they must be valid and the gateway IP address must be evaluated as reachable. 
 
+**References**
+
+- [ proto][ proto]
+- [ model][ model]
+- [ conf files][ conf-file]
+
 Every route includes a scope which is the network domain where the route is applicable. The options are `Global`, `Site`, `Link` and `Host`. The scope is defined in the route config.  
 
 The northbound Linux plugin API defines route in the [linux route model][linux-route-model].
@@ -349,9 +382,15 @@ import (
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
-## Namespace plugin
+## Namespace Plugin
 
 The namespace plugin is an auxiliary plugin used by other Linux plugins to handle namespaces and microservices.
+
+**References**
+
+- [ proto][ proto]
+- [ model][ model]
+- [ conf files][ conf-file]
 
 The [namespace model][linux-namespace-model] contains two fields; type and reference. The namespace can be of type:
  
@@ -368,6 +407,12 @@ The namespace is imported in the [Linux interface plugin][linux-interface-guide]
 
 The vpp-agent supports Linux network namespaces. It is possible to attach a Linux interface/ARP/route into a new, existing or even yet-to-be-created network namespace via the `Namespace` configuration section inside the data model.
 
+**References**
+
+- [ proto][ proto]
+- [ model][ model]
+- [ conf files][ conf-file]
+
 Namespace can be referenced in multiple ways. 
 
 - The most low-level link to a namespace is a file descriptor associated with the symbolic link automatically created in the `proc` filesystem, pointing to the definition of the namespace used by a given process (`/proc/<PID>/ns/net`) or by a task of a given process (`/proc/<PID>/task/<TID>/ns/net`). 
@@ -379,15 +424,22 @@ A `namespace` configuration section can be seen as a union of values. First, set
 
 Additionally, we provide a non-standard namespace reference, denoted as `MICROSERVICE_REF_NS`, which is specific to ecosystems with microservices. It is possible to attach interface/ARP/route into the namespace of a container that runs a microservice with a given label. 
 
-To simplify further, it is not required to start the microservice before the configured item is pushed. The vpp-agent will postpone interface (re)configuration until the referenced microservice is launched. Behind the scenes, the vpp-agent communicates with the docker daemon to construct and maintain an up-to-date map of microservice labels to PIDs and the IDs of their corresponding containers. Whenever a new microservice is detected, all pending interfaces are moved to its namespace.
+To simplify further, it is not required to start the microservice before the configured item is pushed. The VPP agent will postpone interface (re)configuration until the referenced microservice is launched. Behind the scenes, the vpp-agent communicates with the docker daemon to construct and maintain an up-to-date map of microservice labels to PIDs and the IDs of their corresponding containers. Whenever a new microservice is detected, all pending interfaces are moved to its namespace.
 
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [key-reference]: ../user-guide/reference.md
-[linux-arp-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/l3/arp.proto
+[linux-arp-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/l3/arp.proto
+[linux-interface-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/ifplugin/linux-ifplugin.conf 
 [linux-interface-guide]: linux-plugins.md#interface-plugin
-[linux-interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/interfaces/interface.proto
-[linux-namespace-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/namespace/namespace.proto
-[linux-route-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/linux/l3/route.proto
+[linux-interface-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/interfaces/models.go
+[linux-interface-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/interfaces/interface.proto
+[linux-iptables-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/iptables/models.go
+[linux-iptables-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/iptables/iptables.proto
+[linux-l3-arp-route-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/l3/models.go
+[linux-namespace-conf]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/nsplugin/linux-nsplugin.conf 
+[linux-namespace-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/namespace/namespace.proto
+[linux-punt-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/punt/punt.proto
+[linux-route-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/l3/route.proto
 [redhat-veth-page]: http://man7.org/linux/man-pages/man4/veth.4.html
 [veth]: http://man7.org/linux/man-pages/man4/veth.4.html
 [vpp-interface-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto

@@ -1,10 +1,10 @@
-# Config Files
+# Conf Files
 
 This section discusses plugin configuration files and flags.
 
 ---
 
-## Config Directory
+## Conf Directory
 
 ```bash
 -config-dir=".": Location of the config files; can also be set via 'CONFIG_DIR' env variable.
@@ -13,7 +13,7 @@ This section discusses plugin configuration files and flags.
 This flag is used to define the directory for loading plugin configuration files.
 Using `-<plugin>-config` for a specific plugin will override this flag.
 
-## Plugin Configs
+## Plugin Conf Files
 ---
 
 <!--
@@ -32,7 +32,7 @@ Flag reserved for the ACL plugin, currently not in use.
 -bolt-config= 
 ```
 
-_**Bolt Config File Options**_
+_**Bolt Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -51,7 +51,7 @@ _**Bolt Config File Options**_
 ```
 
 
-_**Cassandra Config File Options**_
+_**Cassandra Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
