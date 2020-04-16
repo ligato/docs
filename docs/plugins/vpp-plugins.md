@@ -167,7 +167,7 @@ The VPP agent provides an option to automatically set the MTU size for an interf
 
 ---
 
-### Interface Configuration Examples
+### VPP Interface Configuration Examples
 
 **KV Data Store**
  
@@ -483,7 +483,7 @@ config := &configurator.Config{
 
 The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]):
+Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -848,7 +848,7 @@ proxyArp := &l3.ProxyARP{
 
 The configuration data can be combined with any other VPP or Linux configuration.
 
-Update the data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
+Update data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
 	"github.com/ligato/vpp-agent/api/configurator"
@@ -918,7 +918,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/route/vrf/0/dst/1.2.3.4/32/gw '{"type"
 
 **REST**
 
-REST only supports the retrieval of the existing configuration. Use this cURL command to read all route entries:
+REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+
+Use this cURL command to read VPP routing table entries:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/routes
@@ -1076,7 +1078,7 @@ Note that the same function could be achieved with a dedicated VRF table with a 
 
 ### VRF
 
-The L3 plugin supports a special VRF table for use in controlling flow-based forwarding.   
+The L3 plugin supports VRF tables in scenarios where multiple discrete routing tables are required.    
 
 **References**
 
