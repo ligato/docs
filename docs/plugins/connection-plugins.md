@@ -21,7 +21,7 @@ There are several options for configuring a different port number:
  
 - Set the VPP agent flag: `-http-port=<port>`
 - Set the `HTTP_PORT` env variable to a desired value
-- Modify the [REST plugin conf file][http-conf-file]
+- Modify the [REST conf file][http-conf-file]
 
 ### Usage
 
@@ -40,7 +40,7 @@ Choose the `GET` method, provide the desired URL, and send the request.
 
 ### Supported URLs
 
-The REST plugin enables configuration item dumps sorted by types such as interfaces, L3 routes, telemetry, and bridge domains.
+The REST plugin enables the dump of configuration item dumps sorted by types such as interfaces, L3 routes, telemetry, and bridge domains.
  
 
 **Index Page**
@@ -177,15 +177,6 @@ dump/vpp/v2/proxyarp/interfaces
 ```
 ---
 
-**VPP CLI**
-
-Use the VPP CLI command via REST. Commands are defined as a map like so:
-```
-/vpp/command -d '{"vppclicommand":"<command>"}'
-```
-
----
-
 **Telemetry**
 
 ```
@@ -201,6 +192,15 @@ Use the VPP CLI command via REST. Commands are defined as a map like so:
 ```
 /vpp/binapitrace
 ```
+---
+
+**VPP CLI**
+
+Use the VPP CLI command via REST. Commands are defined as a map like so:
+```
+/vpp/command -d '{"vppclicommand":"<command>"}'
+```
+
 ---
 
 ## Security
@@ -285,7 +285,7 @@ where `ca.pem` is a CA where server certificates should be validated, in the cas
   
 ### Token-based Authorization
 
-REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST plugin config file][http-config]:
+REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST config file][http-config]:
 
 ```
 enable-token-auth: true
@@ -301,7 +301,7 @@ token-expiration: 600000000000
 
 Note that time is in nanoseconds. If no time is provided, the default value of 1 hour is set.
 
-By default, token uses a pre-defined signature string as the key to sign it. This can be changed in [REST plugin conf file][http-conf-file].
+By default, token uses a pre-defined signature string as the key to sign it. This can be changed in [REST conf file][http-conf-file].
 
 ```
 token-signature: <string>
@@ -313,7 +313,7 @@ After login, the token is required in an authentication header in the format `Be
 
 ### Users and Permission Groups
 
-Users must be pre-defined in the [REST plugin conf file][http-conf-file].User definitions consists of a name, hashed password and permission groups.
+Users must be pre-defined in the [REST conf file][http-conf-file].User definitions consists of a name, hashed password and permission groups.
 
 User format example:
 ```
@@ -326,7 +326,7 @@ users:
 
 `Name` defines a username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and password "ligato123"
 
-`Password` must be hashed. It is possible to use the [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the [REST plugin conf file][http-conf-file]like so:
+`Password` must be hashed. It is possible to use the [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the [REST conf file][http-conf-file]like so:
 
 ```
 password-hash-cost: <number>
@@ -334,7 +334,7 @@ password-hash-cost: <number>
 
 Minimal hash cost is 4, maximal value is 31. The higher the cost, the more CPU time/memory is required to hash the password.
 
-`Permission Groups` define a list of permissions composed of allowed URLs and methods. Every user needs at least one permission group defined, otherwise the user will be excluded from access to any server. Permission groups described in the [access security proto][access-security-proto]. 
+`Permission Groups` define a list of permissions composed of allowed URLs and methods. Every user requires at least one permission group defined, otherwise the user will be excluded from access to any server. Permission groups described in the [access security proto][access-security-proto]. 
 
 To add a permission group, use a rest plugin API:
 
@@ -348,7 +348,7 @@ To add permission group to the user, put its name to the conf file under user fi
 
 ---
 
-### Login and logout
+### Login/Logout
 
 To log in a user, follow the URL `http://localhost:9191/login`. The site is enabled for two methods. It is possible to use a `POST` to directly provide credentials in the format:
 
@@ -359,7 +359,7 @@ To log in a user, follow the URL `http://localhost:9191/login`. The site is enab
 }
 ```
 
-The site returns the access token in plain text. If the URL is accessed with `GET`, it displays the login page where the credentials can be entered. After a successful submit, it redirects to the index.
+The site returns the access token in plain text. If the URL is accessed with `GET`, it displays the login page where the credentials can be entered. After a successful submit, the user is redirected to the index.
 
 To log out, post the username to `http://localhost:9191/logout`.
 
@@ -375,11 +375,13 @@ To log out, post the username to `http://localhost:9191/logout`.
 
 **References** 
 
+* [GRPC Repo Folder][grpc-cn-infra-repo-folder]
+* [GRPC conf file][grpc-conf-file]
 * [GRPC client tutorial][grpc-client-tutorial] shows how to create a client for the off-the-shelf VPP agent GRPC Server
 * [GRPC server tutorial][grpc-server-tutorial] shows how to create your own GRPC Server using the [GRPC Plugin][grpc-plugin].
 * [GRPC Handler Tutorial][grpc-handler-tutorial]
 
-GRPC support in the vpp-agent is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
+GRPC support is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
 
 The VPP agent GRPC plugin supports the following:
 
@@ -389,12 +391,12 @@ The VPP agent GRPC plugin supports the following:
 
 The following remote procedure calls (RPC) are defined:
 
-* **Get** creates new configuration or updates and existing configuration
-* **Delete** removes a specified (existing) configuration
+* **Get** creates new configuration or updates an existing configuration
+* **Delete** removes an existing configuration
 * **Dump** reads existing configuration data from VPP
 * **Notify** subscribes GRPC to the notification service
 
-To enable the GRPC server within the VPP agent, the GRPC plugin must be added to the plugin pool and loaded (currently the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
+To enable the GRPC server, the GRPC plugin must be added to the plugin pool and loaded (currently the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
 
 Clients can reach the GRPC Server via an endpoint IP:Port address or via a unix domain socket file. The TCP network is set as default, but other network types are also possible (like TCP6 or UNIX).
 
@@ -427,8 +429,10 @@ Once the handler is registered with the `GRPC Plugin` and the agent is running, 
 [configurator-grpc]: https://github.com/ligato/vpp-agent/blob/master/plugins/configurator/plugin.go#L54
 [grpc-client-tutorial]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-client
 [grpc-server-tutorial]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-server
+[grpc-conf-file]: https://github.com/ligato/cn-infra/blob/master/rpc/grpc/grpc.conf
 [grpc-image]: ../img/user-guide/grpc.png
 [grpc-plugin]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
+[grpc-cn-infra-repo-folder]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-handler-tutorial]: ../tutorials/08_grpc-tutorial.md
 [http-conf-file]: ../user-guide/config-files.md#rest
 [password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md

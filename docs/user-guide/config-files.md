@@ -424,7 +424,7 @@ This flag can be used to set the HTTP port:
 ```
 
 
-[_HTTP conf file_][http-conf-file]
+[_REST conf file_][http-conf-file]
 
 ---
 
