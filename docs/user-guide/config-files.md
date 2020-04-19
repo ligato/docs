@@ -439,7 +439,7 @@ _**Service Label Plugin Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-|**microservice-label**|_string_||Identifies a particular instance of a vpp-agent. Used to form a key prefix associated with the vpp-agent's config data contained in an etcd data store.|
+|**microservice-label**|_string_||Identifies a particular instance of a VPP agent. Used to form a key prefix associated with the VPP agent's config data contained in an etcd data store.|
 
 ---
 
@@ -473,13 +473,13 @@ _**VPP Interface Plugin Conf File Options**_
 | Option | Type | Default | Description |
 |---|---|---|---|
 |**MTU**|_unit32_|0|Default maximum transmission unit (MTU) size. The value is used if an interface without an MTU is created. Note that the MTU in the interface configuration is preferred.|
-|**status-publishers**|_string_||Enables the vpp-agent to send status data back to a KV data store. etcd, redis or both are supported.|
+|**status-publishers**|_string_||Enables the VPP agent to send status data back to a KV data store. etcd, redis or both are supported.|
 
 [_vpp-ifplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf)
 
 ---
 
-## vpp-agent -h command
+## VPP agent -h command
 
 Use this command to display flag, conf file name, and env variable information for all config files.
 

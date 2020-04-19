@@ -2,7 +2,7 @@
 
 ---
 
-This [folder][vpp-agent-examples-folder] in the vpp-agent repo contains several examples that illustrate vpp-agent functionality. Each example is structured as an individual executable with its own `main.go` file. Each example focuses on a simple use case. 
+This [VPP agent examples folder][vpp-agent-examples-folder] in the repo contains several examples that illustrate VPP agent functionality. Each example is structured as an individual executable with its own `main.go` file. Each example focuses on a simple use case. 
 
 !!! note
     All examples use etcd, GoVPP and Kafka. Please make sure there are running instances of etcd, Kafka and VPP before running through an example. The [quickstart guide][quickstart-guide] can guide you through a setup, or follow the [instructions][setup-instructions] below using the pre-built docker image.
@@ -32,15 +32,15 @@ Current examples:
 * **[localclient_linux_veth][example-localclient-linux-veth]** configures 
   simple topology consisting of VPP af-packet interfaces attached to 
   linux Veth pairs. This example uses the localclient package to push 
-  the configuration to vpp-agent plugins.   
+  the configuration to VPP agent plugins.   
 <br />   
 * **[grpc_vpp_remote_client][example-grpc-vpp-remote]** demonstrates how to
   use the remoteclient package to push example configuration data into
-  VPP plugins running within different vpp-agent OS processes.   
+  VPP plugins running within different VPP agent OS processes.   
 <br />  
 * **[grpc_vpp_notifications][example-grpc-vpp-notifications]** demonstrates how to
-  use the notifications package to  receive VPP notifications streamed by different 
-  vpp-agent processes.   
+  use the notifications package to receive VPP notifications streamed by different 
+  VPP agent processes.   
 <br />  
 * **[CN-Infra  examples][cn-infra-examples]** demonstrates how to use the Ligato Infra framework
   plugins.
@@ -61,9 +61,7 @@ docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /u
 ```
   </br>
  
-  
-  
- **2. (Optional) start Kafka on localhost**
+ **2b. (Optional) start Kafka on localhost**
 
  ```
  sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
@@ -81,7 +79,7 @@ Note: **For ARM64 see the information for [kafka][kafka-arm64]**.
  
  **4. Start desired example**
 
- Example can be started now from particular directory.
+ Example can be started now from the specific directory.
  
 ```
 go run main.go  \

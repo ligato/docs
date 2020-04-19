@@ -56,7 +56,7 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
 ---
 
 * Value in the `UNIMPLEMENTED` state
-    - for NB KV data store, verify the key suffix used to put the value is correct. The prefix is valid and watched by the vpp-agent, but the suffix, normally composed of value primary fields, is malformed. There is a mismatch with the descriptor's `KeySelector`
+    - for NB KV data store, verify the key suffix used to put the value is correct. The prefix is valid and watched by the VPP agent, but the suffix, normally composed of value primary fields, is malformed. There is a mismatch with the descriptor's `KeySelector`
     - `KeySelector` or `NBKeyPrefix` of the descriptor do not use the model, or does use it, but incorrectly. `NBKeyPrefix` of this or another descriptor selects the value, but `KeySelector` does not
 
 ---
@@ -94,7 +94,7 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
 ### Resync removes item not configured by NB
 
 - use Retrieved with Origin `FromSB` for objects automatically created in SB such as default routes
-- `UnknownOrigin` can be used and the KV Scheduler will search the history of transactions to determine if the given value has been configured by the vpp-agent
+- `UnknownOrigin` can be used and the KV Scheduler will search the history of transactions to determine if the given value has been configured by the VPP agent
 - defaults to `FromSB` when the first resync and transactions history is empty
 
 ---
@@ -428,7 +428,7 @@ Here is the URL:
 http://<host>:9191/scheduler/graph
 ```
 !!! note  
-    9191 is the default port number for the REST API, but it can be changed in the configuration file for the [REST plugin][rest-plugin].
+    9191 is the default port number for the REST API, but it can be changed in the conf file of the [REST plugin][rest-plugin].
 
 The requirement is to have the `dot` renderer from graphviz installed on the host which is running the agent. The renderer is shipped with the [graphviz package](http://graphviz.org/).
 
@@ -452,7 +452,7 @@ Without any GET arguments, the API returns the rendering of the graph in its cur
 http://<host>:9191/scheduler/graph?txn=0
 ```
 
-More information on the KV Scheduler REST API can be found [here](kvscheduler.md#rest-api).
+See the [KV Scheduler REST API](kvscheduler.md#rest-api) section for more information.
 
 The graph visualization tool is quite helpful for debugging. It provides an instantaneous global view of the system state. The source of potential problems can be easily pinpointed. The result is reduced time and effort in development and troubleshooting.
 

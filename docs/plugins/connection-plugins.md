@@ -10,33 +10,48 @@ The VPP agent REST plugin supports the retrieval of VPP configuration informatio
 
 The plugin also provides a general purpose HTTP server that can be used by plugins to expose a REST API to external clients. 
 
-The [REST Handler tutorial][rest-handler-tutorial] illustrates how to implement a REST API for a customized plugin.
+The [REST handler tutorial][rest-handler-tutorial] illustrates how to implement a REST API for a customized plugin.
 
+**References**
 
-### Basics
+- [Ligato cn-infra REST folder][cn-infra-rest-repo-folder]
+- [REST plugin folder][vpp-agent-rest-plugin]
+- [REST conf file][rest-conf-file]
+- [REST handler tutorial][rest-handler-tutorial]
 
-REST plugin functionality is enabled without the need for any external configuration file. The default HTTP endpoint is opened on port `0.0.0.0:9191`. 
+---
+
+### Configuration
+
+REST plugin functionality is enabled without the need for any external configuration file. The default HTTP server endpoint is opened on port `0.0.0.0:9191`. 
 
 There are several options for configuring a different port number:
  
-- Set the VPP agent flag: `-http-port=<port>`
+- VPP agent flag:
+```
+ -http-port=<port>`
+```
+
 - Set the `HTTP_PORT` env variable to a desired value
-- Modify the [REST conf file][http-conf-file]
+- Set the endpoint field in the [REST conf file][rest-conf-file]:
+```json
+endpoint: 0.0.0.0:9191
+```
+
+---
 
 ### Usage
 
 **cURL** 
 
-Specify the VPP agent target HTTP IP address and port with a link to the desired data. All URLs are accessible via the `GET` method.
+Specify the VPP agent target HTTP IP address:port with a link to the desired data. All URLs are accessible via the `GET` method.
 
 Example:
 ```
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
 
-**Postman**
-
-Choose the `GET` method, provide the desired URL, and send the request.
+---
 
 ### Supported URLs
 
@@ -45,11 +60,9 @@ The REST plugin enables the dump of configuration item dumps sorted by types suc
 
 **Index Page**
 
-Index of supported API URLs.
-
+Index of supported REST API URLs:
 ```
 curl -X GET http://localhost:9191/
-
 ```
 ---
 
@@ -203,7 +216,7 @@ Use the VPP CLI command via REST. Commands are defined as a map like so:
 
 ---
 
-## Security
+## HTTP Security
 
 The REST plugin supports several mechanisms for HTTP security.
 
@@ -285,7 +298,7 @@ where `ca.pem` is a CA where server certificates should be validated, in the cas
   
 ### Token-based Authorization
 
-REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST config file][http-config]:
+REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST conf file][rest-conf-file]:
 
 ```
 enable-token-auth: true
@@ -293,7 +306,7 @@ enable-token-auth: true
 
 Authorization restricts access to all registered permission group URLs. The user receives a token after login, which grants access to all permitted sites. The token is valid until the user is logged out, or until it expires.
 
-The expiration time is a token claim set in the [REST plugin config file][http-conf-file]:
+The expiration time is a token claim set in the [REST plugin config file][rest-conf-file]:
 
 ```
 token-expiration: 600000000000  
@@ -301,7 +314,7 @@ token-expiration: 600000000000
 
 Note that time is in nanoseconds. If no time is provided, the default value of 1 hour is set.
 
-By default, token uses a pre-defined signature string as the key to sign it. This can be changed in [REST conf file][http-conf-file].
+By default, token uses a pre-defined signature string as the key to sign it. This can be changed in [REST conf file][rest-conf-file].
 
 ```
 token-signature: <string>
@@ -313,7 +326,7 @@ After login, the token is required in an authentication header in the format `Be
 
 ### Users and Permission Groups
 
-Users must be pre-defined in the [REST conf file][http-conf-file].User definitions consists of a name, hashed password and permission groups.
+Users must be pre-defined in the [REST conf file][rest-conf-file].User definitions consists of a name, hashed password and permission groups.
 
 User format example:
 ```
@@ -326,7 +339,7 @@ users:
 
 `Name` defines a username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and password "ligato123"
 
-`Password` must be hashed. It is possible to use the [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the [REST conf file][http-conf-file]like so:
+`Password` must be hashed. It is possible to use the [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the [REST conf file][rest-conf-file]like so:
 
 ```
 password-hash-cost: <number>
@@ -371,19 +384,17 @@ To log out, post the username to `http://localhost:9191/logout`.
 
 ---
 
-## VPP Agent GRPC
+## GRPC Plugin
+
+GRPC support is provided by the GRPC plugin. It is a [Ligato infrastructure][ligato-cn-infra-framework] plugin that enables applications and plugins to utilize gRPC APIs to interact with other system components including the VPP agent.
 
 **References** 
 
-* [GRPC Repo Folder][grpc-cn-infra-repo-folder]
+* [Ligato cn-infra repo][cn-infra-github]
+* [GRPC plugin repo folder][grpc-cn-infra-repo-folder]
 * [GRPC conf file][grpc-conf-file]
-* [GRPC client tutorial][grpc-client-tutorial] shows how to create a client for the off-the-shelf VPP agent GRPC Server
-* [GRPC server tutorial][grpc-server-tutorial] shows how to create your own GRPC Server using the [GRPC Plugin][grpc-plugin].
-* [GRPC Handler Tutorial][grpc-handler-tutorial]
 
-GRPC support is provided by the [CN-Infra GRPC plugin][grpc-plugin] that implements handling of GRPC requests.
-
-The VPP agent GRPC plugin supports the following:
+The GRPC plugin supports the following:
 
 * Send configuration data to VPP
 * Retrieve (dump) configuration from VPP
@@ -396,47 +407,81 @@ The following remote procedure calls (RPC) are defined:
 * **Dump** reads existing configuration data from VPP
 * **Notify** subscribes GRPC to the notification service
 
-To enable the GRPC server, the GRPC plugin must be added to the plugin pool and loaded (currently the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]). The plugin also requires a startup configuration file (see [CN-Infra GRPC plugin][grpc-plugin]), where the endpoint is defined.
+To enable the GRPC server, the GRPC plugin must be added to the plugin pool and loaded. Currently, the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]. The plugin also requires a [conf file][grpc-conf-file] where the endpoint is defined. 
 
-Clients can reach the GRPC Server via an endpoint IP:Port address or via a unix domain socket file. The TCP network is set as default, but other network types are also possible (like TCP6 or UNIX).
+---
 
-### GRPC Plugin
+### Configuration
 
-The `GRPC Plugin` is an infrastructure plugin that enables app plugins to handle GRPC requests (see the `GRPC Plugin API` figure below) as follows:
+Clients can reach the GRPC Server with an endpoint IP:Port address, or by a unix domain socket file.  
 
-1. The GRPC Plugin starts the GRPC server + net listener in its own goroutine
-2. Plugins register their handlers with the `GRPC Plugin`. To service GRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. `GRPC Plugin` uses an GRPC request multiplexer from `grpc/Server`.
-3. The GRPC Server routes GRPC requests to their respective registered handlers using the `grpc/Server`.
+The GRPC endpoint is the address of the GRPC netListener. There are two way to modify the endpoint address: port flag, or conf file.
+
+GRPC port flag:
+```
+-grpc-port=<port>
+```
+Endpoint field in the [GRPC conf file][grpc-conf-file]:
+```json
+endpoint: 0.0.0.0:9191
+```
+
+If a unix domain socket file is used, the socket type can be modified using the network field of the [GRPC conf file][grpc-conf-file]:
+```json
+network: tcp
+```
+TCP is set as the default, but other types are possible, including TCP6, unix, and unixpacket.
+
+---
+
+### Plugin API
+
+Application plugins can handle GRPC requests as follows:
+
+- The GRPC Plugin starts the GRPC server + net listener in its own goroutine
+- Plugins register their handlers with the `GRPC Plugin`. To service GRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. The GRPC Plugin uses an GRPC request multiplexer from `grpc/Server`.
+- GRPC Server routes GRPC requests to their respective registered handlers using the `grpc/Server`.
 
 ![grpc][grpc-image]
 <p style="text-align: center; font-weight: bold">GRPC Plugin API</p>
 <br/>
 
-**Configuration**
-
-- The GRPC Server's port can be defined using the commandline flag `grpc-port` or via the environment variable GRPC_PORT.
-
-**Example**
-
-The [grpc-server greeter example](https://github.com/ligato/cn-infra/blob/master/examples/grpc-plugin/grpc-server/main.go) demonstrates the usage of the `GRPC Plugin` plugin API GetServer():
+The [GRPC server example][grpc-server-example] demonstrates the usage of the plugin API GetServer():
 ```
 // Register our GRPC request handler/service using generated RegisterGreeterServer:
 RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
 ```
-Once the handler is registered with the `GRPC Plugin` and the agent is running, you can use a grpc client to call the service .
+Once the handler is registered with the GRPC plugin, and the agent is running, you can use a GRPC client to call the service.
+
+---
+
+**Examples & Tutorials**
+
+* [GRPC client example][grpc-client-tutorial] shows how to create a client for the GRPC Server
+* [GRPC server example][grpc-server-tutorial] shows how to create a GRPC Server
+* [GRPC handler tutorial][grpc-handler-tutorial]
+* [GRPC VPP notifications example][example-grpc-vpp-notifications]
+* [GRPC VPP configuration example][example-grpc-vpp-remote]
+
 
 [access-security-proto]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/model/access-security/accesssecurity.proto
+[cn-infra-github]: https://github.com/ligato/cn-infra
+[cn-infra-rest-repo-folder]: https://github.com/ligato/cn-infra/tree/master/rpc/rest
 [configurator-grpc]: https://github.com/ligato/vpp-agent/blob/master/plugins/configurator/plugin.go#L54
-[grpc-client-tutorial]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-client
-[grpc-server-tutorial]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-server
-[grpc-conf-file]: https://github.com/ligato/cn-infra/blob/master/rpc/grpc/grpc.conf
+[example-grpc-vpp-notifications]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/notifications
+[example-grpc-vpp-remote]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/remote_client
+[grpc-client-example]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-client
+[grpc-server-example]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-server
+[grpc-conf-file]: ../user-guide/config-files.md#grpc
 [grpc-image]: ../img/user-guide/grpc.png
 [grpc-plugin]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-cn-infra-repo-folder]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-handler-tutorial]: ../tutorials/08_grpc-tutorial.md
-[http-conf-file]: ../user-guide/config-files.md#rest
+[rest-conf-file]: ../user-guide/config-files.md#rest
+[ligato-cn-infra-framework]: ../intro/framework.md#cn-infra
 [password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md
 [rest-handler-tutorial]: ../tutorials/03_rest-handler.md
+[vpp-agent-rest-plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/restapi
 
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol

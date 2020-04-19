@@ -1,8 +1,8 @@
-# DB plugins
+# Database Plugins
 
 ## Datasync
 
-Datasync defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources such as data stores, message buses, or RPC-connected clients.
+Datasync defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources such as data stores, message buses, or rpc-connected clients.
 
 Data synchronization addresses the situation when multiple data sets must by synchronized as a result of a published event.
 
@@ -23,39 +23,44 @@ The data handled by one plugin can have references to the data of another plugin
 
 ### Watch Data API
 
-The watch data API is used by plugins to:
+The watch data API is used for the following:
 
-- Subscribe to channels for data changes using `Watch()`, while being "abstracted away" from the particular message source such as an etcd server.
-- Process a full Data RESYNC (startup & fault recovery scenarios). Feedback is provided to the user of this API (e.g. success or error) via callback.
-- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where the minimal set of changes (deltas) to reach synchronized state are propagated to plugins. Feedback to the user of the API (e.g. successful configuration or error) is returned via callback.
+- Subscribe to channels for data changes using Watch(), while being “abstracted away” from the particular message source such as an etcd server.
+- Process a full Data RESYNC including startup & fault recovery scenarios. Feedback such as success or error is provided to the user of this API via callback.
+- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where the minimal set of changes, or deltas, to reach synchronized state are propagated to plugins. Feedback such as successful configuration or error is returned to the user of the API via callback.
+
+
 
 ![datasync][datasync-image]
 <p style="text-align: center; font-weight: bold">Watch data API Functions</p>
 
 This API defines two types of events that a plugin should support:
 
-- Full Data RESYNC (resynchronization) event triggers a resync of the entire configuration. This event is used after an agent start/restart, or for a fault recovery scenario (e.g. when the agent's connectivity to an external data source is lost and restored).
-- Incremental Data CHANGE event triggers incremental processing of configuration changes. Each data change event contains both the previous and the new/current value. The Data synchronization is switched to this optimized mode only after a successful Full Data RESYNC.
+- Full data RESYNC event triggers a resync of the entire configuration. This event is used after an agent start/restart, or for a fault recovery scenario, such as when the agent connectivity to an external data source is lost and restored.
+- Incremental data CHANGE event triggers incremental processing of configuration changes. Each data change event contains both the previous and the new/current value. The Data synchronization is switched to this optimized mode only after a successful Full Data RESYNC.
 
 ---
 
 ### Publish Data API
 
-The publish data API is used plugins to asynchronously publish events with data change values and still remain abstracted away from the target data store, message bus or RPC client(s).
+The publish data API is used plugins to asynchronously publish events with data change values, and still remain abstracted away from the target data store, message bus or RPC client(s).
 
 ![datasync publish][datasync-publish-image]
 <p style="text-align: center; font-weight: bold">Publish data API Functions</p>
+
+---
+
 ## Data Broker 
 
 The Data Broker abstraction is based on two APIs:
 
-* **Broker** - used by plugins to `pull` (i.e. read) data from a data store or `push` (i.e. write) data into the data store. Data can be retrieved for a specific key or by running a query. Data can be written for a specific key. Multiple writes can be executed in a transaction.
-* **Watcher** - used by plugins to `watch` data on a specified key. Watching means to monitor for data changes, and receive a notifications upon any change occurring.
+* **Broker** - used by plugins to pull data from a data store, or push data to the data store. Data can be retrieved for a specific key or by running a query. Data can be written for a specific key. Multiple writes can be executed in a transaction.
+* **Watcher** - used by plugins to watch data on a specified key. Watching means to monitor for data changes, and receive a notifications upon any change occurring.
   
 ![db][db-image]
 <p style="text-align: center; font-weight: bold">Broker and Watcher APIs Functions</p>
 
-The broker amd watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between KV-based and sql-based data stores. Therefore the broker and watcher Go interfaces are defined in each package separately; The method names for a given operation are the same, the method arguments are different.
+The broker amd watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between KV-based and sql-based data stores. Therefore the broker and watcher Go interfaces are defined in each package separately. The method names for a given operation are the same, the method arguments are different.
 
 ---
 
