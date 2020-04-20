@@ -83,6 +83,10 @@ The etcd plugin provides access to an etcd KV data store. The host or server whe
 
 ### Configuration
 
+The etcd conf file contains configuration information for the etcd data store.
+
+The configuration options are described in the [etcd conf file][etcd-conf-file] section of user guide.  
+
 - Location of the etcd configuration file can be defined either by the command line flag `etcd-config` or by setting the `ETCD_CONFIG` environment variable. Examples:
 
 ```bash
@@ -342,6 +346,7 @@ The `value` identifies a configuration item such as an interface.
 Data types supporting status propagation (e.g. interfaces or bridge domains) can store their state in the filesystem. There is a field in the configuration file called `status-path` which must be set in order to store status. Status data will be stored in JSON or YAML formats.
 
 
+[etcd-conf-file]: ../user-guide/config-files.md#etcd
 [datasync-image]: ../img/user-guide/datasync_watch.png
 [datasync-publish-image]: ../img/user-guide/datasync_pub.png
 [db-image]: ../img/user-guide/db.png

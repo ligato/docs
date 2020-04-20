@@ -4,14 +4,41 @@ This section discusses plugin configuration files and flags.
 
 ---
 
-## Conf Directory
+## Conf File Location
 
+The location of the conf files directory or individual conf files can be set using a VPP agent start flag or env variable export.
+
+**Conf file directory**
+
+Conf file directory flag:
 ```bash
--config-dir=".": Location of the config files; can also be set via 'CONFIG_DIR' env variable.
+-config-dir="."
+```
+If conf file directory is `/opt/vpp-agent/dev`, then start the VPP agent with this command:
+```json
+vpp-agent --config-dir=/opt/vpp-agent/dev
+```
+Same conf file directory, but using the env variable of `CONFIG_DIR`:
+```json
+export CONFIG_DIR=/opt/vpp-agent/dev
 ```
 
-This flag is used to define the directory for loading plugin configuration files.
-Using `-<plugin>-config` for a specific plugin will override this flag.
+---
+
+**Conf file location**
+
+Using per-plugin flags or env variables will override the conf file directory options.
+
+If the etcd conf file location is `/opt/vpp-agent/dev/etcd.conf`, then start the VPP agent with the etcd conf file flag of `--etcd-config=` like so:
+```bash
+vpp-agent -etcd-config=/opt/vpp-agent/dev/etcd.conf
+```
+Using the `ETCD_CONFIG` env variable:
+```bash
+export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
+```
+
+---
 
 ## Plugin Conf Files
 ---
@@ -526,7 +553,7 @@ Usage of vpp-agent:
 [bolt-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/bolt/bolt.conf
 [cassandra-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/sql/cassandra/cassandra.conf
 [consul-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/consul/consul.conf
-[etcd-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/etcd/etcd.conf
+[etcd-conf-file]: ../user-guide/config-files.md#etcd
 [filedb-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/filedb/filesystem.conf
 [govppmux-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/govppmux/govpp.conf
 [grpc-conf-file]: https://github.com/ligato/cn-infra/blob/master/rpc/grpc/grpc.conf
