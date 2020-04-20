@@ -107,9 +107,9 @@ The etcd plugin provides access to an etcd KV data store. The host or server whe
 
 ### Configuration
 
-Thew location of the etcd conf file can be defined either by the command line flag `etcd-config`, or by setting the `ETCD_CONFIG` env variable. 
+The location of the etcd conf file can be defined either by the command line flag `etcd-config`, or by setting the `ETCD_CONFIG` env variable. 
 
-The configuration options are described in the [etcd conf file][etcd-conf-file] section of user guide.  
+The configuration options are described in the [etcd conf file][etcd-conf-file] section of the user guide.  
 
 
 ### Status Check
@@ -303,7 +303,7 @@ The Consul plugin provides access to a Consul KV data store.
 
 The location of the Consul configuration file can be defined by the command line flag `consul-config`, or set via the `CONSUL_CONFIG` env variable.
 
-The configuration options are described in the [Consul conf file][consul-conf-file] section of user guide. 
+The configuration options are described in the [Consul conf file][consul-conf-file] section of the user guide. 
 
 ### Status Check
 
@@ -341,7 +341,7 @@ JSON and YAML-formatted data are supported.
 * JSON `(*.json)`
 * YAML `(*.yaml)`
 
-The configuration options are described in the [FileDB conf file][filedb-conf-file] section of user guide. 
+The configuration options are described in the [FileDB conf file][filedb-conf-file] section of the user guide. 
 
 ### Data Structure
 
