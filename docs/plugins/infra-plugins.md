@@ -1,24 +1,31 @@
-# Infra plugins
+# Infra Plugins
 
-!!! Note
-    The documentation in some cases may refer to the Ligato Infra as Cloud Native - Infra or CN-infra for short.
+This section describes the set of [Ligato infrastructure][cn-infra-githu] plugins.
 
 ---
 
 ## Status Check
 
-The `statuscheck` infra plugin monitors the overall status of a cn-infra based app by collecting and aggregating the status of agents plugins. The status is exposed to external clients via [ETCD - datasync][datasync-plugin] and [HTTP][rest-plugin]. 
+The status check plugin monitors the overall status of a cn-infra based application by collecting and aggregating the status of agent plugins. The status is exposed to external clients via [etcd - datasync][datasync-plugin] and [REST][rest-plugin]. 
 
-See the `statuscheck API` figure below:
 
 ![status check][status-check-image]
 <p style="text-align: center; font-weight: bold">StatusCheck API</p>
+
+**References**
+
+- [Ligato cn-infra repo][cn-infra-github]
+- [Status check repo folder][status-check-repo-folder]
+- [Status check proto][status-check-proto]
+- [Status check model][status-check-model]
+
+---
 
 ### Overall Agent Status
 
 The overall agent status is aggregated from all plugins' status. Conceptually this is a  `logical AND` for each plugin's status.
 
-The agent's current status can be retrieved from etcd using this key: 
+The agent's current status can be retrieved from the etcd data store using this key: 
 ```
 /vnf-agent/<agent-label>/check/status`
 
@@ -39,14 +46,16 @@ $ curl -X GET http://localhost:9191/readiness
 {"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
 ```
 
-To change the HTTP server port (default `9191`), use the `http-port` option of the vpp-agent:
+To change the HTTP server port (default `9191`), use the `http-port` flago of the VPP agent:
 ```
 $ vpp-agent -http-port 9090
 ```
 
+---
+
 ### Plugin Status
 
-Plugins may use the `PluginStatusWriter.ReportStateChange` API to `push` status information at any time. For optimum performance, `statuscheck` will then propagate the status report to external clients if and only if it has changed since the last update. 
+Plugins may use the `PluginStatusWriter.ReportStateChange` API to `push` status information at any time. For optimum performance, `statuscheck` will then propagate the status report to external clients, if and only if, it has changed since the last update. 
 
 See the `Push Status` figure below. 
 
@@ -356,7 +365,7 @@ dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 
 
 
-
+[cn-infra-github]: https://github.com/ligato/cn-infra
 [datasync-plugin]: db-plugins.md#datasync-plugin
 [idx-map-cache-image]: ../img/user-guide/idxmap_cache.png
 [idx-map-local-image]: ../img/user-guide/idxmap_local.png
@@ -369,8 +378,11 @@ dbw.Watch(dataChan, cfg.SomeConfigKeyPrefix(plugin.Label))
 [rest-plugin]: connection-plugins.md#rest-plugin
 [sarama]: https://github.com/Shopify/sarama
 [status-check-image]: ../img/user-guide/status_check.png
+[status-check-model]: https://github.com/ligato/cn-infra/blob/master/health/statuscheck/model/status/keys_agent_status.go
+[status-check-proto]: https://github.com/ligato/cn-infra/blob/master/health/statuscheck/model/status/status.proto
 [status-check-push-image]: ../img/user-guide/status_check_push.png
 [status-check-pull-image]: ../img/user-guide/status_check_pull.png
+[status-check-repo-folder]: https://github.com/ligato/cn-infra/tree/master/health/statuscheck
 [vpp-iface-idx]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifaceidx/ifaceidx.goL62
 [vpp-iface-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin_api.go#L26
 [value-origin]: https://github.com/ligato/vpp-agent/blob/dev/plugins/kvscheduler/api/kv_descriptor_api.go#L53

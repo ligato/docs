@@ -553,7 +553,7 @@ Usage of vpp-agent:
 [bolt-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/bolt/bolt.conf
 [cassandra-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/sql/cassandra/cassandra.conf
 [consul-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/consul/consul.conf
-[etcd-conf-file]: ../user-guide/config-files.md#etcd
+[etcd-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/etcd/etcd.conf
 [filedb-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/filedb/filesystem.conf
 [govppmux-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/govppmux/govpp.conf
 [grpc-conf-file]: https://github.com/ligato/cn-infra/blob/master/rpc/grpc/grpc.conf
