@@ -10,7 +10,7 @@ The link below the key title points to its proto definition.
 
 ---
 
-### VPP keys
+### VPP Keys
 
 **[ACL-based forwarding:][abf-proto]**
 
@@ -188,7 +188,7 @@ Key:
 ---
 
 
-### Linux keys
+### Linux Keys
 
 **[Linux interfaces:][interface-proto-linux]**
 

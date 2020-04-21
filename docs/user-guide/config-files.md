@@ -6,7 +6,7 @@ This section discusses plugin configuration files and flags.
 
 ## Conf File Location
 
-The location of the conf files directory or individual conf files can be set using a VPP agent start flag or env variable export.
+The location of the conf files directory, or individual conf files can be set using a VPP agent start flag or env variable export.
 
 **Conf file directory**
 
@@ -14,7 +14,7 @@ Conf file directory flag:
 ```bash
 -config-dir="."
 ```
-If conf file directory is `/opt/vpp-agent/dev`, then start the VPP agent with this command:
+If the conf file directory is `/opt/vpp-agent/dev`, then start the VPP agent with this command:
 ```json
 vpp-agent --config-dir=/opt/vpp-agent/dev
 ```
@@ -25,9 +25,9 @@ export CONFIG_DIR=/opt/vpp-agent/dev
 
 ---
 
-**Conf file location**
+**Individual conf file location**
 
-Using per-plugin flags or env variables will override the conf file directory options.
+Using per-plugin flags or env variables will override the conf file directory option.
 
 If the etcd conf file location is `/opt/vpp-agent/dev/etcd.conf`, then start the VPP agent with the etcd conf file flag of `--etcd-config=` like so:
 ```bash
@@ -508,7 +508,7 @@ _**VPP Interface Plugin Conf File Options**_
 
 ## VPP agent -h command
 
-Use this command to display flag, conf file name, and env variable information for all config files.
+Use this command to display flag, conf file name, and env variable information for all conf files.
 
 ```json
 vpp-agent -h

@@ -83,7 +83,7 @@ For convenience, here are those options:
 !!! Note
     `TraceEnabled` is obsolete and used only in older versions.
 
-**References**
+**References:**
     
 - [GoVPPMux Conf File][govppmux-conf-file]
 
@@ -297,14 +297,14 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Interface Status
 
-Interface status is a **collection of interface data** that can be stored in an external database or sent as a notification.
+Interface status is a **collection of interface data** that can be stored in an external database, or sent as a notification.
 
 The VPP agent waits on several types of VPP events such as object creation, deletion or counter updates. The event is processed and all data extracted. Using the collected information, the VPP agent builds a notification which is sent to all registered publishers or databases. Any errors that occurred are also stored. The statistics readout is performed every second.
 
-!!! danger "Important"
-    The interface status is disabled by default, since no default publishers are defined. The interface status can be set in the [VPP interface conf file][vpp-interface-conf-file].   
+!!! Note
+    The publishing of interface status is disabled by default, since no default publishers are defined. Publishing interface status can be set by adding one or more `StatusPublishers` to the [VPP interface conf file][vpp-interface-conf-file].  
 
-**References**
+**References:**
 
 - [VPP interface status proto][vpp-interface-state-proto]
 - [VPP interface status models][vpp-interface-model]
@@ -352,7 +352,7 @@ agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/loop1
 agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/memif1
 ```
 !!! note
-    Do not forget to enable status in the conf file. Otherwise, the status will not be published to the database.
+    Do not forget to enable status in the conf file. Otherwise, status will not be published to the KV data store or database.
 
 
 ---
@@ -365,7 +365,7 @@ The L2 plugin is used to configure VPP link-layer configuration items, notably *
 
 The L2 bridge domain (BD) is a set of interfaces that belong to the same flooding or broadcast domain. Every BD contains several attributes including MAC learning, unicast forwarding, flooding, and an ARP termination table, which all can be enabled or disabled. The BD is identified by a unique ID, which is managed by the plugin and cannot be externally configured. 
 
-**References**
+**References:**
 
 - [BD proto][bd-proto]
 - [BD model][bd-model]  
@@ -512,7 +512,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 An L2 forwarding information base (FIB) can be used in network bridging or routing. Inbound packets are forwarded to an outbound interface defined in the FIB table. The VPP agent enables the configuration of static FIB entries with a combination of interface and bridge domain values.
 
-**References**
+**References:**
 
 - [FIB proto][bd-proto]
 - [FIB model][bd-model] 
@@ -609,7 +609,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The VPP agent supports the L2 cross connect (xconnect) feature which sets an interface pair to cross connect (xconnect) mode. All packets received on the first interface are transmitted out the second interface. This mode is not bidirectional by default. If required both interfaces in each direction must be set.
 
-**References**
+**References:**
 
 - [xconnect proto][xc-proto]
 - [xconnect model][bd-model]
@@ -705,7 +705,7 @@ The address resolution protocol (ARP) is a communication protocol for discoverin
 
 The structure of an ARP entry is defined in the [ARP proto][arp-proto]. Every ARP entry includes a MAC address, IP address and an interface. The two latter values are a part of the [ARP entries key][key reference].
 
-**References**
+**References:**
 
 - [ARP proto][arp-proto]
 - [ARP model][L3-models]
@@ -801,7 +801,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 Proxy ARP is a technique whereby a device on a subnet responds to ARP queries for the IP address of a host on a different network. Proxy ARP IP address ranges are defined via the respective binary API call. In addition, the desired interfaces must be enabled for the proxy ARP feature.  
 
-**References**
+**References:**
 
 - [Proxy ARP proto][L3-proto]
 - [Proxy ARP model][L3-models]  
@@ -912,7 +912,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The VPP routing table contains destination network prefixes, a corresponding next_hop IP address and the outbound interface. Routes are grouped in virtual routing and forwarding (VRF) tables, with a default table of index 0.
 
-**References**
+**References:**
 
 - [Routes proto][route-proto]
 - [Routes model][L3-models]
@@ -1030,7 +1030,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The VPP IP scan-neighbor feature is used to enable or disable periodic IP neighbor scans. The IP scan-neighbor proto defines scan intervals, timers, delays, IPv4 mode, IPv6 mode or dual-stack.
 
-**References**
+**References:**
 
 - [IP scan-neighbor proto][L3-proto]
 - [IP scan-neighbor][L3-models] 
@@ -1126,7 +1126,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The VPP agent supports the L3 cross connect (L3xc) feature. It applies the xconnect paradigm for IPv4 or IPv6 packets by cross connecting all ingress traffic received on an L3-configured interface to an outbound L3 FIB path.
 
-**References**
+**References:**
 
 - [L3xc Proto][l3xc-proto]
 - [l3xc model][l3-models]  
@@ -1141,7 +1141,7 @@ Note that the same function can be achieved using a dedicated VRF table with a d
 
 The L3 plugin supports VRF tables in scenarios where multiple discrete routing tables are required.    
 
-**References**
+**References:**
 
 - [VRF table proto][vrf-proto]
 - [VRF table model][L3-models]
@@ -1163,7 +1163,7 @@ The IPSec plugin handles the configuration of **Security Policy Databases** (SPD
 
 The SPD specifies the policies that determine the disposition of all the inbound or outbound IP traffic from either the host or the security gateway. The SPD is bound to an SPD interface and contains a list of policy entries in a table. Every policy entry points to an IPsec security association (SA). 
 
-**References**
+**References:**
 
 - [SPD Proto][ipsec-proto]
 - [SPD Model][ipsec-model]
@@ -1300,7 +1300,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 An IPsec security association (SA) is a set of security behaviors negotiated between two or more devices for the purpose of communicating in a secure fashion. The SA includes the agreed upon crypto methods for authentication, encryption and extended sequence number. The IPsec tunnel encapsulation type of authentication header (AH), or encapsulating security protocol (ESP) is established as well. 
 
-**References**
+**References:**
 
 - [SA Proto][ipsec-proto]
 - [SA Model][ipsec-model] 
@@ -1404,7 +1404,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The punt plugin is used to configure VPP to punt (re-direct) packets to the TCP/IP host stack. The plugin supports `punt to the host` either directly, or via a Unix domain socket.
 
-**References**
+**References:**
 
 - [Punt proto][punt-proto]
 - [Punt model][punt-model]
@@ -1515,7 +1515,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 IP redirect enables traffic that arrives on an interface, and matching a given IP protocol, to be punted (redirect) to a transmit (TX) interface and next_hop IP address. The IP protocol can be IPv4 or IPv6. The IP protocol, TX, and next_hop fields are defined in the ip redirect proto. Optionally, the received interface (RX) interface can be used to redirect traffic only received on that interface. 
 
-**References**
+**References:**
 
 - [IP redirect proto][punt-proto]
 - [IP redirect model][punt-model] 
@@ -1630,7 +1630,7 @@ Current limitations for IP redirect:
 
 Access Control Lists (ACL) filter network traffic by controlling whether packets are forwarded (permitted) or blocked (deny) at the router’s interfaces based on the criteria specified in the access list.
 
-**References**
+**References:**
 
 - [ACL proto][acl-proto]
 - [ACL model][acl-model]
@@ -1822,7 +1822,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The ACL-based forwarding plugin is an implementation of policy-based routing (PBR). With ABF, packets are forwarded based on user-defined fields expressed by ACLs, rather than by a longest match lookup in a routing table. ACL is defined in the [ABF model][abf-model]. 
 
-**References**
+**References:**
 
 - [ABF proto][abf-proto]
 - [ABF model][abf-model]
@@ -1962,7 +1962,7 @@ Network address translation (NAT) is a method for translating IP addresses belon
 
 The global NAT configuration is a special case of data grouped under single key. This means there is no unique character as a part of the key, so there is only one global NAT configuration. Interfaces marked as NAT-enabled should be present in VPP but if not, the KV scheduler caches the configuration for later use when the interface becomes available. 
 
-**References**
+**References:**
 
 - [NAT global proto][nat-proto]
 - [NAT global model ][nat-model]
@@ -2121,7 +2121,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 Destination network address translation (DNAT) translates the destination IP address of a packet in one direction and performs the inverse NAT function for packets returning in the opposite direction. In the VPP agent, the DNAT configuration is composed of a list of static and/or identity mappings labelled under a single key. DNAT44 configuration is defined in the [NAT model][nat-model].
 
-**References**
+**References:**
 
 - [DNAT44 proto][nat-proto]
 - [DNAT44 model][nat-model]
@@ -2274,7 +2274,7 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 The `srplugin` is designed to configure Segment Routing for IPv6 (SRv6) in VPP.
 
-**References**
+**References:**
 
 - [SRv6 proto][srv6-proto]
 - [SRv6 model][srv6-model]
@@ -2322,7 +2322,7 @@ In some deployments, a host is outfitted with two NICs: one controlled by VPP an
 
 The steal-the-NIC (STN) plugin is used when only a single NIC is supported on the host. In this [single-NIC setup][stn-contiv-vpp], the interface will be “stolen” from the host network stack just before starting the VPP and configured with the same IP address on VPP. The same VPP interface IP address will also be used on the host-to-VPP interconnect TAP interface.
 
-**References**
+**References:**
 
 - [STN proto][stn-proto]
 - [STN-model][stn-model] 
