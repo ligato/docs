@@ -55,7 +55,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 
 ### Supported URLs
 
-The REST plugin enables the dump of configuration item dumps sorted by types such as interfaces, L3 routes, telemetry, and bridge domains.
+The REST plugin enables a dump of configuration item dumps sorted by types such as interfaces, L3 routes, telemetry, and bridge domains.
  
 
 **Index Page**
@@ -244,11 +244,11 @@ If `server-cert-file` and `server-key-file` are defined, the server requires HTT
 
 `client-cert-files` is the list of the root certificate authorities (CA) the server uses to validate client certificates. If the list is _NOT_ empty, only clients who provide a valid certificate are allowed to access the server.
 
-`client-basic-auth` allows one to define user/password credentials permitting access to the server. The config option defines a static list of allowed user(s). If the list is _NOT_ empty, default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin (e.g.: if you want to read credentials from etcd).
+`client-basic-auth` allows one to define user/password credentials permitting access to the server. The config option defines a static list of allowed user(s). If the list is _NOT_ empty, default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin. This would be applicable if you wanted to read credentials from etcd.
 
 ---
 
-***Example***
+**Example**
 
 In order to generate self-signed certificates, use the following commands:
 
@@ -298,7 +298,7 @@ where `ca.pem` is a CA where server certificates should be validated, in the cas
   
 ### Token-based Authorization
 
-REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST conf file][rest-conf-file]:
+The REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST conf file][rest-conf-file]:
 
 ```
 enable-token-auth: true
@@ -320,13 +320,13 @@ By default, token uses a pre-defined signature string as the key to sign it. Thi
 token-signature: <string>
 ```
 
-After login, the token is required in an authentication header in the format `Bearer <token>`, so it can be validated. If the REST interface is accessed via a browser, the token is written to a cookie file.
+After login, the token is required in an authentication header in the format `Bearer <token>`, so it can be validated. If the REST interface is accessed with a browser, the token is written to a cookie file.
 
 ---
 
 ### Users and Permission Groups
 
-Users must be pre-defined in the [REST conf file][rest-conf-file].User definitions consists of a name, hashed password and permission groups.
+Users must be pre-defined in the [REST conf file][rest-conf-file]. User definitions consists of a name, hashed password and permission groups.
 
 User format example:
 ```
@@ -337,9 +337,9 @@ users:
 `
 ```
 
-`Name` defines a username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and password "ligato123"
+`Name` defines a username (login). Name "admin" is forbidden since the admin user is created automatically with full permissions and a password of "ligato123"
 
-`Password` must be hashed. It is possible to use the [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the [REST conf file][rest-conf-file]like so:
+`Password` must be hashed. It is possible to use the [password-hasher utility][password-hasher] to assist with this function. Password must also be hashed with the same cost value, as defined in the [REST conf file][rest-conf-file] like so:
 
 ```
 password-hash-cost: <number>
@@ -386,7 +386,10 @@ To log out, post the username to `http://localhost:9191/logout`.
 
 ## GRPC Plugin
 
-GRPC support is provided by the GRPC plugin. It is a [Ligato infrastructure][ligato-cn-infra-framework] plugin that enables applications and plugins to utilize gRPC APIs to interact with other system components including the VPP agent.
+gRPC support is provided by the GRPC plugin. It is a [Ligato infrastructure][ligato-cn-infra-framework] plugin that enables applications and plugins to utilize gRPC APIs to interact with other system components including the VPP agent.
+
+!!! Note
+    The documentation will use the terms: "GRPC" and "gRPC". GRPC refers to the Ligato-specific GRPC components such as the plugin, tutorials and examples. gRPC refers to the functions, flows, definitions and behaviors independent of a specific implementation, as noted in [gRPC open source project][grpc-io] documentation. 
 
 **References** 
 
@@ -415,7 +418,7 @@ To enable the GRPC server, the GRPC plugin must be added to the plugin pool and 
 
 Clients can reach the GRPC Server with an endpoint IP:Port address, or by a unix domain socket file.  
 
-The GRPC endpoint is the address of the GRPC netListener. There are two way to modify the endpoint address: port flag, or conf file.
+The GRPC endpoint is the address of the gRPC netListener. There are two way to modify the endpoint address: using the port flag, or modifying the GRPC conf file.
 
 GRPC port flag:
 ```
@@ -436,11 +439,11 @@ TCP is set as the default, but other types are possible, including TCP6, unix, a
 
 ### Plugin API
 
-Application plugins can handle GRPC requests as follows:
+Application plugins can handle gRPC requests as follows:
 
 - The GRPC Plugin starts the GRPC server + net listener in its own goroutine
-- Plugins register their handlers with the `GRPC Plugin`. To service GRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. The GRPC Plugin uses an GRPC request multiplexer from `grpc/Server`.
-- GRPC Server routes GRPC requests to their respective registered handlers using the `grpc/Server`.
+- Plugins register their handlers with the `GRPC Plugin`. To service gRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. The GRPC Plugin uses an GRPC request multiplexer from `grpc/Server`.
+- GRPC Server routes gRPC requests to their respective registered handlers using the `grpc/Server`.
 
 ![grpc][grpc-image]
 <p style="text-align: center; font-weight: bold">GRPC Plugin API</p>
@@ -451,14 +454,14 @@ The [GRPC server example][grpc-server-example] demonstrates the usage of the plu
 // Register our GRPC request handler/service using generated RegisterGreeterServer:
 RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
 ```
-Once the handler is registered with the GRPC plugin, and the agent is running, you can use a GRPC client to call the service.
+Once the handler is registered with the GRPC plugin, and the agent is running, you can use a gRPC client to call the service.
 
 ---
 
 **Examples & Tutorials**
 
-* [GRPC client example][grpc-client-tutorial] shows how to create a client for the GRPC Server
-* [GRPC server example][grpc-server-tutorial] shows how to create a GRPC Server
+* [GRPC client example][grpc-client-example] shows how to create a client for the GRPC Server
+* [GRPC server example][grpc-server-example] shows how to create a GRPC Server
 * [GRPC handler tutorial][grpc-handler-tutorial]
 * [GRPC VPP notifications example][example-grpc-vpp-notifications]
 * [GRPC VPP configuration example][example-grpc-vpp-remote]
@@ -474,6 +477,7 @@ Once the handler is registered with the GRPC plugin, and the agent is running, y
 [grpc-server-example]: https://github.com/ligato/cn-infra/tree/master/examples/grpc-plugin/grpc-server
 [grpc-conf-file]: ../user-guide/config-files.md#grpc
 [grpc-image]: ../img/user-guide/grpc.png
+[grpc-io]: https://grpc.io/
 [grpc-plugin]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-cn-infra-repo-folder]: https://github.com/ligato/cn-infra/tree/master/rpc/grpc
 [grpc-handler-tutorial]: ../tutorials/08_grpc-tutorial.md

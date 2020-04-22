@@ -242,7 +242,7 @@ The Linux iptables proto defines the configurable options to define and manage i
 
 ## L3 Plugin
 
-The Linux L3 plugin is used to configure Linux ARP entries and **Linux routes**. The Linux L3 plugin is dependent on the [Linux interface plugin](#linux-interface-plugin). L3 configuration items support the Linux namespace in the same manner as the Linux interface.  
+The Linux L3 plugin is used to configure Linux ARP entries and Linux routes. The Linux L3 plugin is dependent on the [Linux interface plugin](#linux-interface-plugin). L3 configuration items support the Linux namespace in the same manner as the Linux interface.  
 
 ### Linux ARP
 
@@ -265,7 +265,7 @@ scope.
 
 **KV Data Store**
  
-Put the ARP entry configuration data into an etcd data store using the correct [interface key][linux-key-reference].
+Put the ARP entry configuration data into an etcd data store using the correct [Linux ARP key][linux-key-reference].
 
 Example data:
 ```json
@@ -368,7 +368,7 @@ The scope options are:
 
 **KV Data Store**
 
-Put the route data into an etcd data store using the [route key][linux-key-reference].
+Put the route data into an etcd data store using the [Linux route key][linux-key-reference].
 
 Example configuration:
 ```json

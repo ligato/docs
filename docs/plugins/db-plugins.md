@@ -38,8 +38,8 @@ The data handled by one plugin can have references to the data of another plugin
 The watch data API is used for the following:
 
 - Subscribe to channels for data changes using Watch(), while being “abstracted away” from the particular message source such as an etcd server.
-- Process a full Data RESYNC including startup and fault recovery scenarios. Feedback such as success or error is provided to the user of this API via callback.
-- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where the minimal set of changes, or deltas, to reach synchronized state are propagated to the plugins. Feedback such as successful configuration or error is returned to the user of this API via callback.
+- Process a full Data RESYNC including startup and fault recovery scenarios. Feedback, such as success or error, is provided to the user of this API via callback.
+- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where the minimal set of changes, or deltas, to reach synchronized state are propagated to the plugins. Feedback, such as successful configuration or error, is returned to the user of this API via callback.
 
 
 
@@ -48,7 +48,7 @@ The watch data API is used for the following:
 
 This API defines two types of events that a plugin should support:
 
-- Full data RESYNC event triggers a resync of the entire configuration. This event is used after an agent start/restart, or for a fault recovery scenario, such as when agent connectivity to an external data source is lost and restored.
+- Full data RESYNC event triggers a resync of the entire configuration. This event is used after an agent start/restart, or in a fault recovery scenario, such as when agent connectivity to an external data source is lost and restored.
 - Incremental data CHANGE event triggers incremental processing of configuration changes. Each data change event contains both the previous and the new/current value. The Data synchronization is switched to this optimized mode only after a successful Full Data RESYNC.
 
 ---
@@ -67,7 +67,7 @@ The publish data API is used by plugins to asynchronously publish events with da
 The Data Broker abstraction is based on the broker and watcher APIs:
 
 * **Broker** - used by plugins to pull data from a data store, or push data to the data store. Data can be retrieved for a specific key or by running a query. Data can be written for a specific key. Multiple writes can be executed in a transaction.
-* **Watcher** - used by plugins to watch data on a specified key. Watching means to monitor for data changes, and receive a notifications upon any change occurring.
+* **Watcher** - used by plugins to watch data on a specified key. Watching means to monitor for data changes, and receive notifications upon any change occurring.
   
 ![db][db-image]
 <p style="text-align: center; font-weight: bold">Broker and Watcher APIs Functions</p>
@@ -114,7 +114,7 @@ The configuration options are described in the [etcd conf file][etcd-conf-file] 
 
 ### Status Check
 
-The etcd plugin will use the Status Check plugin to periodically issue a GET request to verify connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with the etcd server, both the readiness and the liveness probe from the probe plugin will return a negative result.
+The etcd plugin will use the Status Check plugin to periodically issue a GET request to verify connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with the etcd server, both the readiness and the liveness probes from the probe plugin will return a negative result.
 
 ### Compacting
 
@@ -160,15 +160,17 @@ var cfg redis.SentinelConfig
 - Redis Cluster
 var cfg redis.ClusterConfig
 
-You can initialize any of the above configuration instances in memory, or load the settings from a file using 
+You can initialize any of the above configuration instances in memory, or load the settings from a file using: 
 ```
 err = config.ParseConfigFromYamlFile(configFile, &cfg)
 ```
-You can also load any of the three configuration files using
+You can also load any of the three configuration files using:
 ```
 var cfg interface{}
 cfg, err := redis.LoadConfig(configFile)
 ```
+
+---
 
 ### Create Connection
 
@@ -176,6 +178,8 @@ cfg, err := redis.LoadConfig(configFile)
 client, err := redis.CreateClient(cfg)
 db, err := redis.NewBytesConnection(client, logrus.DefaultLogger())
 ```
+
+---
 
 ### Create Brokers and Watchers
 
@@ -190,6 +194,8 @@ wrapper := kvproto.NewProtoWrapper(db)
 protoBroker := wrapper.NewBroker("some-prefix")
 protoWatcher := wrapper.NewWatcher("some-prefix")
 ```
+
+---
 
 ### Perform CRUD Operations
 
@@ -239,6 +245,8 @@ txn.Put("key103", []byte("val 103")).Put("key104", []byte("val 104"))
 err := txn.Commit()
 ```
 
+---
+
 ### Key Space Event Subscription
 
 ```
@@ -263,6 +271,8 @@ for {
 ```
 config SET notify-keyspace-events KA
 ```
+
+---
 
 ### Resiliency
 
@@ -307,7 +317,7 @@ The configuration options are described in the [Consul conf file][consul-conf-fi
 
 ### Status Check
 
-The Consul plugin will use the Status Check plugin to periodically issue a GET request to verify connection status. The Consul connection state affects the global status of the agent. If the agent cannot establish a connection with Consul, both the readiness and the liveness probe from the probe plugin will return a negative result. 
+The Consul plugin will use the Status Check plugin to periodically issue a GET request to verify connection status. The Consul connection state affects the global status of the agent. If the agent cannot establish a connection with Consul, both the readiness and the liveness probes from the probe plugin will return a negative result. 
 
 ### Reconnect Resync
 
@@ -332,7 +342,7 @@ All configuration data is resynced in the beginning just as it is for KV data st
 
 ### Configuration
 
-All files or directories used as a data store must be defined in the conf file. The location of the file can be defined either by the command line flag `filedb-config` or set using the `FILEDB_CONFIG` environment variable.
+All files or directories used as a data store must be defined in the conf file. The location of the file can be defined either by the command line flag `filedb-config`, or set using the `FILEDB_CONFIG` environment variable.
 
 ### Supported Formats
 

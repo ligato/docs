@@ -75,7 +75,7 @@ CNF configuration dependency constraints can pose unique challenges:
 * No standard methods for tracking and logging configuration item activity such as transactions, caches and errors.
 * Synchronizing northbound (NB) intent with southbound (SB) configuration state is difficult.
 
-The KV Scheduler was implemented to address these challenges. It is a plugin that works with VPP agents and Linux agents on the SB side, and orchestrators/external data sources such as KV data stores and RPC clients on the NB side. In a nutshell, it keeps track of the correct configuration order and associated dependencies.
+The KV Scheduler was implemented to address these challenges. It is a plugin that works with VPP and Linux agents on the SB side, and orchestrators/external data sources such as KV data stores and RPC clients on the NB side. In a nutshell, it keeps track of the correct configuration order and associated dependencies.
 
 ![kvs-arch-pict][ligato-kvs-arch] 
 <p style="text-align: center; font-weight: bold">KV Scheduler</p>

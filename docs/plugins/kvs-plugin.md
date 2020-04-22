@@ -2,92 +2,101 @@
 
 ---
 
-The KVScheduler plugin provides transaction-based configuration processing based on a generic mechanism for dependency resolution between different configuration items. KVScheduler is a core component which all VPP and Linux plugin configurators are now using.
+The KV Scheduler plugin provides transaction-based configuration processing based on a generic mechanism for dependency resolution between different configuration items. The KV Scheduler is a core component employed by all VPP and Linux plugin configurators.
 
-More Detail: [KVScheduler Discussion in the Developer Guide][kvs-dev-guide]
+Reference: [KV Scheduler Discussion in the Developer Guide][kvs-dev-guide]
+
+---
 
 ### Motivation
 
-The KVScheduler addresses several challenges encountered in the original vpp-agent design, which became apparent as the variety and complexity of different configuration items increased.   
+The KV Scheduler addresses several challenges encountered in the original VPP agent design. These became apparent as the variety and complexity of different configuration items increased.   
 
-* `vpp` and `linux` plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
+* VPP and Linux plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
 
-* the `configurators` - i.e. components of `vpp` and `linux` plugins, each processing a specific configuration item type (e.g. interface, route, etc.) - were built from scratch, solving the same set of problems again and again with frequent code duplication.
+* VPP and Linux plugin configurator components, each processing a specific configuration item type such as an interface or route, were built from scratch, solving the same set of problems with frequent code duplication.
 
-* configurators would communicate with each through notifications, and react to changes asynchronously to ensure proper operation ordering. Dependency resolution wasn distributed across all configurators, making it very difficult to understand, predict and stabilize the system behavior from the developer's viewpoint.
+* Configurator components would communicate with each through notifications, and react to changes asynchronously to ensure proper operational ordering. Dependency resolution was not distributed across all configurators, making it difficult to understand, predict and stabilize system behavior from the developer's viewpoint.
 
-The result was an unreliable and unpredictable re-synchronization (or resync for short), also known as state reconciliation, between the desired configuration state (referred as Northbound) and the actual configuration state (referred to as southbound.). 
+The result was an unreliable and unpredictable re-synchronization (resync), also known as state reconciliation, between the desired northbound (NB) configuration state, and the actual run-time southbound (SB) configuration state. 
 
-Indeed an efficient and accurate resync function was meant to be one of the primary values offered by the Ligato vpp-agent. 
 
 !!! Note
-    Northbound (NB) describes the desired or intended configuration state. Southbound (SB) describes the actual run-time configuration state.
+    Northbound (NB) describes the desired or intended configuration state. Southbound (SB) describes the run-time configuration state.
 
-### Basic concepts 
+---
 
-The [KVScheduler Discussion in the Developer Guide][kvs-dev-guide] provides a good deal more detail on this powerful plugin. 
+### Basic Concepts 
 
-Here we will provide a brief explanations of some of the key concepts: 
+The [KV Scheduler Discussion in the Developer Guide][kvs-dev-guide] provides more detail on the KV Scheduler plugin. 
 
-- applies graph theory concepts to manage dependencies between configuration items and their proper operational ordering
-- state of the system is modeled as a graph; configuration items are represented as vertices and relations between them are represented as edges. 
-- graph is then walked through to generate transaction plans, refresh the state, execute state reconciliation, etc
-- transaction plan is a series of CRUD operations performed on some of the graph verticies (i.e. configuration items)
-- configuration items and how to deal with them are "abstracted away" by the notion of a [KVDescriptors][kvdescriptor-dev-guide] that "describe" the graph vertices to the KVScheduler
-- KVDescriptors are basically handlers, each assigned to a distinct subset of graph vertices, providing the scheduler with pointers to callbacks that implement CRUD operations. 
-- plugins are decoupled and no longer communicate directly, but instead interact with each other through a mediator (the KVScheduler)
-- Plugins only provide CRUD callbacks and describe their dependencies on other plugins through one or more KVDescriptors.
-- KVScheduler is then able to plan operations without even knowing what the graph vertices actually represent in the configured system.
+Here, we will provide a brief explanations of key concepts: 
 
+- Applies graph theory concepts to manage dependencies between configuration items and their proper operational ordering.
+- System state is modeled as a graph; configuration items are represented as vertices and the relationship between them are represented as edges. 
+- Graph is then walked through to generate transaction plans, refresh the state, execute state reconciliation, and so on.
+- Transaction plan is a series of CRUD operations performed on graph vertices, where vertices represent configuration items.
+- Configuration items and how to deal with them are "abstracted away" by the notion of a [KV Descriptors][kvdescriptor-dev-guide] that "describe" the graph vertices to the KV Scheduler.
+- KV Descriptors are basically handlers, each assigned to a distinct subset of graph vertices, providing the KV Scheduler with pointers to callbacks that implement CRUD operations. 
+- Plugins are decoupled and no longer communicate directly, but instead interact with each other through a mediator. The KV Scheduler is the mediator.
+- Plugins provide CRUD callbacks, and describe their dependencies on other plugins through one or more KV Descriptors.
+- KV Scheduler is then able to plan operations without knowing what the graph vertices represent in the configured system.
+
+
+---
 
 ### Dependencies
 
-The idea behind the scheduler is based on the mediator pattern. Configurators do not communicate directly, but instead interact through the mediator. This reduces the dependencies between communicating objects, thereby reducing coupling.
+The idea behind the KV Scheduler is based on the mediator pattern. Configurators do not communicate directly, but instead interact through a mediator. This reduces the dependencies between communicating objects, thereby reducing coupling.
 
-The values are described for the KVScheduler by registered KVDescriptors. The KVScheduler learns two types of relationships between values that must be respected by the scheduling algorithm:
+The values are described to the KV Scheduler by registered KV Descriptors. The KV Scheduler learns two types of relationships between values processed by the scheduling algorithm:
 
-1. `A` **depends on** `B`:
+**1.** `A` **depends on** `B`:
 
-   - `A` cannot exist without `B`
-   - request to add `A` without `B` existing must be postponed by marking `A` as `pending` (value with unmet dependencies) in the in-memory graph 
-   - if `B` is to be removed and `A` exists, `A` must be removed first and set to `pending` state in case `B` is restored in the future
+   - `A` cannot exist without `B`.
+   - Request to add `A` without `B` existing must be postponed by marking `A` as `pending` in the in-memory graph. `Pending` means that a value has dependencies that have not been resolved.
+   - If `B` is to be removed and `A` exists, `A` must be removed first and set to `pending` state in case `B` is restored in the future.
    
 !!! note  
     Values pushed from SB are not checked for dependencies
     
-2. `B` **is derived from** `A`:
+**2.** `B` **is derived from** `A`:
 
-   - value `B` is not added directly (by NB or SB) but instead is derived from base value `A` (using the DerivedValues() method of the base value's descriptor)
-   - a derived value exists only as long as its base does and is removed (immediately, not pending) once the base value disappears.
-   - a derived value may be described by a descriptor different from the base and usually represents the property of the base value that other values may depend on or, an extra action to be taken when additional dependencies are met.
+   - value `B` is not added directly by NB or SB. Instead, it is derived from base value `A` using the DerivedValues() method of the base value's descriptor.
+   - A derived value exists only as long as its base value does. It is removed once the base value disappears. It is NOT placed in a `pending` state.
+   - A derived value may be described by a descriptor that is different from the base value. It usually represents the property of the base value that other values may depend on, or an extra action to be taken when additional dependencies are met.
+
+---
 
 ### Resync 
 
-Configurators no longer need to implement resync on their own. As they "teach" the KVScheduler how to operate with configuration items by providing callbacks to CRUD operations through KVDescriptors, it now has all it needs to determine and execute the set of operations needed to reach state synchronization following a transaction or restart.
+Configurators no longer need to implement resync on their own. In effect, they "teach" the KV Scheduler how to operate on configuration items by providing callbacks to CRUD operations through KV Descriptors. The KV Scheduler now has all it needs to determine and execute the set of operations needed to reach state synchronization following a transaction or restart.
 
-Furthermore, the KVScheduler enhances the concept of state reconciliation, and defines three types of the resync:
+Furthermore, the KV Scheduler enhances the concept of state reconciliation, and defines three types of the resync:
 
-- **Full resync**: the desired configuration is re-read from NB, the view of SB is refreshed via Dump operations and inconsistencies are resolved via Add/Delete/Modify operations
-- **Upstream resync**: partial resync, same as Full resync except the SB view is assumed to be up-to-date and will not be refreshed. It can be used by NB when it is easier to re-calculate the desired state than to determine the (minimal) deltas.
-- **Downstream resync**: partial resync, same as Full resync except the desired configuration is assumed to be up-to-date and will not be re-read from NB. It can be used periodically to resync, even without interacting with NB
+- **Full resync**: desired configuration is re-read from NB, the view of SB is refreshed via Dump operations and inconsistencies are resolved via Add/Delete/Modify operations.
+- **Upstream resync**: partial resync, same as full resync except the SB view is assumed to be up-to-date and will not be refreshed. It can be used by NB to recalculate the desired state which may be simpler than exerting effort to compute the minimal deltas.
+- **Downstream resync**: partial resync, same as full resync except the desired configuration is assumed to be up-to-date and will not be re-read from NB. It can be used periodically to resync, even without interacting with NB.
+
+---
 
 ### Transactions
 
-The KVScheduler can group related changes and apply them as transactions. This is not supported, however, by all agent NB interfaces - for example, changes from the `etcd` datastore are always received one a time. To leverage the transaction support, localclient (the same process) or GRPC API (remote access) must be used instead.
+The KV Scheduler can group related changes and apply them as transactions. This is not supported, however, by all agent NB interfaces. For example, changes from the etcd data store are always received one at a time. To leverage the transaction support, localclient consisting of the same process, or remote access using a gRPC API is required.
 
-Inside the KVScheduler, transactions are queued and executed synchronously to simplify the algorithm and avoid concurrency issues. 
+Inside the KV Scheduler, transactions are queued and executed synchronously to simplify the algorithm and avoid concurrency issues. 
 
-The processing of a transaction is split into two stages:
+Transaction processing is divided into two stages:
 
-- **Simulation**: the set of operations to execute and their order is determined by the `transaction plan`, without actually initiating CRUD descriptor callbacks.
+- **Simulation**: the set of operations to execute, their order determined by the `transaction plan`, without actually initiating CRUD descriptor callbacks.
 
-- **Execution**: executing the operations in the correct order. If any operation fails, the already applied changes are reverted. If the `BestEffort` mode is enabled, the KVScheduler attempts to apply the maximum possible set of required changes. `BestEffort` is the default for resync.  
+- **Execution**: executing the operations in the correct order. If any operation fails, the applied changes are reverted. If the `BestEffort` mode is enabled, the KV Scheduler attempts to apply the maximum possible set of required changes. BestEffort is the default for resync.  
 
-Right after simulation, transaction metadata (sequence number printed as `#xxx`, description, values to apply, etc.) are printed, together with the transaction plan. This is done before execution, to ensure that the user is informed about the operations that were going to be executed even if any of the operations cause the agent to crash. 
+Following simulation, transaction metadata including the sequence number printed as `#xxx`, description, and values to apply are printed, together with the transaction plan. This is done before execution, to ensure that the user has visibility into the operations, even if any cause the agent to crash. 
 
-After the transaction has executed, the set of completed operations and and any errors are printed. 
+After the transaction has executed, the set of completed operations and any errors are printed. 
 
-An example transaction output printed to logs (in this case there were no errors, therefore the plan matches the executed operations):
+Here is an example of the transaction output printed to logs. In this case, there were no errors so the plan matches the executed operations.
 ```
 +======================================================================================================================+
 | Transaction #5                                                                                        NB transaction |
@@ -123,9 +132,11 @@ x #5                                                                            
 x----------------------------------------------------------------------------------------------------------------------x
 ```
 
+---
+
 ### REST API
 
-KVScheduler also exposes the state of the system and the history of operations through a set of REST APIs:
+The KV Scheduler exposes the state of the system and the history of operations through a set of REST APIs:
 
 - **Transaction History**: `GET /scheduler/txn-history`
     - returns the full history of executed transactions or only for a given time window

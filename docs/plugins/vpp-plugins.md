@@ -51,7 +51,7 @@ Tho GoVPP multiplexer supports two connection types:
 By default, GoVPP connects to VPP using the `socket client`. This option can be changed using the environment variable of `GOVPPMUX_NOSOCK`, with a fallback to `shared memory`. In the shared memory case, the plugin connects to the VPP instance that uses the default shared memory segment prefix.
  
 The default behaviour assumes that there is only a single VPP running in an environment together with the VPP agent. In the case where VPP runs with a customized SHM prefix, or there are several VPP instances running side-by-side, GoVPP must know the SHM prefix in order to connect to the desired VPP 
-instance. The prefix must be included in the GoVPPMux conf file, [govpp.conf][govppmux-conf-file], with the key `shm-prefix`, and the value matching the VPP shared memory prefix name.
+instance. The prefix must be included in the [GoVPPMux conf file][govppmux-conf-file], with the key `shm-prefix`, and the value matching the VPP shared memory prefix name.
 
 ### Multiplexing
 
@@ -69,7 +69,7 @@ A user plugin could blast configuration requests in bulk mode which could overlo
 
 ### Health Checks
   
-There are several health check mechanisms associated with the GoVPPMUX plugin. Health check timeouts, retry, intervals and reconnects options can be set in the [govpp.conf][govppmux-conf-file].
+There are several health check mechanisms associated with the GoVPPMUX plugin. Health check timeouts, retry, intervals and reconnects options can be set in the [GoVPPMux conf file][govppmux-conf-file].
 
 For convenience, here are those options: 
 
@@ -171,7 +171,7 @@ The VPP agent provides an option to automatically set the MTU size for an interf
 
 **KV Data Store**
  
-Put the interface configuration data into an etcd data store using the correct [interface key][key-reference].
+Put the interface configuration data into an etcd data store using the correct [VPP interface key][vpp-key-reference].
 
 Example data:
 ```json
@@ -359,7 +359,7 @@ agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/memif1
 
 ## L2 Plugin
 
-The L2 plugin is used to configure VPP link-layer configuration items, notably **bridge domains**, **forwarding tables** (FIBs) and **VPP cross connects**.  
+The L2 plugin is used to configure VPP link-layer configuration items, notably bridge domains, forwarding tables (FIBs) and VPP cross connects.  
 
 ### Bridge Domains
 
@@ -387,7 +387,7 @@ The BD index can be obtained using the standard retrieval methods such as etcdct
 
 **KV Data Store** 
  
-Put the BD configuration data into an etcd data store using the [bridge domain key][key-reference].
+Put the BD configuration data into an etcd data store using the [bridge domain key][vpp-key-reference].
 
 Example Data:
 
@@ -525,7 +525,7 @@ To configure a FIB entry, a MAC address, interface and bridge domain must be pro
 
 **KV Data Store**
 
-Put the FIB configuration data into an etcd data store using the [FIB key][key-reference]
+Put the FIB configuration data into an etcd data store using the [FIB key][vpp-key-reference]
 .
 
 Example Data:
@@ -622,7 +622,7 @@ The xconnect proto references the transmit and receive interfaces. Both interfac
 
 **KV Data Store**
 
-Put the cross connect data into an etcd data store using the [cross connect key][key-reference].
+Put the cross connect data into an etcd data store using the [cross connect key][vpp-key-reference].
 
 Example Data:
 ```json
@@ -697,18 +697,18 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ## L3 Plugin
 
-The L3 plugin is capable of configuring **ARP** entries (including **proxy ARP**), **VPP routes**, **IP neighbor** functions, **L3 cross connects**, and **VRFs**.
+The L3 plugin is capable of configuring ARP entries (including proxy ARP), VPP routes, IP neighbor functions, L3 cross connects, and VRFs.
 
 ### ARP  
 
 The address resolution protocol (ARP) is a communication protocol for discovering the MAC address associated with a given IP address. The L3 plugin works with the VPP implementation of ARP. The ARP entry is uniquely identified by the interface and IP address.
 
-The structure of an ARP entry is defined in the [ARP proto][arp-proto]. Every ARP entry includes a MAC address, IP address and an interface. The two latter values are a part of the [ARP entries key][key reference].
+The structure of an ARP entry is defined in the [VPP ARP proto][arp-proto]. Every ARP entry includes a MAC address, IP address and an interface. The two latter values are a part of the [VPP ARP entries key][key reference].
 
 **References:**
 
-- [ARP proto][arp-proto]
-- [ARP model][L3-models]
+- [VPP ARP proto][arp-proto]
+- [VPP ARP model][L3-models]
 
 ---
 
@@ -716,7 +716,7 @@ The structure of an ARP entry is defined in the [ARP proto][arp-proto]. Every AR
 
 **KV Data Store**
 
-Put the ARP data into an etcd data store using the [ARP entry key][key-reference].
+Put the ARP data into an etcd data store using the [VPP ARP entry key][vpp-key-reference].
 
 Example data:
 ```json
@@ -803,8 +803,8 @@ Proxy ARP is a technique whereby a device on a subnet responds to ARP queries fo
 
 **References:**
 
-- [Proxy ARP proto][L3-proto]
-- [Proxy ARP model][L3-models]  
+- [VPP Proxy ARP proto][L3-proto]
+- [VPP Proxy ARP model][L3-models]  
 
 The Proxy ARP proto lays out a list of IP address ranges, and another for interfaces. The interface must exist in order for it to be enabled for proxy ARP. 
 
@@ -814,7 +814,7 @@ The Proxy ARP proto lays out a list of IP address ranges, and another for interf
 
 **KV Data Store**
 
-Put the ARP data into an etcd data store using the [ARP entry key][key-reference].
+Put the ARP data into an etcd data store using the [VPP ARP entry key][vpp-key-reference].
 
 Example Data:
 ```json
@@ -914,8 +914,8 @@ The VPP routing table contains destination network prefixes, a corresponding nex
 
 **References:**
 
-- [Routes proto][route-proto]
-- [Routes model][L3-models]
+- [VPP routes proto][route-proto]
+- [VPP routes model][L3-models]
 
 The VPP routes proto explains the standard routing table fields such a destination network, next_hop IP address. Weight and preference fields are included to assist in path selection.  
 
@@ -933,7 +933,7 @@ The proto defines several route types:
 
 **KV Data Store**
 
-Put the route data into an etcd data store using the [route key][key-reference].
+Put the route data into an etcd data store using the [VPP route key][vpp-key-reference].
 
 Example data for an `intra-VRF route`:
 ```json
@@ -1032,8 +1032,8 @@ The VPP IP scan-neighbor feature is used to enable or disable periodic IP neighb
 
 **References:**
 
-- [IP scan-neighbor proto][L3-proto]
-- [IP scan-neighbor][L3-models] 
+- [VPP IP scan-neighbor proto][L3-proto]
+- [VPP IP scan-neighbor][L3-models] 
 
 ---
 
@@ -1041,7 +1041,7 @@ The VPP IP scan-neighbor feature is used to enable or disable periodic IP neighb
 
 **KV Data Store**
 
-Put the IP scan-neighbor data into an etcd data store using the [IP Scan Neighbor][key-reference].
+Put the IP scan-neighbor data into an etcd data store using the [VPP IP Scan Neighbor key][vpp-key-reference].
 
 Example data:
 ```json
@@ -1128,8 +1128,8 @@ The VPP agent supports the L3 cross connect (L3xc) feature. It applies the xconn
 
 **References:**
 
-- [L3xc Proto][l3xc-proto]
-- [l3xc model][l3-models]  
+- [VPP L3xc proto][l3xc-proto]
+- [VPP l3xc model][l3-models]  
 
 The L3xc proto references an ingress IP interface, and outbound path composed of an outgoing interface, next_hop IP address, weight and preference. 
 
@@ -1143,10 +1143,10 @@ The L3 plugin supports VRF tables in scenarios where multiple discrete routing t
 
 **References:**
 
-- [VRF table proto][vrf-proto]
-- [VRF table model][L3-models]
+- [VPP VRF table proto][vrf-proto]
+- [VPP VRF table model][L3-models]
 
-The VRF table proto defines an ID, protocol setting for IPv4 or IPv6, optional label description, and flow hashing settings.
+The VRF table proto defines an ID, protocol setting for IPv4 or IPv6, optional label description, and flow hash settings.
 
 ---
 
@@ -1165,8 +1165,8 @@ The SPD specifies the policies that determine the disposition of all the inbound
 
 **References:**
 
-- [SPD Proto][ipsec-proto]
-- [SPD Model][ipsec-model]
+- [VPP SPD proto][ipsec-proto]
+- [VPP SPD model][ipsec-model]
 
 The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent as it is a part of the SPD key. 
 
@@ -1183,7 +1183,7 @@ The SPD defines two bindings: SA and the interface. The interface binding is imp
 
 **KV Data Store**
 
-Put the SPD data into an etcd data store using the [SPD key][key-reference].
+Put the SPD data into an etcd data store using the [VPP SPD key][vpp-key-reference].
 
 Example Data:
 ```json
@@ -1302,8 +1302,8 @@ An IPsec security association (SA) is a set of security behaviors negotiated bet
 
 **References:**
 
-- [SA Proto][ipsec-proto]
-- [SA Model][ipsec-model] 
+- [VPP SA proto][ipsec-proto]
+- [VPP SA model][ipsec-model] 
 
 !!! Note
  The SPD and SA are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
@@ -1316,7 +1316,7 @@ The SA uses the same indexing system as SPD. The index is a user-defined unique 
 
 **KV Data Store**
 
-Put the SA configuration data into an etcd data store using the [SA key][key-reference].
+Put the SA configuration data into an etcd data store using the [VPP SA key][vpp-key-reference].
 
 Example data:
 ```json
@@ -1406,8 +1406,8 @@ The punt plugin is used to configure VPP to punt (re-direct) packets to the TCP/
 
 **References:**
 
-- [Punt proto][punt-proto]
-- [Punt model][punt-model]
+- [VPP Punt proto][punt-proto]
+- [VPP Punt model][punt-model]
 
 ---
 
@@ -1434,7 +1434,7 @@ The usage of the L3 protocol, `ALL`, is exclusive for IP punt to host (without s
 
 **KV Data Store**
 
-Put the punt configuration data into an etcd data store using the [punt key][key-reference]. 
+Put the punt configuration data into an etcd data store using the [VPP punt key][vpp-key-reference]. 
 
 Example data:
 ```json
@@ -1517,8 +1517,8 @@ IP redirect enables traffic that arrives on an interface, and matching a given I
 
 **References:**
 
-- [IP redirect proto][punt-proto]
-- [IP redirect model][punt-model] 
+- [VPP IP redirect proto][punt-proto]
+- [VPP IP redirect model][punt-model] 
 
 IP redirect is defined as the `IpRedirect` object in the proto file. The L3 protocol is defined as a `string` value that is transformed to numeric in the VPP binary API call. 
 
@@ -1530,7 +1530,7 @@ If L3 protocol is set to `ALL`, the respective API is called for IPv4 and IPv6 s
 
 **KV Data Store**
 
-Put the IP redirct configuration data into an etcd data store using the [ip redirect key][key-reference]. 
+Put the IP redirct configuration data into an etcd data store using the [VPP ip redirect key][vpp-key-reference]. 
 
 Example value:
 ```json
@@ -1632,8 +1632,8 @@ Access Control Lists (ACL) filter network traffic by controlling whether packets
 
 **References:**
 
-- [ACL proto][acl-proto]
-- [ACL model][acl-model]
+- [VPP ACL proto][acl-proto]
+- [VPP ACL model][acl-model]
 
 The VPP agent ACL plugin uses the binary API of the VPP data plane ACL plugin. The version of the VPP ACL plugin is displayed at VPP agent startup. Every ACL consists of  `match` rules that classify the packets to be acted upon, and  `action` rules (actions) to be applied to those packets.
 
@@ -1649,7 +1649,7 @@ A single ACL rule can cover multiple protocol-based rules. The MAC-IP match (MAC
 
 **KV Data Store**
 
-Put the ACL configuration data into an etcd data store using the [ACL key][key-reference].
+Put the ACL configuration data into an etcd data store using the [VPP ACL key][vpp-key-reference].
 
 Example configuration:
 ```json
@@ -1820,14 +1820,14 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ## ABF Plugin
 
-The ACL-based forwarding plugin is an implementation of policy-based routing (PBR). With ABF, packets are forwarded based on user-defined fields expressed by ACLs, rather than by a longest match lookup in a routing table. ACL is defined in the [ABF model][abf-model]. 
+The ACL-based forwarding plugin is an implementation of policy-based routing (PBR). With ABF, packets are forwarded based on user-defined fields expressed by ACLs, rather than by a longest match lookup in a routing table.  
 
 **References:**
 
-- [ABF proto][abf-proto]
-- [ABF model][abf-model]
+- [VPP ABF proto][abf-proto]
+- [VPP ABF model][abf-model]
 
-The ABF entry is identifed by a numeric index. ABF data consists of a list of interfaces the ABF is attached to, the forwarding paths, and the name of the associated ACL. The ACL represents a dependency for the given ABF; If the ACL is not present, the ABF configuration will be cached until created. The same applies for ABF interfaces.   
+The ABF entry is identifed by a numeric index. ABF data consists of a list of interfaces the ABF is attached to, the forwarding paths, and the name of the associated ACL. The ACL represents a dependency for the given ABF; If the ACL is not present, the ABF configuration will be cached until the ACL is created. The same applies for ABF interfaces.   
 
 ---
 
@@ -1835,7 +1835,7 @@ The ABF entry is identifed by a numeric index. ABF data consists of a list of in
 
 **KV Data Store**
 
-Put the ABF configuration data into an etcd data store using the [ABF key][key-reference].
+Put the ABF configuration data into an etcd data store using the [VPP ABF key][vpp-key-reference].
 
 Example value:
 ```json
@@ -1964,8 +1964,8 @@ The global NAT configuration is a special case of data grouped under single key.
 
 **References:**
 
-- [NAT global proto][nat-proto]
-- [NAT global model ][nat-model]
+- [VPP NAT global proto][nat-proto]
+- [VPP NAT global model ][nat-model]
 
 
 The NAT global configuration is divided into several independent parts pertaining to specific VPP NAT features:
@@ -1981,7 +1981,7 @@ The NAT global configuration is divided into several independent parts pertainin
 
 **KV Data Store**
 
-Put the NAT global configuration data into an etcd data store using the [NAT key][key-reference].
+Put the NAT global configuration data into an etcd data store using the [VPP NAT key][vpp-key-reference].
 
 Example value:
 ```json
@@ -2123,8 +2123,8 @@ Destination network address translation (DNAT) translates the destination IP add
 
 **References:**
 
-- [DNAT44 proto][nat-proto]
-- [DNAT44 model][nat-model]
+- [VPP DNAT44 proto][nat-proto]
+- [VPP DNAT44 model][nat-model]
 
 DNAT44 consists from two main parts: static mappings and identity mappings.
 
@@ -2139,7 +2139,7 @@ DNAT44 contains a unique label serving as an identifier. However, the DNAT44 con
 
 **KV Data Store**
 
-Put the DNAT44 configuration data into an etcd data store using the [DNAT44 key][key-reference].
+Put the DNAT44 configuration data into an etcd data store using the [VPP DNAT44 key][vpp-key-reference].
 
 Example value:
 ```json
@@ -2276,8 +2276,8 @@ The `srplugin` is designed to configure Segment Routing for IPv6 (SRv6) in VPP.
 
 **References:**
 
-- [SRv6 proto][srv6-proto]
-- [SRv6 model][srv6-model]
+- [VPP SRv6 proto][srv6-proto]
+- [VPP SRv6 model][srv6-model]
 
 SRv6 configuration data must be stored in etcd using the srv6 key:
  
@@ -2308,7 +2308,7 @@ The policy can be defined inside multiple segment lists. The VPP implementation 
 ---
 
 ### Configuring Steering
-The steering (the VPP's policy for steering traffic into SR policy) can be configured using this key:
+The VPP method for steering traffic into an SR policy can be configured using this key:
 ```
 /vnf-agent/<agent-label>/config/vpp/srv6/v2/steering/<name>
 ```
@@ -2324,8 +2324,8 @@ The steal-the-NIC (STN) plugin is used when only a single NIC is supported on th
 
 **References:**
 
-- [STN proto][stn-proto]
-- [STN-model][stn-model] 
+- [VPP STN proto][stn-proto]
+- [VPP STNmodel][stn-model] 
 
 ---
 
@@ -2554,6 +2554,7 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [L3-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go
 [L3-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/l3.proto
 [l3xc-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/l3xc.proto
+[linux-key-reference]: ../user-guide/reference.md#linux-keys
 [linux-interface-plugin-guide]: linux-plugins.md#interface-plugin
 [nat-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go
 [nat-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/nat.proto
@@ -2564,6 +2565,7 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [srv6-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/srv6/srv6.proto
 [xc-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/xconnect.proto
 [links]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/interfaces/interface.proto
+[vpp-key-reference]: ../user-guide/reference.md#vpp-keys
 [vpp-nat-lb]: https://jira.fd.io/browse/VPP-954
 [prometheus]: https://prometheus.io/
 [stn-contiv-vpp]: https://github.com/contiv/vpp/blob/master/docs/setup/SINGLE_NIC_SETUP.md
