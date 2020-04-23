@@ -1,19 +1,46 @@
-# Config Files
+# Conf Files
 
 This section discusses plugin configuration files and flags.
 
 ---
 
-## Config Directory
+## Conf File Location
 
+The location of the conf files directory, or individual conf files can be set using a VPP agent CLI start flag, or env variable export.
+
+**Conf file directory**
+
+Conf file directory flag:
 ```bash
--config-dir=".": Location of the config files; can also be set via 'CONFIG_DIR' env variable.
+-config-dir="."
+```
+If the conf file directory is `/opt/vpp-agent/dev`, then start the VPP agent with this command:
+```json
+vpp-agent --config-dir=/opt/vpp-agent/dev
+```
+Same conf file directory, but using the env variable of `CONFIG_DIR`:
+```json
+export CONFIG_DIR=/opt/vpp-agent/dev
 ```
 
-This flag is used to define the directory for loading plugin configuration files.
-Using `-<plugin>-config` for a specific plugin will override this flag.
+---
 
-## Plugin Configs
+**Individual conf file location**
+
+Using per-plugin flags or env variables will override the conf file directory option.
+
+If the etcd conf file location is `/opt/vpp-agent/dev/etcd.conf`, then start the VPP agent with the etcd conf file flag of `--etcd-config=` like so:
+```bash
+vpp-agent -etcd-config=/opt/vpp-agent/dev/etcd.conf
+```
+Using the `ETCD_CONFIG` env variable:
+```bash
+export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
+```
+
+---
+
+## Plugin Conf Files
 ---
 
 <!--
@@ -32,7 +59,7 @@ Flag reserved for the ACL plugin, currently not in use.
 -bolt-config= 
 ```
 
-_**Bolt Config File Options**_
+_**Bolt Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -40,7 +67,10 @@ _**Bolt Config File Options**_
 | **file-mode** | _os.FileMode_ | | File mode and permission bits in decimal format |
 | **lock-timeout** | _time.Duration_ | | Timeout duration for waiting to obtain file lock, set to zero to wait indefinitely. |
 
-[_bolt.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/bolt/bolt.conf)
+_**Bolt References:**_
+
+- [Bolt concepts doc][bolt-concepts-doc] 
+- [Bolt repo conf file][bolt-repo-conf-file]
 
 ---
 
@@ -51,7 +81,7 @@ _**Bolt Config File Options**_
 ```
 
 
-_**Cassandra Config File Options**_
+_**Cassandra Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -63,7 +93,10 @@ _**Cassandra Config File Options**_
 | **protocol_version**|_int_|4|Sets the version of the native protocol to use. This will enable features in the driver for specific protocol versions. Generally this should be set to a known version (2,3,4) for the cluster being connected to.</br></br> If it is 0 or unset (the default), then the driver will attempt to discover the highest supported protocol for the cluster. In clusters with nodes of different versions, the protocol selected is not defined (i.e., it can be any of the supported in the cluster).|
 | **TLS Setup **|||Defines client cert, client private key, certificate authority, whether to skip verification of server name & certificate, disable TLS|
 
-[_cassandra.conf file_](https://github.com/ligato/cn-infra/blob/master/db/sql/cassandra/cassandra.conf)
+_**Cassandra References:**_
+
+- [Cassandra plugin doc][cassandra-plugin-doc] 
+- [Cassandra repo conf file][cassandra-repo-conf-file]
 
 
 ---
@@ -74,14 +107,17 @@ _**Cassandra Config File Options**_
 -consul-config=
 ```
 
-_**Consul Config File Options**_
+_**Consul Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 |**address**|_string_|0.0.0.0:8500|Consul server address|
 |**resync-after-reconnect**|_bool_|false|Perform resync procedure for all registered plugins following reconnect to Consul server|
 
-[_consul.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/consul/consul.conf)
+_**Consult References:**_
+
+- [Consul plugin doc][consul-plugin-doc] 
+- [Consul repo conf file][consul-repo-conf-file]
 
 ---
 
@@ -91,7 +127,7 @@ _**Consul Config File Options**_
 -etcd-config=
 ```
 
-_**etcd Config File Options**_
+_**etcd Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -108,7 +144,10 @@ _**etcd Config File Options**_
 |**allow-delayed-start**|_bool_|false|Allow to start without connected ETCD database. Plugin will try to connect and if successful, overall resync will be called|
 |**reconnect-interval**|_time.Duration_|2000000000ns|Interval between attempts to reconnect to the etcd server|
 
-[_etcd.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/etcd/etcd.conf)
+_**etcd References:**_
+
+- [etcd plugin doc][etcd-plugin-doc] 
+- [etcd repo conf file][etcd-repo-conf-file]
 
 
 
@@ -120,7 +159,7 @@ _**etcd Config File Options**_
 -filedb-config=
 ```
 
-_**FileDB Config File Options**_
+_**FileDB Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -129,7 +168,11 @@ _**FileDB Config File Options**_
 
 Note: `filesystem` refers to the name of the FileDB plugin.
 
-[_filesystem.conf file_](https://github.com/ligato/cn-infra/blob/master/db/keyval/filedb/filesystem.conf)
+_**FileDB References:**_
+
+- [FileDB plugin doc][filedb-plugin-doc] 
+- [FileDB repo conf file][filedb-repo-conf-file]
+
 
 ---
 
@@ -139,7 +182,7 @@ Note: `filesystem` refers to the name of the FileDB plugin.
 -govpp-config=
 ```
 
-_**GoVPPMux Config File Options**_
+_**GoVPPMux Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -158,18 +201,22 @@ _**GoVPPMux Config File Options**_
 |**health-check-threshold**|_int_||number of consecutive failed health checks until an error is reported|
 
 
-[govpp.conf file](https://github.com/ligato/vpp-agent/blob/master/plugins/govppmux/govpp.conf)
+
+_**GoVPPMux References:**_
+
+- [GoVPPMux plugin doc][govppmux-plugin-doc]
+- [GoVPPMux repo conf file][govppmux-repo-conf-file]
 
 ---
 
 
-### gRPC
+### GRPC
 
 ```bash
 -grpc-config=
 ```
 
-_**gRPC Config File Options**_
+_**GRPC Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -190,14 +237,16 @@ The following config file options are used if `insecure-transport` is `false`:
 |**key-file**|_string_||Required for creating a secure connection. example is /path/to/key.pem|
 |**ca-file**|_string_||Set custom CA to verify client's certificate. If not set, client's certificate is not required. </br></br>Examples ca-files are /path/to/ca1.pem and /path/to/ca2.pem|
 
-This flag can be used to set the gRPC port:
+This flag can be used to set the GRPC port:
 
 ```bash
 -grpc-port=
 ```
 
+_**GRPC References:**_
 
-[_grpc.conf file_](https://github.com/ligato/cn-infra/blob/master/rpc/grpc/grpc.conf)
+- [GRPC plugin doc][grpc-plugin-doc]
+- [GRPC repo conf file][grpc-repo-conf-file]
 
 ---
 
@@ -206,7 +255,7 @@ This flag can be used to set the gRPC port:
 ```bash
 -kafka-config=
 ```
-_**Kafka Config File Options**_
+_**Kafka Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -214,7 +263,10 @@ _**Kafka Config File Options**_
 |**group_id**|_string_||Name of the consumer's group|
 |**TLS**|||TLS Configuration|
 
-[_kafka.conf file_](https://github.com/ligato/cn-infra/blob/master/messaging/kafka/kafka.conf)
+_**Kafka References:**_
+
+- [Kafka plugin doc][Kafka-plugin-doc]
+- [Kafka conf file][kafka-repo-conf-file]
 
 ---
 
@@ -224,7 +276,7 @@ _**Kafka Config File Options**_
 -kvscheduler-config=
 ```
 
-_**KV Scheduler Config File Options**_
+_**KV Scheduler Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -234,6 +286,10 @@ _**KV Scheduler Config File Options**_
 | **enable-txn-simulation** | _bool_ | `false` | Enable transaction simulation |
 | **print-txn-summary** | _bool_ | `true` | Print transaction summary for each transaction |
 
+_**KV Scheduler References:**_
+
+- [KV Scheduler plugin doc][kvs-plugin-doc]
+
 ---
 
 ### Linux Interface Plugin
@@ -241,14 +297,17 @@ _**KV Scheduler Config File Options**_
 ```bash
 -linux-ifplugin-config=
 ```
-_**Linux Interface Plugin Config File Options**_
+_**Linux Interface Plugin Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 |**disabled**|_bool_|false|Used to disable linux ifplugin|
 |**go-routines-count**|_int_|10|How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel|
 
-[_linux-ifplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/ifplugin/linux-ifplugin.conf)
+_**Linux Interface References:**_
+
+- [Linux Interface plugin doc][linux-interface-plugin-doc]
+- [Linux interface repo conf file][linux-repo-interface-conf-file]
 
 ---
 
@@ -258,14 +317,17 @@ _**Linux Interface Plugin Config File Options**_
 ```bash
 -linux-iptables-config=
 ```
-_**Linux IP Tables Plugin Config File Options**_
+_**Linux IP Tables Plugin Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 |**disabled**|_bool_|false|Used to disable linux iptables plugin|
 |**go-routines-count**|_int_|10|How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel|
 
-[_linux-iptablesplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/iptablesplugin/linux-iptablesplugin.conf)
+_**Linux IP Tables References:**_
+
+- [Linux iptables plugin doc][linux-iptables-plugin-doc]
+- [Linux iptables repo conf file][linux-repo-iptables-conf-file]
 
 ---
 
@@ -275,14 +337,35 @@ _**Linux IP Tables Plugin Config File Options**_
 ```bash
 -linux-l3plugin-config=
 ```
-_**Linux L3 Plugin Config File Options**_
+_**Linux L3 Plugin Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 |**disabled**|_bool_|false|Used to disable linux L3 plugin|
 |**go-routines-count**|_int_|10|How many goroutines (at most) will split configured network namespaces to execute the Retrieve operation in parallel|
 
-[_linux-l3plugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/l3plugin/linux-l3plugin.conf)
+_**Linux L3 References:**_
+
+- [Linux L3 plugin doc][linux-l3-plugin-doc]
+- [Linux L3 repo conf file][linux-repo-l3-conf-file]
+
+---
+
+### Linux Namespace
+
+```json
+--linux-nsplugin-config=
+```
+_**Linux Namespace Plugin Conf File Options**_
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**disabled**|_bool_|false|Used to disable linux namespace plugin|
+
+_**Linux Namespace References:**_
+
+- [Linux namespace plugin doc][linux-nsplugin-doc]
+- [Linux namespace repo conf file][linux-repo-namespace-conf-file]
 
 ---
 
@@ -291,7 +374,7 @@ _**Linux L3 Plugin Config File Options**_
 ```bash
 --logs-config=
 ```
-_**Log Manager Config File Options**_
+_**Log Manager Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -333,23 +416,10 @@ hooks:
 #    protocol: tcp
 ```
 
-[_logs.conf file_](https://github.com/ligato/cn-infra/blob/master/logging/logmanager/logs.conf)
+_**Log Manager References:**_
 
----
-
-### Namespace
-
-```bash
--linux-nsplugin-config=
-```
-
-_**Linux Namespace Plugin Config File Options**_
-
-| Option | Type | Default | Description |
-|---|---|---|---|
-|**disabled**|_bool_|false|Used to disable namespace plugin|
-
-[_linux-nsplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/linux/nsplugin/linux-nsplugin.conf)
+- [Log manager plugin doc][log-manager-plugin-doc]
+- [Logs repo conf file][logs-repo-conf-file]
 
 ---
 
@@ -359,13 +429,16 @@ _**Linux Namespace Plugin Config File Options**_
 -process-manager-config=
 ```
 
-_**Process Manager Config File Options**_
+_**Process Manager Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 |**template-path**|_string_||path where process templates will be stored|
 
-[_pm.conf file_](https://github.com/ligato/cn-infra/blob/master/exec/processmanager/pm.conf)
+_**Process Manager References:**_
+
+- [Process manager plugin doc][pm-plugin-doc]
+- [Process manager repo conf file][pm-repo-conf-file]
 
 ---
 
@@ -375,7 +448,7 @@ _**Process Manager Config File Options**_
 -http-config=
 ```
 
-_**REST Plugin Config File Options**_
+_**REST Plugin Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
@@ -406,8 +479,10 @@ This flag can be used to set the HTTP port:
 -http-port=
 ```
 
+_**REST References:**_
 
-[_http.conf file_](https://github.com/ligato/cn-infra/blob/master/rpc/rest/http.conf)
+- [REST plugin doc][rest-plugin-doc]
+- [REST repo conf file][http-repo-conf-file]
 
 ---
 
@@ -418,11 +493,59 @@ This flag can be used to set the HTTP port:
 --microservice-label=
 ```
 
-_**Service Label Plugin Config File Options**_
+_**Service Label Plugin Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
-|**microservice-label**|_string_||Identifies a particular instance of a vpp-agent. Used to form a key prefix associated with the vpp-agent's config data contained in an etcd data store.|
+|**microservice-label**|_string_||Identifies a particular instance of a VPP agent. Used to form a key prefix associated with the VPP agent's config data contained in an etcd data store.|
+
+_**Service Label References:**_
+
+- [Service Label plugin doc][service-label-plugin-doc]
+
+---
+
+### Supervisor
+
+The supervisor is an infrastructure plugin providing mechanisms to handle and manage processes and process hooks.
+
+The conf file is split into two main categories:
+
+ - **programs** or processes
+ - **hooks**
+ 
+ Each of these may contain multiple entries so more programs or hooks can be contained in a single file.
+
+_**References:**_
+
+- [Supervisor plugin doc][supervisor-plugin-doc] 
+- [Supervisor repo conf File][supervisor-repo-conf-file]
+ 
+---
+
+
+### Telemetry
+
+```json
+--telemetry_config=
+```
+_**Telemetry Plugin Conf File Options**_
+
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+|**disabled**|_bool_|false|Used to disable telemetry plugin|
+|**prometheus-disabled**|_bool_|false|export to prometheus|
+|**polling-interval**|_time.Duration_|30sec|interval between VPP reads|
+|**skipped**| _string_ | |skip some metrics collection such runtime, memory, buffers, nodes, interfaces|
+
+_**Telemetry References:**_
+
+- [Telemetry plugin doc][telemetry-plugin-doc]
+- [Telemetry repo conf file][telemetry-repo-conf-file]
+
+---
+
 
 ### VPP Interface
 
@@ -430,20 +553,20 @@ _**Service Label Plugin Config File Options**_
 -vpp-ifplugin-config=
 ```
 
-_**VPP Interface Plugin Config File Options**_
+_**VPP Interface Plugin Conf File Options**_
 
 | Option | Type | Default | Description |
 |---|---|---|---|
 |**MTU**|_unit32_|0|Default maximum transmission unit (MTU) size. The value is used if an interface without an MTU is created. Note that the MTU in the interface configuration is preferred.|
-|**status-publishers**|_string_||Enables the vpp-agent to send status data back to a KV data store. etcd, redis or both are supported.|
+|**status-publishers**|_string_||Enables the VPP agent to send status data back to a KV data store. etcd, redis or both are supported.|
 
 [_vpp-ifplugin.conf file_](https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf)
 
 ---
 
-## vpp-agent -h command
+## VPP agent -h command
 
-Use this command to display flag, conf file name, and env variable information for all config files.
+Use this command to display flag, conf file name, and env variable information for all conf files.
 
 ```json
 vpp-agent -h
@@ -484,6 +607,46 @@ Usage of vpp-agent:
   -vpp-ifplugin-config="vpp-ifplugin.conf": Location of the "vpp-ifplugin" plugin config file; can also be set via "VPP-IFPLUGIN_CONFIG" env variable.
 
 ```
+
+[bolt-concepts-doc]: ../user-guide/concepts.md#bolt 
+[bolt-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/bolt/bolt.conf
+[cassandra-plugin-doc]: ../plugins/plugin-overview.md#cassandra 
+[cassandra-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/sql/cassandra/cassandra.conf
+[consul-plugin-doc]: ../plugins/db-plugins.md#consul
+[consul-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/consul/consul.conf
+[etcd-plugin-doc]: ../plugins/db-plugins.md#etcd
+[etcd-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/etcd/etcd.conf
+[filedb-plugin-doc]: ../plugins/db-plugins.md#filedb
+[filedb-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/db/keyval/filedb/filesystem.conf
+[govppmux-plugin-doc]: ../plugins/vpp-plugins.md#govppmux-plugin
+[govppmux-repo-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/govppmux/govpp.conf
+[grpc-plugin-doc]: ../plugins/connection-plugins.md#grpc-plugin
+[grpc-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/rpc/grpc/grpc.conf
+[rest-plugin-doc]: ../plugins/connection-plugins.md#rest-plugin
+[kafka-plugin-doc]: ../plugins/infra-plugins.md#messagingkafka
+[http-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/http.conf
+[kafka-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/messaging/kafka/kafka.conf
+[kvs-plugin-doc]: ../plugins/kvs-plugin.md
+[linux-interface-plugin-doc]: ../plugins/linux-plugins.md#linux-interface-plugin
+[linux-repo-interface-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/ifplugin/linux-ifplugin.conf
+[linux-repo-iptables-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/iptablesplugin/linux-iptablesplugin.conf
+[linux-nsplugin-doc]: ../plugins/linux-plugins.md#namespace-plugin
+[linux-repo-namespace-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/nsplugin/linux-nsplugin.conf
+[linux-interface-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/interfaces/interface.proto
+[linux-iptables-plugin-doc]: ../plugins/linux-plugins.md#ip-tables-plugin
+[linux-l3-plugin-doc]: ../plugins/linux-plugins.md#l3-plugin
+[linux-repo-l3-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/l3plugin/linux-l3plugin.conf
+[linux-repo-iptables-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/linux/iptablesplugin/linux-iptablesplugin.conf
+[log-manager-plugin-doc]: ../plugins/infra-plugins.md#log-manager
+[logs-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/logging/logmanager/logs.conf
+[pm-plugin-doc]: ../plugins/infra-plugins.md#process-manager
+[pm-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/exec/processmanager/pm.conf
+[service-label-plugin-doc]: ../plugins/infra-plugins.md#service-label
+[service-label-repo-conf-file]: 
+[supervisor-plugin-doc]: ../plugins/infra-plugins.md#supervisor
+[supervisor-repo-conf-file]: https://github.com/ligato/cn-infra/blob/master/exec/supervisor/supervisor.conf
+[telemetry-plugin-doc]: ../plugins/vpp-plugins.md#telemetry-plugin 
+[telemetry-repo-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/telemetry/telemetry.conf
 
 *[ACL]: Access Control List
 *[HTTP]: Hypertext Transfer Protocol

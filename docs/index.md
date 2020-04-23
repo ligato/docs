@@ -7,7 +7,8 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 ## About Ligato
 
 - [Overview](intro/overview.md): high-level overview
-- [Releases](https://github.com/ligato/vpp-agent/releases): release info for VPP Agent
+- [VPP Agent Releases][vpp-agent-releases]: release info for VPP Agent
+- [Cn-Infra Releases][cn-infra-releases]: release info for cn-infra
 
 ## Using Ligato
 
@@ -22,4 +23,7 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 - [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) - code documentation
 
 See the **Developer Guide** section for more information.
+
+[vpp-agent-releases]: https://github.com/ligato/vpp-agent/releases
+[cn-infra-releases]: https://github.com/ligato/cn-infra/releases
 

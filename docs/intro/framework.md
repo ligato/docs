@@ -5,7 +5,7 @@
 
 ## Ligato Architecture Stack
 
-The Ligato framework can be framed as a protocol stack. At the bottom we have the VPP and Linux kernel data planes.
+The Ligato framework can be framed as a protocol stack. At the bottom, we have the VPP and Linux kernel data planes.
 
 
 
@@ -26,6 +26,8 @@ Ligato is agnostic to the composition and functions implemented in an applicatio
 Returning to the stack diagram, Ligato is slotted in the middle. Explanations of its components follow.
 
 
+---
+
 ### cn-infra
 
 cn-infra and the VPP agent are the two constituent frameworks that together, form the basis of the Ligato framework. With Ligato, each management or control plane applicaton (app)utilize one or modules called plugins. Each plugin provides a specific function or functions. Some plugins come with the cn-infra framework; Others come with the VPP agent; Yet others created by app developers perform custom tasks.
@@ -39,9 +41,11 @@ The framework is modular and extensible. Plugins supporting new functionality (e
 
 Extending the code base does not mean that all plugins are present in all apps. Again, developers can cherry-pick the plugins best suited for their management or control plane app. For example, if an app does not require a KV store, cn-infra's  KV data store plugins need not be included.
 
+---
+
 ### VPP Agent
 
-The VPP Agent (VPP agent) is composed of a set of VPP-specific plugins. Used in combination with cn-infra, CNFs and apps can be developed to interact with other services/microservices in a cloud-native environment. For example, a CNF might need to interact with an external KV data store to receive configuration updates.
+The VPP Agent is composed of a set of VPP-specific plugins. Used in combination with cn-infra, CNFs and apps can be developed to interact with other services/microservices in a cloud-native environment. For example, a CNF might need to interact with an external KV data store to receive configuration updates.
 
 The VPP agent exposes VPP functionality to client app components via a higher-level model-driven API construct. Clients that consume this API are:
 
@@ -55,10 +59,13 @@ The VPP agent exposes VPP functionality to client app components via a higher-le
 
 Each (northbound) VPP API is implemented by a VPP agent plugin. Northbound (NB) API calls and operations are translated into southbound (SB) low level VPP Binary API calls. Northbound APIs are defined using protobufs. GoVPP is used to interact with VPP in the southbound direction.
 
+---
 
-### KVScheduler
+### KV Scheduler
 
-The runtime configuration state of a CNF must accurately reflect the desired network function. In just about all cases, this involves programming multiple configuration items such as an interface and a route. Moreover, one configuration item could be dependent on the successful configuration of another item. Example: a route cannot be configured without an interface, therefore we say the interface is a dependency configuration item of the route.
+The runtime configuration state of a CNF must accurately reflect the desired network function. In just about all cases, this involves programming multiple configuration items such as an interface and a route. 
+
+Moreover, one configuration item could be dependent on the successful configuration of another item. Example: a route cannot be configured without an interface, therefore we say the interface is a dependency configuration item of the route.
 
 CNF configuration dependency constraints can pose unique challenges:
 
@@ -68,18 +75,20 @@ CNF configuration dependency constraints can pose unique challenges:
 * No standard methods for tracking and logging configuration item activity such as transactions, caches and errors.
 * Synchronizing northbound (NB) intent with southbound (SB) configuration state is difficult.
 
-The KVScheduler was implemented to address these challenges. It is a plugin that works with VPP agents and Linux agents on the SB side, and orchestrators/external data sources such as KV data stores and RPC clients on the NB side. In a nutshell, it keeps track of the correct configuration order and associated dependencies.
+The KV Scheduler was implemented to address these challenges. It is a plugin that works with VPP and Linux agents on the SB side, and orchestrators/external data sources such as KV data stores and RPC clients on the NB side. In a nutshell, it keeps track of the correct configuration order and associated dependencies.
 
 ![kvs-arch-pict][ligato-kvs-arch] 
-<p style="text-align: center; font-weight: bold">KVScheduler</p>
+<p style="text-align: center; font-weight: bold">KV Scheduler</p>
  
-Internally, the KVScheduler builds a graph. The vertices represent configuration items. The edges represent relationships (i.e. dependency, derived from) between the configuration items. Each configuration item has its own set of KVDescriptors which are, in essence, pointers to CRUD callback operations. With this level of abstraction, the KVScheduler does not need to know the low-level details of configuration items.
+Internally, the KV Scheduler builds a graph. The vertices represent configuration items. The edges represent relationships (i.e. dependency, derived from) between the configuration items. Each configuration item has its own set of KV Descriptors which are, in essence, pointers to CRUD callback operations. With this level of abstraction, the KV Scheduler does not need to know the low-level details of configuration items.
 
-The KVScheduler walks the tree to sequence the correct configuration actions. It builds a transaction plan that drives CRUD operations to the VPP agent in the SB direction. Configuration items can be cached until outstanding dependencies are resolved.
+The KV Scheduler walks the tree to sequence the correct configuration actions. It builds a transaction plan that drives CRUD operations to the VPP agent in the SB direction. Configuration items can be cached until outstanding dependencies are resolved.
 
 NB partial, SB partial or full state reconciliation (synchronization) is supported.  Information on transaction plans, cached values and errors are exposed via REST APIs.
 
-Note that any plugin requiring an object, that is dependent on another object, can leverage the KVScheduler.
+Note that any plugin requiring an object, that is dependent on another object, can leverage the KV Scheduler.
+
+---
 
 ### Ligato Plugins
 
@@ -89,7 +98,7 @@ The ethos of a component-based architecture ("plugginability") in software platf
 - flexibility to swap in or out different plugins for development, testing and implementation
 - create custom app plugins
 
-Ligato plugins are defined using common pattern making it straightforward to understand existing plugins as well as create new ones. In addition, config files are used to define plugin functionality at startup.
+Ligato plugins are defined using a common pattern making it straightforward to understand existing plugins as well as create new ones. In addition, config files are used to define plugin functionality at startup.
 
 
 [infra]: ../img/intro/ligato-framework-arch-infra.svg
