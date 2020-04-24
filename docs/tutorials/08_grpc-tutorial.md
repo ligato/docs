@@ -73,7 +73,7 @@ The plugin should define the GRPC connection and client that will be used later 
 ```go
 import (
 	"github.com/ligato/cn-infra/infra"
-	"github.com/ligato/vpp-agent/api/configurator"
+	"github.com/ligato/vpp-agent/proto/ligato/configurator"
 	"google.golang.org/grpc"
 )
 
@@ -158,7 +158,7 @@ package grpc
 
 import (
 	"github.com/ligato/cn-infra/infra"
-    "github.com/ligato/vpp-agent/api/configurator"
+    "github.com/ligato/vpp-agent/proto/ligato/configurator"
     "google.golang.org/grpc"
     "net"
     "time"

@@ -185,8 +185,8 @@ linuxTap := &linuxIf.Interface{
 Prepare the gRPC configuration data:
 ```go
 import (
-	"github.com/ligato/vpp-agent/api/configurator"
-	"github.com/ligato/vpp-agent/api/models/linux"
+	"github.com/ligato/vpp-agent/proto/ligato/configurator"
+	"github.com/ligato/vpp-agent/proto/ligato/linux"
 )
 
 config := &configurator.Config{
@@ -203,7 +203,7 @@ The configuration data can be combined with any other Linux and VPP configuratio
 Update data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
-	"github.com/ligato/vpp-agent/api/configurator"
+	"github.com/ligato/vpp-agent/proto/ligato/configurator"
 )
 
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
@@ -314,8 +314,8 @@ linuxArp := &linuxL3.ARPEntry{
 Prepare the gRPC config data:
 ```go
 import (
-	"github.com/ligato/vpp-agent/api/configurator"
-	"github.com/ligato/vpp-agent/api/models/linux"
+	"github.com/ligato/vpp-agent/proto/ligato/configurator"
+	"github.com/ligato/vpp-agent/proto/ligato/linux"
 )
 
 config := &configurator.Config{
@@ -333,7 +333,7 @@ Update data with gRPC by using the client of the `ConfigurationClient` type. Rea
 
 ```go
 import (
-	"github.com/ligato/vpp-agent/api/configurator"
+	"github.com/ligato/vpp-agent/proto/ligato/configurator"
 )
 
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
@@ -420,8 +420,8 @@ linuxRoute := &linuxL3.Route{
 Prepare the gRPC config data:
 ```go
 import (
-	"github.com/ligato/vpp-agent/api/configurator"
-	"github.com/ligato/vpp-agent/api/models/linux"
+	"github.com/ligato/vpp-agent/proto/ligato/configurator"
+	"github.com/ligato/vpp-agent/proto/ligato/linux"
 )
 
 config := &configurator.Config{
@@ -436,7 +436,7 @@ config := &configurator.Config{
 Update data with gRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
 ```go
 import (
-	"github.com/ligato/vpp-agent/api/configurator"
+	"github.com/ligato/vpp-agent/proto/ligato/configurator"
 )
 
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
