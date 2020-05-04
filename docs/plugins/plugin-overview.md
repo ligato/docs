@@ -10,9 +10,9 @@ The KV Scheduler is the first step in any VPP or Linux related data processing. 
 
 ## VPP Plugins
 
-vpp-gent core VPP plugins (e.g. plugins which are always required when working with VPP). Plugin list:
+VPP agent core VPP plugins (e.g. plugins which are always required when working with VPP). Plugin list:
 
-- GoVPP Multiplexer
+- GoVPPMux
 - Interface plugin
 - L2 plugin
 - L3 plugin
@@ -21,6 +21,7 @@ vpp-gent core VPP plugins (e.g. plugins which are always required when working w
 - IPSec plugin
 - NAT plugin
 - Punt plugin
+- Segment routing plugin
 - STN plugin 
 - Telemetry plugin
 
@@ -79,15 +80,21 @@ More at: [punt-plugin][punt-plugin]
 
 Provides access to the VPP punt feature, where incoming VPP traffic matching a set pre-defined rules is 'punted' or redirected to the host stack or socket.
 
+### Segment Routing
+
+More at: [SR plugin][sr-plugin]
+
+Configure segment routing IPv6 (SRv6)
+
+### STN Plugin
+
+Implementation of the `control plane` for the VPP STN (Steal the NIC) feature
+
 ### Telemetry
 
 More at: [telemetry plugin][telemetry-plugin]
 
 Collects telemetry statistics from VPP for export to external monitoring and management tools.
-
-### STN plugin
-
-Implementation of the `control plane` for the VPP STN (Steal the NIC) feature
 
 ## Linux Plugins
 
@@ -110,13 +117,13 @@ More at: [Linux L3 plugin][linux-l3-plugin]
 
 Configure Linux routes  and ARPs. 
 
-### IPtables Plugin
+### IP Tables Plugin
 
 More at: [Linux iptables plugin][linux-iptables-plugin]
 
 Implementation of the [Linux IPtables feature][linux-iptables].
 
-### Namespace plugin
+### Namespace Plugin
 
 More at: [Namespace plugin][linux-namespace-pluign]
 
@@ -124,25 +131,25 @@ Helper plugin tied in with the Linux interface/l3 plugins. It manages namespaces
 
 ## Connection plugins
 
-VPP agent connection plugins enable external data read or write without the use of a data store.
+VPP agent connection plugins enable external data read/write without the use of a data store.
 
 - REST plugin
 - GRPC plugin
 
 
-### REST plugin
+### REST Plugin
 
 More at: [REST plugin][rest-plugin]
 
 REST API support including security.
 
-### GRPC plugin
+### GRPC Plugin
 
 More at: [GRPC plugin][grpc-plugin]
 
 Provides base GRPC support for the VPP agent for handling GRPC requests.
 
-## Database plugins
+## Database Plugins
 
 This section describes the VPP agent database plugins.
 
@@ -155,41 +162,41 @@ This section describes the VPP agent database plugins.
 - Cassandra
 - FileDB
 
-### Datasync plugin
+### Datasync Plugin
 
 More at: [Datasync plugin][datasync-plugin]
 
 defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources.
 
-### Data Broker plugin
+### Data Broker Plugin
 
 More at: [Data Broker plugin][data-broker-plugin]
 
 data broker abstraction.
 
-### ETCD
+### etcd
 
 More at: [etcd plugin][etcd-plugin]
 
-Provides access to an etcd key-value data store.
+Provides access to an etcd KV data store.
 
 ### Redis
 
 More at: [Redis plugin][redis-plugin]
 
-Provides access to an Redis key-value data store.
+Provides access to an Redis KV data store.
 
 ### Consul
 
 More at: [Consul plugin][consul-plugin]
 
-Provides access to a consul key-value data store.
+Provides access to a consul KV data store.
 
 ### Bolt
 
 More at: [Bolt plugin][bolt-plugin]
 
-Provides access to a Bolt key-value data store.
+Provides access to a Bolt data store.
 
 ### Cassandra
 
@@ -201,9 +208,9 @@ Provides access to a Cassandra MYSQL data store.
 
 More at: [FileDB plugin][file-db-plugin]
 
-Uses the OS file system as a key-value data store.
+Uses the OS file system as a KV data store.
 
-## Infra plugins
+## Infra Plugins
 
 Discusses the Ligato infra plugins.
 
@@ -230,7 +237,7 @@ More at: [Status Check plugin][status-check]
 
 Monitors the status of a Ligato infra app by collecting and aggregating partial status of VPP agent plugins.
 
-### Index Map plugin
+### Index Map Plugin
 
 More at: [Index Map plugin][index-map]
 
@@ -254,7 +261,7 @@ More at: [Process Manager plugin][process-manager]
 
 Set of methods to create a process instance to manage and monitor plugins.
 
-### Service Label plugin
+### Service Label Plugin
 
 More at: [Service Label plugin][service-label]
 
@@ -292,6 +299,7 @@ Other plugins can use this plugin to obtain the microservice label, or more spec
 [redis-plugin]: db-plugins.md#redis
 [rest-plugin]: connection-plugins.md#rest-plugin
 [service-label]: infra-plugins.md#status-check
+[sr-plugin]: vpp-plugins.md#sr-plugin
 [status-check]: infra-plugins.md#status-check
 [telemetry-plugin]: vpp-plugins.md#telemetry 
 

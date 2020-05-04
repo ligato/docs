@@ -5,30 +5,34 @@
 This section describes the behavior of the KV Scheduler system using examples accompanied by UML control-flow diagrams. Each example covers a specific scenario using
 configuration items supported by the VPP and Linux plugins. The diagrams illustrate the interactions between the KV Scheduler, NB plane and KV Descriptors for an executed configuration transaction.
 
-To improve readability, the examples use shortened keys without prefixes, or in some cases, more descriptive aliases, as object identifiers. For example, `my-route` is used as a placeholder for a user-defined route, which otherwise would be identified by a [key](../user-guide/reference.md#vpp-keys) composed of a destination network, outgoing interface and next hop address. In addition, most of the configuration items that are automatically created in the SB plane are omitted from the diagrams since they do not play any role in the scenarios described below. These items are retrieved from the VPP and Linux plugins during the first resync. Examples include routes and physical interfaces.
+To improve readability, the examples use shortened keys without prefixes, or in some cases, more descriptive aliases, as object identifiers. For example, `my-route` is used as a placeholder for a user-defined route, which otherwise would be identified by a [VPP route key][vpp-key] composed of a destination network, outgoing interface and next hop address. 
+
+In addition, most of the configuration items that are automatically created in the SB plane are omitted from the diagrams since they do not play any role in the scenarios described below. These items are retrieved from the VPP and Linux plugins during the first resync. Examples include routes and physical interfaces.
 
 
 !!! Note
-    The UML diagrams are plotted as SVG images. They also contain links to diagrams
+    The UML diagrams are plotted as SVG images. They contain links to diagrams
     presenting the state of the graph with values at the end of every transaction.
     To access these links, the UML diagrams must be opened as standalone inside a separate web browser tab.
+
+---
 
 ### Example: AF-Packet interface
 
 `AF-Packet` is a VPP interface type attached to a host OS interface. It captures all incoming traffic, and permits Tx packet injection through a socket interface.
 
-The host OS interface must exist before the `AF-Packet` interface is created. This could be problematic because the vpp-agent does not control or configure the host OS interface. Instead, this task could be handled by an external process or
-an administrator during vpp-agent run-time. In this situation, there is no key-value pair to resolve `AF-Packet` dependencies.
+The host OS interface must exist before the `AF-Packet` interface is created. This could be problematic because the VPP agent does not control or configure the host OS interface. Instead, this task could be handled by an external process or
+an administrator during VPP agent run-time. In this situation, there is no key-value pair to resolve `AF-Packet` dependencies.
 
 The KV Scheduler solves this problem by supporting external object notifications through the use of the `PushSBNotification(key, value, metadata)` method. Values received through notifications are denoted as `OBTAINED`. They cannot be removed by a resync even
 though they are not explicitly configured by NB. Obtained values are allowed to have their own descriptors. The `Retrieve()` operation is called to refresh the graph.
  `Create`, `Delete` and `Update` operations are never used because:
 
  - obtained values are updated externally.
- - vpp-agent is notified about any changes _after_ they have occurred.
+ - VPP agent is notified about any changes _after_ they have occurred.
 
 The Linux plugin support an `InterfaceWatcher` descriptor. It retrieves
-and generates notifications regarding Linux interfaces in the default network namespace of the vpp-agent. Linux interfaces are assigned unique
+and generates notifications regarding Linux interfaces in the default network namespace of the VPP agent. Linux interfaces are assigned unique
 keys using their host names with `linux/interface/host-name/eth1` serving as an example.
 The `AF-Packet` interface then defines the dependency referencing the key with the
 host name of the interface it is supposed to attach to. Note that it cannot attach
@@ -39,6 +43,8 @@ In this example, the host OS interface is created after the request to configure
 `PENDING` state until the notification is received. 
 
 ![CFD][cfd-af-packet]
+
+---
 
 ### Example: Bridge Domain
 
@@ -62,6 +68,8 @@ The control-flow diagram shows that the bridge domain is created even if an inte
 
 ![CFD][cfd-bridge-domain]
 
+---
+
 ### Example: Interface Re-creation
 
 Incremental configuration updates for some items are not supported by the SB. Instead, the given item may need to be deleted and re-created with the new configuration. The KV Scheduler supports this scenario using the `UpdateWithRecreate()` method. It enables a descriptor to inform the KV Scheduler if an item requires
@@ -74,6 +82,8 @@ the `PENDING` state before interface re-creation. The route configuration can th
 
 
 ![CFD][cfd-interface-recreation]
+
+---
 
 ### Example: Retry of Failed Operation
 
@@ -89,6 +99,8 @@ the `Create(my-tap)` operation and ultimately succeed as shown.
 
 
 ![CFD][cfd-retry-failed]
+
+---
 
 ### Example: Transaction Revert
 
@@ -106,12 +118,14 @@ the interface is removed, the system is returned to its pre-transaction state. F
 
 ![CFD][cfd-transaction-revert]
 
+---
+
 ### Example: Unnumbered Interface
 
 An unnumbered interface is an interface that has not been configured with an IP address. It can borrow an IP address from another interface. This can conserve network address space.
 
-The interface that will "loan" IP addresses to unnumbered interfaces must be configured with at least one IP address. Normally, the vpp-agent represents a given VPP interface using a single key-value
-pair. Depending on this key alone would only ensure that the target interface, is already configured when a dependent object is being created.
+The interface that will "loan" IP addresses to unnumbered interfaces must be configured with at least one IP address. Normally, the VPP agent represents a given VPP interface using a single key-value
+pair. Depending on this key alone would only ensure that the target interface is already configured when a dependent object is being created.
 
 !!! Note
     The paragragh above only refers to a VPP interface. It is not referring to a VPP interface configured with an IP address.
@@ -121,7 +135,7 @@ an interface, every VPP interface value must `derive` a unique
 key-value pair for each assigned IP address. This enables the KV Scheduler to reference IP
 address assignments and build dependencies around them.
 
-An unnumbered interface can derive a single value from every interface, with key that would allow it to determine if the interface has at least one assigned IP address.
+An unnumbered interface can derive a single value from every interface, with a key that would allow it to determine if the interface has at least one assigned IP address.
 
 Here is an example:
 ```
@@ -167,6 +181,8 @@ the address before it is unassigned, and becomes an interface in L2 mode.
 
 ![CFD][cfd-unnumbered]
 
+---
+
 ### Scenario: Create VPP interface via KV Data Store
 
 This is the most basic scenario one will encounter. The control-flow diagram is detailed. It includes all of interacting components consisting of:
@@ -180,17 +196,21 @@ This is the most basic scenario one will encounter. The control-flow diagram is 
 
 ![CFD][cfd-create-vpp-interface-kvdb]
 
+---
+
 ### Scenario: Create VPP Interface via gRPC
 
-In this example, gRPC is used as the vpp-agent's NB instead of the KV data store. The transaction control-flow is collapsed because there are essentially no differences between the two cases. The KV Scheduler is not concerned how the desired configuration is conveyed to the vpp-agent.
+In this example, gRPC is used as the VPP agent's NB instead of the KV data store. The transaction control-flow is collapsed because there are essentially no differences between the two cases. The KV Scheduler is not concerned how the desired configuration is conveyed to the VPP agent.
 
 The advantage of the gRPC approach is that the transaction error
 value is propagated back to the client, which is then able to react to it
-accordingly. On the other hand, with the KV data store approach, there is no client-to-agent connection required. The configuration can be submitted even when the vpp-agent is restarting or not running at all.
+accordingly. On the other hand, with the KV data store approach, there is no client-to-agent connection required. The configuration can be submitted even when the VPP agent is restarting or not running at all.
 
 
 
 ![CFD][cfd-create-vpp-interface-grpc]
+
+---
 
 ### Example: Route waiting for the associated interface
 
@@ -209,6 +229,7 @@ This example shows how a route, received from the KV data store, is placed in a 
 [cfd-unnumbered]: ../img/control-flow-diagram/unnumbered_interface.svg?sanitize=true
 [retry-failed]: control-flows.md#example-retry-of-failed-operation
 [vpp-interface]: control-flows.md#scenario-create-vpp-interface-via-kvdb
+[vpp-key]: ../user-guide/reference.md#vpp-keys
 
 *[KVDB]: Key-Value Database
 *[VPP]: Vector Packet Processing
