@@ -502,7 +502,7 @@ docker exec -it vpp-agent agentctl -e 172.17.0.2:2379 kvdb list
 
 ---
 
-Restart vpp-agent steps:
+Restart VPP agent steps:
 
     docker ps -f name=vpp-agent
     docker stop <XX> ; with <XX> equals first to 2 characters of container ID

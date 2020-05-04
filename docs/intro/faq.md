@@ -81,7 +81,7 @@ A VPP agent process that maintains consistency between configuration data provid
 
 ### What is a model?
 
-Each object is defined by a model consisting of a [module, version and type fields](../user-guide/concepts.md).
+Each object is defined by a model consisting of two parts: [Model Specification](../user-guide/concepts.md#model-specification) and [proto.Message](../user-guide/concepts.md#protomessage).
 
 ### What is the microservice label?
 
