@@ -1,6 +1,6 @@
 #![logo](img/ligato/ligato-dark.png) <span >Ligato Docs</span>
 
-Welcome to the Ligato Docs, a collection of information about the [Ligato projects](https://github.com/ligato).
+Welcome to the Ligato Docs, a collection of information and documentation about the [Ligato projects](https://github.com/ligato).
 
 ---
 
@@ -8,7 +8,7 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 
 - [Overview](intro/overview.md): high-level overview
 - [VPP Agent Releases][vpp-agent-releases]: release info for VPP Agent
-- [Cn-Infra Releases][cn-infra-releases]: release info for cn-infra
+- [cn-infra Releases][cn-infra-releases]: release info for cn-infra
 
 ## Using Ligato
 
@@ -19,7 +19,7 @@ Welcome to the Ligato Docs, a collection of information about the [Ligato projec
 ## Developing with Ligato
 
 - [Hello World](tutorials/01_hello-world.md) - first in a series of Ligato programming tutorials
-- [KVScheduler](developer-guide/kvscheduler.md) and [KVDescriptors](developer-guide/kvdescriptor.md) - detailed architecture, behavior and troubleshooting aspects of the KV Scheduler framework
+- [KV Scheduler](developer-guide/kvscheduler.md) and [KV Descriptors](developer-guide/kvdescriptor.md) - detailed architecture, behavior and troubleshooting aspects of the KV Scheduler framework
 - [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) - code documentation
 
 See the **Developer Guide** section for more information.

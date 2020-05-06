@@ -35,7 +35,7 @@ cn-infra and the VPP agent are the two constituent frameworks that together, for
 cn-infra can be decomposed into a suite of plugins supporting capabilities present in modern cloud-native CNFs and apps. Plugins offering logging, health checks, messaging, KV data store connectivity, REST and gRPC APIs are available. Developers can implement a mix of cn-infra plugins, that together with other VPP agent and/or custom plugins, define CNF functionality. cn-infra provides plugin lifecycle management such as initialization and graceful shutdown.
 
 ![cn-infra][infra]
-<p style="text-align: center; font-weight: bold">CN-infra</p>
+<p style="text-align: center; font-weight: bold">cn-infra</p>
 
 The framework is modular and extensible. Plugins supporting new functionality (e.g. another KV store or another message bus) can be swapped in or out as needed. It is possible to build cn-infra-based apps in layers; App plugins together with new cn-infra plugins can form a new foundation providing APIs or services to higher layer apps. This approach was used in constructing the VPP agent discussed below.
 
@@ -54,7 +54,7 @@ The VPP agent exposes VPP functionality to client app components via a higher-le
 
  
 ![VPP agent][vpp-agent-new]
-<p style="text-align: center; font-weight: bold">vpp-agent</p>
+<p style="text-align: center; font-weight: bold">VPP Agent</p>
   
 
 Each (northbound) VPP API is implemented by a VPP agent plugin. Northbound (NB) API calls and operations are translated into southbound (SB) low level VPP Binary API calls. Northbound APIs are defined using protobufs. GoVPP is used to interact with VPP in the southbound direction.
