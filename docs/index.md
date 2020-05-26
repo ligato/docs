@@ -8,7 +8,7 @@ Welcome to the Ligato Docs, a collection of information and documentation about 
 
 - [Overview](intro/overview.md): high-level overview
 - [VPP Agent Releases][vpp-agent-releases]: release info for VPP Agent
-- [cn-infra Releases][cn-infra-releases]: release info for cn-infra
+- [Cn-infra Releases][cn-infra-releases]: release info for cn-infra
 
 ## Using Ligato
 

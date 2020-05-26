@@ -51,6 +51,7 @@ nav:
     - Database Plugins: plugins/db-plugins.md
     - Infra Plugins: plugins/infra-plugins.md
   - DEVELOPER GUIDE:
+    - APIs: developer-guide/ligatoAPI.md
     - Plugin Lookup: developer-guide/plugin-lookup.md
     - KV Scheduler: developer-guide/kvscheduler.md
     - KV Descriptors: developer-guide/kvdescriptor.md

@@ -200,7 +200,6 @@ Result should be `OK` message. Same idea as above, but this time for a bridge do
 Verify the **loopback interface** configuration is present in the etcd data store:
 ```
 docker exec etcd etcdctl get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
-/vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 
 Sample output:
