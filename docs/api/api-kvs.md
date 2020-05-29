@@ -1,993 +1,3 @@
-# VPP Agent
-
-## REST API Index
-
-```
-curl http://localhost:9191/
-```
----
-
-## Interfaces
-```
-curl http://localhost:9191/dump/vpp/v2/interfaces
-```
-Sample response:
-```
-{
-    "0": {
-        "interface": {
-            "name": "UNTAGGED-local0",
-            "type": "SOFTWARE_LOOPBACK"
-        },
-        "interface_meta": {
-            "sw_if_index": 0,
-            "sub_sw_if_index": 0,
-            "l2_address": "",
-            "internal_name": "local0",
-            "is_admin_state_up": false,
-            "is_link_state_up": false,
-            "link_duplex": 0,
-            "link_mtu": 0,
-            "mtu": [
-                0,
-                0,
-                0,
-                0
-            ],
-            "link_speed": 0,
-            "sub_id": 0,
-            "tag": "",
-            "dhcp": null,
-            "vrf_ipv4": 0,
-            "vrf_ipv6": 0,
-            "pci": 0
-        }
-    },
-    "1": {
-        "interface": {
-            "name": "GigabitEthernet0/8/0",
-            "type": "DPDK",
-            "enabled": true,
-            "physAddress": "08:00:27:e9:b9:9b",
-            "ipAddresses": [
-                "192.168.16.1/24"
-            ],
-            "mtu": 9206,
-            "rxModes": [
-                {
-                    "mode": "POLLING"
-                }
-            ],
-            "rxPlacements": [
-                {
-                    "mainThread": true
-                }
-            ]
-        },
-        "interface_meta": {
-            "sw_if_index": 1,
-            "sub_sw_if_index": 1,
-            "l2_address": "CAAn6bmb",
-            "internal_name": "GigabitEthernet0/8/0",
-            "is_admin_state_up": true,
-            "is_link_state_up": true,
-            "link_duplex": 2,
-            "link_mtu": 9206,
-            "mtu": [
-                9000,
-                0,
-                0,
-                0
-            ],
-            "link_speed": 1000000,
-            "sub_id": 0,
-            "tag": "",
-            "dhcp": null,
-            "vrf_ipv4": 0,
-            "vrf_ipv6": 0,
-            "pci": 0
-        }
-    },
-// additional interfaces
-...
-```
----
-
-## VPP Interfaces/Loopback
-
-```
-curl http://localhost:9191/dump/vpp/v2/interfaces/loopback
-```
-Sample response:
-```json
-{
-    "0": {
-        "interface": {
-            "name": "UNTAGGED-local0",
-            "type": "SOFTWARE_LOOPBACK",
-            "physAddress": "00:00:00:00:00:00"
-        },
-        "interface_meta": {
-            "sw_if_index": 0,
-            "sub_sw_if_index": 0,
-            "l2_address": "AAAAAAAA",
-            "internal_name": "local0",
-            "is_admin_state_up": false,
-            "is_link_state_up": false,
-            "link_duplex": 0,
-            "link_mtu": 0,
-            "mtu": [
-                0,
-                0,
-                0,
-                0
-            ],
-            "link_speed": 0,
-            "sub_id": 0,
-            "tag": "",
-            "dhcp": null,
-            "vrf_ipv4": 0,
-            "vrf_ipv6": 0,
-            "pci": 0
-        }
-    },
-// additional loopbacks
-...
-```
----
-
-## VPP Interfaces/Ethernet
-```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/ethernet
-```
-Sample response:
-```json
-{
-  "1": {
-    "interface": {
-      "name": "GigabitEthernet0/8/0",
-      "type": "DPDK",
-      "enabled": true,
-      "physAddress": "08:00:27:da:0d:6b",
-      "ipAddresses": [
-        "192.168.16.1/24"
-      ],
-      "mtu": 9206,
-      "rxModes": [
-        {
-          "mode": "POLLING"
-        }
-      ],
-      "rxPlacements": [
-        {
-          "mainThread": true
-        }
-      ]
-    },
-    "interface_meta": {
-      "sw_if_index": 1,
-      "sub_sw_if_index": 1,
-      "l2_address": "CAAn2g1r",
-      "internal_name": "GigabitEthernet0/8/0",
-      "is_admin_state_up": true,
-      "is_link_state_up": true,
-      "link_duplex": 2,
-      "link_mtu": 9206,
-      "mtu": [
-        9000,
-        0,
-        0,
-        0
-      ],
-      "link_speed": 1000000,
-      "sub_id": 0,
-      "tag": "",
-      "dhcp": null,
-      "vrf_ipv4": 0,
-      "vrf_ipv6": 0,
-      "pci": 0
-    }
-  }
-}
-// additional ethernet interfaces
-...
-```
----
-
-## VPP Interfaces/Vxlan
-```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/vxlan
-```
-Sample response:
-```json
-{
-    "8": {
-        "interface": {
-            "name": "vxlan-default-2",
-            "type": "VXLAN_TUNNEL",
-            "enabled": true,
-            "vxlan": {
-                "srcAddress": "192.168.16.1",
-                "dstAddress": "192.168.16.2",
-                "vni": 10
-            }
-        },
-        "interface_meta": {
-            "sw_if_index": 8,
-            "sub_sw_if_index": 8,
-            "l2_address": "",
-            "internal_name": "vxlan_tunnel0",
-            "is_admin_state_up": true,
-            "is_link_state_up": true,
-            "link_duplex": 0,
-            "link_mtu": 0,
-            "mtu": [
-                0,
-                0,
-                0,
-                0
-            ],
-            "link_speed": 0,
-            "sub_id": 0,
-            "tag": "vxlan-default-2",
-            "dhcp": null,
-            "vrf_ipv4": 0,
-            "vrf_ipv6": 0,
-            "pci": 0
-        }
-    }
-}
-// other vxlan interfaces
-...
-```
----
-
-## VPP Interfaces/Tap
-```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/tap
-```
-Sample response:
-```json
-{
-  "3": {
-    "interface": {
-      "name": "tap-vpp2",
-      "type": "TAP",
-      "enabled": true,
-      "physAddress": "34:3c:00:00:00:01",
-      "ipAddresses": [
-        "172.30.1.1/24"
-      ],
-      "mtu": 1450,
-      "rxModes": [
-        {
-          "mode": "POLLING"
-        }
-      ],
-      "rxPlacements": [
-        {
-          "mainThread": true
-        }
-      ],
-      "tap": {
-        "version": 2,
-        "hostIfName": "tap-1755813745",
-        "rxRingSize": 1024,
-        "txRingSize": 1024
-      }
-    },
-    "interface_meta": {
-      "sw_if_index": 3,
-      "sub_sw_if_index": 3,
-      "l2_address": "NDwAAAAB",
-      "internal_name": "tap0",
-      "is_admin_state_up": true,
-      "is_link_state_up": true,
-      "link_duplex": 0,
-      "link_mtu": 1450,
-      "mtu": [
-        1450,
-        0,
-        0,
-        0
-      ],
-      "link_speed": 0,
-      "sub_id": 0,
-      "tag": "tap-vpp2",
-      "dhcp": null,
-      "vrf_ipv4": 0,
-      "vrf_ipv6": 0,
-      "pci": 0
-    }
-  },
-// additional tap interfaces
-...
- 
-```
----
-
-## VPP Interfaces/Memif
-```json
-http://localhost:9191/dump/vpp/v2/interfaces/memif
-```
-Sample response:
-```json
-{
-"2": {
-    "interface": {
-        "name": "mem01",
-        "type": "MEMIF",
-        "enabled": true,
-        "physAddress": "02:00:00:00:00:03",
-        "ipAddresses": [
-            "100.100.100.102/24"
-        ],
-        "mtu": 1500,
-        "memif": {
-            "id": 2,
-            "socketFilename": "/run/vpp/memif.sock",
-            "ringSize": 1
-        }
-    },
-    "interface_meta": {
-        "sw_if_index": 2,
-        "sub_sw_if_index": 2,
-        "l2_address": "AgAAAAAD",
-        "internal_name": "memif0/2",
-        "is_admin_state_up": true,
-        "is_link_state_up": false,
-        "link_duplex": 0,
-        "link_mtu": 1500,
-        "mtu": [
-            1500,
-            0,
-            0,
-            0
-        ],
-        "link_speed": 0,
-        "sub_id": 0,
-        "tag": "mem01",
-        "dhcp": null,
-        "vrf_ipv4": 0,
-        "vrf_ipv6": 0,
-        "pci": 0
-    },
-}
-// additional memif interfaces
-...
-```
----
-
-## VPP Interfaces/Afpacket
-```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/afpacket
-```
----
-
-## VPP ACL IP
-```json
-curl http://localhost:9191/dump/vpp/v2/acl/ip
-```
-
----
-
-## VPP ACL MACIP
-```json
-curl http://localhost:9191/dump/vpp/v2/acl/macip
-```
----
-
-## VPP ARPs
-```json
-curl http://localhost:9191/dump/vpp/v2/arps
-```
-Sample response:
-```json
-[
-    {
-        "Arp": {
-            "interface": "GigabitEthernet0/8/0",
-            "ip_address": "192.168.16.100",
-            "phys_address": "08:00:27:c9:c3:7a"
-        },
-        "Meta": {
-            "SwIfIndex": 1
-        }
-    },
-    {
-        "Arp": {
-            "interface": "vxlanBVI",
-            "ip_address": "192.168.30.2",
-            "phys_address": "12:2b:00:00:00:02",
-            "static": true
-        },
-        "Meta": {
-            "SwIfIndex": 4
-        }
-    },
-    {
-        "Arp": {
-            "interface": "tap-vpp2",
-            "ip_address": "172.30.1.2",
-            "phys_address": "96:55:cc:5b:35:6b"
-        },
-        "Meta": {
-            "SwIfIndex": 3
-        }
-    },
-    {
-        "Arp": {
-            "interface": "vpp-tap-054072f2c3954ab93b479d36b391f264f0096b1c1d374a4afb45ef4",
-            "ip_address": "10.1.1.2",
-            "phys_address": "02:fe:e3:99:d0:4c",
-            "static": true
-        },
-        "Meta": {
-            "SwIfIndex": 5
-        }
-    },
-    {
-        "Arp": {
-            "interface": "vpp-tap-400dc32e50d03aeff4718c568bf5520cdc0addc1196f3c9d58dc1ec",
-            "ip_address": "10.1.1.3",
-            "phys_address": "02:fe:d4:0d:5f:64",
-            "static": true
-        },
-        "Meta": {
-            "SwIfIndex": 6
-        }
-    },
-    {
-        "Arp": {
-            "interface": "vpp-tap-83dc59e9763c663bc2693ae1bd50a4982a536ccac3034518ea9e6a2",
-            "ip_address": "10.1.1.4",
-            "phys_address": "02:fe:a2:51:a7:65",
-            "static": true
-        },
-        "Meta": {
-            "SwIfIndex": 7
-        }
-    }
-]
-// additional ARP entries
-...
-```
----
-
-## VPP L2 Bridge Domain
-```json
-curl http://localhost:9191/dump/vpp/v2/bd
-```
-Sample response:
-```json
-[
-    {
-        "bridge_domain": {
-            "name": "vxlanBD",
-            "forward": true,
-            "interfaces": [
-                {
-                    "name": "vxlanBVI",
-                    "bridged_virtual_interface": true,
-                    "split_horizon_group": 1
-                },
-                {
-                    "name": "vxlan-default-2",
-                    "split_horizon_group": 1
-                }
-            ]
-        },
-        "bridge_domain_meta": {
-            "bridge_domain_id": 1
-        }
-    }
-]
-```
----
-
-## VPP L2 FIB
-```json
-curl http://localhost:9191/dump/vpp/v2/fib
-```
-Sample response:
-```json
-{
-    "12:2b:00:00:00:01": {
-        "fib": {
-            "phys_address": "12:2b:00:00:00:01",
-            "bridge_domain": "vxlanBD",
-            "outgoing_interface": "vxlanBVI",
-            "static_config": true,
-            "bridged_virtual_interface": true
-        },
-        "fib_meta": {
-            "bridge_domain_id": 1,
-            "outgoing_interface_sw_if_idx": 4
-        }
-    },
-    "12:2b:00:00:00:02": {
-        "fib": {
-            "phys_address": "12:2b:00:00:00:02",
-            "bridge_domain": "vxlanBD",
-            "outgoing_interface": "vxlan-default-2",
-            "static_config": true
-        },
-        "fib_meta": {
-            "bridge_domain_id": 1,
-            "outgoing_interface_sw_if_idx": 8
-        }
-    }
-}
-```
----
-
-## VPP L2 X-connect
-```json
-curl http://localhost:9191/dump/vpp/v2/xc
-```
----
-
-## VPP L3 Routes
-```json
-curl http://localhost:9191/dump/vpp/v2/routes
-```
-Sample response:
-```json
-[
-  {
-    "Route": {
-      "dst_network": "0.0.0.0/0",
-      "next_hop_addr": "192.168.16.100",
-      "outgoing_interface": "GigabitEthernet0/8/0",
-      "weight": 1
-    },
-    "Meta": {
-      "TableName": "",
-      "OutgoingIfIdx": 1,
-      "IsIPv6": false,
-      "Afi": 0,
-      "IsLocal": false,
-      "IsUDPEncap": false,
-      "IsUnreach": false,
-      "IsProhibit": false,
-      "IsResolveHost": false,
-      "IsResolveAttached": false,
-      "IsDvr": false,
-      "IsSourceLookup": false,
-      "NextHopID": 0,
-      "RpfID": 0,
-      "LabelStack": []
-    }
-  },
-  {
-    "Route": {
-      "type": 2,
-      "dst_network": "240.0.0.0/4",
-      "next_hop_addr": "0.0.0.0",
-      "weight": 1
-    },
-    "Meta": {
-      "TableName": "",
-      "OutgoingIfIdx": 4294967295,
-      "IsIPv6": false,
-      "Afi": 0,
-      "IsLocal": false,
-      "IsUDPEncap": false,
-      "IsUnreach": false,
-      "IsProhibit": false,
-      "IsResolveHost": false,
-      "IsResolveAttached": false,
-      "IsDvr": false,
-      "IsSourceLookup": false,
-      "NextHopID": 0,
-      "RpfID": 0,
-      "LabelStack": []
-    },
-// additional routes    
-...
-```
----
-
-## VPP L3 IP Scan Neighbor
-```json
-curl http://localhost:9191/dump/vpp/v2/ipscanneigh
-```
-Sampe response:
-```json
-{
-  "mode": 1,
-  "scan_interval": 1,
-  "max_proc_time": 20,
-  "max_update": 10,
-  "scan_int_delay": 1,
-  "stale_threshold": 4
-}
-```
-
----
-
-## VPP L3 Proxy Arp Interfaces
-```json
-curl http://localhost:9191/dump/vpp/v2/proxyarp/interfaces
-```
-
----
-
-## VPP L3 Proxy ARP Ranges
-```json
-curl http://localhost:9191/dump/vpp/v2/proxyarp/ranges
-```
-
----
-
-## VPP NAT Global
-```json
-curl http://localhost:9191/dump/vpp/v2/nat/global
-```
-Sample response:
-```json
-{
-  "forwarding": true,
-  "virtual_reassembly": {
-    "timeout": 2,
-    "max_reassemblies": 1024,
-    "max_fragments": 5
-  }
-}
-```
----
-
-## VPP NAT DNAT
-```json
-curl http://localhost:9191/dump/vpp/v2/nat/dnat
-```
-Sample response:
-```json
-[
-  {
-    "label": "DNAT-identities",
-    "id_mappings": [
-      {
-        "ip_address": "192.168.16.1",
-        "port": 4789,
-        "protocol": 1
-      },
-      {
-        "vrf_id": 1,
-        "ip_address": "192.168.16.1",
-        "protocol": 1
-      },
-      {
-        "ip_address": "192.168.16.1",
-        "protocol": 1
-      }
-    ]
-  },
-  {
-    "label": "default/kubernetes",
-    "st_mappings": [
-      {
-        "external_ip": "10.96.0.1",
-        "external_port": 443,
-        "local_ips": [
-          {
-            "local_ip": "10.20.0.2",
-            "local_port": 6443
-          }
-        ],
-        "twice_nat": 2
-      }
-    ]
-  },
-// additional DNAT Mappings
-...
-```
----
-
-## VPP NAT Interfaces
-```json
-curl http://localhost:9191/dump/vpp/v2/nat/interfaces
-```
-Sample response:
-```json
-{
-  "name": "tap-vpp2",
-  "nat_inside": true,
-  "nat_outside": true
-},
-{
-  "name": "vxlanBVI",
-  "nat_inside": true,
-  "nat_outside": true
-},
-{
-  "name": "vpp-tap-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a816",
-  "nat_outside": true
-},
-{
-  "name": "vpp-tap-860ca2dd92a3a4bf0e330affcedbe17135b7695e6ccd70e06c3eacb",
-  "nat_inside": true,
-  "nat_outside": true
-},
-{
-  "name": "vpp-tap-9653fece511f2e658bcb95ec986b52532acdf540bece3652e01ff32",
-  "nat_outside": true
-},
-{
-  "name": "GigabitEthernet0/8/0",
-  "nat_outside": true,
-  "output_feature": true
-}
-```
----
-
-## VPP NAT Pool
-```json
-curl http://localhost:9191/dump/vpp/v2/nat/pools
-```
-
-Sample response:
-```json
-[
-  {
-    "vrf_id": 4294967295,
-    "first_ip": "192.168.16.1"
-  },
-  {
-    "vrf_id": 4294967295,
-    "first_ip": "10.1.1.254",
-    "twice_nat": true
-  }
-]
-```
----
-
-## Linux Interfaces
-```json
-curl http://localhost:9191/dump/linux/v2/interfaces
-```
-Sample response:
-```json
-[
-  {
-    "interface": {
-      "name": "tap-vpp1",
-      "type": "TAP_TO_VPP",
-      "hostIfName": "vpp1",
-      "enabled": true,
-      "ipAddresses": ["172.30.1.2/24"],
-      "physAddress": "ca:aa:bc:5d:76:9c",
-      "mtu": 1450,
-      "tap": {
-        "vppTapIfName": "tap-vpp2"
-      }
-    },
-    "interface_meta": {
-      "linux_if_index": 6,
-      "parent_index": 0,
-      "master_index": 0,
-      "oper_state": 0,
-      "flags": 69699,
-      "encapsulation": "ether",
-      "num_rx_queue": 0,
-      "num_tx_queue": 0,
-      "tx_queue_len": 500
-    }
-  },
-// additional linux interfaces
-...
-```
----
-
-## Linux ARPs
-```json
-curl http://localhost:9191/dump/linux/v2/arps
-```
-Sample response:
-```json
-[
-  {
-    "linux_arp": {
-      "interface": "linux-tap-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a8",
-      "ip_address": "10.1.1.1",
-      "hw_address": "02:fe:af:aa:51:e6"
-    },
-    "linux_arp_meta": {
-      "interface_index": 7,
-      "ip_family": 2,
-      "vni": 0
-    }
-  },
-...
-```
----
-
-## Linux Interface Stats
-```json
-curl http://localhost:9191/stats/linux/interfaces
-```
-Sample response:
-```json
-{
-  "interface_name": "tap-vpp1",
-  "interface_type": 2,
-  "linux_if_index": 6,
-  "rx_packets": 58919,
-  "tx_packets": 54273,
-  "rx_bytes": 83203332,
-  "tx_bytes": 85581834,
-  "rx_errors": 0,
-  "tx_errors": 0,
-  "rx_dropped": 0,
-  "tx_dropped": 0
-},
-{
-  "interface_name": "linux-loop-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a",
-  "interface_type": 3,
-  "linux_if_index": 1,
-  "rx_packets": 50540,
-  "tx_packets": 50540,
-  "rx_bytes": 4033092,
-  "tx_bytes": 4033092,
-  "rx_errors": 0,
-  "tx_errors": 0,
-  "rx_dropped": 0,
-  "tx_dropped": 0
-},
-...
-```
----
-
-## Linux Routes
-```json
-curl http://localhost:9191/dump/linux/v2/routes
-```
-Sample response:
-```json
-[
-  {
-    "Route": {
-      "outgoing_interface": "tap-vpp1",
-      "dst_network": "10.1.0.0/16",
-      "gw_addr": "172.30.1.1"
-    },
-    "Meta": {
-      "interface_index": 6,
-      "link_scope": 0,
-      "protocol": 3,
-      "mtu": 0
-    }
-  },
-  {
-    "Route": {
-      "outgoing_interface": "tap-vpp1",
-      "dst_network": "10.96.0.0/12",
-      "gw_addr": "172.30.1.1"
-    },
-    "Meta": {
-      "interface_index": 6,
-      "link_scope": 0,
-      "protocol": 3,
-      "mtu": 0
-    }
-  },
-// more Linux routes
-...
-```
-
----
-
-## VPP IPsec SDP
-```json
-curl http://localhost:9191/dump/vpp/v2/ipsec/spds
-```
----
-
-## VPP IPsec SA
-```json
-curl http://localhost:9191/dump/vpp/v2/ipsec/sas
-```
----
-
-## VPP Punt Socket
-```json
-curl http://localhost:9191/dump/vpp/v2/punt/sockets
-```
----
-
-## VPP Telemetry
-```json
-curl http://localhost:9191/vpp/telemetry
-```
----
-
-## VPP Telemetry/Memory
-```json
-curl http://localhost:9191/vpp/telemetry/memory
-```
----
-
-## VPP Telemetry/Runtime
-```json
-curl http://localhost:9191/vpp/telemetry/runtime
-```
-Sample response:
-```json
-{
-    "threads": [
-        {
-            "id": 0,
-            "name": "ALL",
-            "time": 0,
-            "avg_vectors_per_node": 0,
-            "last_main_loops": 0,
-            "vectors_per_main_loop": 0,
-            "vector_length_per_node": 0,
-            "vector_rates_in": 0,
-            "vector_rates_out": 0,
-            "vector_rates_drop": 0,
-            "vector_rates_punt": 0,
-            "items": [
-                {
-                    "index": 0,
-                    "name": "null-node",
-                    "state": "",
-                    "calls": 0,
-                    "vectors": 0,
-                    "suspends": 0,
-                    "clocks": 0,
-                    "vectors_per_call": 0
-                },
-                {
-                    "index": 1,
-                    "name": "vmxnet3-input",
-                    "state": "",
-                    "calls": 0,
-                    "vectors": 0,
-                    "suspends": 0,
-                    "clocks": 0,
-                    "vectors_per_call": 0
-                },
-// more items
-...
-```
-
----
-
-## VPP Telemetry/Nodecount
-```json
-curl http://localhost:9191/vpp/telemetry/nodecount
-```
-Sample response:
-```json
-{
-    "counters": [
-        {
-            "value": 0,
-            "node": "/err/null-node",
-            "name": "blackholed packets"
-        },
-        {
-            "value": 0,
-            "node": "/err/vmxnet3-input",
-            "name": "buffer alloc error"
-        },
-        {
-            "value": 0,
-            "node": "/err/vmxnet3-input",
-            "name": "Rx packet error - no SOP"
-        },
-// more counters
-...
-```
-
-## Stats/Configurator
-```json
-curl http://localhost:9191/stats/configurator
-```
-
----
-
 # KV Scheduler 
 
 ## Dump
@@ -2753,6 +1763,8 @@ Sample response:
     }
 ]
 ```
+
+Get status for a specific key of `config/vpp/v2/interfaces/loop1`
 ```json
 http://localhost:9191/scheduler/status?key=config/vpp/v2/interfaces/loop1
 ```
@@ -2843,5 +1855,276 @@ Sample response:
         "PENDING": 1,
         "RETRYING": 3
     }
+}
+```
+## Downstream Resync
+
+```json
+curl -X POST http://localhost:9191/scheduler/downstream-resync
+```
+
+Sample response:
+```json
+{
+    "Start": "2020-05-29T22:22:32.79908837Z",
+    "Stop": "2020-05-29T22:22:32.829282034Z",
+    "SeqNum": 9,
+    "TxnType": "NBTransaction",
+    "ResyncType": "DownstreamResync",
+    "Executed": [
+        {
+            "Operation": "DELETE",
+            "Key": "vpp/spd/1/interface/tap1",
+            "NewState": "REMOVED",
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase.Interface",
+                "ProtoMsgData": "name:\"tap1\" "
+            },
+            "NOOP": true,
+            "IsDerived": true,
+            "IsRecreate": true
+        },
+        {
+            "Operation": "DELETE",
+            "Key": "vpp/spd/1/sa/10",
+            "NewState": "REMOVED",
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase.PolicyEntry",
+                "ProtoMsgData": "sa_index:10 priority:10 is_outbound:true remote_addr_start:\"10.0.0.1\" remote_addr_stop:\"10.0.0.1\" local_addr_start:\"10.0.0.2\" local_addr_stop:\"10.0.0.2\" action:PROTECT "
+            },
+            "NOOP": true,
+            "IsDerived": true,
+            "IsRecreate": true
+        },
+        {
+            "Operation": "DELETE",
+            "Key": "vpp/spd/1/sa/20",
+            "NewState": "REMOVED",
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase.PolicyEntry",
+                "ProtoMsgData": "sa_index:20 priority:10 remote_addr_start:\"10.0.0.1\" remote_addr_stop:\"10.0.0.1\" local_addr_start:\"10.0.0.2\" local_addr_stop:\"10.0.0.2\" action:PROTECT "
+            },
+            "NOOP": true,
+            "IsDerived": true,
+            "IsRecreate": true
+        },
+        {
+            "Operation": "DELETE",
+            "Key": "config/vpp/ipsec/v2/spd/1",
+            "NewState": "REMOVED",
+            "PrevState": "CONFIGURED",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase",
+                "ProtoMsgData": "index:1 "
+            },
+            "IsRecreate": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "config/vpp/ipsec/v2/spd/1",
+            "NewState": "CONFIGURED",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase",
+                "ProtoMsgData": "index:1 interfaces:<name:\"tap1\" > policy_entries:<sa_index:20 priority:10 remote_addr_start:\"10.0.0.1\" remote_addr_stop:\"10.0.0.1\" local_addr_start:\"10.0.0.2\" local_addr_stop:\"10.0.0.2\" action:PROTECT > policy_entries:<sa_index:10 priority:10 is_outbound:true remote_addr_start:\"10.0.0.1\" remote_addr_stop:\"10.0.0.1\" local_addr_start:\"10.0.0.2\" local_addr_stop:\"10.0.0.2\" action:PROTECT > "
+            },
+            "PrevState": "REMOVED",
+            "IsRecreate": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/spd/1/interface/tap1",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase.Interface",
+                "ProtoMsgData": "name:\"tap1\" "
+            },
+            "NOOP": true,
+            "IsDerived": true,
+            "IsRecreate": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/spd/1/sa/10",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase.PolicyEntry",
+                "ProtoMsgData": "sa_index:10 priority:10 is_outbound:true remote_addr_start:\"10.0.0.1\" remote_addr_stop:\"10.0.0.1\" local_addr_start:\"10.0.0.2\" local_addr_stop:\"10.0.0.2\" action:PROTECT "
+            },
+            "NOOP": true,
+            "IsDerived": true,
+            "IsRecreate": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/spd/1/sa/20",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.ipsec.SecurityPolicyDatabase.PolicyEntry",
+                "ProtoMsgData": "sa_index:20 priority:10 remote_addr_start:\"10.0.0.1\" remote_addr_stop:\"10.0.0.1\" local_addr_start:\"10.0.0.2\" local_addr_stop:\"10.0.0.2\" action:PROTECT "
+            },
+            "NOOP": true,
+            "IsDerived": true,
+            "IsRecreate": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "config/vpp/abfs/v2/abf/1",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.abf.ABF",
+                "ProtoMsgData": "index:1 acl_name:\"aclip1\" attached_interfaces:<input_interface:\"tap1\" priority:40 > attached_interfaces:<input_interface:\"memif1\" priority:60 > forwarding_paths:<next_hop_ip:\"10.0.0.10\" interface_name:\"loop1\" weight:20 preference:25 > "
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.abf.ABF",
+                "ProtoMsgData": "index:1 acl_name:\"aclip1\" attached_interfaces:<input_interface:\"tap1\" priority:40 > attached_interfaces:<input_interface:\"memif1\" priority:60 > forwarding_paths:<next_hop_ip:\"10.0.0.10\" interface_name:\"loop1\" weight:20 preference:25 > "
+            },
+            "NOOP": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "config/vpp/l2/v2/xconnect/if1",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.l2.XConnectPair",
+                "ProtoMsgData": "receive_interface:\"if1\" transmit_interface:\"if2\" "
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.l2.XConnectPair",
+                "ProtoMsgData": "receive_interface:\"if1\" transmit_interface:\"if2\" "
+            },
+            "NOOP": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/acl/acl1/interface/egress/tap1",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "NOOP": true,
+            "IsDerived": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/acl/acl1/interface/egress/tap2",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "NOOP": true,
+            "IsDerived": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/acl/acl1/interface/ingress/tap3",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "NOOP": true,
+            "IsDerived": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/acl/acl1/interface/ingress/tap4",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "google.protobuf.Empty",
+                "ProtoMsgData": ""
+            },
+            "NOOP": true,
+            "IsDerived": true
+        },
+        {
+            "Operation": "UPDATE",
+            "Key": "config/vpp/l2/v2/bridge-domain/bd1",
+            "NewState": "CONFIGURED",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain",
+                "ProtoMsgData": "name:\"bd1\" flood:true unknown_unicast_flood:true forward:true learn:true arp_termination:true interfaces:<name:\"if1\" bridged_virtual_interface:true > interfaces:<name:\"if2\" > interfaces:<name:\"if2\" > arp_termination_table:<ip_address:\"192.168.10.10\" phys_address:\"a7:65:f1:b5:dc:f6\" > arp_termination_table:<ip_address:\"10.10.0.1\" phys_address:\"59:6C:45:59:8E:BC\" > "
+            },
+            "PrevState": "CONFIGURED",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain",
+                "ProtoMsgData": "name:\"bd1\" flood:true unknown_unicast_flood:true forward:true learn:true arp_termination:true arp_termination_table:<ip_address:\"192.168.10.10\" phys_address:\"a7:65:9d:c8:c7:7f\" > arp_termination_table:<ip_address:\"10.10.0.1\" phys_address:\"59:6c:9d:c8:c7:7f\" > "
+            }
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/bd/bd1/interface/if1",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain.Interface",
+                "ProtoMsgData": "name:\"if1\" bridged_virtual_interface:true "
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain.Interface",
+                "ProtoMsgData": "name:\"if1\" bridged_virtual_interface:true "
+            },
+            "NOOP": true,
+            "IsDerived": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/bd/bd1/interface/if2",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain.Interface",
+                "ProtoMsgData": "name:\"if2\" "
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain.Interface",
+                "ProtoMsgData": "name:\"if2\" "
+            },
+            "NOOP": true,
+            "IsDerived": true
+        },
+        {
+            "Operation": "CREATE",
+            "Key": "vpp/bd/bd2/interface/loop1",
+            "NewState": "PENDING",
+            "NewValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain.Interface",
+                "ProtoMsgData": "name:\"loop1\" "
+            },
+            "PrevState": "PENDING",
+            "PrevValue": {
+                "ProtoMsgName": "ligato.vpp.l2.BridgeDomain.Interface",
+                "ProtoMsgData": "name:\"loop1\" "
+            },
+            "NOOP": true,
+            "IsDerived": true
+        }
+    ]
 }
 ```

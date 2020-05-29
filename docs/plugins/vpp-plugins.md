@@ -1155,13 +1155,13 @@ The VRF table proto defines an ID, protocol setting for IPv4 or IPv6, optional l
 The IPSec plugin handles the configuration of **Security Policy Databases** (SPD) and **Security Associations** (SA) in VPP. 
 
 !!! Note
- The IPsec plugin does not handle IPSec tunnel programming. This supported by the IPIP_TUNNEL with ipsec.TunnelProtection. The IPSEC_TUNNEL interface has been deprecated.
+ The IPsec plugin does not handle IPSec tunnel programming. This is supported by the IPIP_TUNNEL with ipsec.TunnelProtection. The IPSEC_TUNNEL interface has been deprecated.
  
 --- 
 
 ### Security Policy Database
 
-The SPD specifies the policies that determine the disposition of all the inbound or outbound IP traffic from either the host or the security gateway. The SPD is bound to an SPD interface and contains a list of policy entries in a table. Every policy entry points to an IPsec security association (SA). 
+The SPD specifies the policies that determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. The SPD is bound to an SPD interface and contains a table policy entries. Every policy entry points to an IPsec security association (SA). 
 
 **References:**
 
@@ -1173,9 +1173,9 @@ The SPD defines its own unique index within VPP. The user has an option to set t
 !!! Note
     Pay special attention when defining an index in the model. Despite the fact the field uses a `string` format, it only accepts plain numbers. Attempts to set non-numeric characters will result in an error.     
 
-Every policy entry field includes `sa_index` used in the SPD for reference to the SPD. The field is mandatory and a missing value will generate a configuration error.
+Every policy entry field includes `sa_index` used in the SPD for reference to the SA. The field is mandatory. A missing value will generate a configuration error.
 
-The SPD defines two bindings: SA and the interface. The interface binding is important since VPP needs to create an empty SPD first. This requires an interface binding. After that, all policy entries are configured, where the SA is expected to exist. 
+The SPD defines two bindings: SA and interface. The interface binding is important since VPP needs to create an empty SPD first. This requires an interface binding. After that, all policy entries are configured and associated with a specific SA. 
 
 ---
  
@@ -1308,7 +1308,7 @@ An IPsec security association (SA) is a set of security behaviors negotiated bet
 !!! Note
  The SPD and SA are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
 
-The SA uses the same indexing system as SPD. The index is a user-defined unique identifier in the `uint32` range. Like the SPD, the SA index is defined as `string` type field in the proto but can be set only to numerical values. Attempts to use values other than numerical will cause errors. The SA has no dependencies on other configuration types.
+The SA uses the same indexing system as SPD. The index is a user-defined unique identifier in the `uint32` range. Like the SPD, the SA index is defined as `string` type field in the proto, but can be set only to numerical values. Attempts to use values other than numerical will cause errors. The SA has no dependencies on other configuration types.
 
 ---
 
