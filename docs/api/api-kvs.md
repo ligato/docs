@@ -1,5 +1,7 @@
 # KV Scheduler 
 
+This section describes the REST APIs ... The URLs and sample responses (in some cases partial) were generated using the quick start environment.
+
 ## Dump
 ```json
 curl http://localhost:9191/scheduler/dump
