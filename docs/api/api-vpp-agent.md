@@ -1,6 +1,6 @@
 # VPP Agent
 
-This section describes the REST APIs exposed by the VPP agent REST plugin. The URLs and sample responses (in some cases partial) were generated using the quick start environment, and a Contiv VPP deployment.
+This section describes the REST APIs exposed by the VPP agent REST plugin. The URLs and sample responses (in some cases partial) were generated using the environment described in the Quickstart Guide.
 
 ---
 
@@ -13,7 +13,7 @@ curl http://localhost:9191/
 ```
 ---
 
-## Interfaces
+## VPP Interfaces
 
 Description: Get all interfaces.
 
@@ -320,7 +320,6 @@ Sample response:
   },
 // additional tap interfaces
 ...
- 
 ```
 ---
 
@@ -840,149 +839,6 @@ Sample response:
 ```
 ---
 
-## Linux Interfaces
-
-Description: Get all Linux interfaces.
-```json
-curl http://localhost:9191/dump/linux/v2/interfaces
-```
-Sample response:
-```json
-[
-  {
-    "interface": {
-      "name": "tap-vpp1",
-      "type": "TAP_TO_VPP",
-      "hostIfName": "vpp1",
-      "enabled": true,
-      "ipAddresses": ["172.30.1.2/24"],
-      "physAddress": "ca:aa:bc:5d:76:9c",
-      "mtu": 1450,
-      "tap": {
-        "vppTapIfName": "tap-vpp2"
-      }
-    },
-    "interface_meta": {
-      "linux_if_index": 6,
-      "parent_index": 0,
-      "master_index": 0,
-      "oper_state": 0,
-      "flags": 69699,
-      "encapsulation": "ether",
-      "num_rx_queue": 0,
-      "num_tx_queue": 0,
-      "tx_queue_len": 500
-    }
-  },
-// additional linux interfaces
-...
-```
----
-
-## Linux L3 ARPs
-
-Description: Get Linux L3 ARP entries.
-```json
-curl http://localhost:9191/dump/linux/v2/arps
-```
-Sample response:
-```json
-[
-  {
-    "linux_arp": {
-      "interface": "linux-tap-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a8",
-      "ip_address": "10.1.1.1",
-      "hw_address": "02:fe:af:aa:51:e6"
-    },
-    "linux_arp_meta": {
-      "interface_index": 7,
-      "ip_family": 2,
-      "vni": 0
-    }
-  },
-...
-```
----
-
-## Linux Interface Stats
-
-Description: Get Linux interface stats.
-```json
-curl http://localhost:9191/stats/linux/interfaces
-```
-Sample response:
-```json
-{
-  "interface_name": "tap-vpp1",
-  "interface_type": 2,
-  "linux_if_index": 6,
-  "rx_packets": 58919,
-  "tx_packets": 54273,
-  "rx_bytes": 83203332,
-  "tx_bytes": 85581834,
-  "rx_errors": 0,
-  "tx_errors": 0,
-  "rx_dropped": 0,
-  "tx_dropped": 0
-},
-{
-  "interface_name": "linux-loop-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a",
-  "interface_type": 3,
-  "linux_if_index": 1,
-  "rx_packets": 50540,
-  "tx_packets": 50540,
-  "rx_bytes": 4033092,
-  "tx_bytes": 4033092,
-  "rx_errors": 0,
-  "tx_errors": 0,
-  "rx_dropped": 0,
-  "tx_dropped": 0
-},
-...
-```
----
-
-## Linux L3 Routes
-
-Description: Get Linux L3 routing table entries.
-```json
-curl http://localhost:9191/dump/linux/v2/routes
-```
-Sample response:
-```json
-[
-  {
-    "Route": {
-      "outgoing_interface": "tap-vpp1",
-      "dst_network": "10.1.0.0/16",
-      "gw_addr": "172.30.1.1"
-    },
-    "Meta": {
-      "interface_index": 6,
-      "link_scope": 0,
-      "protocol": 3,
-      "mtu": 0
-    }
-  },
-  {
-    "Route": {
-      "outgoing_interface": "tap-vpp1",
-      "dst_network": "10.96.0.0/12",
-      "gw_addr": "172.30.1.1"
-    },
-    "Meta": {
-      "interface_index": 6,
-      "link_scope": 0,
-      "protocol": 3,
-      "mtu": 0
-    }
-  },
-// more Linux routes
-...
-```
-
----
-
 ## VPP IPsec SPD
 
 Description: Get IPsec security policy database (SPD) entries.
@@ -1131,15 +987,157 @@ Sample response:
 ...
 ```
 
+## Linux Interfaces
+
+Description: Get all Linux interfaces.
+```json
+curl http://localhost:9191/dump/linux/v2/interfaces
+```
+Sample response:
+```json
+[
+  {
+    "interface": {
+      "name": "tap-vpp1",
+      "type": "TAP_TO_VPP",
+      "hostIfName": "vpp1",
+      "enabled": true,
+      "ipAddresses": ["172.30.1.2/24"],
+      "physAddress": "ca:aa:bc:5d:76:9c",
+      "mtu": 1450,
+      "tap": {
+        "vppTapIfName": "tap-vpp2"
+      }
+    },
+    "interface_meta": {
+      "linux_if_index": 6,
+      "parent_index": 0,
+      "master_index": 0,
+      "oper_state": 0,
+      "flags": 69699,
+      "encapsulation": "ether",
+      "num_rx_queue": 0,
+      "num_tx_queue": 0,
+      "tx_queue_len": 500
+    }
+  },
+// additional linux interfaces
+...
+```
+---
+
+## Linux L3 ARPs
+
+Description: Get Linux L3 ARP entries.
+```json
+curl http://localhost:9191/dump/linux/v2/arps
+```
+Sample response:
+```json
+[
+  {
+    "linux_arp": {
+      "interface": "linux-tap-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a8",
+      "ip_address": "10.1.1.1",
+      "hw_address": "02:fe:af:aa:51:e6"
+    },
+    "linux_arp_meta": {
+      "interface_index": 7,
+      "ip_family": 2,
+      "vni": 0
+    }
+  },
+...
+```
+---
+
+## Linux Interface Stats
+
+Description: Get Linux interface stats.
+```json
+curl http://localhost:9191/stats/linux/interfaces
+```
+Sample response:
+```json
+{
+  "interface_name": "tap-vpp1",
+  "interface_type": 2,
+  "linux_if_index": 6,
+  "rx_packets": 58919,
+  "tx_packets": 54273,
+  "rx_bytes": 83203332,
+  "tx_bytes": 85581834,
+  "rx_errors": 0,
+  "tx_errors": 0,
+  "rx_dropped": 0,
+  "tx_dropped": 0
+},
+{
+  "interface_name": "linux-loop-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a",
+  "interface_type": 3,
+  "linux_if_index": 1,
+  "rx_packets": 50540,
+  "tx_packets": 50540,
+  "rx_bytes": 4033092,
+  "tx_bytes": 4033092,
+  "rx_errors": 0,
+  "tx_errors": 0,
+  "rx_dropped": 0,
+  "tx_dropped": 0
+},
+...
+```
+---
+
+## Linux L3 Routes
+
+Description: Get Linux L3 routing table entries.
+```json
+curl http://localhost:9191/dump/linux/v2/routes
+```
+Sample response:
+```json
+[
+  {
+    "Route": {
+      "outgoing_interface": "tap-vpp1",
+      "dst_network": "10.1.0.0/16",
+      "gw_addr": "172.30.1.1"
+    },
+    "Meta": {
+      "interface_index": 6,
+      "link_scope": 0,
+      "protocol": 3,
+      "mtu": 0
+    }
+  },
+  {
+    "Route": {
+      "outgoing_interface": "tap-vpp1",
+      "dst_network": "10.96.0.0/12",
+      "gw_addr": "172.30.1.1"
+    },
+    "Meta": {
+      "interface_index": 6,
+      "link_scope": 0,
+      "protocol": 3,
+      "mtu": 0
+    }
+  },
+// more Linux routes
+...
+```
+---
+
 ## Stats/Configurator
 
-Description: Reads configurator operation stats. 
+Description: Get configurator operations stats. 
 ```json
 curl http://localhost:9191/stats/configurator
 ```
 ## VPP CLI Command
 
-Description: Execute VPP CLI commands through REST API
+Description: Execute VPP CLI commands through a REST API
 
 For a `show version` command, use
 ```json

@@ -12,7 +12,7 @@ The KV Scheduler is a transaction-based configuration processing system. It incl
 
 The KV Scheduler addresses several challenges encountered in the original VPP agent design, which became apparent as the variety and complexity of different configuration items increased.
 
-* `vpp` and `linux` plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
+* `VPP` and `Linux` plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
 
 * `configurator` components of `vpp` and `linux` plugins, each processing a specific configuration item type (e.g. interface, route, etc.) were built from scratch, solving the same set of problems again and again, with frequent code duplication.
 
@@ -226,7 +226,7 @@ The KV Scheduler exposes the state of the system and the history of operations t
     - args:
         - `descriptor=<descriptor-name>`: dump values in the scope of the given descriptor
         - `key-prefix=<key-prefix>`: dump values with the given key prefix
-        - `view=<NB, SB, internal>`: whether to dump intended, actual or the configuration state as known to  the KV Scheduler
+        - `view=<NB, SB, cached>`: whether to dump the intended, running or cached configuration state as known to the KV Scheduler
 * **request downstream resync**: `POST /scheduler/downstream-resync`
     - args:
         - `retry=< 1/true | 0/false >`: retry operations that failed
