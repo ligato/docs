@@ -1,9 +1,9 @@
 # VPP Agent
 
-This section describes the REST APIs exposed by the VPP agent REST plugin. The URLs and sample responses (in some cases partial) were generated using the environment described in the Quickstart Guide.
+This section describes the REST APIs exposed by the VPP agent REST plugin. The URLs and sample responses (in some cases partial) were generated using the environment described in the [Quickstart Guide][quickstart-guide].
 
 !!! Note
-    For VPP and Linux plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+    For VPP and Linux plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. Note also that `9191` is the default port number for the REST API, however it can be changed using one of the [REST plugin configuration options][rest-plugin-config-options]. In addition, the [Agentctl][agentctl] CLI tool is another option for retrieving VPP data from the system.
 
 ---
 
@@ -1150,3 +1150,6 @@ Sample response:
 ```json
 "vpp v20.01-rc2~11-gfce396738~b17 built by root on b81dced13911 at 2020-01-29T21:07:15\n"
 ```
+[agentctl]: ../user-guide/agentctl.md
+[quickstart-guide]: ../user-guide/quickstart.md
+[rest-plugin-config-options]: ../plugins/connection-plugins.md#configuration

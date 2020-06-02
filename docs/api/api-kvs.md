@@ -1,6 +1,11 @@
 # KV Scheduler 
 
-This section describes the REST APIs exposed by the KV Scheduler. The URLs and sample responses (in some cases partial) were generated using the Quickstart environment.
+This section describes the REST APIs exposed by the KV Scheduler. The URLs and sample responses (in some cases partial) were generated using the [Quickstart Guide][quickstart-guide] environment.
+
+Reference: [KV Scheduler plugin rest.go file][kvs-rest-go]
+
+!!! Note
+    `9191` is the default port number for Ligato REST APIs, however it can be changed using one of the [REST plugin configuration options][rest-plugin-config-options]. Note that the [Agentctl][agentctl] CLI tool is another option for retrieving KV Scheduler system state.
 
 ---
 
@@ -994,6 +999,14 @@ Sample response:
 
 ---
 
+## Graph
+
+Description: A graph-based representation of the system state, used internally by the KV Scheduler, can be displayed using any modern web browser supporting SVG.
+
+Reference: [How to visualize the graph][kvs-graph-api] section of the Developer Guide.
+
+---
+
 ## Graph Snapshot
 
 Description: GET a snapshot of the KV Scheduler internal graph at a point in time. If there is no parameter passed in the request, then the current state is returned. 
@@ -1636,7 +1649,7 @@ Sample response:
 
 ## Status
 
-Description: GET the value state by descriptor, by key, or all. The parameters are:
+Description: GET value state by descriptor, by key, or all. The parameters are:
 
 - descriptor
 - key 
@@ -1854,7 +1867,7 @@ Sample response:
 
 Description: GET total and per-value counts by value flag. The following parameters are used to specify a value flag:  
 
-- last-update: set to remember the last transaction that changed/updated the value
+- last-update: last transaction that changed/updated the value
 - value-state: current state of the value
 - descriptor: used to look up values by descriptor
 - derived: mark derived values
@@ -2214,4 +2227,9 @@ Sample response:
     ]
 }
 ```
+[agentctl]: ../user-guide/agentctl.md
 [unix-timestamp]: https://www.unixtimestamp.com/
+[quickstart-guide]: ../user-guide/quickstart.md
+[kvs-rest-go]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/rest.go
+[kvs-graph-api]: ../developer-guide/kvs-troubleshooting.md#how-to-visualize-the-graph
+[rest-plugin-config-options]: ../plugins/connection-plugins.md#configuration

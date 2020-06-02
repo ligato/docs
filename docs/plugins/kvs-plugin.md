@@ -138,7 +138,7 @@ x-------------------------------------------------------------------------------
 
 The KV Scheduler exposes the state of the system through a set of REST APIs.
 
-Reference: [KV Scheduler REST APIs Section][kv-scheduler-rest-api]
+Reference: [KV Scheduler REST API Docs Section][kv-scheduler-rest-api]
 
 ---
 
@@ -157,7 +157,7 @@ Reference: [KV Scheduler REST APIs Section][kv-scheduler-rest-api]
 
 - GET the timeline of value changes for a `specific key`
 - Parameters:
-    - `key=<key-without-agent-prefix>`: key of the value to show changes over time
+    - `key=<key-without-agent-prefix>`
 
 ----
 
@@ -176,22 +176,37 @@ Reference: [KV Scheduler REST APIs Section][kv-scheduler-rest-api]
 
 ---
  
-**Dump (with parameters)**: GET /scheduler/dump?`<parameters>`
+**Dump (with parameters)**: **GET /scheduler/dump?`<parameters>`**
 
 - GET key-value data filtered by parameters
 - parameters: 
     - `descriptor=<descriptor-name>`
-    - `key-prefix`=<key prefix name>
+    - `key-prefix=<key prefix name>`
     - `view=<NB, SB, cached>`
     - [example][kvs-dump-parameters-example] with query parameters of `view=SB&key-prefix=key-prefix=config/vpp/v2/interfaces/` 
 
 ---
 
-**Status**: [GET /scheduler/status][]
+**Status**: [GET /scheduler/status][kvs-status-api]
 
-- GET the value state by descriptor, by key, or all
+- GET value state by descriptor, by key, or all
 - parameters:
-    -    
+    - `descriptor=<descriptor-name>`
+    - `key=<key name>`
+
+---
+
+**Flag-Stats**: [GET /schedular/flag-stats][kvs-flag-stats]
+
+- GET total and per-value counts by value flag.
+- parameters:
+    - `last-update: last transaction that changed/updated the value`
+    - `value-state: current state of the value`
+    - `descriptor: used to look up values by descriptor`
+    - `derived: mark derived values`
+    - `unavailable: mark NB values which should not be considered when resolving dependencies of other values`
+    - `Error: used to store error returned from the last operation, including validation errors` 
+ 
     
 --- 
     
@@ -201,6 +216,14 @@ Reference: [KV Scheduler REST APIs Section][kv-scheduler-rest-api]
 - parameters:
     - `retry=< 1/true | 0/false >`: permit retry operations that failed during resync
     - `verbose=< 1/true | 0/false >`: print graph after refresh
+
+---
+    
+**Graph Visualization**: **GET /scheduler/graph**
+
+Used to generate a graph-based representation of the system state, used internally by the KV Scheduler, and can be displayed using any modern web browser supporting SVG. 
+
+Reference: [How to visualize the graph][kvs-graph-api] section of the Developer Guide
 
 ----
 [bd-model]: https://github.com/ligato/vpp-agent/blob/master/api/models/vpp/l2/bridge-domain.proto
@@ -217,6 +240,7 @@ Reference: [KV Scheduler REST APIs Section][kv-scheduler-rest-api]
 [kvs-downstream-resync]: ../api/api-kvs.md#downstream-resync
 [kvs-status-api]: ../api/api-kvs.md#status
 [kvs-flag-stats]: ../api/api-kvs.md#flag-stats
+[kvs-graph-api]: ../developer-guide/kvs-troubleshooting.md#how-to-visualize-the-graph
 [kvdescriptor-dev-guide]: ../developer-guide/kvdescriptor.md
 [vpp-iface-idx]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifaceidx/ifaceidx.go
 [vpp-iface-map]: https://github.com/ligato/vpp-agent/blob/dev/plugins/vpp/ifplugin/ifplugin_api.go#L26

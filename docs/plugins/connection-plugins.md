@@ -12,12 +12,14 @@ The plugin also provides a general purpose HTTP server that can be used by plugi
 
 The [REST handler tutorial][rest-handler-tutorial] illustrates how to implement a REST API for a customized plugin.
 
-**References**
+**References:**
 
+- [VPP Agent REST API Docs][api-vpp-agent-rest]
 - [Ligato cn-infra REST folder][cn-infra-rest-repo-folder]
 - [REST plugin folder][vpp-agent-rest-plugin]
 - [REST conf file][rest-conf-file]
 - [REST handler tutorial][rest-handler-tutorial]
+
 
 ---
 
@@ -51,12 +53,11 @@ Example:
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
 
+Reference: [VPP Agent REST API Docs][api-vpp-agent-rest]
+
 ---
 
 ### Supported URLs
-
-The REST plugin enables a dump of configuration item dumps sorted by types such as interfaces, L3 routes, telemetry, and bridge domains.
- 
 
 **Index Page**
 
@@ -64,157 +65,11 @@ Index of supported REST API URLs:
 ```
 curl -X GET http://localhost:9191/
 ```
----
 
-**Access lists**
-
-```
-# ACL IP
-/dump/vpp/v2/acl/ip
-
-# ACL MAC IP
-/dump/vpp/v2/acl/macip
-```
----
-
-**VPP Interfaces**
-
-```
-# All interfaces
-/dump/vpp/v2/interfaces
-
-# Loopback
-/dump/vpp/v2/interfaces/loopback
-
-# Ethernet
-/dump/vpp/v2/interfaces/ethernet
-
-# Memory interface
-/dump/vpp/v2/interfaces/memif
-
-# Tap
-/dump/vpp/v2/interfaces/tap
-
-# VxLAN tunnel
-/dump/vpp/v2/interfaces/vxlan
-
-# Af-Packet interface
-/dump/vpp/v2/interfaces/afpacket
-```
+See [VPP Agent REST API Docs][api-vpp-agent-rest] for specific URL and sample responses.
 
 ---
 
-**Linux Interfaces**
-
-```
-/dump/linux/v2/interfaces
-```
----
-
-**L2 Plugin**
-
-```
-# Bridge domains
-/dump/vpp/v2/bd
-
-# FIB entries
-/dump/vpp/v2/fib
-
-# Cross-connects
-/dump/vpp/v2/xc
-```
----
-
-**L3 Plugin**
-
-```
-# Routes
-/dump/vpp/v2/routes
-
-# ARPs
-/dump/vpp/v2/arps
-
-# Proxy ARP interfaces
-dump/vpp/v2/proxyarp/interfaces
-
-# Proxy ARP ranges
-/dump/vpp/v2/proxyarp/ranges
-
-# IP scan neighbor
-/dump/vpp/v2/ipscanneigh
-```
----
-
-**Linux L3 Plugin**
-
-```
-# Linux routes
-/dump/linux/v2/routes
-
-# Linux ARPs
-/dump/linux/v2/arps
-```
-
----
-
-**NAT plugin**
-
-```
-# REST path of a NAT
-/dump/vpp/v2/nat
-
-# Global NAT config
-/dump/vpp/v2/nat/global
-
-# DNAT configurations
-/dump/vpp/v2/nat/dnat
-```
----
-
-**IPSec plugin**
-
-```
-# REST path of the SPD
-/dump/vpp/v2/ipsec/spds
-
-# REST path of the SA
-/dump/vpp/v2/ipsec/sas
-```
----
-
-**Punt plugins**
-
-```
-# REST path of the punt socket register
-/dump/vpp/v2/punt/sockets
-```
----
-
-**Telemetry**
-
-```
-/vpp/telemetry
-/vpp/telemetry/memory
-/vpp/telemetry/runtime
-/vpp/telemetry/nodecount
-```
----
-
-**Tracer**
-
-```
-/vpp/binapitrace
-```
----
-
-**VPP CLI**
-
-Use the VPP CLI command via REST. Commands are defined as a map like so:
-```
-/vpp/command -d '{"vppclicommand":"<command>"}'
-```
-
----
 
 ## HTTP Security
 
@@ -486,6 +341,7 @@ Once the handler is registered with the GRPC plugin, and the agent is running, y
 [password-hasher]: https://github.com/ligato/cn-infra/blob/master/rpc/rest/security/password-hasher/README.md
 [rest-handler-tutorial]: ../tutorials/03_rest-handler.md
 [vpp-agent-rest-plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/restapi
+[api-vpp-agent-rest]: ../api/api-vpp-agent.md
 
 *[ACL]: Access Control List
 *[ARP]: Address Resolution Protocol
