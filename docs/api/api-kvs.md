@@ -6,9 +6,9 @@ This section describes the REST APIs exposed by the KV Scheduler. The URLs and s
 
 ## Dump
 
-Description: Get list of the `descriptors` registered with the KV Scheduler, list of the `key prefixes` under watch in the NB direction, and `view` options from the perspective of the KV Scheduler 
+Description: GET list of the `descriptors` registered with the KV Scheduler, list of the `key prefixes` under watch in the NB direction, and `view` options from the perspective of the KV Scheduler 
 ```json
-curl http://localhost:9191/scheduler/dump
+curl -X GET http://localhost:9191/scheduler/dump
 ```
 Sample response:
 ```json
@@ -119,14 +119,14 @@ Sample response:
 
 ## Dump View&Key-Prefix
 
-Description: Get key-value data by view for a specific key prefix. The parameters are: 
+Description: GET key-value data by view for a specific key prefix. The parameters are: 
 
-- view: `SB` where descriptor retrieve methods are employed to learn the actual, up-to-date state of the system; `NB` means examine the key-value space to determine what key-values were requested and assumed by the NB to be applied; `cached` obtains the KV Scheduler's current SB view.
+- view: `SB` where descriptor retrieve methods are employed to learn the actual, up-to-date state of the system; `NB` examines the key-value space to determine what key-values were requested and assumed by the NB to be applied; `cached` obtains the KV Scheduler's current SB view.
 - key-prefix: Key prefix such as `config/vpp/v2/interfaces/` 
 
 This example dumps the system state in the SB direction for the key prefix of `config/vpp/v2/interfaces/`: 
 ```json
-curl "http://localhost:9191/scheduler/dump?view=SB&key-prefix=config/vpp/v2/interfaces/"
+curl -X GET "http://localhost:9191/scheduler/dump?view=SB&key-prefix=config/vpp/v2/interfaces/"
 ```
 Sample response: 
 ```json
@@ -184,15 +184,15 @@ Sample response:
 
 ## Transaction History
 
-Description: Get a complete history of planned and executed transactions. In addition, the following parameters can be included to scope the response:
+Description: GET a complete history of planned and executed transactions. In addition, the following parameters can be included to scope the response:
 
 - seq-num: sequence number of the transaction
 - since: start of the transaction history time window in [unix timestamp][unix-timestamp] format
 - until: end of the transaction history time window in [unix timestamp][unix-timestamp] format
 
-To get the complete transaction history, use: 
+To GET the complete transaction history, use: 
 ```json
-curl http://localhost:9191/scheduler/txn-history
+curl -X GET http://localhost:9191/scheduler/txn-history
 ```
 Sample response:
 ```json
@@ -855,9 +855,9 @@ Sample response:
 
 ---
 
-To get the transaction history for a sequence number = 1, use:
+To GET the transaction history for a sequence number = 1, use:
 ```json
-curl http://localhost:9191/scheduler/txn-history?seq-num=1
+curl -X GET http://localhost:9191/scheduler/txn-history?seq-num=1
 ```
 
 Sample response:
@@ -920,21 +920,21 @@ Sample response:
     ]
 }
 ```
-To get the transaction history for a window in time, where the `start time = 1591031902` and `end time = 1591031903`, use:
+To GET the transaction history for a window in time, where the `start time = 1591031902` and `end time = 1591031903`, use:
 
 ```json
-curl "http://localhost:9191/scheduler/txn-history?since=1591031902&until=1591031903"
+curl -X GET "http://localhost:9191/scheduler/txn-history?since=1591031902&until=1591031903"
 ```
 
 ---
 
 ## Key Timeline
 
-Description: Get the timeline of value changes for a `specific key`.
+Description: GET the timeline of value changes for a `specific key`.
 
-Use this to get the timeline of value changes for `key=config/vpp/v2/interfaces/loop1`
+To GET the timeline of value changes for `key=config/vpp/v2/interfaces/loop1`, use:
 ```json
-curl "http://localhost:9191/scheduler/key-timeline?key=config/vpp/v2/interfaces/loop1"
+curl -X GET "http://localhost:9191/scheduler/key-timeline?key=config/vpp/v2/interfaces/loop1"
 ```
 Sample response:
 ```json
@@ -996,15 +996,15 @@ Sample response:
 
 ## Graph Snapshot
 
-Description: Get a snapshot of the KV Scheduler internal graph at a point in time. If there is no parameter passed in the request, then the current state is returned. 
+Description: GET a snapshot of the KV Scheduler internal graph at a point in time. If there is no parameter passed in the request, then the current state is returned. 
 
 Use the following parameter to specify a snapshot point in time:
 
 - time: in [unix timestamp][unix-timestamp] format   
 
-To get the current graph snapshot, use:
+To GET the current graph snapshot, use:
 ```json
-curl http://localhost:9191/scheduler/graph-snapshot
+curl -X GET http://localhost:9191/scheduler/graph-snapshot
 ```
 Sample response:
 ```json
@@ -1636,14 +1636,14 @@ Sample response:
 
 ## Status
 
-Description: Get the value state by descriptor, by key, or all. The parameters are:
+Description: GET the value state by descriptor, by key, or all. The parameters are:
 
 - descriptor
 - key 
 
-To get all value states, use: 
+To GET all value states, use: 
 ```json
-curl http://localhost:9191/scheduler/status
+curl -X GET http://localhost:9191/scheduler/status
 ```
 Sample response:
 ```json
@@ -1817,9 +1817,9 @@ Sample response:
 
 ---
 
-To get the value state for the `config/vpp/v2/interfaces/loop1` key, use:
+To GET the value state for the `config/vpp/v2/interfaces/loop1` key, use:
 ```json
-http://localhost:9191/scheduler/status?key=config/vpp/v2/interfaces/loop1
+curl -X GET http://localhost:9191/scheduler/status?key=config/vpp/v2/interfaces/loop1
 ```
 Sample response:
 ```json
@@ -1852,7 +1852,7 @@ Sample response:
 
 ## Flag Stats
 
-Description: Get total and per-value counts pertaining value flag. The following parameters are used to specify a value flag:  
+Description: GET total and per-value counts by value flag. The following parameters are used to specify a value flag:  
 
 - last-update: set to remember the last transaction that changed/updated the value
 - value-state: current state of the value
@@ -1861,9 +1861,9 @@ Description: Get total and per-value counts pertaining value flag. The following
 - unavailable: mark NB values which should not be considered when resolving dependencies of other values
 - Error: used to store error returned from the last operation, including validation errors 
 
-To get the flag-stats by `descriptor` flag, use:
+To GET the flag-stats by `descriptor` flag, use:
 ```json
-curl http://localhost:9191/scheduler/flag-stats?flag=descriptor
+curl -X GET http://localhost:9191/scheduler/flag-stats?flag=descriptor
 ```
 Sample response:
 ```json
@@ -1886,9 +1886,9 @@ Sample response:
 }
 ```
 
-To get the flag-stats by `last-update` flag, use:
+To GET the flag-stats by `last-update` flag, use:
 ```json
-curl http://localhost:9191/scheduler/flag-stats?flag=last-update
+curl -X GET http://localhost:9191/scheduler/flag-stats?flag=last-update
 ```
 Sample response:
 ```json
@@ -1907,9 +1907,9 @@ Sample response:
     }
 }
 ```
-To get the flag-stats by `value-state` flag, use:
+To GET the flag-stats by `value-state` flag, use:
 ```json
-curl http://localhost:9191/scheduler/flag-stats?flag=value-state
+curl -X GET http://localhost:9191/scheduler/flag-stats?flag=value-state
 ```
 Sample response:
 ```json
@@ -1924,26 +1924,26 @@ Sample response:
     }
 }
 ```
-To get the flag-stats by `derived` flag, use:
+To GET the flag-stats by `derived` flag, use:
 ```json
-curl http://localhost:9191/scheduler/flag-stats?flag=derived
+curl -X GET http://localhost:9191/scheduler/flag-stats?flag=derived
 ```
 ---
-To get the flag-stats by `unavailable` flag, use:
+To GET the flag-stats by `unavailable` flag, use:
 ```json
-curl http://localhost:9191/scheduler/flag-stats?flag=unavailable
+curl -X GET http://localhost:9191/scheduler/flag-stats?flag=unavailable
 ```
 ---
 
-To get the flag-stats by `error` flag, use:
+To GET the flag-stats by `error` flag, use:
 ```json
-curl http://localhost:9191/scheduler/flag-stats?flag=error
+curl -X GET http://localhost:9191/scheduler/flag-stats?flag=error
 ```
 ---
 
 ## Downstream Resync
 
-Description: Triggers a downstream-resync.
+Description: Triggers a downstream resync
 
 ```json
 curl -X POST http://localhost:9191/scheduler/downstream-resync

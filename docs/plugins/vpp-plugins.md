@@ -4,7 +4,10 @@ This section describes the VPP agent plugins. Each plugin section provides:
 
 - Short description
 - Pointers to the `*.proto` containing configuration/NB protobuf API definitions, the 'models.go' file defining the model, and the conf file if one is available.  
-- Example configuration interactions using an etcd data store, REST and gPRC.  
+- Example configuration interactions using an etcd data store, REST and gPRC.
+
+!!! Note
+    For VPP plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.  
 
 ---
 
@@ -102,8 +105,8 @@ The NB configuration demands are translated to a sequence of binary API calls us
 
 - [VPP interface proto][vpp-interface-proto] 
 - [VPP interface models][vpp-interface-model]
-- [VPP interface conf file][vpp-interface-conf-file] 
-
+- [VPP interface conf file][vpp-interface-conf-file]
+ 
 The interface proto file is divided into two parts:
  
  - data common to all interface types.
@@ -222,9 +225,9 @@ agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memi
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [VPP Interfaces][vpp-interface-rest-api]
 
-Use this cURL command to read all Linux interfaces:
+Use this cURL command to GET all VPP interfaces:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
@@ -368,8 +371,8 @@ The L2 bridge domain (BD) is a set of interfaces that belong to the same floodin
 **References:**
 
 - [BD proto][bd-proto]
-- [BD model][bd-model]  
-
+- [BD model][bd-model]
+ 
 The BD proto consists of the standard bridge domain configuration parameters including forwarding, learning, assigned interfaces and an ARP termination table. BD interfaces are only referenced. 
 
 The configuration of the interface is handled by the interface plugin. Every referenced interface also contains the bridge domain-specific fields consisting of a bridged virtual interface (BVI) and a split horizon group. 
@@ -443,9 +446,9 @@ etcdctl del /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [L2 Bridge Domain][vpp-bd-rest-api]
 
-Use this cURL command to read all BD entries:
+Use this cURL command to GET all BD entries:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/bd
@@ -549,9 +552,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C '{"ph
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [L2 FIB][vpp-l2fib-rest-api]
 
-Use this cURL command to read all FIB entries:
+Use this cURL command to GET all FIB entries:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/fib
 ```
@@ -641,9 +644,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/xconnect/if1 '{"receive_interface":
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [L2 X-Connect][vpp-l2xc-rest-api]
 
-Use this cURL command to read all L2 xconnects: 
+Use this cURL command to GET all L2 xconnects: 
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/xc
@@ -742,9 +745,9 @@ etcdctl del /vnf-agent/vpp1/config/vpp/v2/arp/tap1/192.168.10.21
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [L3 ARPs][vpp-l3-arps]
 
-Use this cURL command to read all ARP entries:
+Use this cURL command to GET all ARP entries:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/arps
@@ -845,9 +848,12 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/proxyarp-global/settings '{"interfaces
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API References:
 
-Use these two cURL commands to read the entries for the interfaces and address ranges supported by proxy ARP:
+- [VPP Proxy ARP Ranges][vpp-proxy-arp-ranges]
+- [VPP Proxy ARP Interfaces][vpp-proxy-arp-interfaces]
+
+Use these two cURL commands to GET the entries for the interfaces and address ranges supported by proxy ARP:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/interfaces
@@ -969,9 +975,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/route/vrf/0/dst/1.2.3.4/32/gw '{"type"
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [VPP L3 routes][vpp-l3-routes]
 
-Use this cURL command to read VPP routing table entries:
+Use this cURL command to GET VPP routing table entries:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/routes
@@ -1064,9 +1070,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/ipscanneigh-global/settings '{"mode":"
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [VPP IP Scan Neighbor][vpp-l3-ip-scan-neighbor]
 
-Use this cURL command to read IP scan-neighbor configuration data:
+Use this cURL command to GET IP scan-neighbor configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/ipscanneigh
@@ -1226,9 +1232,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/spd/1 '{"index":"1","interfaces"
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [VPP IPsec SPD][vpp-ipsec-spd]
 
-Use this cURL command to read SPD configuration data:
+Use this cURL command to GET SPD configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/spds
@@ -1340,9 +1346,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/sa/1 '{"index":"1","spi":1001,"p
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. 
+API Reference: [VPP IPsec SA][vpp-ipsec-sa] 
 
-Use this cURL command to read SA configuration data:
+Use this cURL command to GET SA configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sas
@@ -1455,9 +1461,9 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/tohost/l3/IPv4/l4/UDP/port/9000 {"l3_p
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [VPP Punt Socket][vpp-punt-socket]
 
-Use this cURL command to read punt configuration data:
+Use this cURL command to GET punt sockets configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/punt/sockets
@@ -1550,7 +1556,8 @@ etcdctl put /vnf-agent/vpp1/config/vpp/v2/ipredirect/l3/IPv4/tx/tap1 '{"l3_proto
 
 **REST** 
 
-There is no Punt IP redirect REST API. 
+!!! Note
+    There is no Punt IP redirect REST API. 
 
 ---
 
@@ -1604,13 +1611,13 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 Current limitations for punt to host:
 
 - UDP configuration cannot be shown or configured using the VPP CLI.
-- VPP does not provide an API to dump configuration. Thus the VPP agent does not have the opportunity to read existing entries and this may cause certain issues with resync.
-* Although the VPP agent supports the L4 TCP  protocol to filter incoming traffic, the VPP data plane does not.
+- VPP does not provide an API to dump configuration. Thus, the VPP agent does not have the opportunity to read existing entries and this may cause certain issues with resync.
+* Although the VPP agent supports the L4 TCP protocol to filter incoming traffic, the VPP data plane does not.
 * Configured punt to host entries cannot be removed because VPP does not support this option. Any attempt to do so exits with an error.
 
 Current limitations for a punt to host via unix domain socket:
 
-- Configuration cannot be shown or configured using in the VPP CLI.
+- Configuration cannot be shown or configured using the VPP CLI.
 - VPP agent cannot read registered entries since the VPP does not provide an API to do so.
 - The VPP startup configuration punt section requires a defined unix domain socket path. The VPP limitation is that only one path can be defined at any one time.
 
@@ -1628,7 +1635,7 @@ Current limitations for IP redirect:
 
 ## ACL Plugin
 
-Access Control Lists (ACL) filter network traffic by controlling whether packets are forwarded (permitted) or blocked (deny) at the router’s interfaces based on the criteria specified in the access list.
+Access Control Lists (ACL) filter network traffic by controlling whether packets are forwarded (permitted), or blocked (deny) at the router’s interfaces, based on the criteria specified in the access list.
 
 **References:**
 
@@ -1639,9 +1646,9 @@ The VPP agent ACL plugin uses the binary API of the VPP data plane ACL plugin. T
 
 The VPP agent defines an access list with a unique name. VPP generates an index, but the association is under the purview of the VPP agent. Every ACL must contain match rules, and action rules. 
 
-The IP match rule can be specified for a variety of protocols, each with their own parameters. For example, the IP rule for the IP protocol can define the source and destination network addresses the packet must match in order to execute the defined action. Other supported protocols are TCP, UDP and ICMP. 
+The IP match rule can be specified for a variety of protocols, each with their own parameters. For example, the IP rule for the IP protocol can define the source and destination network addresses that the packet must match in order to execute the defined action. Other supported protocols are TCP, UDP and ICMP. 
 
-A single ACL rule can cover multiple protocol-based rules. The MAC-IP match (MACIP rule) defines IP address + mask and MAC address + mask as filtering rules. Note that the IP rules and MACIP rules cannot be combined in the same ACL.
+A single ACL rule can cover multiple protocol-based rules. The MAC-IP match (MACIP rule) defines IP address + mask, and MAC address + mask as filtering rules. Note that the IP rules and MACIP rules cannot be combined in the same ACL.
 
 ---
 
@@ -1700,9 +1707,12 @@ etcdctl put /vnf-agent/vpp1/config/vpp/acls/v2/acl/acl1 '{"name":"acl1","interfa
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API References:
 
-Use these cURL commands to obtain IP or MACIP based Access lists:
+- [VPP IP ACL][vpp-ip-acl]
+- [VPP MACIP ACL][vpp-macip-acl]
+
+Use these cURL commands to obtain IP or MACIP-based access lists:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/acl/ip
 curl -X GET http://localhost:9191/dump/vpp/v2/acl/macip
@@ -1877,9 +1887,9 @@ etcdctl del /vnf-agent/vpp1/config/vpp/abfs/v2/abf/1
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. 
+API Reference: [VPP ABF][vpp-abf] 
 
-Use this cURL command to read ABF configuration data:
+Use this cURL command to GET ABF configuration data:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/abf
 ```
@@ -1971,8 +1981,8 @@ The global NAT configuration is a special case of data grouped under single key.
 The NAT global configuration is divided into several independent parts pertaining to specific VPP NAT features:
 
   - **Forwarding** is a boolean field to enable or disable forwarding.
-  - **NAT interfaces** represents a list of interfaces enabled for NAT. If the interface does not exist in VPP, it is cached and potentially configured later. Every interface is defined by its logical name and whether it is an `inside` or an `outside` interface. The enable or disable output feature is also defined here.
-  - **Address pools** is a list of "NAT-able" IP addresses for a given VRF table. Despite the name, only one address is defined in the single "pool" entry.
+  - **NAT interfaces** represents a list of interfaces enabled for NAT. If the interface does not exist in VPP, it is cached and potentially configured later. Every interface is defined by its logical name and whether it is an `inside` or an `outside` interface. Use the [NAT Interfaces REST API][vpp-nat-interfaces] to GET this configuration data.
+  - **Address pools** is a list of "NAT-able" IP addresses for a given VRF table. Despite the name, only one address is defined in the single "pool" entry. Use the [NAT Pools REST API][vpp-nat-pool] to GET this configuration data.
   - **Virtual reassembly** support for datagram fragmentation handling to allow the correct recalculation of higher-level checksums.
 
 ---
@@ -2033,9 +2043,9 @@ etcdctl del /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [NAT Global][vpp-nat-global]
 
-Use this cURL command to read NAT global configuration data:
+Use this cURL command to GET NAT global configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/nat/global
@@ -2190,9 +2200,9 @@ etcdctl del /vnf-agent/vpp1/config/vpp/nat/v2/dnat44/dnat1
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. 
+API Reference: [NAT DNAT44][vpp-nat-dnat] 
 
-Use this cURL command to read IP DNAT44 configuration data:
+Use this cURL command to GET NAT DNAT44 configuration data:
 
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/nat/dnat
@@ -2572,6 +2582,35 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [stn-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/stn/models.go
 [stn-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/stn/stn.proto
 [virtio]: https://wiki.libvirt.org/page/Virtio
+[vpp-interface-rest-api]: ../api/api-vpp-agent.md#vpp-interfaces
+[vpp-bd-rest-api]: ../api/api-vpp-agent.md#vpp-l2-bridge-domain
+[vpp-l2fib-rest-api]: ../api/api-vpp-agent.md#vpp-l2-fib
+[vpp-l2xc-rest-api]: ../api/api-vpp-agent.md#vpp-l2-x-connect
+[vpp-l3-routes]: ../api/api-vpp-agent.md#vpp-l3-routes
+[vpp-l3-arps]: ../api/api-vpp-agent.md#vpp-l3-arps
+[vpp-l3-ip-scan-neighbor]: ../api/api-vpp-agent.md#vpp-l3-ip-scan-neighbor
+[vpp-proxy-arp-ranges]: ../api/api-vpp-agent.md#vpp-l3-proxy-arp-ranges
+[vpp-proxy-arp-interfaces]: ../api/api-vpp-agent.md#vpp-l3-proxy-arp-interfaces
+[vpp-nat-global]: ../api/api-vpp-agent.md#vpp-nat-global
+[vpp-nat-dnat]: ../api/api-vpp-agent.md#vpp-nat-dnat
+[vpp-nat-interfaces]: ../api/api-vpp-agent.md#vpp-nat-interfaces
+[vpp-nat-pool]: ../api/api-vpp-agent.md#vpp-nat-pool
+[vpp-ipsec-spd]: ../api/api-vpp-agent.md#vpp-ipsec-spd
+[vpp-ipsec-sa]: ../api/api-vpp-agent.md#vpp-ipsec-sa
+[vpp-punt-socket]: ../api/api-vpp-agent.md#vpp-punt-socket
+[vpp-ip-acl]: ../api/api-vpp-agent.md#vpp-acl-ip
+[vpp-macip-acl]: ../api/api-vpp-agent.md#vpp-acl-macip
+[vpp-abf]: ../api/api-vpp-agent.md#vpp-abf
+[vpp-telemetry]: ../api/api-vpp-agent.md#vpp-telemetry
+[vpp-telemetry-memory]: ../api/api-vpp-agent.md#vpp-telemetrymemory
+[vpp-telemetry-runtime]: ../api/api-vpp-agent.md#vpp-telemetryruntime
+[vpp-telemetry-nodecount]: ../api/api-vpp-agent.md#vpp-telemetrynodecount
+[linux-interfaces]: ../api/api-vpp-agent.md#linux-interfaces
+[linux-l3-arps]: ../api/api-vpp-agent.md#linux-l3-arps
+[linux-interface-stats]: ../api/api-vpp-agent.md#linux-interface-stats
+[linux-l3-routes]: ../api/api-vpp-agent.md#linux-l3-routes
+[stats-configurator]: ../api/api-vpp-agent.md#statsconfigurator
+[vpp-cli-command]: ../api/api-vpp-agent.md#vpp-cli-command
 [vrf-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/vrf.proto  
 
 *[ABF]: ACL-Based Forwarding

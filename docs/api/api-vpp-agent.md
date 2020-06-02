@@ -2,6 +2,9 @@
 
 This section describes the REST APIs exposed by the VPP agent REST plugin. The URLs and sample responses (in some cases partial) were generated using the environment described in the Quickstart Guide.
 
+!!! Note
+    For VPP and Linux plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+
 ---
 
 ## Index
@@ -9,16 +12,16 @@ This section describes the REST APIs exposed by the VPP agent REST plugin. The U
 Description: Returns an html-formatted index of supported REST APIs. 
 
 ```
-curl http://localhost:9191/
+curl -X GET http://localhost:9191/
 ```
 ---
 
 ## VPP Interfaces
 
-Description: Get all interfaces.
+Description: GET all interfaces.
 
 ```
-curl http://localhost:9191/dump/vpp/v2/interfaces
+curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
 Sample response:
 ```
@@ -104,7 +107,7 @@ Sample response:
 
 ## VPP Interfaces/Loopback
 
-Description: Get loopback interfaces.
+Description: GET loopback interfaces.
 
 ```
 curl http://localhost:9191/dump/vpp/v2/interfaces/loopback
@@ -149,10 +152,10 @@ Sample response:
 
 ## VPP Interfaces/Ethernet
 
-Description: Get ethernet interfaces.
+Description: GET ethernet interfaces.
 
 ```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/ethernet
+curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/ethernet
 ```
 Sample response:
 ```json
@@ -210,9 +213,9 @@ Sample response:
 
 ## VPP Interfaces/Vxlan
 
-Description: Get vxlan interfaces.
+Description: GET vxlan interfaces.
 ```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/vxlan
+curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/vxlan
 ```
 Sample response:
 ```json
@@ -260,9 +263,9 @@ Sample response:
 
 ## VPP Interfaces/Tap
 
-Description: Get tap interfaces.
+Description: GET tap interfaces.
 ```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/tap
+curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/tap
 ```
 Sample response:
 ```json
@@ -325,7 +328,7 @@ Sample response:
 
 ## VPP Interfaces/Memif
 
-Description: Get memif interfaces.
+Description: GET memif interfaces.
 ```json
 http://localhost:9191/dump/vpp/v2/interfaces/memif
 ```
@@ -379,18 +382,18 @@ Sample response:
 
 ## VPP Interfaces/Afpacket
 
-Description: Get afpacket interfaces.
+Description: GET afpacket interfaces.
 
 ```json
-curl http://localhost:9191/dump/vpp/v2/interfaces/afpacket
+curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/afpacket
 ```
 ---
 
 ## VPP ACL IP
 
-Description: Get IP ACL entries.
+Description: GET IP ACL entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/acl/ip
+curl -X GET http://localhost:9191/dump/vpp/v2/acl/ip
 ```
 
 Sample response:
@@ -436,25 +439,25 @@ Sample response:
 
 ## VPP ACL MACIP
 
-Description: Get MACIP ACL entries.
+Description: GET MACIP ACL entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/acl/macip
+curl -X GET http://localhost:9191/dump/vpp/v2/acl/macip
 ```
 ---
 
 ## VPP ABF
 
-Description: Get ABF entries.
+Description: GET ABF entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/abf
+curl -X GET http://localhost:9191/dump/vpp/v2/abf
 ```
 ---
 
 ## VPP L2 Bridge Domain
 
-Description: Get bridge domain information.
+Description: GET bridge domain information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/bd
+curl -X GET http://localhost:9191/dump/vpp/v2/bd
 ```
 Sample response:
 ```json
@@ -485,9 +488,9 @@ Sample response:
 
 ## VPP L2 FIB
 
-Description: Get L2 FIB information.
+Description: GET L2 FIB information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/fib
+curl -X GET http://localhost:9191/dump/vpp/v2/fib
 ```
 Sample response:
 ```json
@@ -523,17 +526,17 @@ Sample response:
 
 ## VPP L2 X-connect
 
-Description: Get L2 x-connect information.
+Description: GET L2 x-connect information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/xc
+curl -X GET http://localhost:9191/dump/vpp/v2/xc
 ```
 ---
 
 ## VPP L3 Routes
 
-Description: Get L3 routing table entries.
+Description: GET L3 routing table entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/routes
+curl -X GET http://localhost:9191/dump/vpp/v2/routes
 ```
 Sample response:
 ```json
@@ -595,9 +598,9 @@ Sample response:
 
 ## VPP L3 ARPs
 
-Description: Get ARP entries.
+Description: GET ARP entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/arps
+curl -X GET http://localhost:9191/dump/vpp/v2/arps
 ```
 Sample response:
 ```json
@@ -673,9 +676,9 @@ Sample response:
 
 ## VPP L3 IP Scan Neighbor
 
-Description: Gets L3 IP scan neighbor data.
+Description: GET L3 IP scan neighbor data.
 ```json
-curl http://localhost:9191/dump/vpp/v2/ipscanneigh
+curl -X GET http://localhost:9191/dump/vpp/v2/ipscanneigh
 ```
 Sampe response:
 ```json
@@ -693,27 +696,27 @@ Sampe response:
 
 ## VPP L3 Proxy ARP Interfaces
 
-Description: Get proxy ARP interface information.
+Description: GET proxy ARP interface information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/proxyarp/interfaces
+curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/interfaces
 ```
 
 ---
 
 ## VPP L3 Proxy ARP Ranges
 
-Description: Get proxy ARP range information.
+Description: GET proxy ARP range information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/proxyarp/ranges
+curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/ranges
 ```
 
 ---
 
 ## VPP NAT Global
 
-Description: Get NAT global configuration information.
+Description: GET NAT global configuration information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/nat/global
+curl -X GET http://localhost:9191/dump/vpp/v2/nat/global
 ```
 Sample response:
 ```json
@@ -730,9 +733,9 @@ Sample response:
 
 ## VPP NAT DNAT
 
-Description: Get destination-based NAT entries.
+Description: GET destination-based NAT entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/nat/dnat
+curl -X GET http://localhost:9191/dump/vpp/v2/nat/dnat
 ```
 Sample response:
 ```json
@@ -779,9 +782,9 @@ Sample response:
 
 ## VPP NAT Interfaces
 
-Description: Get interface-specific NAT information.
+Description: GET interface-specific NAT information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/nat/interfaces
+curl -X GET http://localhost:9191/dump/vpp/v2/nat/interfaces
 ```
 Sample response:
 ```json
@@ -818,9 +821,9 @@ Sample response:
 
 ## VPP NAT Pool
 
-Description: Get NAT address pool information.
+Description: GET NAT address pool information.
 ```json
-curl http://localhost:9191/dump/vpp/v2/nat/pools
+curl -X GET http://localhost:9191/dump/vpp/v2/nat/pools
 ```
 
 Sample response:
@@ -841,17 +844,17 @@ Sample response:
 
 ## VPP IPsec SPD
 
-Description: Get IPsec security policy database (SPD) entries.
+Description: GET IPsec security policy database (SPD) entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/ipsec/spds
+curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/spds
 ```
 ---
 
 ## VPP IPsec SA
 
-Description: Get IPsec security association (SA) entries.
+Description: GET IPsec security association (SA) entries.
 ```json
-curl http://localhost:9191/dump/vpp/v2/ipsec/sas
+curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sas
 ```
 Sample response:
 ```json
@@ -887,33 +890,33 @@ Sample response:
 
 ## VPP Punt Socket
 
-Description: Get punt socket data.
+Description: GET punt socket data.
 ```json
-curl http://localhost:9191/dump/vpp/v2/punt/sockets
+curl -X GET http://localhost:9191/dump/vpp/v2/punt/sockets
 ```
 ---
 
 ## VPP Telemetry
 
-Description: Get VPP telemetry information.
+Description: GET VPP telemetry information.
 ```json
-curl http://localhost:9191/vpp/telemetry
+curl -X GET http://localhost:9191/vpp/telemetry
 ```
 ---
 
 ## VPP Telemetry/Memory
 
-Description: Get VPP telemetry memory stats.
+Description: GET VPP telemetry memory stats.
 ```json
-curl http://localhost:9191/vpp/telemetry/memory
+curl -X GET http://localhost:9191/vpp/telemetry/memory
 ```
 ---
 
 ## VPP Telemetry/Runtime
 
-Description: Get VPP telemetry runtime stats.
+Description: GET VPP telemetry runtime stats.
 ```json
-curl http://localhost:9191/vpp/telemetry/runtime
+curl -X GET http://localhost:9191/vpp/telemetry/runtime
 ```
 Sample response:
 ```json
@@ -960,9 +963,9 @@ Sample response:
 
 ## VPP Telemetry/Nodecount
 
-Description: Get VPP telemetry nodecount stats.
+Description: GET VPP telemetry nodecount stats.
 ```json
-curl http://localhost:9191/vpp/telemetry/nodecount
+curl -X GET http://localhost:9191/vpp/telemetry/nodecount
 ```
 Sample response:
 ```json
@@ -989,9 +992,9 @@ Sample response:
 
 ## Linux Interfaces
 
-Description: Get all Linux interfaces.
+Description: GET all Linux interfaces.
 ```json
-curl http://localhost:9191/dump/linux/v2/interfaces
+curl -X GET http://localhost:9191/dump/linux/v2/interfaces
 ```
 Sample response:
 ```json
@@ -1028,9 +1031,9 @@ Sample response:
 
 ## Linux L3 ARPs
 
-Description: Get Linux L3 ARP entries.
+Description: GET Linux L3 ARP entries.
 ```json
-curl http://localhost:9191/dump/linux/v2/arps
+curl -X GET http://localhost:9191/dump/linux/v2/arps
 ```
 Sample response:
 ```json
@@ -1053,9 +1056,9 @@ Sample response:
 
 ## Linux Interface Stats
 
-Description: Get Linux interface stats.
+Description: GET Linux interface stats.
 ```json
-curl http://localhost:9191/stats/linux/interfaces
+curl -X GET http://localhost:9191/stats/linux/interfaces
 ```
 Sample response:
 ```json
@@ -1091,9 +1094,9 @@ Sample response:
 
 ## Linux L3 Routes
 
-Description: Get Linux L3 routing table entries.
+Description: GET Linux L3 routing table entries.
 ```json
-curl http://localhost:9191/dump/linux/v2/routes
+curl -X GET http://localhost:9191/dump/linux/v2/routes
 ```
 Sample response:
 ```json
@@ -1131,13 +1134,13 @@ Sample response:
 
 ## Stats/Configurator
 
-Description: Get configurator operations stats. 
+Description: GET configurator operations stats. 
 ```json
-curl http://localhost:9191/stats/configurator
+curl -X GET http://localhost:9191/stats/configurator
 ```
 ## VPP CLI Command
 
-Description: Execute VPP CLI commands through a REST API
+Description: Execute VPP CLI commands through a REST API.
 
 For a `show version` command, use
 ```json
