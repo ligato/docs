@@ -1,85 +1,165 @@
 # VPP CLI
 
+The VPP CLI can be used to verify and troubleshoot VPP configurations. This section describes some of the VPP CLI commands to support that function.
+
+**References**
+
+- [FD.io wiki CLI Guide][vpp-cli-guide]
+- [How to start the VPP CLI in the VPP agent container](quickstart.md#53-vpp-cli)
+- [How to execute VPP CLI commands through a REST API][vpp-cli-rest-api]
+- [How to execute VPP CLI commands through Agentctl][agentctl-vpp-cli]
+ 
+
 ---
 
-**The VPP CLI interface commands:** 
+**Class VPP CLI terminal console:**
+```
+    _______    _        _   _____  ___ 
+ __/ __/ _ \  (_)__    | | / / _ \/ _ \
+ _/ _// // / / / _ \   | |/ / ___/ ___/
+ /_/ /____(_)_/\___/   |___/_/  /_/    
 
-The VPP cli has several CLI commands to verify configuration:
+vpp# 
+```
 
-- to show all configured interfaces: `show interface`
-- to show interface IP addresses: `show interface address`
-- show connected PCI interfaces: `show PCI`
-- various information about the state: `show hardware`
-- show VxLan tunnel details: `show vxlan tunnel`
-- show IPSec tunnel details: `show ipsec`
-- show bond interface config: `show bond` or `show bond details`
+**Interface** 
 
-**The VPP CLI bridge domain commands:** 
+show all configured interfaces: 
+```
+show interface
+```
+show interface IP addresses: 
+```json
+show interface address
+```
+show connected PCI interfaces:
+```
+show PCI
+```
+various information about the state: 
+```
+show hardware
+```
+show VxLan tunnel details: 
+```
+show vxlan tunnel
+```
+show bond interface config: 
+```
+show bond `or` show bond details
+```
 
-The VPP cli has following CLI commands to verify configuration:
+---
 
-- show list of all configured bridge domains: `show bridge-domain`
-- show details (interfaces, ARP entries, ...) for any bridge domain: `show bridge-domain <index> details`
+**Bridge domain:** 
 
-**The VPP CLI FIB commands:**
+show list of all configured bridge domains:
+```
+show bridge-domain
+```
+show details (interfaces, ARP entries, ...) for any bridge domain:
+```
+show bridge-domain <index> details
+```
 
-The VPP cli has following CLI command to verify FIB configuration:
+---
 
-- show list of all configured FIB entries: `show l2fib`
+**FIB:**
 
-**The VPP CLI cross-connect commands:**
+show list of all configured FIB entries: 
+```
+show l2fib
+```
 
-The cross-connect mode can be shown on the VPP with command `show mode`
+---
 
-**The VPP CLI ARP commands:**
+**Cross-connect:**
 
-The VPP cli has following CLI commands to verify configuration:
-- show list of all configured ARPs: `show ip arp`
+show cross-connect mode:
+```
+show mode
+```
 
-**The VPP CLI Proxy ARP commands:**
+**ARP and Proxy ARP**
 
-To verify ARP configuration, use the same call as for the ordinary ARP:
+show list of all configured ARPs:
+```
+show ip arp
+```
 
-- show list of all configured proxy ARPs: `show ip arp`
+---
  
-**The VPP CLI route commands:**
+**L3 route:**
  
-The route configuration can be verified with:
+show all routes:
+```
+show ip fib
+```
+show routes from a given VRF table:
+```
+show ip fib table <table-ID>
+``` 
 
-- show all rotes: `show ip fib`
-- show routes from the given VRF table: `show ip fib table <table-ID>` 
+---
 
-**The VPP CLI IP scan neighbor commands:**
+**IP scan neighbor**
 
-The IP scan neighbor configuration can be verified with:
+show IP scan neighbor:
+```
+show ip scan-neighbor
+```
 
-- show IP scan neighbor: `show ip scan-neighbor`
+---
 
-**The VPP CLI access list commands:**
+**ACL**
 
-The VPP does not support any CLI commands related to access list. 
-In order to retrieve ACL configuration, use `vat#` console and direct binary API call `acl_dump`.    
+VPP does not support any CLI commands related to ACLs. In order to retrieve ACL configuration data, use:
 
-**The VPP CLI IPSec SPD commands:**
+- `vat#` console and a direct binary API call `acl_dump`, or
+- call the [IP ACL](../api/api-vpp-agent.md#vpp-acl-ip) REST API or [MACIP ACL](../api/api-vpp-agent.md#vpp-acl-macip) REST API from the VPP Agent    
 
-The VPP cli has a command to show the SPD IPSec configuration: `sh ipsec`
+---
 
-**The VPP CLI IPSec SA commands:**
+**IPSec**
 
-Show the IPSec configuration with the VPP cli command: `sh ipsec`
+show IPSec configuration:
+```
+sh ipsec
+```
+---
 
-**The VPP CLI NAT44 global commands:** 
+**NAT44 global:** 
 
-The VPP cli has following CLI commands to verify configuration:
+show list of all NAT44 addresses:
+```
+show nat44 addresses
+```
+show list of all NAT44 interfaces:
+```
+show nat44 interfaces
+```
+show list of all NAT44 interface addresses:
+```
+show nat44 interface address
+```
 
-- show list of all NAT44 addresses: `show nat44 addresses`
-- show list of all NAT44 interfaces: `show nat44 interfaces`
-- show list of all NAT44 interface addresses: `show nat44 interface address`
+---
 
-**The VPP CLI DNAT44 commands:** 
+**DNAT44** 
 
-The VPP cli has following CLI commands to verify configuration:
+show static mappings: 
+```
+show nat44 static mappings
+```
 
-- show static mappings: `show nat44 static mappings`
+---
 
-The VPP cli command (for configuration verification) is `show ip punt redirect`. 
+**IP Punt Redirect**
+
+Show IP punt redirect configuration: 
+```
+show ip punt redirect
+``` 
+[vpp-cli-guide]: https://wiki.fd.io/view/VPP/Command-line_Interface_(CLI)_Guide
+[vpp-cli-rest-api]: ../api/api-vpp-agent.md#vpp-cli-command
+[agentctl-vpp-cli]: ../user-guide/agentctl.md#vpp

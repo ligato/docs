@@ -164,7 +164,7 @@ gRPC and REST.
 
 ### What REST APIs are supported?
 
-VPP REST APIs are documented [here](../plugins/../plugins/connection-plugins.md#supported-urls). There are also REST APIs for determining the [descriptors registered with the KVS](../developer-guide/kvs-troubleshooting.md#how-to-list-registered-descriptors-and-watched-key-prefixes) and for [retrieving data for visualizing the KVS graph](../developer-guide/kvs-troubleshooting.md#how-to-visualize-the-graph)
+There is an extensive suite of [VPP Agent](../api/api-vpp-agent.md) and [KV Scheduler](../api/api-kvs.md) REST APIs supported by Ligato.
 
 ### Can I develop my own set of customized APIs?
 
