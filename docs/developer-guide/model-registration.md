@@ -10,7 +10,7 @@ A model and proto definition are prerequisites for generating a key. A descripti
 
 ### Registration
 
-The model is registered to the vpp-agent `spec.go`. The key, paths, and names are generated and stored in the registration map. An example registration is illustrated in the `models` package shown here.
+The model is registered to the VPP agent `spec.go`. The key, paths, and names are generated and stored in the registration map. An example registration is illustrated in the `models` package shown here.
 
 ```go
 models.Register(&ProtoMessage{}, models.Spec{

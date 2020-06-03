@@ -6,6 +6,9 @@ This section describes the VPP Agent Linux plugins. Each plugin section provides
 - Pointers to the `*.proto` containing configuration/NB protobuf API definitions, the `models.go` file defining the model, and the conf file if one is available.  
 - Example configuration interactions using an etcd data store, REST and gPRC.
 
+!!! Note
+    For Linux plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+
 ---
 
 ## Linux Interface Plugin
@@ -146,9 +149,12 @@ etcdctl put /vnf-agent/vpp1/config/linux/interfaces/v2/interface/tap1 '{"name":"
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API References: 
 
-Use this cURL command to read all Linux interfaces:
+- [Linux Interfaces][linux-interfaces]
+- [Linux Interface Stats][linux-interface-stats]
+
+Use this cURL command to GET all Linux interfaces:
 
 ```bash
 curl -X GET http://localhost:9191/dump/linux/v2/interfaces
@@ -290,9 +296,9 @@ etcdctl del /vnf-agent/vpp1/config/linux/l3/v2/arp/veth1/130.0.0.1
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [Linux L3 ARPs][linux-l3-arps]
 
-Use this cURL command to read all Linux ARP entries:
+Use this cURL command to GET all Linux ARP entries:
 
 ```bash
 curl -X GET http://localhost:9191/dump/linux/v2/arps
@@ -351,7 +357,7 @@ The linux routing table contains destination network prefixes, a corresponding n
 - [Linux routes model][linux-l3-arp-route-models]
 - [Linux L3 conf file][linux-l3-conf-file]
 
-The interface of the route is mandatory. The namespace is derived from the interface in the same manner as Linux ARP. If the source and gateway (next_hop router) IP addresses are set, they must be valid and the gateway IP address must be evaluated as reachable. 
+The interface for the route is mandatory. The namespace is derived from the interface in the same manner as Linux ARP. If the source and gateway (next_hop router) IP addresses are set, they must be valid, and the gateway IP address must be evaluated as reachable. 
 
 Every route includes a scope which is the network domain where the route is applicable. The scope is defined in the route configuration.
 
@@ -394,9 +400,9 @@ etcdctl del /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1
 
 **REST**
 
-REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
+API Reference: [Linux L3 routes][linux-l3-routes]
 
-Use this cURL command to read Linux routing table entries:
+Use this cURL command to GET Linux routing table entries:
 
 
 ```bash
@@ -513,6 +519,10 @@ It is not required to start the microservice before the configured item is pushe
 [linux-namespace-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/namespace/namespace.proto
 [linux-punt-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/punt/punt.proto
 [linux-route-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/l3/route.proto
+[linux-interfaces]: ../api/api-vpp-agent.md#linux-interfaces
+[linux-l3-arps]: ../api/api-vpp-agent.md#linux-l3-arps
+[linux-interface-stats]: ../api/api-vpp-agent.md#linux-interface-stats
+[linux-l3-routes]: ../api/api-vpp-agent.md#linux-l3-routes
 [iptables-digital-ocean-blog]: https://www.digitalocean.com/community/tutorials/a-deep-dive-into-iptables-and-netfilter-architecture
 [netlink-repo]: https://github.com/vishvananda/netlink
 [redhat-veth-page]: http://man7.org/linux/man-pages/man4/veth.4.html

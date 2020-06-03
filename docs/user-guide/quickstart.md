@@ -200,7 +200,6 @@ Result should be `OK` message. Same idea as above, but this time for a bridge do
 Verify the **loopback interface** configuration is present in the etcd data store:
 ```
 docker exec etcd etcdctl get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
-/vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 
 Sample output:
@@ -235,7 +234,7 @@ The response describes two interfaces:
 - loopback interface `"name": "UNTAGGED-local0"` present in VPP by default
 - loopback interface `"name": "loop1"`configured in the previous step.
 
-Sample output:
+Sample response:
 
 ```
 {
@@ -311,7 +310,7 @@ Get bridge domain configuration information:
 ```
 curl -X GET http://localhost:9191/dump/vpp/v2/bd
 ```
-Sample output:
+Sample response:
 ```
 [
   {
@@ -334,15 +333,7 @@ Sample output:
 ```
 
 
-URLs to read the same data using postman:
-```
-http://localhost:9191/dump/vpp/v2/interfaces
-http://localhost:9191/dump/vpp/v2/bd
-```
-View index of the VPP Agent REST APIs:
-```
-curl -X GET http://localhost:9191/
-```
+More information including URLs with sample responses can be found in the [VPP Agent API Documentation](../api/api-vpp-agent.md) section.
 
 ### 5.3 VPP CLI
 
@@ -400,7 +391,7 @@ vpp# help
 
 Use the `quit` command to exit the VPP CLI.
 
-More information on VPP CLI commands is available [here](https://wiki.fd.io/view/VPP/Command-line_Interface_(CLI)_Guide).
+More information on VPP CLI commands is available in the [CLI guide of the FD.io wiki](https://wiki.fd.io/view/VPP/Command-line_Interface_(CLI)_Guide) and the [VPP CLI section](vpp-cli.md).
 
 ### 5.4 Agentctl
 

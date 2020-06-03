@@ -4,45 +4,42 @@
 
 Link to code: [Using the KV Scheduler in your plugin][code-link]
 
-This tutorial will explain how to use the ['KV Scheduler' (KVS)][5] in our hello world plugin that was created in the
-[previous tutorials](../tutorials/01_hello-world.md). You will learn how to prepare
-a descriptor, generate the adapter and "wire upp" the plugin with the KVS.
+This tutorial will explain how to use the [KV Scheduler][5] in our Hello World plugin created in the
+[previous Hello World tutorial](../tutorials/01_hello-world.md). You will learn how to prepare
+a descriptor, generate the adapter, and "wire upp" the plugin with the KV Scheduler.
 
 Requirements:
 
-* Complete the ['Hello World Agent'](../tutorials/01_hello-world.md) tutorial
+* Complete the [Hello World](../tutorials/01_hello-world.md) tutorial
 * Complete the ['Plugin Dependencies'](../tutorials/02_plugin-deps.md) tutorial
 
-For simplicity sake, this tutorial does not use etcd or any other northbound (NB) KV data store. Instead, NB events are created programmatically using the KV Scheduler API.
+For simplicity's sake, this tutorial does not use etcd or any other northbound (NB) KV data store. Instead, NB events are created programmatically using the KV Scheduler API.
 
-The vpp-agent is the control plane component employed to add and/or modify one or more configuration items in the VPP data plane. In practice, these actions can be dependent on each other. For example, an IP address can be assigned to an interface only if
-the interface is already present in VPP.
+The VPP agent is the control plane component employed to add, modify or delete one or more configuration items in the VPP data plane. In practice, these actions can be dependent on each other. For example, an IP address can be assigned to an interface only if the interface is already present in VPP.
 
 Another example is an L2 FIB entry, which can be added only if both conditions are met:
 
-* required interface and a bridge domain exist
-* the interface is assigned to the bridge domain
+* Interface and bridge domain exist
+* Interface is assigned to the bridge domain
 
 This can result in the creation of a complex dependency tree.
  
 Additional items to consider:
 
-- Typically, more than one binary API call is required to configure a proto-modelled data item coming from the
-   northbound
-- A configuration parameter can be programmed only if its parent exists
-- Configuration dependencies exist in many cases and must be handled properly
+- Typically, more than one binary API call is required to configure a proto-modelled data item received from the NB.
+- Configuration parameters can be programmed only if their respective parents exist.
+- Configuration dependencies exist in many cases and must be handled properly.
 
-This means that VPP binary API calls must be called in a certain order. The job of the KV Scheduler is to manage configuration dependencies to ensure the correct order of API calls is executed.
+This means that VPP binary API calls must be called in a certain order. The job of the KV Scheduler is to manage configuration dependencies, and to ensure the correct order of API calls is executed.
  
-First, we define a simple northbound [proto model][1] that we will use in our example plugin. The model defines two simple messages:
+First, we define a simple NB [proto model][1] that we will use in our example plugin. The model defines two messages:
  
  - `Interface` 
  - `Route` that depends on an interface. The model demonstrates a simple
 dependency between two configuration items.
  
 !!! danger "Important" 
-    The vpp-agent uses the Orchestrator component. It is responsible for collecting northbound
-    data from multiple sources (mainly a KV data store and GRPC clients). To marshall/unmarshall proto messages defined in northbound proto models, the Orchestrator requires message names to be present in the messages. 
+    The VPP agent uses the Orchestrator component. It is responsible for collecting northbound data originating from multiple sources (mainly a KV data store and gRPC clients). To marshall/unmarshall proto messages defined in northbound proto models, the Orchestrator requires `messages` contain `message names`.  
 
 To generate code where message names are present in proto messages, we use the following special protobuf option together with its import:
 ```proto
@@ -50,20 +47,21 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 option (gogoproto.messagename_all) = true;
 ```
 
-In order to register our Hello World plugin with the scheduler and to work with our new model, we need two new 
-components - a **descriptor** and, an **adapter** for every proto-defined type (proto message).
+In order to register our Hello World plugin with the KV Scheduler, and to work with our new model, we need a `Descriptor` and `Adapter` for every proto-defined type (proto.Message).
  
 #### 1. Adapters
  
-Let's start with adapters. An adapter defines conversion methods between our proto-defined type and
-a bare `proto.Message` that the KV Scheduler works with. Since this is a boilerplate code, there is a tooling to auto-generate
-adaptors. The code generator is called `descriptor-adapter` and it can be found [inside the KVScheduler plugin][2]. You can install it manually as follows:
+Let's start with adapters. An adapter defines conversion methods between our proto-defined type, and
+a bare `proto.Message` that the KV Scheduler works with. Since this is boilerplate code, there is tooling to auto-generate
+adapters. The code generator is called `descriptor-adapter` and it can be found [inside the KV Scheduler plugin folder][2]. 
+
+You can install it manually like so:
 
 ```bash
 go install github.com/ligato/vpp-agent/plugins/kvscheduler/descriptor-adapter
 ```
 
-Alternatively, you can put the following target into your project Makefile (assuming you have a dependency on the vpp-agent in your vendor directory):
+Alternatively, and assuming you have a dependency on the VPP agent in your vendor directory, you can put the following target into your project Makefile, :
 
 ```
 get-generators:
@@ -87,8 +85,8 @@ The next  step is to define descriptors. We start with the interface descriptor 
 
 A descriptor can be implemented in one of two ways:
 
-- Define the descriptor constructor that directly implements all required methods. This works well when the implementation uses a relatively small number of short descriptor methods.
-- Define a descriptor object that implements all required methods on this object. This places method references in the descriptor constructor. This is the preferred technique.
+- Define the descriptor constructor that implements all required methods. This works well when the implementation uses a relatively small number of short descriptor methods.
+- Define a descriptor object that implements all required methods on the object. This is the preferred technique for placing method references in the descriptor constructor.
 
 In the interface descriptor, we use the first approach. Let's create a new file called `descriptors.go` so that the descriptor code is outside of `main.go`.
 
@@ -105,36 +103,36 @@ func NewIfDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 
 
 `NewIfDescriptor` is a constructor function that returns a type-safe descriptor object. All potential descriptor 
-dependencies (logger, various mappings, etc.) are provided via constructor parameters.  
+dependencies, such as logger for example, are provided via constructor parameters.  
 
-If you examine `adapter.InterfaceDescriptor`, you will see several fields defined. The most important are function-types with CRUD definitions and the fields resolving dependencies. The full API list is documented in the [KV Descriptor structure][3].
+If you examine `adapter.InterfaceDescriptor`, you will see several fields that are defined. The most important ones are function-types with CRUD definitions, and the fields resolving dependencies. The full API list is documented in the [KV Descriptor structure][3].
 
-Here, we implement the the APIs that we need for our simple example:
+Here, we implement the APIs for our example.
 
-* Name that must be unique for all descriptors.
+Start with a `Name` that must be unique amongst all descriptors:
 ```go
     Name: "if-descriptor",
 ```
 
-* Northbound key prefix for the configuration type handled by the descriptor.
+Northbound key prefix for the configuration type handled by the descriptor:
 ```go
 NBKeyPrefix: "/interface/",
 ```
 
-* String representation of the type.
+String representation of the type:
 ```go
 ValueTypeName: proto.MessageName(&model.Interface{}),
 ```
 
-* Configuration item identifier (label, name, index) is returned by this method. 
+Configuration item identifier consisting of label, name, and index is returned by this method: 
 ```go
 KeyLabel: func(key string) string {
     return strings.TrimPrefix(key, "/interface/")
 },
 ```
 
-* Key selector returns `true` if the provided key is described by the given descriptor. A descriptor can support a
-  subset of keys, but it can only process one value type.
+Key selector returns `true` if the provided key is described by the given descriptor. A descriptor can support a
+  subset of keys, but it can only process one value type:
 ```go
 KeySelector: func(key string) bool {
     if strings.HasPrefix(key, ifPrefix) {
@@ -144,12 +142,12 @@ KeySelector: func(key string) bool {
 },
 ```
 
-* This flag enables metadata for the given type.
+Enable metadata for the given type:
 ```go
-WithMetadata: true,
+WithMetadata: true
 ```
 
-* Create method configures a new configuration item (interface).
+`Create` method configures a new interface configuration item:
 ```go
 Create: func(key string, value *model.Interface) (metadata interface{}, err error) {
     d.log.Infof("Interface %s created", value.Name)
@@ -186,7 +184,7 @@ func NewIfDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 #### 3. Descriptor with Dependency
 
 Next, we continue with the route descriptor that has a dependency on an interface. This descriptor defines additional
-fields since we will need to define the dependency on the interface configuration item. We will also specify the descriptor struct and implement methods outside of the descriptor constructor.
+fields since we will need to define the dependency on the interface configuration item. We will also specify the descriptor struct, and implement methods outside of the descriptor constructor.
 
 First, define the struct and constructor:
 
@@ -228,7 +226,7 @@ func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dep
 }
 ```
 
-The field `WithMetadata` is not needed here so the `Create` method will not return any metadata.
+The `WithMetadata` field is not needed here so the `Create` method will not return any metadata:
 
 ```go
 func (d *RouteDescriptor) Create(key string, value *model.Route) (metadata interface{}, err error) {
@@ -239,7 +237,7 @@ func (d *RouteDescriptor) Create(key string, value *model.Route) (metadata inter
 
 In addition, there are two new fields:
 
-* Dependencies list with a key prefix and a unique label value are required for any given configuration item. The item will not be created because the dependendcy key does not exist. The label is informative and should be unique.
+* Dependencies list with a key prefix, and a unique label value, are required for any given configuration item. The configuration item will not be created because the dependency key does not exist. The label is informative and should be unique:
 ```go
 func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dependency {
 	return []api.Dependency{
@@ -307,14 +305,14 @@ func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 }
 ```
 
-The descriptor API provides additional methods such as Update(), Delete(), Retrieve() and Validate().
+The descriptor API provides additional methods such as `Update()`, `Delete()`, `Retrieve()` and `Validate()`.
 
  The full list can be found in the [KV Descriptor API documentation.][3]
 
 #### Wire Our Plugin with the KV Scheduler
 
-Now with thee descriptors completed, we can register them in the `main.go` file. The first step is to add the `KVScheduler` to the
-`HelloWorld` plugin as a plugin dependency:
+Now, we can register the three completed descriptors in the `main.go` file. The first step is to add the `KV Scheduler` to the
+HelloWorld plugin as a plugin dependency:
 ```go
 type HelloWorld struct {
 	infra.PluginDeps
@@ -322,7 +320,7 @@ type HelloWorld struct {
 }
 ```
 
-Next, register the descriptors with the KV Scheduler in the hello world plugin `Init()`:
+Next, register the descriptors with the KV Scheduler in the Hello World plugin `Init()`:
 ```go
 func (p *HelloWorld) Init() error {
 	p.Log.Println("Hello World!")
@@ -341,26 +339,25 @@ func (p *HelloWorld) Init() error {
 }
 ```
 
-The last step is to replace the plugin initialization method with `AllPlugins()` in the `main()` to ensure that the 
-KV Scheduler is loaded and initialized from the hello world plugin.
+The last step is to replace the plugin initialization method with `AllPlugins()` in  `main()`. This will ensure that the 
+KV Scheduler is loaded and initialized from the Hello World plugin.
 ```go
 a := agent.NewAgent(agent.AllPlugins(p))
 ```
 
-Starting the agent will load the KV Scheduler plugin together with the hello world plugin. The KV Scheduler will
-receive all northbound data and pass it to the hello world descriptor in correct order. If dependencies for a 
-configuration item are not met (i.e. if a route is programmed before its interface dependency is met), the item 
+Starting the agent will load the KV Scheduler plugin together with the Hello World plugin. The KV Scheduler will
+receive all northbound data and pass it to the Hello World descriptor in correct order. If dependencies for a 
+configuration item are 'not met, such as the route being programmed before its interface dependency is resolved, the item 
 will be cached.
 
-#### Example and testing
+#### Example and Testing
 
-The example code from this tutorial can be found [here][4]. It contains `main.go`, `descriptors.go` and two folders with
-model and generated adapters. The tutorial example is extended for the `AfterInit()` method which starts a new go routine
-with a testing procedure.
+The example code from this tutorial can be found [KV Scheduler tutorial folder][4]. It contains `main.go`, `descriptors.go` , and two folders with
+model and generated adapters. The example is extended for the `AfterInit()` method which starts a new Go routine with a testing procedure.
 
 The example below performs three test cases and can be built and started without any config files. Northbound transactions are simulated with the KV Scheduler method `StartNBTransaction()`.
 
-* **1. Configure the interface and the route in a single transaction**
+**1. Configure the interface and the route in a single transaction**
 
 This is the part of the output labelled as `planned operations`:
 ```bash
@@ -372,9 +369,9 @@ This is the part of the output labelled as `planned operations`:
   - value: { name:"route1" interface_name:"if1"  } 
 ``` 
 
-As expected, the interface is created first and the route second, following the order values were set to the transaction.
+As expected, the interface is created first, and the route second. This follows the order set in the transaction.
 
-* **2. Configure the route and the interface in a single transaction.** This order is reversed from the test case above.
+**2. Configure the route first, and the interface second, in a single transaction.** This reverses the order set in the test case above.
 
 Output:
 ```bash
@@ -386,9 +383,9 @@ Output:
   - value: { name:"route2" interface_name:"if2"  } 
 ```
 
-The order is exactly the same despite the fact values were added to transaction in the reverse order. As shown, the scheduler ordered configuration items in the correct sequence before creating the transaction.
+The `Create` sequence is exactly the same, despite the fact the values were added to transaction in the reverse order. As shown, the KV Scheduler re-ordered the configuration items in the correct sequence before generating the transaction.
 
-* **3. Configure the route and the interface in separated transactions**
+**3. Configure the route and interface in separate transactions**
 
 In this case, we have two outputs since there are two transactions:
 
@@ -398,7 +395,7 @@ In this case, we have two outputs since there are two transactions:
   - value: { name:"route3" interface_name:"if3"  } 
 ```
 
-The route comes first, but it is postponed (cached) since the dependent interface does not exist and the scheduler does not know when it will appear. The route is marked as `[NOOP IS-PENDING]`.
+The route comes first, but it is cached, since the dependent interface does not exist, and the KV Scheduler does not know when it will appear. The route is marked as `[NOOP IS-PENDING]`.
 
 ```bash
 1. CREATE:
@@ -409,13 +406,13 @@ The route comes first, but it is postponed (cached) since the dependent interfac
   - value: { name:"route3" interface_name:"if3"  } 
 ```
 
-The second transaction introduces the expected interface. The scheduler:
+The second transaction introduces the expected interface. The KV Scheduler:
  
 - recognized this as a dependency for the cached route
 - sorted items into the correct order
 - called the appropriate configuration method. 
 
-The previously cached route is marked as `[WAS-PENDING]`, highlighting that this item was postponed.
+The previously cached route is marked as `[WAS-PENDING]`. This indicates the item had been cached previously.
 
  [1]: https://github.com/ligato/vpp-agent/blob/master/examples/tutorials/05_kv-scheduler/model/model.proto
  [2]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/descriptor-adapter
@@ -424,5 +421,5 @@ The previously cached route is marked as `[WAS-PENDING]`, highlighting that this
  [5]: ../plugins/kvs-plugin.md
  [code-link]: https://github.com/ligato/vpp-agent/tree/master/examples/tutorials/05_kv-scheduler
  
- *[FIB]: Forwarding Information Base
+ 
  

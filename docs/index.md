@@ -8,7 +8,7 @@ Welcome to the Ligato Docs, a collection of information and documentation about 
 
 - [Overview](intro/overview.md): high-level overview
 - [VPP Agent Releases][vpp-agent-releases]: release info for VPP Agent
-- [cn-infra Releases][cn-infra-releases]: release info for cn-infra
+- [Cn-infra Releases][cn-infra-releases]: release info for cn-infra
 
 ## Using Ligato
 
@@ -20,6 +20,7 @@ Welcome to the Ligato Docs, a collection of information and documentation about 
 
 - [Hello World](tutorials/01_hello-world.md) - first in a series of Ligato programming tutorials
 - [KV Scheduler](developer-guide/kvscheduler.md) and [KV Descriptors](developer-guide/kvdescriptor.md) - detailed architecture, behavior and troubleshooting aspects of the KV Scheduler framework
+- [KV Scheduler](api/api-kvs.md) and [VPP Agent](api/api-vpp-agent.md) REST API documentation
 - [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) - code documentation
 
 See the **Developer Guide** section for more information.

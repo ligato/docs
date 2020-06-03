@@ -59,6 +59,9 @@ nav:
     - Model Registration: developer-guide/model-registration.md
     - Build without Image: developer-guide/build-vpp-agent-no-image.md
     - Go Docs: developer-guide/godocs.md
+  - API:
+    - VPP Agent: api/api-vpp-agent.md
+    - KV Scheduler: api/api-kvs.md
   - Troubleshooting:
     - Start Up: troubleshooting/startup-ts.md
     - Configuration: troubleshooting/config-ts.md

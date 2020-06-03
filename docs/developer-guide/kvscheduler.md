@@ -12,7 +12,7 @@ The KV Scheduler is a transaction-based configuration processing system. It incl
 
 The KV Scheduler addresses several challenges encountered in the original VPP agent design, which became apparent as the variety and complexity of different configuration items increased.
 
-* `vpp` and `linux` plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
+* `VPP` and `Linux` plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
 
 * `configurator` components of `vpp` and `linux` plugins, each processing a specific configuration item type (e.g. interface, route, etc.) were built from scratch, solving the same set of problems again and again, with frequent code duplication.
 
@@ -198,40 +198,96 @@ The KV Scheduler API is defined in a separate [sub-package "api"][kvscheduler-ap
 
 ### REST API
 
-The KV Scheduler exposes the state of the system and the history of operations through formatted logs and a set of REST APIs.
+The KV Scheduler exposes the state of the system through a set of REST APIs.
 
-* **graph visualization**: `GET /scheduler/graph`
-    - returns a graph visualization plotted into an SVG image using [Graphviz](http://graphviz.org/). This can be displayed using any modern web browser.
-    - example: [graph][graph-example] rendered for the [Contiv-VPP][contiv-vpp] project.
-    - *requirements*: `dot` renderer; can be installed on Ubuntu with: `apt-get install graphviz`. This is not needed when the argument `format=dot` is used.
-    - args:
-        - `format=dot`: if defined, the API returns a plain graph description in the DOT format, which is available for further processing and customized rendering.
-        - `txn=<txn-number>`: visualize the state of the graph as it was at the time when the given transaction had just completed. Vertices updated by the transaction are highlighted using a colored border.
-* **transaction history**: `GET /scheduler/txn-history`
-    - returns the full history of executed transactions, or for a given window of time.
-    - args:
-        - `format=<json/text>`
-        - `seq-num=<txn-seq-num>`: transaction sequence number
-        - `since=<unix-timestamp>`: if undefined, the output starts with the oldest kept record
-        - `until=<unix-timestamp>`: if undefined, the output ends with the last executed transaction
-* **key timeline**: `GET /scheduler/key-timeline`
-     - args:
-        - `key=<key-without-agent-prefix>`: key of the value to show changes over time
-* **graph snapshot**: `GET /scheduler/graph-snaphost`
-    - this is an internal representation that is not using `dot`
-    - args:
-        - `time=<unix-timestamp>`: if undefined, current state is returned
-* **dump values**: `GET /scheduler/dump`
-    - Index page is printed if args are `NOT` present
-    - args:
-        - `descriptor=<descriptor-name>`: dump values in the scope of the given descriptor
-        - `key-prefix=<key-prefix>`: dump values with the given key prefix
-        - `view=<NB, SB, internal>`: whether to dump intended, actual or the configuration state as known to  the KV Scheduler
-* **request downstream resync**: `POST /scheduler/downstream-resync`
-    - args:
-        - `retry=< 1/true | 0/false >`: retry operations that failed
-          during resync
-        - `verbose=< 1/true | 0/false >`: print graph after refresh (Retrieve)
+Reference: [KV Scheduler REST API Docs Section][kv-scheduler-rest-api]
+
+---
+
+**Transaction History**: [GET /scheduler/txn-history][kvs-txn-history-api]
+
+- GET a complete history of planned and executed transactions. Can also scope by sequence number and time window. 
+- parameters:
+    - `format=<json/text>`
+    - `seq-num=<txn-seq-num>`: transaction sequence number
+    - `since=<unix-timestamp>`: if undefined, the output starts with the oldest kept record
+    - `until=<unix-timestamp>`: if undefined, the output end with the last executed transaction
+
+----
+
+**Key Timeline**: [GET /scheduler/key-timeline][kvs-key-timeline-api]
+
+- GET the timeline of value changes for a `specific key`
+- Parameters:
+    - `key=<key-without-agent-prefix>`
+
+----
+
+**Graph Snapshot**: [GET /scheduler/graph-snapshot][kvs-graph-snapshot-api]
+
+- GET a snapshot of the KV Scheduler internal graph at a point in time
+- parameters:
+    - `time=<unix-timestamp>`: if undefined, current state is returned
+        
+----
+       
+**Dump**: [GET /scheduler/dump][kvs-dump-api]
+
+- GET list of the `descriptors` registered with the KV Scheduler, list of the `key prefixes` under watch in the NB direction, and `view` options from the perspective of the KV Scheduler
+- parameters: none
+
+---
+ 
+**Dump (with parameters)**: **GET /scheduler/dump?`<parameters>`**
+
+- GET key-value data filtered by parameters
+- parameters: 
+    - `descriptor=<descriptor-name>`
+    - `key-prefix=<key prefix name>`
+    - `view=<NB, SB, cached>`
+    - [example][kvs-dump-parameters-example] with query parameters of `view=SB&key-prefix=key-prefix=config/vpp/v2/interfaces/` 
+
+---
+
+**Status**: [GET /scheduler/status][kvs-status-api]
+
+- GET value state by descriptor, by key, or all
+- parameters:
+    - `descriptor=<descriptor-name>`
+    - `key=<key name>`
+
+---
+
+**Flag-Stats**: [GET /schedular/flag-stats][kvs-flag-stats]
+
+- GET total and per-value counts by value flag.
+- parameters:
+    - `last-update: last transaction that changed/updated the value`
+    - `value-state: current state of the value`
+    - `descriptor: used to look up values by descriptor`
+    - `derived: mark derived values`
+    - `unavailable: mark NB values which should not be considered when resolving dependencies of other values`
+    - `Error: used to store error returned from the last operation, including validation errors` 
+ 
+    
+--- 
+    
+**Request Downstream Resync**: [POST /scheduler/downstream-resync][kvs-downstream-resync]
+
+- Triggers downstream resync
+- parameters:
+    - `retry=< 1/true | 0/false >`: permit retry operations that failed during resync
+    - `verbose=< 1/true | 0/false >`: print graph after refresh
+
+---
+    
+**Graph Visualization**: **GET /scheduler/graph**
+
+Used to generate a graph-based representation of the system state, used internally by the KV Scheduler, and can be displayed using any modern web browser supporting SVG. 
+
+Reference: [How to visualize the graph][kvs-graph-api] section of the Developer Guide
+
+----
 
 [plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler
 [bd-cfd]: control-flows.md#example-bridge-domain
@@ -251,6 +307,16 @@ The KV Scheduler exposes the state of the system and the history of operations t
 [kvscheduler-api-dir]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/api
 [kvdescriptor-guide]: kvdescriptor.md
 [get-history-api]: https://github.com/ligato/vpp-agent/blob/e8e54ef67b666e57ffef1bca555c8ce5585f215f/plugins/kvscheduler/api/kv_scheduler_api.go#L241-L244
+[kv-scheduler-rest-api]: ../api/api-kvs.md
+[kvs-txn-history-api]: ../api/api-kvs.md#transaction-history
+[kvs-key-timeline-api]: ../api/api-kvs.md#key-timeline
+[kvs-graph-snapshot-api]: ../api/api-kvs.md#graph-snapshot
+[kvs-dump-api]: ../api/api-kvs.md#dump
+[kvs-dump-parameters-example]: ../api/api-kvs.md#dump-viewkey-prefix
+[kvs-downstream-resync]: ../api/api-kvs.md#downstream-resync
+[kvs-status-api]: ../api/api-kvs.md#status
+[kvs-flag-stats]: ../api/api-kvs.md#flag-stats
+[kvs-graph-api]: ../developer-guide/kvs-troubleshooting.md#how-to-visualize-the-graph
 
 *[ARP]: Address Resolution Protocol
 *[REST]: Representational State Transfer
