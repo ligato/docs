@@ -1536,7 +1536,7 @@ If L3 protocol is set to `ALL`, the respective API is called for IPv4 and IPv6 s
 
 **KV Data Store**
 
-Put the IP redirct configuration data into an etcd data store using the [VPP ip redirect key][vpp-key-reference]. 
+Put the IP redirect configuration data into an etcd data store using the [VPP ip redirect key][vpp-key-reference]. 
 
 Example value:
 ```json
@@ -2292,7 +2292,7 @@ The `srplugin` is designed to configure Segment Routing for IPv6 (SRv6) in VPP.
 SRv6 configuration data must be stored in etcd using the srv6 key:
  
 ```
-/vnf-agent/<agent-label>/config/vpp/srv6/v2/
+/vnf-agent/<agent-label>/config/vpp/srv6/v2/srv6-global
 ```
 
 ---

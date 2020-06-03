@@ -2,7 +2,7 @@
 
 The VPP CLI can be used to verify and troubleshoot VPP configurations. This section describes some of the VPP CLI commands to support that function.
 
-**References**
+**References:**
 
 - [FD.io wiki CLI Guide][vpp-cli-guide]
 - [How to start the VPP CLI in the VPP agent container](quickstart.md#53-vpp-cli)
@@ -36,15 +36,15 @@ show connected PCI interfaces:
 ```
 show PCI
 ```
-various information about the state: 
+show hardware state: 
 ```
 show hardware
 ```
-show VxLan tunnel details: 
+show vxLan tunnel details: 
 ```
 show vxlan tunnel
 ```
-show bond interface config: 
+show bond interface details: 
 ```
 show bond `or` show bond details
 ```

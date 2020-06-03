@@ -14,7 +14,7 @@ Pre-built production and development images supporting ARM64 are available from 
 
 ** Included in the pre-built ARM64 production image:**
 
-- Binaries for the vpp-agent with default config files
+- Binaries for the VPP agent with default config files
 - Installation of the compatible VPP
 
 Pull the pre-built ARM64 production image:
@@ -26,9 +26,9 @@ docker pull ligato/vpp-agent-arm64
 
 **Included in the pre-built ARM64 development image:**
 
-- vpp-agent with default config files including source code
+- VPP agent with default config files including source code
 - Compatible VPP installation including source code and build artifacts
-- Development environment with all requirements to build the vpp-agent and the VPP
+- Development environment with all requirements to build the VPP agent and the VPP
 - Tools to generate code (proto models, binary APIs)
 
 Pull the pre-built ARM64 development image:

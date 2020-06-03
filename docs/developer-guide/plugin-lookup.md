@@ -8,7 +8,7 @@
 ### Quick Agent Setup
 
 1. Define your plugin. Every plugin must implement the `infra.Plugin` interface.
-2. Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`. This configuration stanza informs the vpp-agent about your plugin. Pass the plugin defined in the preceding step as a parameter into `agent.Plugins(<plugin>...)`. This is a variadic function which means you can pass multiple parameters into it if you need to define multiple plugins. If there are relationships/dependencies between your plugins, and/or if one or more of your plugins depends on other plugins, which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
+2. Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`. This configuration stanza informs the VPP agent about your plugin. Pass the plugin defined in the preceding step as a parameter into `agent.Plugins(<plugin>...)`. This is a variadic function which means you can pass multiple parameters into it if you need to define multiple plugins. If there are relationships/dependencies between your plugins, and/or if one or more of your plugins depends on other plugins, which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
 
 3. Use the `agent.NewAgent(opts ...Option)` function to create a new instance of the agent.
 
@@ -279,7 +279,7 @@ This change applied to both plugins is sufficient to build the agent. This is be
 
 ### Building an Agent
 
-Several [vpp-agent plugins](../plugins/vpp-plugins.md) are used in this example for building an agent.
+Several [VPP agent plugins](../plugins/vpp-plugins.md) are used in this example for building an agent.
 
 1. Create the top-level plugin, which contains all plugins required for the application. Define a method which returns an instance of the `MyApp` plugin called `NewApp()`. Include all methods required to implement the plugin interface:
 

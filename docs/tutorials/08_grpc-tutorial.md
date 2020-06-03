@@ -12,7 +12,7 @@ Requirements:
 * Complete the ['Plugin Dependencies'](../tutorials/02_plugin-deps.md) tutorial
 * Installed VPP, or VPP binary file of the supported version
 
-In the first part, we will create a generic GRPC plugin allowing a client object to send configuration data to the vpp-agent. In addition, it can act as a notification watcher which can listen to vpp-agent notifications.
+In the first part, we will create a generic GRPC plugin allowing a client object to send configuration data to the VPP agent. In addition, it can act as a notification watcher which can listen to VPP agent notifications.
 
 The tutorial uses this folder structure:
 
@@ -133,7 +133,7 @@ func dialer(socket, address string, timeoutVal time.Duration) func(string, time.
 }
 ``` 
 
-**4. Prepare the GRPC client** to send northbound configuration data to the vpp-agent GRPC server, or watch the GRPC server for generated notifications. The client object implements the configurator client interface generated from the [configurator proto file](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/configurator/configurator.proto).
+**4. Prepare the GRPC client** to send northbound configuration data to the VPP agent GRPC server, or watch the GRPC server for generated notifications. The client object implements the configurator client interface generated from the [configurator proto file](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/configurator/configurator.proto).
 ```go
 func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
@@ -211,7 +211,7 @@ func dialer(socket, address string, timeoutVal time.Duration) func(string, time.
 }
 ``` 
 
-As you can see, the code depends on cn-infra infrastructure (plugin definition) and an external GRPC dependency. Later it will consume vpp-agent API proto-definitions thus making it dependent on actual vpp-agent code.
+As you can see, the code depends on cn-infra infrastructure (plugin definition) and an external GRPC dependency. Later it will consume VPP agent API proto-definitions thus making it dependent on actual VPP agent code.
 
 The GRPC plugin is ready to use; however, it still needs to be [wired to the application](#wiring).
 
@@ -279,7 +279,7 @@ func (App) String() string {
 }
 ```
 
-We now have two plugins: the GRPC plugin and the top-level application plugin. The GRPC plugin is used by the top-level plugin as a direct dependency. By vpp-agent convention, a top-level plugin should be created using other plugins as external dependencies. Those plugins can be anything: connectors, VPP-configuration plugins, KV data stores, etc. This approach allows us to use just the top-level plugin in the application with cn-infra plugin lookup mechanisms handling the rest.
+We now have two plugins: the GRPC plugin and the top-level application plugin. The GRPC plugin is used by the top-level plugin as a direct dependency. By VPP agent convention, a top-level plugin should be created using other plugins as external dependencies. Those plugins can be anything: connectors, VPP-configuration plugins, KV data stores, etc. This approach allows us to use just the top-level plugin in the application with cn-infra plugin lookup mechanisms handling the rest.
 
 **3. Finish the App** by adding this code to the `main.go` file. The `New()` method creates an instance of the App (top-level) plugin. The `AllPlugins()` automatically locates and loads our GRPC plugins as an App dependency.
 
@@ -329,7 +329,7 @@ func (App) String() string {
 
 **4. Start the App** with `./client` so our client agent is built into a binary file and initiated.
 
-The client is designed to communicate with the vpp-agent acting as a server. Start the vpp-agent with the `-grpc-config` flag and set the endpoint and the network in the GRPC config file to the same values (hard-coded) used in our GRPC client application. This is so they can communicate with each other.
+The client is designed to communicate with the VPP agent acting as a server. Start the VPP agent with the `-grpc-config` flag and set the endpoint and the network in the GRPC config file to the same values (hard-coded) used in our GRPC client application. This is so they can communicate with each other.
 
 ### Plugin usage
 
@@ -391,11 +391,11 @@ func (p *Client) Init() (err error) {
 }
 ```
 
-After running `./client`, the example interface config is passed via the GRPC server to the vpp-agent which in turn programs the VPP data plane.
+After running `./client`, the example interface config is passed via the GRPC server to the VPP agent which in turn programs the VPP data plane.
 
 ### Notification watcher
 
-The GRPC client can be used to receive automatic notifications from the vpp-agent GRPC server.
+The GRPC client can be used to receive automatic notifications from the VPP agent GRPC server.
 
 Here are the steps to prepare a notification watcher.
 
@@ -464,7 +464,7 @@ func (p *Client) Init() (err error) {
 !!! danger "Important"
     This approach is for testing purposes only. In practice, a race condition could occur since we cannot tell which will run first: `watchNotif` or `configure`. This is not harmful here because notifications are read from the server cache. In theory, it could be a problem if the client configures >100 interfaces before the watcher starts. The result could be loss of some notifications.
 
-After starting the client, the GRPC plugin sends the interface configuration which is received in the vpp-agent server and programmed into the VPP. The server then sends a notification back to the client.
+After starting the client, the GRPC plugin sends the interface configuration which is received in the VPP agent server and programmed into the VPP. The server then sends a notification back to the client.
 
 For illustrative purposes, here is the output log from the client application:
 ```bash
