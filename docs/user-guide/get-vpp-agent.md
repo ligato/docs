@@ -212,11 +212,11 @@ In the default docker environment, the etcd server will be available at `172.17.
 
 The VPP agent defines a flag for the etcd plugin called `--etcd-config`. It points to the location of the `etcd.conf` file that contains static config information used by the etcd plugin upon startup. The most important item contained is the etcd.conf is the endpoints IP address:port number.
 
-An example configuration contained in the etcd.conf file:
+An example configuration contained in the `etcd.conf` file:
 
 ```
 insecure-transport: true
-dial-timeout: 1000000000
+dial-timeout: 1s
 endpoints: 
  - "172.17.0.1:2379"
 ```
