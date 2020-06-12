@@ -10,18 +10,23 @@ The integration tests are written using Go and test mainly the _vppcalls layer_ 
 
 The easiest way to run entire integration test suite is to use make target `integration-tests`.
 
-Run tests with default VPP version:
+Run tests with default VPP version (which is defined by `VPP_DEFAULT`):
 
 ```sh
-# defined by VPP_DEFAULT=YYMM
+# run tests with default VPP version 
 make integration-tests
 ```
 
 Run tests with specific VPP version:
 
 ```sh
+# run tests with VPP 20.05
 make integration-tests VPP_VERSION=2005
+
+# run tests with VPP 20.01
 make integration-tests VPP_VERSION=2001
+
+# run tests with VPP 19.08
 make integration-tests VPP_VERSION=1908
 ```
 
@@ -34,25 +39,25 @@ Before running the tests using the script you have to set `VPP_IMG` variable to 
 
 The simplest way is to export it like this:
 
-```
+```sh
 export VPP_IMG=ligato/vpp-base:20.01
 ```
 
 Then you can simply execute this script:
 
-```
+```sh
 bash ./tests/integration/vpp_integration.sh
 ```
 
 Run tests in verbose mode:
 
-```
+```sh
 bash ./tests/integration/vpp_integration.sh -test.v 
 ```
 
 Run tests cases for specific functionality:
 
-```
+```sh
 # test cases for ACLs
 bash ./tests/integration/vpp_integration.sh -test.run=ACL
 
@@ -61,7 +66,8 @@ bash ./tests/integration/vpp_integration.sh -test.run=Route
 ```
 
 Run tests with any additional flags supported by `go test` tool:
-```
+
+```sh
 # run with coverage report
 bash ./tests/integration/vpp_integration.sh -test.cover
 
