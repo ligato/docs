@@ -79,4 +79,4 @@ bash ./tests/integration/vpp_integration.sh -test.cpuprofile cpu.out
 
 ##### References
 
-- README: https://github.com/ligato/vpp-agent/blob/master/tests/integration/README.md
+- README: [https://github.com/ligato/vpp-agent/blob/master/tests/integration/README.md](https://github.com/ligato/vpp-agent/blob/master/tests/integration/README.md)
