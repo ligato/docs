@@ -1,80 +1,82 @@
 # Integration Tests
 
-This page contains information about integration tests for the vpp-agent. The following text describes how to run robot test suites (locally or in any other environment).
+This page contains information about integration tests for the vpp-agent.
 
 ---
 
-### VM(s) -ubuntu:
-  - required: python, robotframework, docker
+The integration tests are written using Go and test mainly the _vppcalls layer_ that provides VPP-version agnostic API interface. The integration test suite can be executed for any of the VPP versions defined in `vpp.env`.
 
-  - install Docker CE: https://docs.docker.com/install/linux/docker-ce/ubuntu/#prerequisites
-  - install other:
-```
-sudo apt-get update
-sudo apt-get upgrade
-sudo apt-get install git
-sudo apt-get install python
-sudo apt-get install python3
-sudo apt-get install python-pip
-sudo apt-get install python-paramiko
-sudo pip install requests
-sudo pip install robotframework
-sudo pip install robotframework-sshlibrary
-sudo pip install -U robotframework-requests
-sudo pip install --upgrade robotframework-httplibrary
+## Quick Start - execute entire integration test suite
+
+The easiest way to run entire integration test suite is to use make target `integration-tests`.
+
+Run tests with default VPP version (which is defined by `VPP_DEFAULT`):
+
+```sh
+# run tests with default VPP version 
+make integration-tests
 ```
 
-  - SSH connection between VMs:
-```
-sudo apt-get install openssh-server
-ssh-keygen
-ssh xxx@192.168.100.XX
+Run tests with specific VPP version:
+
+```sh
+# run tests with VPP 20.05
+make integration-tests VPP_VERSION=2005
+
+# run tests with VPP 20.01
+make integration-tests VPP_VERSION=2001
+
+# run tests with VPP 19.08
+make integration-tests VPP_VERSION=1908
 ```
 
-### Clone git vpp-agent:
-```
-git clone https://github.com/ligato/vpp-agent.git
+## Customize Test Run
+
+The integration test suite can be executed manually by running script `./tests/integration/vpp_integration.sh`.
+This script supports adding extra arguments for the test run.
+
+Before running the tests using the script you have to set `VPP_IMG` variable to the image that should be used (make target does this for you). 
+
+The simplest way is to export it like this:
+
+```sh
+export VPP_IMG=ligato/vpp-base:20.01
 ```
 
-### Download docker images:
-```
-docker pull ligato/dev-cn-infra:latest             
-docker pull ligato/prod_sfc_controller:latest          
-docker pull quay.io/coreos/etcd:v3.0.16             
-docker pull ligato/dev_sfc_controller:latest 
-docker pull ligato/vpp-agent:dev 
-docker pull ligato/dev-vpp-agent:dev
+Then you can simply execute this script:
+
+```sh
+bash ./tests/integration/vpp_integration.sh
 ```
 
-### Setup local variables:
-      - .../vpp-agent/tests/robot/variables/jozo_local_variables.robot
+Run tests in verbose mode:
 
-        - IP- VM where you will run tests
-        - USER/PASS on this VM
-        - Image witch you will use
-
-      - .../vpp-agent/tests/robot/variables/common_variables.robot
-        -  If you have docker without sudo, then you need change "sudo docker" on line 7, to "docker"
-
-### Make directory on VM:
-```
-sudo mkdir /run/vpp
+```sh
+bash ./tests/integration/vpp_integration.sh -test.v 
 ```
 
-### Run test:
-  - Change directory to folder with tests:
-```
-cd .../vpp-agent/tests/robot/suites/crud/
-```
-  - Run test
- ```
-pybot --loglevel TRACE -v VARIABLES:jozo_local loopback_crud.robot
+Run tests cases for specific functionality:
+
+```sh
+# test cases for ACLs
+bash ./tests/integration/vpp_integration.sh -test.run=ACL
+
+# test cases for L3 routes
+bash ./tests/integration/vpp_integration.sh -test.run=Route
 ```
 
-### Test results:
-      - robot log file, ...:
-        - .../vpp-agent/tests/robot/suites/crud/
-      - logs: vpp-agent, etcd, ...:
-        - .../vpp-agent/tests/robot/suites/crud/results
+Run tests with any additional flags supported by `go test` tool:
 
-*[VPP]: Vector Packet Processing
+```sh
+# run with coverage report
+bash ./tests/integration/vpp_integration.sh -test.cover
+
+# run with CPU profiling
+bash ./tests/integration/vpp_integration.sh -test.cpuprofile cpu.out
+```
+
+---
+
+##### References
+
+- README: https://github.com/ligato/vpp-agent/blob/master/tests/integration/README.md
