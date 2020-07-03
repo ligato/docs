@@ -1156,6 +1156,27 @@ The VRF table proto defines an ID, protocol setting for IPv4 or IPv6, optional l
 
 ---
 
+## IPFIX Plugin
+
+The IPFIX plugin is used to manage [IPFIX][ipfix-rfc] configuration in VPP. It allows one to:
+
+- configure export of flowprobe information
+- configure flowprobe parameters
+- enable/disable the flowprobe feature for a specific interface
+
+**References**
+
+- [VPP IPFIX proto][vpp-ipfix-proto]
+- [VPP Flowprobe proto][vpp-flowprobe-proto]
+- [VPP IPFIX model][vpp-ipfix-model]
+
+Items to keep in mind when deploying flowprobe functionality on an interface:
+
+- flowprobe `cannot` be configured for any interface if flowprobe parameters were not set.
+- flowprobe parameters `cannot` be changed if the flowprobe Feature was enabled for at least one interface.
+
+---
+
 ## IPSec Plugin
 
 The IPSec plugin handles the configuration of **Security Policy Databases** (SPD) and **Security Associations** (SA) in VPP. 
@@ -2553,6 +2574,7 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [govppmux-metrics-models]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/govppmux/models.go
 [govppmux-metrics-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/govppmux/metrics.proto 
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
+[ipfix-rfc]: https://www.ietf.org/rfc/rfc7011.txt
 [vpp-interface-conf-file]: https://github.com/ligato/vpp-agent/blob/master/plugins/vpp/ifplugin/vpp-ifplugin.conf
 [vpp-interface-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go
 [vpp-interface-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/interface.proto
@@ -2601,6 +2623,9 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [vpp-ip-acl]: ../api/api-vpp-agent.md#vpp-acl-ip
 [vpp-macip-acl]: ../api/api-vpp-agent.md#vpp-acl-macip
 [vpp-abf]: ../api/api-vpp-agent.md#vpp-abf
+[vpp-ipfix-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/ipfix/ipfix.proto
+[vpp-flowprobe-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/ipfix/flowprobe.proto
+[vpp-ipfix-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/ipfix/models.go
 [vpp-telemetry]: ../api/api-vpp-agent.md#vpp-telemetry
 [vpp-telemetry-memory]: ../api/api-vpp-agent.md#vpp-telemetrymemory
 [vpp-telemetry-runtime]: ../api/api-vpp-agent.md#vpp-telemetryruntime

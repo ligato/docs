@@ -44,6 +44,9 @@ Current examples:
 <br />  
 * **[CN-Infra  examples][cn-infra-examples]** demonstrates how to use the Ligato Infra framework
   plugins.
+<br/>
+<br/>
+* **[Custom VPP Plugin][custom-vpp-plugin]** contains a working example of custom agent which adds support for a custom VPP plugin. This example can serve as skeleton code for developing custom agents, that add new VPP functionality that is not part of the official VPP Agent. 
   
 ## How to run an example
  
@@ -86,7 +89,8 @@ go run main.go  \
 --etcd-config=/opt/vpp-agent/dev/etcd.conf \
 --kafka-config=/opt/vpp-agent/dev/kafka.conf
 ```
-[cn-infra-examples]: https://github.com/ligato/cn-infra/tree/master/examples 
+[cn-infra-examples]: https://github.com/ligato/cn-infra/tree/master/examples
+[custom-vpp-plugin]: https://github.com/ligato/vpp-agent/tree/master/examples/customize/custom_vpp_plugin 
 [example-govpp-call]: https://github.com/ligato/vpp-agent/tree/master/examples/govpp_call
 [example-grpc-vpp-notifications]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/notifications
 [example-grpc-vpp-remote]: https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/remote_client

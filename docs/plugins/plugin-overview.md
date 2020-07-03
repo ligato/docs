@@ -13,17 +13,18 @@ The KV Scheduler is the first step in any VPP or Linux related data processing. 
 VPP agent core VPP plugins (e.g. plugins which are always required when working with VPP). Plugin list:
 
 - GoVPPMux
-- Interface plugin
-- L2 plugin
-- L3 plugin
+- Interface
+- L2 
+- L3
 - Access Control List (ACL)
 - ACL-based forwarding (ABF)
-- IPSec plugin
-- NAT plugin
-- Punt plugin
-- Segment routing plugin
-- STN plugin 
-- Telemetry plugin
+- IPFIX
+- IPSec
+- NAT
+- Punt
+- Segment Routing
+- STN 
+- Telemetry
 
 ### GoVPPMux Plugin
 
@@ -61,6 +62,12 @@ Handles VPP access control lists. If rules defined in the access list are met by
 Implementation of the ACL-based forwarding feature. Performs policy-based routing (PBR) where forwarding is performed based on ACL matches rather than destination address prefix.
 
 More at: [ABF plugin][abf-plugin]
+
+### IPFIX
+
+Implementation of VPP IPFIX support for monitoring and exporting flow information.
+
+More at: [IPFIX plugin][ipfix-plugin]
 
 ### IPSec plugin
 
@@ -282,6 +289,7 @@ Other plugins can use this plugin to obtain the microservice label, or more spec
 [index-map]: infra-plugins.md#index-map
 [interface-plugin]: vpp-plugins.md#interface-plugin
 [interface-plugin-guide]: vpp-plugins.md#interface-plugin
+[ipfix-plugin]: vpp-plugins.md#ipfix-plugin
 [ipsec-plugin]: vpp-plugins.md#ipsec-plugin
 [kvscheduler]: kvs-plugin.md
 [l2-plugin]: vpp-plugins.md#l2-plugin
