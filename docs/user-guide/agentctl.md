@@ -10,6 +10,8 @@ Agentctl provides an etcdctl-like feature for interacting with the KV data store
 
 ![agentctl](../img/tools/agentctl.png)
 
+---
+
 ## Installation
 
 ### Docker Image Pull
@@ -34,6 +36,7 @@ Agentctl help to get started:
 ```
 docker exec -it vpp-agent agentctl --help
 ```
+---
 
 ### Build from Source
 
@@ -49,6 +52,7 @@ Run Agentctl help to get started
 agentctl --help
 ```
 
+---
 
 ## Setup
 
@@ -100,6 +104,7 @@ Run 'agentctl COMMAND --help' for more information on a command.
 !!! note
     Bears worth repeating: Use `agentctl <ANY COMMAND> --help` for explanations and in some cases, examples for any of the agentctl commands and subcommands. 
 
+---
 
 ### NB Access Methods
 
@@ -272,6 +277,8 @@ config/vpp/v2/vrf-table/id/0/protocol/IPV6                    [ligato.vpp.l3.Vrf
                                                               label: "ipv6-VRF:0"
 ```
 
+---
+
 Dump the `vpp.interfaces` model:
 ```
 agentctl dump vpp.interfaces
@@ -291,6 +298,8 @@ config/vpp/v2/interfaces/loop1             [ligato.vpp.interfaces.Interface]   f
                                            ip_addresses: "192.168.1.1/24"
 ```
 
+---
+
 Dump the `vpp.interfaces` model using a NB view:
 ```
 agentctl dump --view=NB vpp.interfaces
@@ -304,6 +313,8 @@ config/vpp/v2/interfaces/loop1   [ligato.vpp.interfaces.Interface]   from-NB   m
                                  enabled: true
                                  ip_addresses: "192.168.1.1/24"
 ```
+
+---
 
 Dump the `vpp.interfaces` model using json format:
 
@@ -411,6 +422,8 @@ vpp.tohost                  config   ligato.vpp.punt.ToHost                   co
 vpp.vrf-table               config   ligato.vpp.l3.VrfTable                   config/vpp/v2/vrf-table/                   
 ```
 
+---
+
 Show details about a specific model using `vpp.interfaces` as an example:
 ```
 agentctl model inspect vpp.interfaces
@@ -437,7 +450,7 @@ Sample Output:
 
 ### Status
 
-Use this command to return the status of the VPP agent.
+Use this command to return VPP agent status, version, build and plugin info. 
 
 ```
 Usage:	agentctl status
@@ -455,27 +468,41 @@ agentctl status
 Sample Output:
 ```
 AGENT
-       State: OK
-     Version: v3.2.0-alpha-1-g615f9fd36
-     Started: 2020-04-02 00:47:40 +0000 UTC (14h21m45s ago)
+    App name:    vpp-agent
+    Version:     v3.2.0-alpha-22-ge9aa3556d
 
- Last change: 14h21m39s
- Last update: 5s
+    State:       OK
+    Started:     2020-07-03 15:10:51 +0000 UTC (22m36s ago)
+    Last change: 22m30s
+    Last update: 3s
+
+    Go version:  go1.14.4
+    OS/Arch:     linux/amd64
+
+    Build Info:
+        Git commit: e9aa3556defe818904670e3f5051246fdd11746d
+        Git branch: HEAD
+        User:       root
+        Host:       06a7eb7fd825
+        Built:      2020-07-03 13:01:58 +0000 UTC
 
 PLUGINS
-   VPPAgent: OK
-   etcd: OK
-   govpp: OK
-   vpp-abfplugin: INIT
-   vpp-aclplugin: INIT
-   vpp-ifplugin: OK
-   vpp-ipsec-plugin: INIT
-   vpp-l2plugin: INIT
-   vpp-l3plugin: INIT
-   vpp-natplugin: INIT
-   vpp-srplugin: INIT
+    VPPAgent: OK
+    etcd: OK
+    govpp: OK
+    vpp-abfplugin: INIT
+    vpp-aclplugin: INIT
+    vpp-ifplugin: OK
+    vpp-ipsec-plugin: INIT
+    vpp-l2plugin: INIT
+    vpp-l3plugin: INIT
+    vpp-natplugin: INIT
+    vpp-srplugin: INIT
+
 
 ```
+
+---
 
 ### Values
 
@@ -545,6 +572,8 @@ COMMANDS
 !!! Note
     Attempts to interact with the etcd data store using the `agentctl kvdb` command could encounter a `Failed to connect to Etcd` message. This is because the VPP agent that includes `agentctl` is started in one container, and etcd is started another. Agentctl uses a default address of `127.0.0.1` to reach the etcd server; The etcd server is started with a default address of `172.17.0.2:2379`. The solution is to pass the etcd server address to agentctl using the `e` or `--etcd-endpoints` flags like so: `agentctl -e 172.17.0.2:2379 kvdb <command>`.
 
+---
+
 List command:
 ```json
 agentctl kvdb list
@@ -559,6 +588,8 @@ Sample Output:
 ```
 Depending on the number of entries in the KV data store, the output could be massive and difficult to read. You can whittle this down by using a less specific key.
 
+---
+
 For example, use this command to list only the configured interfaces:
 ```json
 agentctl kvdb list /vnf-agent/vpp1/config/vpp/v2/interfaces/ 
@@ -571,11 +602,15 @@ Sample output:
 {“name”:”tap1”,”type”:”TAP”,”enabled”:true,”ip_addresses”:[“192.168.1.1/24”]}
 ```
 
+---
+
 Put command example using a loopback interface
 ```json
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
 Response is `OK`.
+
+---
 
 Get command example for the loopback interface using the long-form key:
 ```
@@ -619,6 +654,8 @@ Sample output:
 vpp# show version
 vpp v20.01-rc2~11-gfce396738~b17 built by root on b81dced13911 at 2020-01-29T21:07:15
 ```
+
+---
 
 Use the `info` option to show VPP information:
 ```
@@ -715,6 +752,8 @@ OPTIONS:
 
 ```
 
+---
+
 Here is another example using short keys with the microservice label. The contents of the `myconfig` configuration data file are:
 ```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
@@ -754,6 +793,8 @@ OPTIONS:
   -f, --format string   Output formats: json, yaml (default "json")
       --oneline         Print output as single line (only json format)
 ```
+
+---
 
 Generate a configuration sample for a VPP route:
 
@@ -822,6 +863,9 @@ COMMANDS
   call        Call methods on services
   list        List remote services
 ```
+
+---
+
 List remote services including `methods` using the `-m` flag:
 ```
 agentctl service list -m
@@ -847,6 +891,8 @@ service ligato.generic.ManagerService (ligato/generic/manager.proto)
 service ligato.generic.MetaService (ligato/generic/meta.proto)
  - rpc KnownModels (KnownModelsRequest) returns (KnownModelsResponse)
 ```
+---
+
 Call service and method:
 ```
 agentctl service call SERVICE METHOD
@@ -865,6 +911,8 @@ COMMANDS
   list        List metrics
 ```
 
+---
+
 List metrics:
 ```
 agentctl metrics list
@@ -874,6 +922,8 @@ Sample output:
 METRIC          PROTO MESSAGE
 govppmux.stats  ligato.govppmux.Metrics
 ```
+---
+
 Get metrics:
 ```
 agentctl metrics get govppmux.stats
@@ -888,5 +938,7 @@ Sample Output:
   "requests_sent": 78
 }
 ```
+
+---
 
 [ligato-vpp-agent-repo]: https://github.com/ligato/vpp-agent

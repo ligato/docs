@@ -1188,14 +1188,14 @@ The IPSec plugin handles the configuration of **Security Policy Databases** (SPD
 
 ### Security Policy Database
 
-The SPD specifies the policies that determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. The SPD is bound to an SPD interface and contains a table policy entries. Every policy entry points to an IPsec security association (SA). 
+The SPD specifies the policies that determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. The SPD is bound to an SPD interface and contains one or more policy entries. Each policy entry points to an IPsec security association (SA). 
 
 **References:**
 
 - [VPP SPD proto][ipsec-proto]
 - [VPP SPD model][ipsec-model]
 
-The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent as it is a part of the SPD key. 
+The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent, as it is a part of the SPD key. 
 
 !!! Note
     Pay special attention when defining an index in the model. Despite the fact the field uses a `string` format, it only accepts plain numbers. Attempts to set non-numeric characters will result in an error.     
@@ -2364,6 +2364,13 @@ The steal-the-NIC (STN) plugin is used when only a single NIC is supported on th
 
 The Telemetry plugin is used for exporting telemetry statistics from VPP to [Prometheus][prometheus]. Statistics are published via the registry path `/vpp` on port `9191` and updated every 30 seconds.
 
+**API References:**
+
+- [Telemetry][telemetry-plugin]
+- [Telemetry Memory][telemetry-memory]
+- [Telemetry Runtime][telemetry-runtime]
+- [Telemetry Nodecount][telemetry-nodecount]
+
 **Exported Data**
 
 - VPP runtime (`show runtime`)
@@ -2636,7 +2643,11 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [linux-l3-routes]: ../api/api-vpp-agent.md#linux-l3-routes
 [stats-configurator]: ../api/api-vpp-agent.md#statsconfigurator
 [vpp-cli-command]: ../api/api-vpp-agent.md#vpp-cli-command
-[vrf-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/vrf.proto  
+[vrf-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/vrf.proto
+[telemetry-plugin]: ../api/api-vpp-agent.md#vpp-telemetry
+[telemetry-memory]: ../api/api-vpp-agent.md#vpp-telemetrymemory
+[telemetry-runtime]: ../api/api-vpp-agent.md#vpp-telemetryruntime
+[telemetry-nodecount]: ../api/api-vpp-agent.md#vpp-telemetrynodecount  
 
 *[ABF]: ACL-Based Forwarding
 *[ACL]: Access Control List

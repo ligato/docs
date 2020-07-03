@@ -910,6 +910,28 @@ Description: GET VPP telemetry memory stats.
 ```json
 curl -X GET http://localhost:9191/vpp/telemetry/memory
 ```
+
+Sample response:
+```json
+{
+  "threads": [
+    {
+      "id": 0,
+      "name": "north1",
+      "size": 0,
+      "objects": 0,
+      "used": 0,
+      "total": 0,
+      "free": 0,
+      "reclaimed": 0,
+      "overhead": 0,
+      "pages": 0,
+      "page_size": 0
+    }
+  ]
+}
+```
+
 ---
 
 ## VPP Telemetry/Runtime
@@ -989,6 +1011,8 @@ Sample response:
 // more counters
 ...
 ```
+
+---
 
 ## Linux Interfaces
 
@@ -1138,6 +1162,32 @@ Description: GET configurator operations stats.
 ```json
 curl -X GET http://localhost:9191/stats/configurator
 ```
+---
+
+## Version
+
+Description: GET VPP Agent Version Info
+```json
+curl -X GET http://localhost:9191/info/version
+```
+
+Sample Response:
+```json
+{
+  "App": "vpp-agent",
+  "Version": "v3.2.0-alpha-22-ge9aa3556d",
+  "GitCommit": "e9aa3556defe818904670e3f5051246fdd11746d",
+  "GitBranch": "HEAD",
+  "BuildUser": "root",
+  "BuildHost": "06a7eb7fd825",
+  "BuildTime": 1593781318,
+  "GoVersion": "go1.14.4",
+  "OS": "linux",
+  "Arch": "amd64"
+}
+```
+---
+
 ## VPP CLI Command
 
 Description: Execute VPP CLI commands through a REST API.
