@@ -7,6 +7,13 @@ This section describes the REST APIs exposed by the VPP agent REST plugin. The U
 
 ---
 
+
+<div class="swagbutton">
+    <a href="https://app.swaggerhub.com/apis/chrisM9/ligato-vpp_agent_rest_ap_is/3">View OpenAPI definitions</a>
+</div>
+
+---
+
 ## Index
 
 Description: Returns an html-formatted index of supported REST APIs. 

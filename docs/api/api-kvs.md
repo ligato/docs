@@ -9,6 +9,12 @@ Reference: [KV Scheduler plugin rest.go file][kvs-rest-go]
 
 ---
 
+<div class="swagbutton">
+    <a href="https://app.swaggerhub.com/apis/chrisM9/ligato-kvs-rest-api/2-oas3">View OpenAPI definitions</a>
+</div>
+
+---
+
 ## Dump
 
 Description: GET list of the `descriptors` registered with the KV Scheduler, list of the `key prefixes` under watch in the NB direction, and `view` options from the perspective of the KV Scheduler 
