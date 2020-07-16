@@ -7,6 +7,7 @@ This section describes the REST APIs exposed by the VPP agent REST plugin. The U
 
 ---
 
+OpenAPI (swagger) definitions provide additional details for describing, producing and consuming VPP agent REST APIs.  
 
 <div class="swagbutton">
     <a href="https://app.swaggerhub.com/apis/chrisM9/ligato-vpp_agent_rest_ap_is/3">View OpenAPI definitions</a>

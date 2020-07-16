@@ -631,11 +631,16 @@ If the JSON API was changed, it must be re-generated in the VPP agent. All chang
 
 ### Multi-Version
 
-In order to minimize updates for various VPP versions, the VPP agent introduced multi-version support. The VPP agent can switch to a different VPP version with corresponding APIs without any changes to the VPP agent itself,  without any need to rebuild the VPP agent binary. Plugins can now obtain the version of the VPP and the VPP agent to connect and initialize the correct set of `vppcalls`.
+In order to minimize updates for various VPP versions, the VPP agent introduced multi-version support. The VPP agent can switch to a different VPP version with corresponding APIs without any changes to the VPP agent itself, without any need to rebuild the VPP agent binary. Plugins can now obtain the version of the VPP and the VPP agent to connect and initialize the correct set of `vppcalls`.
+
+The following figure depicts the version agnostic and specific components used by the VPP (and custom) agents supporting multiple VPP versions. 
+
+![vpp-multi-version-support](../img/user-guide/vpp-multiversion-support.png)
 
 Every `vppcalls` handler registers itself with the VPP version it will support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the VPP agent performs a compatibility check with all available handlers, searching for one that is compatible with the required messages. The chosen handler must be in line with all messages, as it is not possible to use multiple handlers for a single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin.
 
 One small drawback of this solution is code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions, which is seen in the majority of cases.
+
 
 ---
 

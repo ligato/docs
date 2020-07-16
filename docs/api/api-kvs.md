@@ -9,6 +9,8 @@ Reference: [KV Scheduler plugin rest.go file][kvs-rest-go]
 
 ---
 
+OpenAPI (swagger) definitions provide additional details for describing, producing and consuming KV Scheduler REST APIs.  
+
 <div class="swagbutton">
     <a href="https://app.swaggerhub.com/apis/chrisM9/ligato-kvs-rest-api/2-oas3">View OpenAPI definitions</a>
 </div>
