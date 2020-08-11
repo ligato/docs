@@ -67,7 +67,8 @@ nav:
     - Configuration: troubleshooting/config-ts.md
   - TESTING:
     - Integration Tests: testing/integration-tests.md
-    - Robot Framework Guide: testing/robot-framework-guide.md
+# TODO: Add document for e2e tests (see issue https://github.com/ligato/docs/issues/69)
+#    - End-to-end Tests: testing/end-to-end-tests.md
 
 markdown_extensions:
   - extra
