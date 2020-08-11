@@ -3,8 +3,9 @@ This page contains a how-to guide for writing custom integration tests using the
 
 ---
 
-!!! Note
-    Tests written with Robot Framework are no longer maintained! 
+!!! Attention
+    Tests written with Robot Framework are no longer maintained!
+    
     All our tests are now implemented in Go. Read [Integration Tests](https://docs.ligato.io/en/latest/testing/integration-tests/) for more info.
 
 ## Robot Test Setup
