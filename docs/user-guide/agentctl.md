@@ -4,10 +4,16 @@
 
 ## Introduction
 
-Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. It provides a simple and intuitive CLI that enables the developer or operator to check status, control VPP, view models, configure logs, gather metrics, and includes commands for a select or complete system dump.   
+Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. 
+It provides a simple and intuitive CLI that enables the developer or operator to perform the following:
 
-Agentctl provides an etcdctl-like feature for interacting with the KV data store. Commands are also available to 
-manage the VPP agent's config data.
+- check status
+- manage VPP agent configurations 
+- inspect and generate models
+- List, get, put and del operations against a KV data store
+- configure logs
+- gather stats
+- Perform system dumps   
 
 ![agentctl](../img/tools/agentctl.png)
 
@@ -149,7 +155,7 @@ Agentctl subcommands:
 
 ### Config
 
-Use this command to manage configuration data. configuration [resync](../developer-guide/kvscheduler.md#resync) action.
+Use this command to manage VPP agent configuration data.
 
 ```
 Usage:	agentctl config COMMAND
@@ -164,7 +170,50 @@ COMMANDS
   update      Update config in agent
 ```
 
-Command:
+---
+
+**Config get:**
+```sh
+agentctl config get
+```
+Sample output:
+```json
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+linuxConfig: {}
+netallocConfig: {}
+```
+
+---
+
+**Config history:**
+```json
+agentctl config history
+```
+Sample output:
+```golang
+  SEQ     TYPE                          AGE  SUMMARY                   RESULT
+    0  ⟱  NB Transaction   Full Resync  16m  values: 16 -> 0 executed  ok
+    1  ⟱  NB Transaction                14m  values:  1 -> 4 executed  ok
+    2  ⇧  SB Notification               14m  values:  1 -> 1 executed  ok
+    3  ⟱  NB Transaction                13m  values:  1 -> 2 executed  ok
+    4  ⟱  NB Transaction   SB Sync      7m   values:  0 -> 0 executed  ok
+```
+
+---
+
+**Config [resync](../developer-guide/kvscheduler.md#resync):**
 ```
 agentctl config resync
 ```
@@ -177,6 +226,148 @@ Sample output:
   "TxnType": "NBTransaction",
   "ResyncType": "DownstreamResync"
 }
+```
+
+---
+
+**Config retrieve** (a running config)
+```sh
+agentctl config retrieve
+```
+Sample output:
+```json
+dump:
+  vppConfig:
+    interfaces:
+    - name: UNTAGGED-local0
+      type: SOFTWARE_LOOPBACK
+      physAddress: 00:00:00:00:00:00
+    - name: loop1
+      type: SOFTWARE_LOOPBACK
+      enabled: true
+      physAddress: de:ad:00:00:00:00
+      ipAddresses:
+      - 192.168.1.1/24
+    bridgeDomains:
+    - name: bd1
+      forward: true
+      learn: true
+      interfaces:
+      - name: loop1
+    routes:
+    - type: DROP
+      dstNetwork: ::/0
+      nextHopAddr: ::
+      weight: 1
+    - dstNetwork: fe80::/10
+      nextHopAddr: ::
+      weight: 1
+    - type: DROP
+      dstNetwork: 0.0.0.0/0
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 240.0.0.0/4
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 224.0.0.0/4
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - dstNetwork: 192.168.1.1/24
+      nextHopAddr: 0.0.0.0
+      outgoingInterface: loop1
+      weight: 1
+    - dstNetwork: 192.168.1.1/32
+      nextHopAddr: 192.168.1.1
+      outgoingInterface: loop1
+      weight: 1
+    - type: DROP
+      dstNetwork: 0.0.0.0/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 255.255.255.255/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 192.168.1.255/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 192.168.1.0/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    nat44Global: {}
+  linuxConfig: {}
+  netallocConfig: {}
+```
+
+---
+
+**Config update**
+
+Example of an existing config:
+```json
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+linuxConfig: {}
+netallocConfig: {}
+```
+We want to update the existing config with a new `loop2` interface saved in `update.txt`
+```json
+vppConfig:
+  interfaces:
+  - name: loop2
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.3.1/24
+```
+
+Run the config update command:
+```json
+agentctl config update ./update.txt
+```
+
+Updated config contains the `loop2` interface config item:
+```json
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  - name: loop2
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.3.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+linuxConfig: {}
+netallocConfig: {}
+```
+
+Use the `replace` flag to swap the existing config with a new config contained in `update.txt`:
+```json
+agentctl config update --replace ./update.txt
 ```
 
 ---
@@ -207,7 +398,7 @@ OPTIONS:
 ```
 
 
-Dump all:
+**Dump all:**
 ```
 agentctl dump all
 ```
@@ -312,39 +503,54 @@ Sample Output:
 
 ---
 
-Dump the `vpp.interfaces` model:
+**Dump the `vpp.interfaces` model:**
 ```
 agentctl dump vpp.interfaces
 ```
 Sample Output:
 ```
-KEY                                        VALUE                               ORIGIN    METADATA
-config/vpp/v2/interfaces/UNTAGGED-local0   [ligato.vpp.interfaces.Interface]   from-SB   map[IPAddresses:<nil> SwIfIndex:0 TAPHostIfName: Vrf:0]
-                                           name: "UNTAGGED-local0"
-                                           type: SOFTWARE_LOOPBACK
-                                           phys_address: "00:00:00:00:00:00"
-
-config/vpp/v2/interfaces/loop1             [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
-                                           name: "loop1"
-                                           type: SOFTWARE_LOOPBACK
-                                           enabled: true
-                                           ip_addresses: "192.168.1.1/24"
++----------------+---------+-----------------------------------+----------------------+-----------------+
+|     MODEL      | ORIGIN  |               VALUE               |       METADATA       |       KEY       |
++----------------+---------+-----------------------------------+----------------------+-----------------+
+| vpp.interfaces | from-SB | # ligato.vpp.interfaces.Interface | DevType: local       | UNTAGGED-local0 |
+|                |         | name: UNTAGGED-local0             | IPAddresses: null    |                 |
+|                |         | type: SOFTWARE_LOOPBACK           | InternalName: local0 |                 |
+|                |         | physAddress: 00:00:00:00:00:00    | SwIfIndex: 0         |                 |
+|                |         |                                   | TAPHostIfName: ""    |                 |
+|                |         |                                   | Vrf: 0               |                 |
+|                |         |                                   |                      |                 |
++                +---------+-----------------------------------+----------------------+-----------------+
+|                | from-NB | # ligato.vpp.interfaces.Interface | DevType: Loopback    | loop1           |
+|                |         | name: loop1                       | IPAddresses:         |                 |
+|                |         | type: SOFTWARE_LOOPBACK           | - 192.168.1.1/24     |                 |
+|                |         | enabled: true                     | InternalName: loop0  |                 |
+|                |         | ipAddresses:                      | SwIfIndex: 1         |                 |
+|                |         | - 192.168.1.1/24                  | TAPHostIfName: ""    |                 |
+|                |         |                                   | Vrf: 0               |                 |
+|                |         |                                   |                      |                 |
++----------------+---------+-----------------------------------+----------------------+-----------------+
 ```
 
 ---
 
-Dump the `vpp.interfaces` model using a NB view:
+**Dump the `vpp.interfaces` model using a NB view:**
 ```
 agentctl dump --view=NB vpp.interfaces
 ```
 Sample Output:
 ```
-KEY                              VALUE                               ORIGIN    METADATA
-config/vpp/v2/interfaces/loop1   [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
-                                 name: "loop1"
-                                 type: SOFTWARE_LOOPBACK
-                                 enabled: true
-                                 ip_addresses: "192.168.1.1/24"
++----------------+---------+-----------------------------------+---------------------+-------+
+|     MODEL      | ORIGIN  |               VALUE               |      METADATA       |  KEY  |
++----------------+---------+-----------------------------------+---------------------+-------+
+| vpp.interfaces | from-NB | # ligato.vpp.interfaces.Interface | DevType: Loopback   | loop1 |
+|                |         | name: loop1                       | IPAddresses:        |       |
+|                |         | type: SOFTWARE_LOOPBACK           | - 192.168.1.1/24    |       |
+|                |         | enabled: true                     | InternalName: loop0 |       |
+|                |         | ipAddresses:                      | SwIfIndex: 1        |       |
+|                |         | - 192.168.1.1/24                  | TAPHostIfName: ""   |       |
+|                |         |                                   | Vrf: 0              |       |
+|                |         |                                   |                     |       |
++----------------+---------+-----------------------------------+---------------------+-------+
 ```
 
 ---
@@ -411,7 +617,7 @@ COMMANDS
   ls          List models
 ```
 
-List all supported models:
+**List all supported models:**
 ```
 agentctl model ls
 ```
@@ -494,7 +700,7 @@ OPTIONS:
   -f, --format string   Format output
 ```
 
-Command
+**Status command**
 ```
 agentctl status
 ```
@@ -550,7 +756,7 @@ OPTIONS:
   -f, --format string   Format output
 
 ```
-Command:
+**Values command:**
 ```
 agentctl values
 ```
@@ -586,7 +792,8 @@ vpp.vrf-table          id/0/protocol/IPV6                                  obtai
 
 ### KVDB
 
-Use this command to perform get, put, del or list operations against the KV data store. It is similar to using etcdctl, but supports short keys, which requires setting the `--service-label` in the specific command.
+Use this command to perform get, put, del or list operations against the KV data store. It is similar to etcdctl, but supports short form [keys][keys], 
+which requires setting the `--service-label` flag in the specific command.
 
 ```
 Usage:	agentctl kvdb [options] COMMAND
@@ -607,7 +814,7 @@ COMMANDS
 
 ---
 
-List command:
+**kvdb list:**
 ```json
 agentctl kvdb list
 ```
@@ -619,7 +826,8 @@ Sample Output:
 {"state":"OK","last_change":"1586275962","last_update":"1586280942"}
 ...
 ```
-Depending on the number of entries in the KV data store, the output could be massive and difficult to read. You can whittle this down by using a less specific key.
+Depending on the number of entries in the KV data store, the output could be massive and difficult to read. 
+You can whittle this down by using a more specific key.
 
 ---
 
@@ -637,7 +845,7 @@ Sample output:
 
 ---
 
-Put command example using a loopback interface
+**kvdb put** example using a loopback interface
 ```json
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
@@ -645,15 +853,18 @@ Response is `OK`.
 
 ---
 
-Get command example for the loopback interface using the long-form key:
+**kvdb get** example for the loopback interface using the long form key:
 ```
 agentctl kvdb get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 Sample output:
 ```json
 {"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}
+
+---
+
 ```
-Delete command example for the loopback interface using the long-form key:
+**kvdb delete** example for the loopback interface using the long form key:
 ```
 agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
@@ -787,7 +998,7 @@ OPTIONS:
 
 ---
 
-Here is another example using short keys with the microservice label. The contents of the `myconfig` configuration data file are:
+Here is another example using short form keys with the microservice label. The contents of the `myconfig` configuration data file are:
 ```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
 config/vpp/v2/interfaces/loop2 {"name":"loop2","type":"MEMIF"}
@@ -975,3 +1186,4 @@ Sample Output:
 ---
 
 [ligato-vpp-agent-repo]: https://github.com/ligato/vpp-agent
+[keys]: ../user-guide/concepts.md#keys
