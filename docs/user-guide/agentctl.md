@@ -7,12 +7,13 @@
 Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. 
 It provides a simple and intuitive CLI that enables the developer or operator to perform the following:
 
-- check status
-- manage VPP agent configurations 
-- inspect and generate models
-- List, get, put and del operations against a KV data store
-- configure logs
-- gather stats
+- Manage VPP agent configurations 
+- Inspect and generate models
+- List, get, put and delete operations against a KV data store
+- Check status
+- Manage services
+- Configure logs
+- Gather stats
 - Perform system dumps   
 
 ![agentctl](../img/tools/agentctl.png)
@@ -45,21 +46,17 @@ docker exec -it vpp-agent agentctl --help
 ```
 ---
 
-!!!Note
-    Flag shorthand -h has been deprecated, please use --help.
-
-
 
 ### Build from Source
 
 A local image can be built from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide. 
 
-After the `Start the VPP Agent` command of:
+Start the VPP agent:
 ```
 vpp-agent
 ```
 
-Run Agentctl help to get started
+Agentctl help:
 ```
 agentctl --help
 ```
@@ -325,7 +322,7 @@ vppConfig:
 linuxConfig: {}
 netallocConfig: {}
 ```
-We want to update the existing config with a new `loop2` interface saved in `update.txt`
+We want to update the existing config with a new `loop2` interface. This is saved in a file called `update.txt`
 ```json
 vppConfig:
   interfaces:
@@ -341,7 +338,7 @@ Run the config update command:
 agentctl config update ./update.txt
 ```
 
-Updated config contains the `loop2` interface config item:
+Updated config now contains the `loop2` interface config item:
 ```json
 vppConfig:
   interfaces:
