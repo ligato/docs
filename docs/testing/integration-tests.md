@@ -1,25 +1,32 @@
 # Integration Tests
 
-This page contains information about integration tests for the vpp-agent.
+This section contains information about integration tests for the VPP agent.
 
 ---
 
-The integration tests are written using Go and test mainly the _vppcalls layer_ that provides VPP-version agnostic API interface. The integration test suite can be executed for any of the VPP versions defined in `vpp.env`.
+The integration tests are written using Go and test mainly the _vppcalls layer_ that provides 
+VPP-version agnostic API interface. The integration test suite can be executed for any of the 
+VPP versions defined in [vpp.env](https://github.com/ligato/vpp-agent/blob/master/vpp.env).
 
-## Quick Start - execute entire integration test suite
+!!!Note
+    Running the tests on a mac using the make command could result in errors such as missing syscalls.
 
-The easiest way to run entire integration test suite is to use make target `integration-tests`.
+---
 
-Run tests with default VPP version (which is defined by `VPP_DEFAULT`):
+## Run Integration Test Suite
 
-```sh
+The easiest way to run the entire integration test suite is to use make target `integration-tests`.
+
+Run tests using the default VPP version defined by `VPP_DEFAULT`:
+
+```
 # run tests with default VPP version 
 make integration-tests
 ```
 
-Run tests with specific VPP version:
+Run tests for a specific `VPP_VERSION`:
 
-```sh
+```
 # run tests with VPP 20.05
 make integration-tests VPP_VERSION=2005
 
@@ -30,20 +37,26 @@ make integration-tests VPP_VERSION=2001
 make integration-tests VPP_VERSION=1908
 ```
 
-## Customize Test Run
+---
 
-The integration test suite can be executed manually by running script `./tests/integration/vpp_integration.sh`.
-This script supports adding extra arguments for the test run.
+## Customize Integration Test Run
 
-Before running the tests using the script you have to set `VPP_IMG` variable to the image that should be used (make target does this for you). 
+The integration test suite can be executed manually by running the following script:
+ 
+```
+./tests/integration/vpp_integration.sh
+```
+This script supports the addition of extra arguments for the test run.
 
-The simplest way is to export it like this:
+Before running the tests, you must set the `VPP_IMG` variable to the desired image. 
+
+The simplest way to set the `VPP_IMG` variable uses the export command:
 
 ```sh
 export VPP_IMG=ligato/vpp-base:20.01
 ```
 
-Then you can simply execute this script:
+Then you can execute the script like so:
 
 ```sh
 bash ./tests/integration/vpp_integration.sh
@@ -65,7 +78,7 @@ bash ./tests/integration/vpp_integration.sh -test.run=ACL
 bash ./tests/integration/vpp_integration.sh -test.run=Route
 ```
 
-Run tests with any additional flags supported by `go test` tool:
+Run tests with any additional flags supported by the `go test` tool:
 
 ```sh
 # run with coverage report
@@ -77,6 +90,4 @@ bash ./tests/integration/vpp_integration.sh -test.cpuprofile cpu.out
 
 ---
 
-##### References
-
-- README: [https://github.com/ligato/vpp-agent/blob/master/tests/integration/README.md](https://github.com/ligato/vpp-agent/blob/master/tests/integration/README.md)
+Reference: [VPP Agent tests repo folder](https://github.com/ligato/vpp-agent/tree/master/tests)

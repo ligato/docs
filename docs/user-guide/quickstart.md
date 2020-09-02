@@ -68,7 +68,8 @@ The following command starts the etcd server in a docker container. If the image
 docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
 
-In the default docker environment, the etcd server will be available at `172.17.0.1:2379`. It is possible to change some of the command flags such as the advertise or listen client URLs. More on the etcd command flags can be found in the [etcd configuration guide](https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/configuration.md).
+In the default docker environment, the etcd server will be available at `172.17.0.1:2379`. It is possible to change some of the command flags such as the advertise or listen client URLs. 
+More on the etcd command flags can be found in the [etcd configuration guide](https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/configuration.md).
 
 Open a new terminal session and verify the etcd container is running:
 ```sh
@@ -144,6 +145,8 @@ This section will explain:
 - How to connect to the VPP CLI and show the configuration
 - How to use agentctl to manage the VPP agent and Ligato components
 
+---
+
 ### 5.1 etcdctl
 
 The etcd data store contains configuration information in the form of key-value pairs.
@@ -218,6 +221,7 @@ Sample output:
 {"name":"bd1","forward":true,"learn":true,"interfaces":[{"name":"loop1"}]}
 ```
 
+---
 
 ### 5.2 REST API
 
@@ -332,8 +336,9 @@ Sample response:
 
 ```
 
-
 More information including URLs with sample responses can be found in the [VPP Agent API Documentation](../api/api-vpp-agent.md) section.
+
+---
 
 ### 5.3 VPP CLI
 
@@ -403,12 +408,12 @@ docker exec -it vpp-agent agentctl --help
 ```
 Output:
 ```
-     ___                    __  ________  __
-    /   | ____ ____  ____  / /_/ ____/ /_/ /
-   / /| |/ __ '/ _ \/ __ \/ __/ /   / __/ /
-  / ___ / /_/ /  __/ / / / /_/ /___/ /_/ /
- /_/  |_\__, /\___/_/ /_/\__/\____/\__/_/
-       /____/
+
+                      __      __  __
+  ___ ____ ____ ___  / /_____/ /_/ /
+ / _ '/ _ '/ -_) _ \/ __/ __/ __/ /
+ \_,_/\_, /\__/_//_/\__/\__/\__/_/
+     /___/
 
 COMMANDS
   config      Manage agent configuration
@@ -420,7 +425,7 @@ COMMANDS
   metrics     Get runtime metrics
   model       Manage known models
   service     Manage agent services
-  status      Retrieve agent status
+  status      Retrieve agent status and version info
   values      Retrieve values from scheduler
   vpp         Manage VPP instance
 
@@ -441,6 +446,29 @@ OPTIONS:
   -v, --version                  Print version info and quit
 
 Run 'agentctl COMMAND --help' for more information on a command.
+```
+
+Get the VPP agent config data:
+```json
+docker exec -it vpp-agent agentctl config get
+```
+Sample output:
+```json
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+linuxConfig: {}
+netallocConfig: {}
 ```
 
 The [agentctl](agentctl.md) section of this user guide contains more information and examples.

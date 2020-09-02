@@ -4,9 +4,17 @@
 
 ## Introduction
 
-Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. It provides a simple and intuitive CLI that enables the developer or operator to check status, control VPP, view models, configure logs, gather metrics, and includes commands for a select or complete system dump.   
+Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. 
+It provides a simple and intuitive CLI that enables the developer or operator to perform the following:
 
-Agentctl provides an etcdctl-like feature for interacting with the KV data store. A command is also available to import configuration data from an external file.
+- Manage VPP agent configurations 
+- Inspect and generate models
+- List, get, put and delete operations against a KV data store
+- Check status
+- Manage services
+- Configure logs
+- Gather stats
+- Perform system dumps   
 
 ![agentctl](../img/tools/agentctl.png)
 
@@ -38,16 +46,17 @@ docker exec -it vpp-agent agentctl --help
 ```
 ---
 
+
 ### Build from Source
 
 A local image can be built from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide. 
 
-After the `Start the VPP Agent` command of:
+Start the VPP agent:
 ```
 vpp-agent
 ```
 
-Run Agentctl help to get started
+Agentctl help:
 ```
 agentctl --help
 ```
@@ -62,12 +71,12 @@ agentctl
 ```
 Output:
 ```json
-     ___                    __  ________  __
-    /   | ____ ____  ____  / /_/ ____/ /_/ /
-   / /| |/ __ '/ _ \/ __ \/ __/ /   / __/ /
-  / ___ / /_/ /  __/ / / / /_/ /___/ /_/ /
- /_/  |_\__, /\___/_/ /_/\__/\____/\__/_/
-       /____/
+
+                      __      __  __
+  ___ ____ ____ ___  / /_____/ /_/ /
+ / _ '/ _ '/ -_) _ \/ __/ __/ __/ /
+ \_,_/\_, /\__/_//_/\__/\__/\__/_/
+     /___/
 
 COMMANDS
   config      Manage agent configuration
@@ -79,7 +88,7 @@ COMMANDS
   metrics     Get runtime metrics
   model       Manage known models
   service     Manage agent services
-  status      Retrieve agent status
+  status      Retrieve agent status and version info
   values      Retrieve values from scheduler
   vpp         Manage VPP instance
 
@@ -143,18 +152,65 @@ Agentctl subcommands:
 
 ### Config
 
-Use this command to perform a configuration [resync](../developer-guide/kvscheduler.md#resync) action.
+Use this command to manage VPP agent configuration data.
 
 ```
-Usage:	agentctl config [options] COMMAND
+Usage:	agentctl config COMMAND
 
 Manage agent configuration
 
 COMMANDS
-  resync      Run config resync in agent
+  get         Get config from agent
+  history     Retrieve config history
+  resync      Run config resync
+  retrieve    Retrieve currently running config
+  update      Update config in agent
 ```
 
-Command:
+---
+
+**Config get:**
+```sh
+agentctl config get
+```
+Sample output:
+```json
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+linuxConfig: {}
+netallocConfig: {}
+```
+
+---
+
+**Config history:**
+```json
+agentctl config history
+```
+Sample output:
+```golang
+  SEQ     TYPE                          AGE  SUMMARY                   RESULT
+    0  ⟱  NB Transaction   Full Resync  16m  values: 16 -> 0 executed  ok
+    1  ⟱  NB Transaction                14m  values:  1 -> 4 executed  ok
+    2  ⇧  SB Notification               14m  values:  1 -> 1 executed  ok
+    3  ⟱  NB Transaction                13m  values:  1 -> 2 executed  ok
+    4  ⟱  NB Transaction   SB Sync      7m   values:  0 -> 0 executed  ok
+```
+
+---
+
+**Config [resync](../developer-guide/kvscheduler.md#resync):**
 ```
 agentctl config resync
 ```
@@ -167,6 +223,148 @@ Sample output:
   "TxnType": "NBTransaction",
   "ResyncType": "DownstreamResync"
 }
+```
+
+---
+
+**Config retrieve** (a running config)
+```sh
+agentctl config retrieve
+```
+Sample output:
+```json
+dump:
+  vppConfig:
+    interfaces:
+    - name: UNTAGGED-local0
+      type: SOFTWARE_LOOPBACK
+      physAddress: 00:00:00:00:00:00
+    - name: loop1
+      type: SOFTWARE_LOOPBACK
+      enabled: true
+      physAddress: de:ad:00:00:00:00
+      ipAddresses:
+      - 192.168.1.1/24
+    bridgeDomains:
+    - name: bd1
+      forward: true
+      learn: true
+      interfaces:
+      - name: loop1
+    routes:
+    - type: DROP
+      dstNetwork: ::/0
+      nextHopAddr: ::
+      weight: 1
+    - dstNetwork: fe80::/10
+      nextHopAddr: ::
+      weight: 1
+    - type: DROP
+      dstNetwork: 0.0.0.0/0
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 240.0.0.0/4
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 224.0.0.0/4
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - dstNetwork: 192.168.1.1/24
+      nextHopAddr: 0.0.0.0
+      outgoingInterface: loop1
+      weight: 1
+    - dstNetwork: 192.168.1.1/32
+      nextHopAddr: 192.168.1.1
+      outgoingInterface: loop1
+      weight: 1
+    - type: DROP
+      dstNetwork: 0.0.0.0/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 255.255.255.255/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 192.168.1.255/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    - type: DROP
+      dstNetwork: 192.168.1.0/32
+      nextHopAddr: 0.0.0.0
+      weight: 1
+    nat44Global: {}
+  linuxConfig: {}
+  netallocConfig: {}
+```
+
+---
+
+**Config update**
+
+Example of an existing config:
+```json
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+linuxConfig: {}
+netallocConfig: {}
+```
+We want to update the existing config with a new `loop2` interface. This is saved in a file called `update.txt`
+```json
+vppConfig:
+  interfaces:
+  - name: loop2
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.3.1/24
+```
+
+Run the config update command:
+```json
+agentctl config update ./update.txt
+```
+
+Updated config now contains the `loop2` interface config item:
+```json
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  - name: loop2
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.3.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+linuxConfig: {}
+netallocConfig: {}
+```
+
+Use the `replace` flag to swap the existing config with a new config contained in `update.txt`:
+```json
+agentctl config update --replace ./update.txt
 ```
 
 ---
@@ -197,121 +395,159 @@ OPTIONS:
 ```
 
 
-Dump all:
+**Dump all:**
 ```
 agentctl dump all
 ```
 
 Sample Output:
 ```
-KEY                                                           VALUE                               ORIGIN    METADATA
-config/vpp/l2/v2/bridge-domain/bd1                            [ligato.vpp.l2.BridgeDomain]        from-NB   map[Index:1]
-                                                              name: "bd1"
-                                                              forward: true
-                                                              learn: true
-                                                              interfaces: <
-                                                                name: "loop1"
-                                                              >
++----------------------+---------+-----------------------------------+----------------------+-----------------------------------------+
+|        MODEL         | ORIGIN  |               VALUE               |       METADATA       |                   KEY                   |
++----------------------+---------+-----------------------------------+----------------------+-----------------------------------------+
+| vpp.ipfix.ipfix      | from-SB | # ligato.vpp.ipfix.IPFIX          |                      | config/vpp/ipfix/v2/ipfix               |
+|                      |         | collector:                        |                      |                                         |
+|                      |         |   address: 0.0.0.0                |                      |                                         |
+|                      |         | sourceAddress: 0.0.0.0            |                      |                                         |
+|                      |         | vrfId: 4294967295                 |                      |                                         |
+|                      |         |                                   |                      |                                         |
++----------------------+         +-----------------------------------+----------------------+-----------------------------------------+
+| vpp.nat.nat44-global |         | # ligato.vpp.nat.Nat44Global      |                      | config/vpp/nat/v2/nat44-global          |
+|                      |         | {}                                |                      |                                         |
+|                      |         |                                   |                      |                                         |
++----------------------+         +-----------------------------------+----------------------+-----------------------------------------+
+| vpp.interfaces       |         | # ligato.vpp.interfaces.Interface | DevType: local       | UNTAGGED-local0                         |
+|                      |         | name: UNTAGGED-local0             | IPAddresses: null    |                                         |
+|                      |         | type: SOFTWARE_LOOPBACK           | InternalName: local0 |                                         |
+|                      |         | physAddress: 00:00:00:00:00:00    | SwIfIndex: 0         |                                         |
+|                      |         |                                   | TAPHostIfName: ""    |                                         |
+|                      |         |                                   | Vrf: 0               |                                         |
+|                      |         |                                   |                      |                                         |
++                      +---------+-----------------------------------+----------------------+-----------------------------------------+
+|                      | from-NB | # ligato.vpp.interfaces.Interface | DevType: ""          | loop1                                   |
+|                      |         | name: loop1                       | IPAddresses:         |                                         |
+|                      |         | type: SOFTWARE_LOOPBACK           | - 192.168.1.1/24     |                                         |
+|                      |         | enabled: true                     | InternalName: ""     |                                         |
+|                      |         | ipAddresses:                      | SwIfIndex: 1         |                                         |
+|                      |         | - 192.168.1.1/24                  | TAPHostIfName: ""    |                                         |
+|                      |         |                                   | Vrf: 0               |                                         |
+|                      |         |                                   |                      |                                         |
++----------------------+---------+-----------------------------------+----------------------+-----------------------------------------+
+| vpp.proxyarp-global  | from-SB | # ligato.vpp.l3.ProxyARP          |                      | config/vpp/v2/proxyarp-global           |
+|                      |         | {}                                |                      |                                         |
+|                      |         |                                   |                      |                                         |
++----------------------+         +-----------------------------------+----------------------+-----------------------------------------+
+| vpp.route            |         | # ligato.vpp.l3.Route             |                      | vrf/0/dst/0.0.0.0/0/gw/0.0.0.0          |
+|                      |         | type: DROP                        |                      |                                         |
+|                      |         | dstNetwork: 0.0.0.0/0             |                      |                                         |
+|                      |         | nextHopAddr: 0.0.0.0              |                      |                                         |
+|                      |         | weight: 1                         |                      |                                         |
+|                      |         |                                   |                      |                                         |
++                      +         +-----------------------------------+----------------------+-----------------------------------------+
+|                      |         | # ligato.vpp.l3.Route             |                      | vrf/0/dst/0.0.0.0/32/gw/0.0.0.0         |
+|                      |         | type: DROP                        |                      |                                         |
+|                      |         | dstNetwork: 0.0.0.0/32            |                      |                                         |
+|                      |         | nextHopAddr: 0.0.0.0              |                      |                                         |
+|                      |         | weight: 1                         |                      |                                         |
+|                      |         |                                   |                      |                                         |
++                      +         +-----------------------------------+----------------------+-----------------------------------------+
+|                      |         | # ligato.vpp.l3.Route             |                      | vrf/0/dst/224.0.0.0/4/gw/0.0.0.0        |
+|                      |         | type: DROP                        |                      |                                         |
+|                      |         | dstNetwork: 224.0.0.0/4           |                      |                                         |
+|                      |         | nextHopAddr: 0.0.0.0              |                      |                                         |
+|                      |         | weight: 1                         |                      |                                         |
+|                      |         |                                   |                      |                                         |
++                      +         +-----------------------------------+----------------------+-----------------------------------------+
+|                      |         | # ligato.vpp.l3.Route             |                      | vrf/0/dst/240.0.0.0/4/gw/0.0.0.0        |
+|                      |         | type: DROP                        |                      |                                         |
+|                      |         | dstNetwork: 240.0.0.0/4           |                      |                                         |
+|                      |         | nextHopAddr: 0.0.0.0              |                      |                                         |
+|                      |         | weight: 1                         |                      |                                         |
+|                      |         |                                   |                      |                                         |
++                      +         +-----------------------------------+----------------------+-----------------------------------------+
+|                      |         | # ligato.vpp.l3.Route             |                      | vrf/0/dst/255.255.255.255/32/gw/0.0.0.0 |
+|                      |         | type: DROP                        |                      |                                         |
+|                      |         | dstNetwork: 255.255.255.255/32    |                      |                                         |
+|                      |         | nextHopAddr: 0.0.0.0              |                      |                                         |
+|                      |         | weight: 1                         |                      |                                         |
+|                      |         |                                   |                      |                                         |
++                      +         +-----------------------------------+----------------------+-----------------------------------------+
+|                      |         | # ligato.vpp.l3.Route             |                      | vrf/0/dst/::/0/gw/::                    |
+|                      |         | type: DROP                        |                      |                                         |
+|                      |         | dstNetwork: ::/0                  |                      |                                         |
+|                      |         | nextHopAddr: ::                   |                      |                                         |
+|                      |         | weight: 1                         |                      |                                         |
+|                      |         |                                   |                      |                                         |
++                      +         +-----------------------------------+----------------------+-----------------------------------------+
+|                      |         | # ligato.vpp.l3.Route             |                      | vrf/0/dst/fe80::/10/gw/::               |
+|                      |         | dstNetwork: fe80::/10             |                      |                                         |
+|                      |         | nextHopAddr: ::                   |                      |                                         |
+|                      |         | weight: 1                         |                      |                                         |
+|                      |         |                                   |                      |                                         |
++----------------------+         +-----------------------------------+----------------------+-----------------------------------------+
+| vpp.vrf-table        |         | # ligato.vpp.l3.VrfTable          | Index: 0             | id/0/protocol/IPV4                      |
+|                      |         | label: ipv4-VRF:0                 | Protocol: 0          |                                         |
+|                      |         |                                   |                      |                                         |
++                      +         +-----------------------------------+----------------------+-----------------------------------------+
+|                      |         | # ligato.vpp.l3.VrfTable          | Index: 0             | id/0/protocol/IPV6                      |
+|                      |         | protocol: IPV6                    | Protocol: 1          |                                         |
+|                      |         | label: ipv6-VRF:0                 |                      |                                         |
+|                      |         |                                   |                      |                                         |
++----------------------+---------+-----------------------------------+----------------------+-----------------------------------------+
 
-config/vpp/nat/v2/nat44-global                                [ligato.vpp.nat.Nat44Global]        from-SB
 
-config/vpp/v2/interfaces/UNTAGGED-local0                      [ligato.vpp.interfaces.Interface]   from-SB   map[IPAddresses:<nil> SwIfIndex:0 TAPHostIfName: Vrf:0]
-                                                              name: "UNTAGGED-local0"
-                                                              type: SOFTWARE_LOOPBACK
-                                                              phys_address: "00:00:00:00:00:00"
-
-config/vpp/v2/interfaces/loop1                                [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
-                                                              name: "loop1"
-                                                              type: SOFTWARE_LOOPBACK
-                                                              enabled: true
-                                                              ip_addresses: "192.168.1.1/24"
-
-config/vpp/v2/proxyarp-global                                 [ligato.vpp.l3.ProxyARP]            from-SB
-
-config/vpp/v2/route/vrf/0/dst/0.0.0.0/0/gw/0.0.0.0            [ligato.vpp.l3.Route]               from-SB
-                                                              type: DROP
-                                                              dst_network: "0.0.0.0/0"
-                                                              next_hop_addr: "0.0.0.0"
-                                                              weight: 1
-
-config/vpp/v2/route/vrf/0/dst/0.0.0.0/32/gw/0.0.0.0           [ligato.vpp.l3.Route]               from-SB
-                                                              type: DROP
-                                                              dst_network: "0.0.0.0/32"
-                                                              next_hop_addr: "0.0.0.0"
-                                                              weight: 1
-
-config/vpp/v2/route/vrf/0/dst/224.0.0.0/4/gw/0.0.0.0          [ligato.vpp.l3.Route]               from-SB
-                                                              type: DROP
-                                                              dst_network: "224.0.0.0/4"
-                                                              next_hop_addr: "0.0.0.0"
-                                                              weight: 1
-
-config/vpp/v2/route/vrf/0/dst/240.0.0.0/4/gw/0.0.0.0          [ligato.vpp.l3.Route]               from-SB
-                                                              type: DROP
-                                                              dst_network: "240.0.0.0/4"
-                                                              next_hop_addr: "0.0.0.0"
-                                                              weight: 1
-
-config/vpp/v2/route/vrf/0/dst/255.255.255.255/32/gw/0.0.0.0   [ligato.vpp.l3.Route]               from-SB
-                                                              type: DROP
-                                                              dst_network: "255.255.255.255/32"
-                                                              next_hop_addr: "0.0.0.0"
-                                                              weight: 1
-
-config/vpp/v2/route/vrf/0/dst/::/0/gw/::                      [ligato.vpp.l3.Route]               from-SB
-                                                              type: DROP
-                                                              dst_network: "::/0"
-                                                              next_hop_addr: "::"
-                                                              weight: 1
-
-config/vpp/v2/route/vrf/0/dst/fe80::/10/gw/::                 [ligato.vpp.l3.Route]               from-SB
-                                                              dst_network: "fe80::/10"
-                                                              next_hop_addr: "::"
-                                                              weight: 1
-
-config/vpp/v2/vrf-table/id/0/protocol/IPV4                    [ligato.vpp.l3.VrfTable]            from-SB   map[Index:0 Protocol:0]
-                                                              label: "ipv4-VRF:0"
-
-config/vpp/v2/vrf-table/id/0/protocol/IPV6                    [ligato.vpp.l3.VrfTable]            from-SB   map[Index:0 Protocol:1]
-                                                              protocol: IPV6
-                                                              label: "ipv6-VRF:0"
 ```
 
 ---
 
-Dump the `vpp.interfaces` model:
+**Dump the `vpp.interfaces` model:**
 ```
 agentctl dump vpp.interfaces
 ```
 Sample Output:
 ```
-KEY                                        VALUE                               ORIGIN    METADATA
-config/vpp/v2/interfaces/UNTAGGED-local0   [ligato.vpp.interfaces.Interface]   from-SB   map[IPAddresses:<nil> SwIfIndex:0 TAPHostIfName: Vrf:0]
-                                           name: "UNTAGGED-local0"
-                                           type: SOFTWARE_LOOPBACK
-                                           phys_address: "00:00:00:00:00:00"
-
-config/vpp/v2/interfaces/loop1             [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
-                                           name: "loop1"
-                                           type: SOFTWARE_LOOPBACK
-                                           enabled: true
-                                           ip_addresses: "192.168.1.1/24"
++----------------+---------+-----------------------------------+----------------------+-----------------+
+|     MODEL      | ORIGIN  |               VALUE               |       METADATA       |       KEY       |
++----------------+---------+-----------------------------------+----------------------+-----------------+
+| vpp.interfaces | from-SB | # ligato.vpp.interfaces.Interface | DevType: local       | UNTAGGED-local0 |
+|                |         | name: UNTAGGED-local0             | IPAddresses: null    |                 |
+|                |         | type: SOFTWARE_LOOPBACK           | InternalName: local0 |                 |
+|                |         | physAddress: 00:00:00:00:00:00    | SwIfIndex: 0         |                 |
+|                |         |                                   | TAPHostIfName: ""    |                 |
+|                |         |                                   | Vrf: 0               |                 |
+|                |         |                                   |                      |                 |
++                +---------+-----------------------------------+----------------------+-----------------+
+|                | from-NB | # ligato.vpp.interfaces.Interface | DevType: Loopback    | loop1           |
+|                |         | name: loop1                       | IPAddresses:         |                 |
+|                |         | type: SOFTWARE_LOOPBACK           | - 192.168.1.1/24     |                 |
+|                |         | enabled: true                     | InternalName: loop0  |                 |
+|                |         | ipAddresses:                      | SwIfIndex: 1         |                 |
+|                |         | - 192.168.1.1/24                  | TAPHostIfName: ""    |                 |
+|                |         |                                   | Vrf: 0               |                 |
+|                |         |                                   |                      |                 |
++----------------+---------+-----------------------------------+----------------------+-----------------+
 ```
 
 ---
 
-Dump the `vpp.interfaces` model using a NB view:
+**Dump the `vpp.interfaces` model using a NB view:**
 ```
 agentctl dump --view=NB vpp.interfaces
 ```
 Sample Output:
 ```
-KEY                              VALUE                               ORIGIN    METADATA
-config/vpp/v2/interfaces/loop1   [ligato.vpp.interfaces.Interface]   from-NB   map[IPAddresses:[192.168.1.1/24] SwIfIndex:1 TAPHostIfName: Vrf:0]
-                                 name: "loop1"
-                                 type: SOFTWARE_LOOPBACK
-                                 enabled: true
-                                 ip_addresses: "192.168.1.1/24"
++----------------+---------+-----------------------------------+---------------------+-------+
+|     MODEL      | ORIGIN  |               VALUE               |      METADATA       |  KEY  |
++----------------+---------+-----------------------------------+---------------------+-------+
+| vpp.interfaces | from-NB | # ligato.vpp.interfaces.Interface | DevType: Loopback   | loop1 |
+|                |         | name: loop1                       | IPAddresses:        |       |
+|                |         | type: SOFTWARE_LOOPBACK           | - 192.168.1.1/24    |       |
+|                |         | enabled: true                     | InternalName: loop0 |       |
+|                |         | ipAddresses:                      | SwIfIndex: 1        |       |
+|                |         | - 192.168.1.1/24                  | TAPHostIfName: ""   |       |
+|                |         |                                   | Vrf: 0              |       |
+|                |         |                                   |                     |       |
++----------------+---------+-----------------------------------+---------------------+-------+
 ```
 
 ---
@@ -378,7 +614,7 @@ COMMANDS
   ls          List models
 ```
 
-List all supported models:
+**List all supported models:**
 ```
 agentctl model ls
 ```
@@ -461,7 +697,7 @@ OPTIONS:
   -f, --format string   Format output
 ```
 
-Command
+**Status command**
 ```
 agentctl status
 ```
@@ -517,7 +753,7 @@ OPTIONS:
   -f, --format string   Format output
 
 ```
-Command:
+**Values command:**
 ```
 agentctl values
 ```
@@ -553,7 +789,8 @@ vpp.vrf-table          id/0/protocol/IPV6                                  obtai
 
 ### KVDB
 
-Use this command to perform get, put, del or list operations against the KV data store. It is similar to using etcdctl, but supports short keys, which requires setting the `--service-label` in the specific command.
+Use this command to perform get, put, del or list operations against the KV data store. It is similar to etcdctl, but supports short form [keys][keys], 
+which requires setting the `--service-label` flag in the specific command.
 
 ```
 Usage:	agentctl kvdb [options] COMMAND
@@ -574,7 +811,7 @@ COMMANDS
 
 ---
 
-List command:
+**kvdb list:**
 ```json
 agentctl kvdb list
 ```
@@ -586,7 +823,8 @@ Sample Output:
 {"state":"OK","last_change":"1586275962","last_update":"1586280942"}
 ...
 ```
-Depending on the number of entries in the KV data store, the output could be massive and difficult to read. You can whittle this down by using a less specific key.
+Depending on the number of entries in the KV data store, the output could be massive and difficult to read. 
+You can whittle this down by using a more specific key.
 
 ---
 
@@ -604,7 +842,7 @@ Sample output:
 
 ---
 
-Put command example using a loopback interface
+**kvdb put** example using a loopback interface
 ```json
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
@@ -612,15 +850,18 @@ Response is `OK`.
 
 ---
 
-Get command example for the loopback interface using the long-form key:
+**kvdb get** example for the loopback interface using the long form key:
 ```
 agentctl kvdb get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 Sample output:
 ```json
 {"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}
+
+---
+
 ```
-Delete command example for the loopback interface using the long-form key:
+**kvdb delete** example for the loopback interface using the long form key:
 ```
 agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
@@ -754,7 +995,7 @@ OPTIONS:
 
 ---
 
-Here is another example using short keys with the microservice label. The contents of the `myconfig` configuration data file are:
+Here is another example using short form keys with the microservice label. The contents of the `myconfig` configuration data file are:
 ```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
 config/vpp/v2/interfaces/loop2 {"name":"loop2","type":"MEMIF"}
@@ -942,3 +1183,4 @@ Sample Output:
 ---
 
 [ligato-vpp-agent-repo]: https://github.com/ligato/vpp-agent
+[keys]: ../user-guide/concepts.md#keys
