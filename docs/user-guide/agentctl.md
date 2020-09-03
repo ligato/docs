@@ -200,12 +200,22 @@ agentctl config history
 ```
 Sample output:
 ```golang
-  SEQ     TYPE                          AGE  SUMMARY                   RESULT
-    0  ⟱  NB Transaction   Full Resync  16m  values: 16 -> 0 executed  ok
-    1  ⟱  NB Transaction                14m  values:  1 -> 4 executed  ok
-    2  ⇧  SB Notification               14m  values:  1 -> 1 executed  ok
-    3  ⟱  NB Transaction                13m  values:  1 -> 2 executed  ok
-    4  ⟱  NB Transaction   SB Sync      7m   values:  0 -> 0 executed  ok
+  SEQ  TYPE            START  INPUT      OPERATIONS  RESULT  SUMMARY
+  0    config replace  26m    16 values  <none>              <none>
+  1    config change   4m     1  values  CREATE:4    ok      CONFIGURED:4
+  2    status update   4m     1  values  CREATE:1    ok      OBTAINED:1
+  3    config change   3m     1  values  CREATE:2    ok      CONFIGURED:2
+```
+
+---
+
+Config history using transaction log format:
+```json
+agentctl config history --format=log
+```
+Config history with more details:
+```json
+agentctl config history --details
 ```
 
 ---
@@ -322,7 +332,7 @@ vppConfig:
 linuxConfig: {}
 netallocConfig: {}
 ```
-We want to update the existing config with a new `loop2` interface. This is saved in a file called `update.txt`
+We want to update the existing config with a new `loop2` interface. This is saved in our example file called `update.txt`
 ```json
 vppConfig:
   interfaces:
@@ -337,6 +347,11 @@ Run the config update command:
 ```json
 agentctl config update ./update.txt
 ```
+
+You can run the config update command and print the transaction log using `--verbose`:
+```json
+agentctl config update ./update.txt --verbose
+``` 
 
 Updated config now contains the `loop2` interface config item:
 ```json

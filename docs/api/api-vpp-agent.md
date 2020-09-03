@@ -894,6 +894,27 @@ Sample response:
 
 ```
 
+## VPP IPsec SP
+
+Description: GET IPsec security policies
+```json
+curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sps
+``` 
+
+Sample response:
+```json
+[
+  {
+    "spd_index": 1,
+    "sa_index": 1,
+    "remote_addr_start": "1.1.1.1",
+    "remote_addr_stop": "2.2.2.2",
+    "local_addr_start": "3.3.3.3",
+    "local_addr_stop": "4.4.4.4"
+  }
+]
+```
+
 ---
 
 ## VPP Punt Socket
