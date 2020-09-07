@@ -257,6 +257,18 @@ Key:
 /vnf-agent/vpp1/config/vpp/ipsec/v2/sa/<index>
 ```
 ---
+
+**IPsec SP (Security Policy)**
+
+- [VPP SA proto][ipsec-proto]
+- [VPP SA model][ipsec-model]
+
+Key:
+```json
+/vnf-agent/vpp1/config/vpp/ipsec/v2/sp/spd/<spd_index>/sa/<sa_index>/<inbound> or <outbound>/local-addresses/<local_addr_start>-<local_addr_stop>/remote-addresses/<remote_addr_start>-<remote_addr_stop>/
+```
+
+
 **IPsec tunnel protection**
 
 - [VPP tunnel protect proto][ipsec-proto]

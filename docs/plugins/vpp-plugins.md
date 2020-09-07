@@ -6,6 +6,27 @@ This section describes the VPP agent plugins. Each plugin section provides:
 - Pointers to the `*.proto` containing configuration/NB protobuf API definitions, the 'models.go' file defining the model, and the conf file if one is available.  
 - Example configuration interactions using an etcd data store, REST and gPRC.
 
+
+
+**Agentctl** 
+
+VPP configuration data can also be managed using `agentctl config` commands.
+```
+Usage:	agentctl config COMMAND
+
+Manage agent configuration
+
+COMMANDS
+  get         Get config from agent
+  history     Retrieve config history
+  resync      Run config resync
+  retrieve    Retrieve currently running config
+  update      Update config in agent
+```
+
+Reference: [agentctl config commands][agentctl-config]
+
+  
 !!! Note
     For VPP plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.  
 
@@ -1179,7 +1200,7 @@ Items to keep in mind when deploying flowprobe functionality on an interface:
 
 ## IPSec Plugin
 
-The IPSec plugin handles the configuration of **Security Policy Databases** (SPD) and **Security Associations** (SA) in VPP. 
+The IPSec plugin handles the configuration of **Security Policies** (SP) and **Security Associations** (SA) in VPP. 
 
 !!! Note
  The IPsec plugin does not handle IPSec tunnel programming. This is supported by the IPIP_TUNNEL with ipsec.TunnelProtection. The IPSEC_TUNNEL interface has been deprecated.
@@ -1187,6 +1208,13 @@ The IPSec plugin handles the configuration of **Security Policy Databases** (SPD
 --- 
 
 ### Security Policy Database
+
+!!! Warning
+    The previous model of configuring ipsec security policies inside an ipsec security policy database (SPD) is now **deprecated**. In practice, the content of SPDs changes frequently and 
+    using a single SPD model with all security policies inside is not convenient or efficient. A new model, SecurityPolicy (SP), was added that allows one to configure each security policy
+    as a separate proto message instance. Although the new SP model is backward-compatible with the old one, 
+    a request to configure a security policy through the SPD model will return `error: it is deprecated and no longer supported to define SPs inside SPD model. 
+    (use SecurityPolicy model instead)`.    
 
 The SPD specifies the policies that determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. The SPD is bound to an SPD interface and contains one or more policy entries. Each policy entry points to an IPsec security association (SA). 
 
@@ -1426,6 +1454,47 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 ```
 
 ---
+
+### Security Policy
+
+
+**Security Policy Configuration Examples**
+
+**KV Data Store**
+
+Put the SP data into an etcd data store using the [VPP SP key][vpp-key-reference].
+
+Example security policy data:
+```json
+  {
+    "spd_index": 1,
+    "sa_index": 1,
+    "priority": 5,
+    "is_outbound": true,
+    "remote_addr_start": "0.0.0.0",
+    "remote_addr_stop": "255.255.255.255",
+    "local_addr_start": "0.0.0.0",
+    "local_addr_stop": "255.255.255.255",
+    "protocol": 4,
+    "remote_port_start": 65535,
+    "local_port_start": 65535,
+    "action": 3
+  }
+```
+
+Use this `agentctl kvdb put` command to the put the key-value entry:
+```json
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/ipsec/v2/sp/spd/1/sa/1/outbound/local-addresses/0.0.0.0-255.255.255.255/remote-addresses/0.0.0.0-255.255.255.255 '{"spd_index": 1, "sa_index": 1, "priority": 5, "is_outbound": true, "remote_addr_start": "0.0.0.0", "remote_addr_stop": "255.255.255.255", "local_addr_start": "0.0.0.0", "local_addr_stop": "255.255.255.255", "protocol": 4, "remote_port_start": 65535, "remote_port_stop": 65535, "local_port_start": 65535, "local_port_stop": 65535, "action": 3}'
+```
+
+REST
+
+API Reference: [VPP IPsec SP][vpp-ipsec-sp]
+
+Use this cURL command to GET SP configuration data:
+```json
+ curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sps
+```
 
 ## Punt Plugin
 
@@ -2626,6 +2695,7 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [vpp-nat-pool]: ../api/api-vpp-agent.md#vpp-nat-pool
 [vpp-ipsec-spd]: ../api/api-vpp-agent.md#vpp-ipsec-spd
 [vpp-ipsec-sa]: ../api/api-vpp-agent.md#vpp-ipsec-sa
+[vpp-ipsec-sp]: ../api/api-vpp-agent.md#vpp-ipsec-sp
 [vpp-punt-socket]: ../api/api-vpp-agent.md#vpp-punt-socket
 [vpp-ip-acl]: ../api/api-vpp-agent.md#vpp-acl-ip
 [vpp-macip-acl]: ../api/api-vpp-agent.md#vpp-acl-macip
@@ -2647,7 +2717,8 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [telemetry-plugin]: ../api/api-vpp-agent.md#vpp-telemetry
 [telemetry-memory]: ../api/api-vpp-agent.md#vpp-telemetrymemory
 [telemetry-runtime]: ../api/api-vpp-agent.md#vpp-telemetryruntime
-[telemetry-nodecount]: ../api/api-vpp-agent.md#vpp-telemetrynodecount  
+[telemetry-nodecount]: ../api/api-vpp-agent.md#vpp-telemetrynodecount
+[agentctl-config]: ../user-guide/agentctl.md#config  
 
 *[ABF]: ACL-Based Forwarding
 *[ACL]: Access Control List

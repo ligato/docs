@@ -894,6 +894,8 @@ Sample response:
 
 ```
 
+---
+
 ## VPP IPsec SP
 
 Description: GET IPsec security policies
@@ -907,10 +909,16 @@ Sample response:
   {
     "spd_index": 1,
     "sa_index": 1,
-    "remote_addr_start": "1.1.1.1",
-    "remote_addr_stop": "2.2.2.2",
-    "local_addr_start": "3.3.3.3",
-    "local_addr_stop": "4.4.4.4"
+    "priority": 5,
+    "is_outbound": true,
+    "remote_addr_start": "0.0.0.0",
+    "remote_addr_stop": "255.255.255.255",
+    "local_addr_start": "0.0.0.0",
+    "local_addr_stop": "255.255.255.255",
+    "protocol": 4,
+    "remote_port_start": 65535,
+    "local_port_start": 65535,
+    "action": 3
   }
 ]
 ```
