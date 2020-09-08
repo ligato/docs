@@ -260,8 +260,8 @@ Key:
 
 **IPsec SP (Security Policy)**
 
-- [VPP SA proto][ipsec-proto]
-- [VPP SA model][ipsec-model]
+- [VPP SP proto][ipsec-proto]
+- [VPP SP model][ipsec-model]
 
 Key:
 ```json
@@ -401,7 +401,7 @@ Key:
 - [Linux routes proto][linux-route-proto]
 - [Linux routes model][linux-l3-arp-route-models]
 
-Key (dst_network is with mask in format `<ip>/<mask>`):
+Key (dst_network uses mask in format of `<ip>/<mask>`):
 ```json
 /vnf-agent/vpp1/config/linux/l3/v2/route/<dst_network>/<outgoing_interface>
 ```

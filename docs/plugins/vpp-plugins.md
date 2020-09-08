@@ -6,7 +6,10 @@ This section describes the VPP agent plugins. Each plugin section provides:
 - Pointers to the `*.proto` containing configuration/NB protobuf API definitions, the 'models.go' file defining the model, and the conf file if one is available.  
 - Example configuration interactions using an etcd data store, REST and gPRC.
 
+!!! Note
+    For VPP plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. 
 
+---
 
 **Agentctl** 
 
@@ -26,12 +29,8 @@ COMMANDS
 
 Reference: [agentctl config commands][agentctl-config]
 
-  
-!!! Note
-    For VPP plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.  
-
 ---
-
+  
 ## GoVPPMux Plugin
 
 The GoVPPMux plugin allows a VPP agent plugin to access VPP through its own dedicated communication channel. This is accomplished using connection multiplexing.
@@ -1200,7 +1199,7 @@ Items to keep in mind when deploying flowprobe functionality on an interface:
 
 ## IPSec Plugin
 
-The IPSec plugin handles the configuration of **Security Policies** (SP) and **Security Associations** (SA) in VPP. 
+The IPSec plugin handles the configuration of **Security Policies** (SP), **Security Policy Database (SPD)**, and **Security Associations** (SA) in VPP. 
 
 !!! Note
  The IPsec plugin does not handle IPSec tunnel programming. This is supported by the IPIP_TUNNEL with ipsec.TunnelProtection. The IPSEC_TUNNEL interface has been deprecated.
@@ -1213,8 +1212,8 @@ The IPSec plugin handles the configuration of **Security Policies** (SP) and **S
     The previous model of configuring ipsec security policies inside an ipsec security policy database (SPD) is now **deprecated**. In practice, the content of SPDs changes frequently and 
     using a single SPD model with all security policies inside is not convenient or efficient. A new model, SecurityPolicy (SP), was added that allows one to configure each security policy
     as a separate proto message instance. Although the new SP model is backward-compatible with the old one, 
-    a request to configure a security policy through the SPD model will return `error: it is deprecated and no longer supported to define SPs inside SPD model. 
-    (use SecurityPolicy model instead)`.    
+    a request to configure a security policy through the SPD model will return: `error: it is deprecated and no longer supported to define SPs inside SPD model. 
+    (use SecurityPolicy model instead)`. See [PR #1679](https://github.com/ligato/vpp-agent/pull/1679) for more details.  
 
 The SPD specifies the policies that determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. The SPD is bound to an SPD interface and contains one or more policy entries. Each policy entry points to an IPsec security association (SA). 
 
@@ -1233,7 +1232,8 @@ Every policy entry field includes `sa_index` used in the SPD for reference to th
 The SPD defines two bindings: SA and interface. The interface binding is important since VPP needs to create an empty SPD first. This requires an interface binding. After that, all policy entries are configured and associated with a specific SA. 
 
 ---
- 
+
+<!--fix up spd config examples based on #1679--> 
 **SPD Configuration Examples**
 
 **KV Data Store**
@@ -1361,7 +1361,7 @@ An IPsec security association (SA) is a set of security behaviors negotiated bet
 - [VPP SA model][ipsec-model] 
 
 !!! Note
- The SPD and SA are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
+    The SPD and SA are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
 
 The SA uses the same indexing system as SPD. The index is a user-defined unique identifier in the `uint32` range. Like the SPD, the SA index is defined as `string` type field in the proto, but can be set only to numerical values. Attempts to use values other than numerical will cause errors. The SA has no dependencies on other configuration types.
 
@@ -1457,6 +1457,12 @@ response, err := client.Update(context.Background(), &configurator.UpdateRequest
 
 ### Security Policy
 
+IPsec security policies (SP) determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. Each security policy contains indicies pointing to an SPD and SA respectively.
+
+**References:**
+
+- [VPP SP proto][ipsec-proto]
+- [VPP SP model][ipsec-model]
 
 **Security Policy Configuration Examples**
 
@@ -1487,7 +1493,7 @@ Use this `agentctl kvdb put` command to the put the key-value entry:
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/ipsec/v2/sp/spd/1/sa/1/outbound/local-addresses/0.0.0.0-255.255.255.255/remote-addresses/0.0.0.0-255.255.255.255 '{"spd_index": 1, "sa_index": 1, "priority": 5, "is_outbound": true, "remote_addr_start": "0.0.0.0", "remote_addr_stop": "255.255.255.255", "local_addr_start": "0.0.0.0", "local_addr_stop": "255.255.255.255", "protocol": 4, "remote_port_start": 65535, "remote_port_stop": 65535, "local_port_start": 65535, "local_port_stop": 65535, "action": 3}'
 ```
 
-REST
+**REST**
 
 API Reference: [VPP IPsec SP][vpp-ipsec-sp]
 
@@ -1495,6 +1501,8 @@ Use this cURL command to GET SP configuration data:
 ```json
  curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sps
 ```
+
+---
 
 ## Punt Plugin
 

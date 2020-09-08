@@ -852,10 +852,24 @@ Sample response:
 
 ## VPP IPsec SPD
 
-Description: GET IPsec security policy database (SPD) entries.
+Description: GET IPsec security policy database (SPD) entries. 
 ```json
 curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/spds
 ```
+Sample response:
+```json
+[
+  {
+    "index": 1,
+    "interfaces": [
+      {
+        "name": "tap1"
+      }
+    ]
+  }
+]
+```
+
 ---
 
 ## VPP IPsec SA
