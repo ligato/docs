@@ -1212,7 +1212,7 @@ The IPSec plugin handles the configuration of **Security Policies** (SP), a **Se
 
 !!! Warning
     The previous model of configuring IPsec security policies inside an IPsec security policy database (SPD) is now **deprecated**. In practice, the content of SPDs changes frequently and 
-    using a single SPD model for all security policies inside is not convenient or efficient. A new model, SecurityPolicy, was added that allows one to configure each security policy
+    using a single SPD model for defining all security policies is not convenient or efficient. A new model, SecurityPolicy, was added that allows one to configure each security policy
     as a separate proto message instance. Although the new SecurityPolicy model is backward-compatible with the old one, 
     a request to configure a security policy through the SPD model will return: `error: it is deprecated and no longer supported to define SPs inside SPD model. 
     (use SecurityPolicy model instead)`. See [PR #1679](https://github.com/ligato/vpp-agent/pull/1679) for more details.  
@@ -1225,10 +1225,7 @@ The IPSec plugin handles the configuration of **Security Policies** (SP), a **Se
 The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent, as it is a part of the [SPD key][vpp-key-reference]. 
 
 In addition, the SPD includes one or more interfaces where configured SA and SP entries are applied. SP entries described below contain an `spd_index` referencing the SPD.
-
-<!-- ipsec spd index in ipsec proto is defined using uint32 format. Does this note still apply?-->
-!!! Note
-    Pay special attention when defining an index in the model. Despite the fact the field uses a `string` format, it only accepts plain numbers. Attempts to use non-numeric characters will result in an error.     
+    
 
 ---
 
@@ -1278,8 +1275,7 @@ An IPsec security association (SA) is a set of security behaviors negotiated bet
 
 !!! Note
     The SPD, SA and associated security policies are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
-<!-- ipsec sa index in ipsec proto is defined using uint32 format. Does this text still apply?-->
-The SA uses the same indexing system as SPD. The index is a user-defined unique identifier in the `uint32` range. Like the SPD, the SA index is defined as `string` type field in the proto, but can be set only to numerical values. Attempts to use values other than numerical will cause errors. The SA has no dependencies on other configuration types.
+
 
 Security policy entries described below contain an `sa_index` referencing the SA by its `index` value.
 
