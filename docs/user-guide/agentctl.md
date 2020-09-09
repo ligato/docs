@@ -332,7 +332,7 @@ vppConfig:
 linuxConfig: {}
 netallocConfig: {}
 ```
-We want to update the existing config with a new `loop2` interface. This is saved in our example file called `update.txt`
+We want to update the existing config with a new `loop2` interface. This is saved in our example file called `update.txt`.
 ```json
 vppConfig:
   interfaces:
