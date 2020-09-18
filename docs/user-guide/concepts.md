@@ -23,9 +23,9 @@ The model specification (spec) describes the model using the module, version and
 
 - `module` -  groups models belonging to the same configuration entity. For example, VPP configuration models have a VPP module; Linux configuration models have a Linux module.
 - `version` - current version of the VPP agent API. This value changes upon release of a new version.
-- `type` - keyword describing the given model (e.g. interfaces, bridge-domains, etc.)
+- `type` - keyword describing the given model such as interfaces or bridge-domains.
 
-Model specs are defined in the `models.go` files contained in the [VPP agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
+Model specs are defined in the `models.go` files located in the [VPP agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
 
 ---
 
@@ -36,19 +36,17 @@ The three fields of the `model spec` are used to form a `key prefix` like so.
 config/<module>/<version>/<type>/
 ```
 
-The model spec portion of a model's key prefix can be discerned by inspecting the models.go files.
-
-Alternatively, the output of the [agentctl model](../user-guide/agentctl.md#model) shows the model name and corresponding key prefix.
+The model spec portion of a model's key prefix can be discerned by inspecting the models.go files. Alternatively, the output of [agentctl model commands](../user-guide/agentctl.md#model) returns the model spec, key prefix and additional information including proto name and name template in a simple to read json format. 
 
 ---
 
 ### Keys
 
-A key is used as an index for an object managed by a CNF or app. For example, there is a key associated with each object stored in a KV data store. Note that this is `NOT` the key associated with a value structured as key-value pairs contained in the KV data store.
+A key is used to index an object stored in a KV data store and managed by a CNF or app. Note that this is `NOT` the key associated with a value structured as key-value pairs contained in the KV data store.
 
 The `key prefix` is prepended to a more specific object identifier, such as an index value or name, to form a `key`. There are two types of key formats: short form key and long form key.
 
-The key difference (sorry, could not resist :) between the two is that the latter is prepended by a [microservice-label-prefix](#keys-and-microservice-label). This is identifies a specific instance of a VPP agent. By default, long form keys are used.
+The primary difference between the two is that the latter is prepended by a [microservice-label-prefix](#keys-and-microservice-label). In essence, this value represents an instance of the VPP agent associated with those objects sharing the same prefix. By default, long form keys are used.
 
 short form key:
 ```
@@ -84,9 +82,9 @@ Note that the value of `loop1` is the `<name>` of the interface.
 
 Keys can also be distinguished by the composition of the identifier.
 
-* Composite keys composed of a `key prefix` and `combination of fields`. An example is a [vpp route](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go)
-* Specific keys composed of a `key prefix` and `unique parameter`. An example is an [vpp interface name](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go).
-* Global keys composed of a `key prefix` and `some constant string`. Only one message of the given type can be stored under a global key. An example is [Nat44Global](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go)
+* Composite keys are composed of a `key prefix` and `combination of fields`. An example is a [vpp route](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go).    
+* Specific keys are composed of a `key prefix` and `unique parameter`. An example is an [vpp interface name](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go).
+* Global keys are composed of a `key prefix` and `some constant string`. Only one message of the given type can be stored under a global key. An example is [Nat44Global](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go).
 
 ---
 
@@ -99,7 +97,7 @@ The proto.Message defines the structure and serialized format of the data associ
 
 If the object is a route, then the proto.Message contained in the [route.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto) file will define destination network, next_hop, outgoing interface and so on.
 
-The combination of the model, and proto.Message are used to define the northbound `protobuf APIs` 
+The combination of the model and proto.Message are used to define the northbound `protobuf APIs`. 
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KV-store.svg)
 
@@ -117,10 +115,8 @@ Refer to the [Custom Templates][developer-guide-custom-templates] section of the
 
 ## Key-Value Data Store
 
-This section describes how the VPP agent works with a KV data store.
-
 !!! Note
-    Terms such as KV database, KVDB, KV store and KV data store are all terms that define a data store or database of key-value (KV) pairs, or more generally, structured data objects. Unless otherwise noted, we will use the term `KV data store` in this documentation. The term `KVDB` will appear in the code examples and this will remain as is.
+    KV database, KVDB, KV store and KV data store are all terms that define a data store or database of key-value (KV) pairs, or more generally, structured data objects. Unless otherwise noted, we will use the term `KV data store` in this documentation. The term `KVDB` will appear in the code examples and this will remain as is.
     
     `Connector` is a plugin providing access or connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
 
@@ -138,7 +134,7 @@ The VPP agent uses an external KV data store for several reasons:
 !!! Note
     To distinguish between the key prefix and key definitions described above, we will refer to the `/vnf-agent/<microservice label>/` value as the `microservice-label-prefix`
 
-Each VPP agent is defined with a construct known as the `microservice label`. It is used to group VPP agents with configuration items stored in the KV data store. VPP agents configured with the same microservice label will prepend that to a `key prefix` described above to form a `microservice-label-prefix`. These VPP agents will then watch or listen to configuration item changes indexed by the matching microservice-label-prefix.
+Each VPP agent is defined with a construct known as the `microservice label`. It is used to group VPP agents with configuration items stored in the KV data store. VPP agents configured with the same microservice label will prepend that value to a `key prefix` described above to form a `microservice-label-prefix`. VPP agents will then watch or listen to configuration item changes indexed by their respective microservice-label-prefix.
 
 In the figure below, VPP agent 1 on the left with a microservice label = `vpp1` will watch for configuration changes with the microservice label prefix of `/vnf-agent/vpp1/`. VPP agent 1 does not care about nor is it watching KV data store configuration data beginning with `/vnf-agent/vpp2/`.
 
@@ -146,23 +142,20 @@ In the figure below, VPP agent 1 on the left with a microservice label = `vpp1` 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
 
 
-The VPP agent validates microservice-label-prefix and if the label matches, the KV pair is passed to the VPP agent configuration watchers.
+The VPP agent validates the microservice-label-prefix and if the label matches, the KV pair is passed to the VPP agent configuration watchers.
 
 Additionally, if the remainder of long form key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing. Programming the VPP data plane is an example of the processing that can take place.
 
-Flexibility is extended using this architecture.
+This architecture promotes VPP agent configuration flexibility by noting:
 
-- single KV data store can support multiple VPP agent groups using the microservice label.
-- VPP agent can receive configuration data from multiple sources such as KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the VPP agent plugins.
+- single KV data store can support multiple VPP agent groups by using a unique microservice label per group.
+- VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the VPP agent plugins.
 
 It should be noted that the VPP agent _does not require_ a KV data store. Configuration data can be provided using gRPC, potentially REST, AgentCtl and CLI. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
 
 ---
 
 ### Supported KV Data Stores
-
-!!! Note
-    Some of the items below are technically speaking KV data stores. Some are databases. To avoid acronym overlap and bloat, this section will continue to use the `KV data store` as a uniform term for both. In addition, a `connector` is another term for data base plugin.
 
 The VPP agent provides [connectors to different KV data stores](../plugins/db-plugins.md). All are built on a common abstraction called [kvdbsync][kvdbsync]. The KVDB abstraction approach simplifies the process of changing out one KV data store for another with minimal effort.
 
@@ -236,20 +229,14 @@ sudo docker run -p 2379:2379 --name etcd --rm \
 
 The VPP agent `must` start with the kvdbsync plugin using etcd as a connector.
  
-!!! Note
- 
-    There is the example above or you can look over the code [here][datasync-example].
-
-Here is an example of an etcd.conf file defining the IP address and port number of the etcd server.
+Here is an example of an etcd.conf file defining the IP address and port number of the etcd server:
 ```
 endpoints:
   - "172.17.0.1:2379"
 ```
 The etcd config file is passed to the VPP agent using the flag `--etcd-confg=<path>`. The file contains additional etcd-specific parameters such as dial timeout, certification and compaction. See the [config files section][list-of-supported] for more details.
 
-Note that if the config file is not provided, the connector plugin will not be started and a connection will not be established. If the etcd server is not reachable, the VPP agent may not start. [Here](../tutorials/04_kv-store.md#tutorial-etcd-troubleshooting) are several etcd troubleshooting tips.
-
-The recommended tool to manage etcd data is [`etcdctl`][etcdctl].
+Note that if the config file is not provided, the connector plugin will not be started and a connection will not be established. If the etcd server is not reachable, the VPP agent may not start. Check out the [etcd troubleshooting tips](../tutorials/04_kv-store.md#tutorial-etcd-troubleshooting) section to assist in resolving these errors. 
 
 ---
 
@@ -413,36 +400,36 @@ loop0
 vpp# 
 ```
 
-The interface `loop0` was added and the interface index and name was generated. The index can be shown with the `show interfaces` command.
+The interface `loop0` is added. The interface index and name are generated. The index can be shown with the `show interfaces` command.
 
-Set the interface to the `UP` state. The interface name is required.
+Set the interface to the `UP` state. The interface name of `loop0` is required.
 ```bash
 vpp# set interface state loop0 up
 vpp#
 ``` 
 
-Now let's create a bridge domain:
+Create a bridge domain:
 ```bash
 vpp# create bridge-domain 1 learn 1 forward 1 uu-flood 1 flood 1 arp-term 1   
 bridge-domain 1
 vpp# 
 ```
 
-The bridge domain is currently empty, so let's assign our interface to it:
+The bridge domain is currently empty. Assign the interface to the bridge domain:
 ```bash
 vpp# set interface l2 bridge loop0 1 
 vpp#
 ``` 
 
-We set `loop0` to bridge domain with index 1. Again, we cannot use a non-existing interface because the names are generated at interface creation. We also cannot use a non-existing bridge domain.
+The `loop0` interface to set to the bridge domain with index 1. It is not possible to use a non-existing interface because the name, `loop0`, is generated at interface creation. The same holds true for a non-existing bridge domain.
 
-Finally, let's configure the FIB table entry:
+Configure the FIB table entry:
 ```bash
 vpp# l2fib add 52:54:00:53:18:57 1 loop0
 vpp#
 ```
 
-This command contains dependencies on the `loop0` interface and the bridge domain with ID=1. From the example above, we see that the order of CLI commands must follow this strict sequence: interface, bridge-domain and l2fib.
+This command contains dependencies on the `loop0` interface and the bridge domain with ID=1. The order of CLI commands must follow this strict sequence: interface, bridge-domain and l2fib.
 
 Now remove the interface:
 ```bash
@@ -473,7 +460,7 @@ l2fib del: bridge domain ID 1 invalid
 vpp#
 ```
 
-So we end up with a configuration that cannot be removed until the bridge domain is re-created. To avoid similar scenarios and provide more flexibility in the configuration order, the VPP agent uses an automatic configuration sequencing mechanism.
+The end result is a configuration that cannot be removed until the bridge domain is re-created. To avoid similar scenarios and provide more flexibility in the configuration order, the VPP agent uses an automatic configuration sequencing mechanism.
 
 ---
 
@@ -481,31 +468,31 @@ So we end up with a configuration that cannot be removed until the bridge domain
 
 The VPP agent employs a northbound (NB) API definition for every supported configuration item.  NB interface configuration through an API creates the interface, sets its state, MAC address, IP addresses and so on.
 
-The VPP agent goes further by permitting the configuration of VPP items with non-existent references. Such an item is not really configured, but the VPP agent "remembers" it and programs VPP when possible. This removes the strict VPP configuration ordering constraint.
+The VPP agent goes further by permitting the configuration of VPP items with non-existent references. Such an item is not configured per se, but rather the VPP agent holds on to the information and postpones VPP configuration programming until all dependencies are resolved. This removes the strict VPP configuration ordering constraint.
 
 !!! note
-    This part requires a basic setup to be prepared (VPP agent + VPP + etcd). The steps to achieve this are covered in the [quick start guide][quickstart-guide].
+    This next part requires an active VPP, VPP agent and etcd system. Follow the steps in the [quick start guide][quickstart-guide] prepare a system.
 
-Let's begin from the end and program the FIB entry into VPP:
+To illustrate this process, begin by programming the FIB entry into VPP:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C '{"phys_address":"62:89:C6:A3:6D:5C","bridge_domain":"bd1","outgoing_interface":"if1","action":"FORWARD"}'
 ```
 
-Have a look at the VPP agent output of `planned operations`:
+Examine the `planned operations` VPP agent output:
 ```bash
 1. CREATE [NOOP IS-PENDING]:
   - key: config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C
   - value: { phys_address:"62:89:C6:A3:6D:5C" bridge_domain:"bd1" outgoing_interface:"if1" } 
 ```
 
-There is one `CREATE` transaction planned: the FIB entry with interface `if1`, and bridge domain `bd1`. None of these exist, so the transaction was postponed. It is flagged as `[NOOP IS-PENDING]`.
+There is one `CREATE` transaction planned: the FIB entry with interface `if1`, and bridge domain `bd1`. None of these exist, so the transaction is postponed. It is flagged as `[NOOP IS-PENDING]`.
 
 Configure the bridge domain:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1 '{"name":"bd1","interfaces":[{"name":"if1"}]}'
 ```
 
-A simple bridge domain with an interface was created. Let's parse the output:
+A simple bridge domain with an interface is created. Planned operations output:
 ```bash
 1. CREATE:
   - key: config/vpp/l2/v2/bridge-domain/bd1
@@ -515,14 +502,17 @@ A simple bridge domain with an interface was created. Let's parse the output:
   - value: { name:"if1" }
 ```
 
-Now there are two planned operations: the first is the bridge domain `bd1` which can be created with no restrictions; The second is flagged as: `[DERIVED NOOP IS-PENDING]`. `DERIVED` indicates an internal function performed by the VPP agent. `[NOOP IS-PENDING` indicates that the interface `if1` is not present yet.
+Now there are two planned operations: 
 
-Next step is to add the interface:
+* bridge domain `bd1` is created with no restrictions. 
+* interface `if1` is flagged as: `[DERIVED NOOP IS-PENDING]`. `DERIVED` indicates an internal function performed by the VPP agent. `[NOOP IS-PENDING` indicates that the interface `if1` is not present yet.
+
+Next, add the interface:
 ```bash
 etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/tap1 '{"name":"tap1","type":"TAP","enabled":true}
 ```
 
-VPP agent planned operations output shows:
+Planned operations output:
 ```bash
 1. CREATE:
   - key: config/vpp/v2/interfaces/tap1
@@ -535,18 +525,18 @@ VPP agent planned operations output shows:
   - value: { phys_address:"62:89:C6:A3:6D:5C" bridge_domain:"bd1" outgoing_interface:"if1" }
 ```
 
-There are three `planned operations` present. The first one is the interface itself that was created and enabled.
+There are three planned operations present. The first one is the interface itself that was created and enabled.
 
-The second operation is marked as `DERIVED` (an internal VPP agent designation) and `WAS-PENDING` meaning the cached value could be resolved. This operation shows that the interface was added to the bridge domain as defined in the bridge domain configuration.
+The second operation is marked as `DERIVED` (an internal VPP agent designation), and `WAS-PENDING` meaning the cached value could be resolved. This operation shows that the interface was added to the bridge domain as defined in the bridge domain configuration.
 
-The last statement is marked `WAS-PENDING` as well and represents the FIB entry that was cached until now. Since the bridge domain and interface dependencies were fulfilled, the FIB was configured.
+The last statement is marked `WAS-PENDING` as well and represents the FIB entry that was cached until now. Since the bridge domain and interface dependencies are fulfilled, the FIB entry was configured.
 
-Now let's try to remove the bridge domain as before:
+Now remove the bridge domain:
 ```bash
 etcdctl del /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 ```
 
-The output:
+Planned operations output:
 ```bash
 1. DELETE [IS-PENDING]:
   - key: config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C
@@ -559,11 +549,11 @@ The output:
   - value: { name:"bd1" interfaces:<name:"if1" > } 
 ```
 
-Observe that the first operation was the removal of the FIB entry. The value was not discarded by the VPP agent because it still exists in the etcd data store. The VPP agent returns this value to the cache. The FIB entry no longer exists in VPP and cannot really because the dependencies are not meant. This eliminates the possibility of an accidental mis-configuration or stranding the value in VPP. However, if the bridge domain reappears, the FIB entry will be added back into VPP without any external intervention.
+Observe that the first operation was the removal of the FIB entry. The value was not discarded by the VPP agent because it still exists in the etcd data store. The VPP agent returns this value to the cache. The FIB entry no longer exists in VPP because of unmet dependencies. This eliminates the possibility of an accidental mis-configuration or stranding the value in VPP. However, if the bridge domain reappears, the FIB entry will be added back into VPP without external intervention.
 
 The second step indicates that the interface `if1` was removed from the bridge domain prior to its removal as shown in the last step of the transaction.
 
-The ordering and caching of the configuration data described in this section is performed by the KVScheduler plugin. For more information on how this works, please refer to the discussion of the [KVScheduler][KVs].
+The ordering and caching of the configuration data described in this section is performed by the KV Scheduler plugin. For more information on how this works, please refer to the discussion of the [KV Scheduler][KVs].
 
 ---
 
@@ -600,7 +590,7 @@ func (*CreateLoopback) GetMessageType() api.MessageType {
 }
 ```
 
-The code above is generated from `create_loopback` within `interface.api.json`. The structure represents the binary API request call. usually this contains a set of fields, which can be set to the required values such as the MAC address of a loopback interface.
+The code above is generated from `create_loopback` within `interface.api.json`. The structure represents the binary API request call. Usually this contains a set of fields, which can be set to the required values such as the MAC address of a loopback interface.
 
 Every VPP API request call requires a response:
 
@@ -623,7 +613,7 @@ func (*CreateLoopbackReply) GetMessageType() api.MessageType {
 
 The response has a `Retval` field, which is `0` if the API call was successful. In an error is returned, the field contains a numerical index of a VPP-defined error message. Other fields can be present with information generated within VPP with the `SwIfIndex` of the created interface above as an example.
 
-Note that the response message has the same name but with a `Reply` suffix. Other types of messages may provide information from VPP. Those API calls have a suffix of `Dump`, and the corresponding reply message contains a `Details` suffix).
+Note that the response message has the same name but with a `Reply` suffix. Other types of messages may provide information from VPP. Those API calls have a suffix of `Dump`, and the corresponding reply message contains a `Details` suffix.
 
 If the JSON API was changed, it must be re-generated in the VPP agent. All changes caused by the modified binary api structures must be resolved (e.g. new or modified data fields). This process can be time consuming as it depends on the size of the detected differences.  
 
@@ -631,15 +621,15 @@ If the JSON API was changed, it must be re-generated in the VPP agent. All chang
 
 ### Multi-Version
 
-In order to minimize updates for various VPP versions, the VPP agent introduced multi-version support. The VPP agent can switch to a different VPP version with corresponding APIs without any changes to the VPP agent itself, without any need to rebuild the VPP agent binary. Plugins can now obtain the version of the VPP and the VPP agent to connect and initialize the correct set of `vppcalls`.
+In order to minimize updates for the various VPP versions, the VPP agent introduced multi-version support. The VPP agent can switch to a different VPP version with the corresponding APIs. There are no changes incurred by the VPP agent, and there is no need to rebuild the VPP agent binary. Plugins can now obtain the version of the VPP and the VPP agent to connect and initialize the correct set of `vppcalls`.
 
-The following figure depicts the version agnostic and specific components used by the VPP (and custom) agents supporting multiple VPP versions. 
+The following figure depicts the version-agnostic and version-specific components used by the VPP (and custom) agents supporting multiple VPP versions. 
 
 ![vpp-multi-version-support](../img/user-guide/vpp-multiversion-support.png)
 
 Every `vppcalls` handler registers itself with the VPP version it will support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the VPP agent performs a compatibility check with all available handlers, searching for one that is compatible with the required messages. The chosen handler must be in line with all messages, as it is not possible to use multiple handlers for a single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin.
 
-One small drawback of this solution is code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions, which is seen in the majority of cases.
+One drawback of this solution is some code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions, which is seen in the majority of cases.
 
 
 ---
