@@ -1,12 +1,12 @@
 # Concepts
 
-This section describes several concepts that are fundamental to the Ligato VPP agent and cn-infra architecture and functions.
+This section describes several concepts that are fundamental to the Ligato VPP agent and Cn-infra architecture and functions.
 
 * Model as a representation of an object managed by the VPP agent
 * Key Prefix / Keys for indexing configuration objects
 * proto.Messages for defining and generating protobuf APIs
 * KV data store serving as a repository for configuration information
-* VPP configuration order as performed by CLI and Ligato
+* VPP configuration order as performed by the VPP agent
 * Multi-Version support consisting of multiple versions of the VPP dataplane, and multiple instances of a VPP agent
 
 
@@ -29,7 +29,7 @@ The model represents an abstraction of an object that can be managed through nor
 
 The model specification (spec) describes the model using the module, version and type fields:
 
-- `module` -  groups models belonging to the same configuration entity. For example, VPP configuration models have a VPP module; Linux configuration models have a Linux module.
+- `module` -  groups models belonging to the same configuration entity. For example, VPP configuration models identify with a VPP module; Linux configuration models with a Linux module.
 - `version` - current version of the VPP agent API. This value changes upon release of a new version.
 - `type` - keyword describing the given model such as interfaces or bridge-domains.
 
@@ -44,7 +44,7 @@ The three fields of the `model spec` are used to form a `key prefix` like so.
 config/<module>/<version>/<type>/
 ```
 
-The [agentctl model commands](../user-guide/agentctl.md#model) return model spec information, key prefix and more in a simple to read json format.
+The [agentctl model commands](../user-guide/agentctl.md#model) return model spec information, key prefix and more in a simple json format.
 
 Agentctl model inspect for the vpp.interfaces model:
 ```json
@@ -73,11 +73,14 @@ Sample output:
 
 ### Keys
 
-A key is used to index an object stored in a KV data store that is managed by a CNF or app. Note that this is `NOT` the key associated with a value structured as key-value pairs contained in the KV data store.
+A key is used to index a CNF-managed object stored in a KV data store. Note that this is `NOT` the key associated with a value structured as key-value pairs contained in the KV data store.
 
-The `key prefix` is prepended to a more specific object identifier, such as an index value or name, to form a `key`. There are two types of key formats: short form key and long form key.
+A key is formed by prepending a `key-prefix` to a more specific object identifier, such as an index, name or combination of fields. There are two types of key formats: 
 
-The primary difference between the two is that the latter is prepended by a [microservice-label-prefix](#keys-and-microservice-label). In essence, this value represents an instance of the VPP agent associated with those objects sharing the same prefix. By default, long form keys are used.
+* short form key
+* long form key.
+
+A short form key is composed of just a key prefix and object identifier. A long form key is prepended with a [microservice-label-prefix](#keys-and-microservice-label). This prefix contains a label referred to as a microservice label that identifies a specific instance of a VPP agent. Objects sharing the same microservice-label-prefix in their long form keys are managed exclusively by that VPP agent. The use of a microservice-label-prefix is required in environments with multiple VPP agents in operation.   
 
 short form key:
 ```
@@ -101,15 +104,15 @@ long form key example for a vpp interface:
 /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 
-If the object is `read only`, then `/config/` is replaced by `/status/` in the key prefix.
+If the object is `read only`, then `/config/` is replaced by `/status/` in the key.
 
-An example of a long form key in action is shown in [section 5 of the Quickstart Guide][quickstart-guide-keys]. A VPP loopback interface with the value of an IP address is inserted into an etcd KV data store.
+An example of a long form key in action is shown in [section 5 of the Quickstart Guide][quickstart-guide-keys]. A VPP loopback interface configured with an IP address is inserted into an etcd KV data store.
 
 ```
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ``` 
-Note that the value of `loop1` is the `<name>` of the interface.
+As this example employs a long form VPP interface key, we define `loop1` as the `<name>` identifier. The microservice label is `vpp1`.
 
 Keys can also be distinguished by the composition of the identifier.
 
@@ -189,7 +192,7 @@ The combination of the model and proto.Message define the northbound `protobuf A
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KV-store.svg)
 
-As a summary, use the [agentctl model list][agentctl model list] command to print the model names, proto.Message name and the short-form key prefix. For brevity purposes in this example, the vpp.interfaces model is used:
+Use the [agentctl model list][agentctl model list] command to print the model names, proto.Message name and the short-form key prefix. For brevity purposes, the vpp.interfaces model is used in this example:
 ```json
 agentctl model ls vpp.interfaces 
 ```
@@ -221,9 +224,9 @@ Refer to the [Custom Templates][developer-guide-custom-templates] section of the
 
 The VPP agent uses an external KV data store for several reasons:
  
- - persist the desired state of the VPP/Linux configuration
+ - persist the desired state of the VPP/Linux configuration because CNFs are stateless.
  - To store and export certain VPP statistics
- - exploit the `"watch"` paradigm for stateless configuration management. This same approach is employed in other configuration systems such as [confd][confd].
+ - exploit the `"watch"` paradigm for stateless configuration management. This same approach is used in other configuration systems such as [confd][confd].
 
 ---
 
@@ -232,9 +235,9 @@ The VPP agent uses an external KV data store for several reasons:
 !!! Note
     To distinguish between the key prefix and key definitions described above, we will refer to the `/vnf-agent/<microservice label>/` value as the `microservice-label-prefix`
 
-Each VPP agent is defined with a construct known as the `microservice label`. It is used to group VPP agents with their specific configuration items stored in the KV data store. VPP agents configured with the same microservice label will prepend that value to a `key prefix` described above to form a `microservice-label-prefix`. VPP agents will then watch or listen to configuration item changes indexed by their respective microservice-label-prefix.
+Each VPP agent is defined with a construct known as the `microservice label`. It is used to group VPP agents with their specific configuration objects stored in the KV data store. VPP agents configured with the same microservice label will prepend that value to a `key prefix` described above to form a `microservice-label-prefix`. VPP agents will then watch or listen to configuration item changes indexed by their respective microservice-label-prefix.
 
-In the figure below, VPP agent 1 on the left with a microservice label = `vpp1` will watch for configuration changes with the microservice label prefix of `/vnf-agent/vpp1/`. VPP agent 1 does not care about nor is it watching KV data store configuration data beginning with `/vnf-agent/vpp2/`.
+In the figure below, `VPP Agent 1` on the left with a microservice label = `vpp1` will watch for configuration changes to objects with the microservice-label-prefix of `/vnf-agent/vpp1/`. VPP Agent 1 does not care about nor is it watching KV data store configuration updates beginning with `/vnf-agent/vpp2/` because that is affiliated with `VPP Agent 2`.
 
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
@@ -246,10 +249,10 @@ Additionally, if the remainder of long form key is [registered](../developer-gui
 
 This architecture promotes VPP agent configuration flexibility in the following manner:
 
-- single KV data store can support multiple VPP agent groups by using a unique microservice label per group.
-- VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single source" appearance to the VPP agent plugins.
+- single KV data store can support multiple VPP agent groups by using a unique microservice-label-prefix per group.
+- VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" appearance to the VPP agent plugins.
 
-It should be noted that the VPP agent _does not require_ a KV data store. Configuration data can be provided using gRPC, potentially REST, AgentCtl and CLI. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
+It should be noted that the VPP agent _does not require_ a KV data store. Configuration data can be provided using gRPC, AgentCtl, CLI or customized methods. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
 
 ---
 
@@ -853,7 +856,8 @@ The majority of plugins support `.conf` files. However, some plugins cannot be l
 
 The [conf files][config-files] section of the user guide discusses plugin configuration files in more detail.
 
-[agentct dump](agentctl.md#dump)
+
+[agentctl model list]: agentctl.md#model)
 [client-v2]: ../user-guide/concepts.md#client-v2
 [confd]: https://confd.io
 [config-files]: config-files.md
