@@ -3,11 +3,14 @@
 This section describes several concepts that are fundamental to the Ligato VPP agent and Cn-infra architecture and functions.
 
 * Model as a representation of an object managed by the VPP agent
-* Key Prefix / Keys for indexing configuration objects
-* proto.Messages for defining and generating protobuf APIs
+* Key Prefix / Keys for indexing and interacting with configuration objects
+* proto.Messages for defining and generating protobuf APIs and keys
 * KV data store serving as a repository for configuration information
-* VPP configuration order as performed by the VPP agent
-* Multi-Version support consisting of multiple versions of the VPP dataplane, and multiple instances of a VPP agent
+* KV Scheduler providing a transaction-based system for dependency resolution and configuration management
+* KV Descriptors that describe configuration objects for use by the KV Scheduler
+* VPP configuration processing as performed by CLI and the KV Scheduler
+* Multi-Version support consisting of multiple versions of the VPP dataplane as well as multiple instances of a VPP agent
+* Plugin configuration files
 
 
 ---
@@ -33,7 +36,7 @@ The model specification (spec) describes the model using the module, version and
 - `version` - current version of the VPP agent API. This value changes upon release of a new version.
 - `type` - keyword describing the given model such as interfaces or bridge-domains.
 
-Model specs are defined in the `models.go` files located in the [VPP agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
+Model specs are defined in the `models.go` files located in the [VPP agent proto file folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato). 
 
 ---
 
@@ -46,7 +49,7 @@ config/<module>/<version>/<type>/
 
 The [agentctl model commands](../user-guide/agentctl.md#model) return model spec information, key prefix and more in a simple json format.
 
-Agentctl model inspect for the vpp.interfaces model:
+Agentctl model inspect for the vpp.interfaces model as an example:
 ```json
 agentctl model inspect vpp.interfaces
 ``` 
@@ -73,14 +76,14 @@ Sample output:
 
 ### Keys
 
-A key is used to index a CNF-managed object stored in a KV data store. Note that this is `NOT` the key associated with a value structured as key-value pairs contained in the KV data store.
+A key is used to index and interact with a CNF-managed object stored in a KV data store. Note that this is **not** the key associated with a value structured as key-value pairs contained in the KV data store.
 
 A key is formed by prepending a `key-prefix` to a more specific object identifier, such as an index, name or combination of fields. There are two types of key formats: 
 
 * short form key
 * long form key.
 
-A short form key is composed of just a key prefix and object identifier. A long form key is prepended with a [microservice-label-prefix](#keys-and-microservice-label). This prefix contains a label referred to as a microservice label that identifies a specific instance of a VPP agent. Objects sharing the same microservice-label-prefix in their long form keys are managed exclusively by that VPP agent. The use of a microservice-label-prefix is required in environments with multiple VPP agents in operation.   
+A short form key is composed of just a key prefix and object identifier. A long form key is prepended with a [microservice-label-prefix](#keys-and-microservice-label). This prefix contains a label referred to as a microservice label that identifies a specific instance of a VPP agent. Objects sharing the same microservice-label-prefix in their long form keys are managed exclusively by that VPP agent. The use of a microservice-label-prefix is required in environments with multiple VPP agents in operation using the same KV data store.   
 
 short form key:
 ```
@@ -112,22 +115,25 @@ An example of a long form key in action is shown in [section 5 of the Quickstart
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ``` 
-As this example employs a long form VPP interface key, we define `loop1` as the `<name>` identifier. The microservice label is `vpp1`.
+This example employs a long form VPP interface key with `loop1` as the `<name>` identifier. The microservice label is `vpp1`.
 
 Keys can also be distinguished by the composition of the identifier.
 
-* Composite keys are composed of a `key prefix` and `combination of fields`. An example is a [vpp route](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go).    
-* Specific keys are composed of a `key prefix` and `unique parameter`. An example is an [vpp interface name](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go).
-* Global keys are composed of a `key prefix` and `some constant string`. Only one message of the given type can be stored under a global key. An example is [Nat44Global](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go).
+* Composite keys are composed of a `key prefix` and `combination of fields`. Example: [vpp route](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go).    
+* Specific keys are composed of a `key prefix` and `unique parameter`. Example: [vpp interface name](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go).
+* Global keys are composed of a `key prefix` and `some constant string`. Only one message of the given type can be stored under a global key. Example: [Nat44Global](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go).
+
+A list of keys supported by the VPP agent can be found in the [keys reference][key reference] section of the user guide. 
 
 ---
 
 ### proto.Message
 
-The proto.Message defines the structure and serialized format of the data associated with an object in protobuf message format. It serves two purposes in the Ligato framework:
+The proto.Message defines the structure and serialized format of the data associated with an object in [protobuf][protobuf] message format. It serves serveral purposes in the Ligato framework:
 
 - Describes an object's name and type fields in a protobuf message format. This simplifies development and documentation readability. 
-- Generates northbound `protobuf APIs` used by applications and components to interact with the configured objects. Agentctl, etcdctl and REST are component examples.
+- Generates northbound `protobuf APIs` used by applications and components to interact with the configured objects. Agentctl, REST and gRPC can all use the generated protobuf APIs.
+- Used in conjunction with the model specification to form a key.
 
 If the object is a route, then the proto.Message contained in the [route.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto) file will define messages and associated name and type fields. 
 
@@ -159,50 +165,22 @@ message Route {
 }
 
 ```
-And a snippet from the [route.pb.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.pb.go) type-struct generated by the Go compiler:
-```json
-type Route struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
+The combination of the model and proto.Message define the northbound `protobuf APIs` exposed to external components and applications. In addition, the model, in conjunction with the proto.Message and model specification, are registered in a model registery. This simplifies access to the model key definitions from other parts of the system such as the KV Scheduler. 
 
-	Type Route_RouteType `protobuf:"varint,10,opt,name=type,proto3,enum=ligato.vpp.l3.Route_RouteType" json:"type,omitempty"`
-	// VRF identifier, field required for remote client. This value should be
-	// consistent with VRF ID in static route key. If it is not, value from
-	// key will be preffered and this field will be overriden.
-	// Non-zero VRF has to be explicitly created (see api/models/vpp/l3/vrf.proto)
-	VrfId uint32 `protobuf:"varint,1,opt,name=vrf_id,json=vrfId,proto3" json:"vrf_id,omitempty"`
-	// Destination network defined by IP address and prefix (format: <address>/<prefix>).
-	DstNetwork string `protobuf:"bytes,3,opt,name=dst_network,json=dstNetwork,proto3" json:"dst_network,omitempty"`
-	// Next hop address.
-	NextHopAddr string `protobuf:"bytes,4,opt,name=next_hop_addr,json=nextHopAddr,proto3" json:"next_hop_addr,omitempty"`
-	// Interface name of the outgoing interface.
-	OutgoingInterface string `protobuf:"bytes,5,opt,name=outgoing_interface,json=outgoingInterface,proto3" json:"outgoing_interface,omitempty"`
-	// Weight is used for unequal cost load balancing.
-	Weight uint32 `protobuf:"varint,6,opt,name=weight,proto3" json:"weight,omitempty"`
-	// Preference defines path preference. Lower preference is preferred.
-	// Only paths with the best preference contribute to forwarding (a poor man's primary and backup).
-	Preference uint32 `protobuf:"varint,7,opt,name=preference,proto3" json:"preference,omitempty"`
-	// Specifies VRF ID for the next hop lookup / recursive lookup
-	ViaVrfId uint32 `protobuf:"varint,8,opt,name=via_vrf_id,json=viaVrfId,proto3" json:"via_vrf_id,omitempty"`
-}
-```
+![model-proto-KV-store](../img/user-guide/model-proto-KVS.svg)
 
-The combination of the model and proto.Message define the northbound `protobuf APIs`. 
 
-![model-proto-KV-store](../img/user-guide/model-proto-KV-store.svg)
 
 Use the [agentctl model list][agentctl model list] command to print the model names, proto.Message name and the short-form key prefix. For brevity purposes, the vpp.interfaces model is used in this example:
 ```json
 agentctl model ls vpp.interfaces 
 ```
-output:
+Sample output:
 ```json
 MODEL NAME      CLASS   PROTO MESSAGE                    KEY PREFIX
 vpp.interfaces  config  ligato.vpp.interfaces.Interface  config/vpp/v2/interfaces/
 ```
 
-If a new object and API for the CNF is required, the developer need only define the model and .proto file, and then register the model. Ligato will generate a key as part of a northbound API for access to the new object. Logic to process the new object in a new or existing function is required as well.
 
 ---
 
@@ -217,17 +195,19 @@ Refer to the [Custom Templates][developer-guide-custom-templates] section of the
 ## Key-Value Data Store
 
 !!! Note
-    KV database, KVDB, KV store and KV data store are all terms that define a data store or database of key-value (KV) pairs, or more generally, structured data objects. Unless otherwise noted, we will use the term `KV data store` in this documentation. The term `KVDB` will appear in the agentctl and code examples and thus will remain as is.
+    KV database, KVDB, KV store and KV data store are terms that define a data store or database of key-value (KV) pairs, or more generally, structured data objects. Unless otherwise noted, we will use the term `KV data store` in the documentation. The term `KVDB` will continue to be used in the agentctl and code examples.
     
     `Connector` is a plugin providing access or connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
 
 
 The VPP agent uses an external KV data store for several reasons:
  
- - persist the desired state of the VPP/Linux configuration because CNFs are stateless.
- - To store and export certain VPP statistics
- - exploit the `"watch"` paradigm for stateless configuration management. This same approach is used in other configuration systems such as [confd][confd].
-
+ - persist the desired state of the VPP and Linux configuration because CNFs are stateless.
+ - To store and export certain VPP statistics.
+ - exploit the `"watch"` paradigm for stateless configuration management. This is a common approach used in other configuration systems such as [confd][confd].
+ - Enables asynchronous configuration of resources, even when not running or available.
+ - support self configuration on start/restart required in cloud native environments.
+ 
 ---
 
 ### Keys and Microservice Label
@@ -235,30 +215,30 @@ The VPP agent uses an external KV data store for several reasons:
 !!! Note
     To distinguish between the key prefix and key definitions described above, we will refer to the `/vnf-agent/<microservice label>/` value as the `microservice-label-prefix`
 
-Each VPP agent is defined with a construct known as the `microservice label`. It is used to group VPP agents with their specific configuration objects stored in the KV data store. VPP agents configured with the same microservice label will prepend that value to a `key prefix` described above to form a `microservice-label-prefix`. VPP agents will then watch or listen to configuration item changes indexed by their respective microservice-label-prefix.
+Each VPP agent is defined with a construct known as the `microservice label`. It is used to group VPP agents with their specific configuration objects stored in the KV data store. VPP agents configured with the same microservice label will prepend that value to a `key prefix` described above to form a `microservice-label-prefix`. VPP agents will then watch or listen to configuration item changes that match their own microservice-label-prefix.
 
-In the figure below, `VPP Agent 1` on the left with a microservice label = `vpp1` will watch for configuration changes to objects with the microservice-label-prefix of `/vnf-agent/vpp1/`. VPP Agent 1 does not care about nor is it watching KV data store configuration updates beginning with `/vnf-agent/vpp2/` because that is affiliated with `VPP Agent 2`.
+In the figure below, `VPP Agent 1` on the left with a microservice label = `vpp1` will watch for configuration changes to objects with the microservice-label-prefix of `/vnf-agent/vpp1/`. VPP Agent 1 is not concerned with configuration updates beginning with `/vnf-agent/vpp2/` because those are affiliated with `VPP Agent 2` on the right.
 
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
 
 
-The VPP agent validates the microservice-label-prefix and if the label matches, the KV pair is passed to the VPP agent configuration watchers.
+The VPP agent validates the microservice-label-prefix and if the label matches, the KV pair is passed to VPP agent configuration watchers.
 
-Additionally, if the remainder of long form key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing. Programming the VPP data plane is an example of the processing that can take place.
+Additionally, if the key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing. Programming the VPP data plane is an example of the processing that can take place.
 
 This architecture promotes VPP agent configuration flexibility in the following manner:
 
 - single KV data store can support multiple VPP agent groups by using a unique microservice-label-prefix per group.
 - VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" appearance to the VPP agent plugins.
 
-It should be noted that the VPP agent _does not require_ a KV data store. Configuration data can be provided using gRPC, AgentCtl, CLI or customized methods. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
+It should be noted that the VPP agent _does not require_ a KV data store. Configuration data can be provided using gRPC, agentCtl, CLI or customized methods. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
 
 ---
 
 ### Supported KV Data Stores
 
-The VPP agent provides [connectors to different KV data stores](../plugins/db-plugins.md). All are built on a common abstraction called [kvdbsync][kvdbsync]. The KVDB abstraction approach simplifies the process of changing out one KV data store for another with minimal effort.
+The VPP agent provides [connectors to different KV data stores](../plugins/db-plugins.md). All are built on a common abstraction called [kvdbsync][kvdbsync]. The approach simplifies the process of changing out one KV data store for another with minimal effort.
 
 
 
@@ -318,7 +298,7 @@ To add support for a new KV data store, one need only write a plugin that can es
 
 More information: [etcd documentation][etcd-plugin]
 
-[etcd](https://etcd.io/) is a distributed KV data store that provides data read-write capabilities. The machine hosting the KV data store is referred to as the `etcd server`. The recommended tool to manage etcd data is [etcdctl][etcdctl]. The VPP agent `must` start with the kvdbsync plugin using etcd as a connector.
+[etcd](https://etcd.io/) is a distributed KV data store that provides data read-write capabilities. The machine hosting the KV data store is referred to as the `etcd server`. The recommended tool to manage etcd data is [etcdctl][etcdctl]. The VPP agent **must** start with the kvdbsync plugin using etcd as a connector.
  
 Here is an example of an etcd.conf file defining the IP address and port number of the etcd server:
 ```
@@ -341,10 +321,10 @@ See instructions in the [Redis quickstart documentation][redis-quickstart] on ho
 
 The VPP agent must start with the kvdbsync plugin using Redis as a connector (see code above or look over [this example][datasync-example]). The IP address and port number of the Redis server is defined in the [redis.conf file](http://download.redis.io/redis-stable/redis.conf) and must be provided to the VPP agent at startup.
 
-The [redis conf file][redis conf] is provided to the VPP agent using the flag `--redis-config=<path>`. Note that if the Redis conf file is not provided, the connector plugin will not be started and no connection will be established. If the Redis server is not reachable, the VPP agent may not start.
+The redis conf fileis provided to the VPP agent using the flag `--redis-config=<path>`. Note that if the Redis conf file is not provided, the connector plugin will not be started and the connection will not be established. If the Redis server is not reachable, the VPP agent may not start.
 
 !!! note "Important" 
-    The Redis server is by default started with keyspace event notifications disabled. This means, no data change events are forwarded to the watcher. To enable this, use the `config SET notify-keyspace-events KA` command directly in the `redis-cli`, or change the settings in the Redis server startup config.
+    By default, the Redis server is by default started with keyspace event notifications disabled. This means, no data change events are forwarded to the watcher. To enable this, use the `config SET notify-keyspace-events KA` command directly in the `redis-cli`, or change the settings in the Redis server startup config.
 
 ---
 
@@ -366,7 +346,7 @@ More information: [consul documentation][consul-plugin]
 
 More information: [fileDB documentation][filedb-plugin]
 
-fileDB is unique in that it uses the host OS filesystem as a database. The key-value configuration is stored in text files in a defined path. The fileDB connector works like any other KV data store connector. It reacts on data change events (file edits) in real time and supports all kvdb features including resync, versioning, and microservice labels.
+fileDB is unique in that it uses the host OS filesystem as a database. The key-value configuration is stored in text files in a defined path. The fileDB connector works like any other KV data store connector. It reacts on data change events (file edits) in real time and supports all KV data store features including resync, versioning, and microservice labels.
 
 fileDB is not a process, so it does not need to be started. The VPP agent only requires  correct permissions to access configuration files, and write access if the status is published.
 
@@ -388,7 +368,7 @@ The configuration file can be edited with a text editor such as `vim`.
 
 ### KV Data Store in a Plugin
 
-Implementing a plugin that intends to use a KV data store for publishing or watching begins with the following:
+Implementing a plugin that uses a KV data store for publishing or watching begins with the following:
 
 ```go 
 import (
@@ -468,22 +448,65 @@ The `KeyProtoValWriter` object defines a method, `Put(<key>, <value>, <variadic-
 
 ---
 
-## VPP Configuration Order
+## KV Scheduler & Descriptors
 
-Successfully programming the VPP data plane can be a challenge. Dependencies between configuration items exist and there is a strict order of the programming actions that must be adhered to. This manifests itself into two distinct problems to solve:
+Successfully programming the VPP data plane can be a challenge. Dependencies between configuration items will exist. There is a strict order of the programming actions, using either CLI or binary API calls, that must be adhered to. This manifests itself into two distinct problems to solve:
 
 * A configuration item dependent on any other configuration item cannot be created "in advance". The dependency must be addressed first.
-* VPP data plane functions may not behave as desired or fail altogether if a dependency is removed.
+* VPP data plane functions may not behave as desired, or fail altogether, if a dependency is removed out of order.
 
-The best way to illustrate how Ligato handles VPP configuration order dependencies is through examples.
+The KV Scheduler is a transaction-based system designed to address dependency resolution and programming sequence in the presence of multiple configuration items. It is a core plugin that works with VPP and Linux agents on the southbound side, and orchestrators/external data sources such as KV data stores and RPC clients on the northbound side.  
 
-* Use the VPP CLI to configure an interface, bridge domain and L2FIB in that order. Then show what happens when the interface and bridge domain are removed.
-* Use agentctl to configure the same information through the VPP agent but in reverse order - L2FIB, bridge domain and interface. Then remove the bridge interface and show what happens. 
+KV Descriptors are constructs used by the KV Scheduler. They implement CRUD operations, and define derived values and dependencies for configuration item KV pairs. VPP and Linux plugins define descriptors for their own specific configuration items such as interfaces or routes. New KV Descriptors can be added to existing plugins or as part of a custom plugin. KV descriptors are registered with the KV Scheduler so that it may manipulate the KV pairs without needing to understand what they represent. 
 
-As will be shown, the VPP agent is able to choreograph the series of actions resulting in a successful VPP configuration, even when confronted by multiple dependencies.    
+Here is a snippet of the VPP route descriptor showing name, key prefix, CRUD callbacks and dependencies:
+
+```json
+	typedDescr := &adapter.RouteDescriptor{
+		Name:            RouteDescriptorName,
+		NBKeyPrefix:     l3.ModelRoute.KeyPrefix(),
+		ValueTypeName:   l3.ModelRoute.ProtoName(),
+		KeySelector:     l3.ModelRoute.IsKeyValid,
+		ValueComparator: ctx.EquivalentRoutes,
+		Validate:        ctx.Validate,
+		Create:          ctx.Create,
+		Delete:          ctx.Delete,
+		Retrieve:        ctx.Retrieve,
+		Dependencies:    ctx.Dependencies,
+		RetrieveDependencies: []string{
+			netalloc_descr.IPAllocDescriptorName,
+			ifdescriptor.InterfaceDescriptorName,
+			VrfTableDescriptorName},
+	}
+```    
+
+Internally, the KV Scheduler builds a graph to model system state. The vertices represent configuration items. The edges represent relationships (i.e. dependency, derived from) between the configuration items. The KV Scheduler walks the tree to sequence the correct configuration actions. 
+
+It builds a transaction plan that drives CRUD operations to the VPP agent in the southbound direction. Configuration items can be cached until outstanding dependencies are resolved. Partial or full state reconciliation (synchronization) is supported. Information on transaction plans, cached values and errors are exposed via agentctl, logs and REST APIs.
+
+![kvs-system][kvs-system]
+
+Use the scheduler/dump API to print the registered descriptors and key prefixes under watch:
+```
+curl -X GET http://localhost:9191/scheduler/dump
+```
+Use [agentctl dump][agentctl dump] commands to print the KV Scheduler's running state:
+```json
+agentctl dump all
+```
+
+
+## VPP Configuration Order
+
+The best way to illustrate how the VPP agent KV Scheduler handles dependencies is through examples.
+
+* First, use the VPP CLI to configure an interface, bridge domain and L2FIB in that order. Then show what happens when the interface and bridge domain are removed.
+* Use agentctl to configure the same information through the VPP agent but in reverse order - L2FIB, bridge domain and interface. Then observe what happens when the bridge interface is removed. 
+
+As will be shown, the VPP agent KV Scheduler is able to choreograph and sequence the series of actions resulting in a successful VPP configuration, even when confronted by multiple dependencies.    
 
 !!! note
-    An active VPP, VPP agent and etcd system is required to demonstrate the CLI and VPP agent configuration functions. Follow the steps in the [quick start guide][quickstart-guide] prepare a system. The `agentctl vpp cli` command will be used interface with the VPP CLI. For the VPP agent section, the `agentctl kvdb put/del` will be used to program VPP, and `agentctl config history --format=log` will be used to print the transaction logs.  
+    An active VPP, VPP agent and etcd system is required to demonstrate the CLI and VPP agent configuration functions. Follow the steps in the [quick start guide][quickstart-guide] prepare a system. The `agentctl vpp cli` command will be used to interface with the VPP CLI. For the KV Scheduler section, the `agentctl kvdb put/del` will be used to program VPP, and `agentctl config history --format=log` will be used to print the transaction logs.  
 
 
 ---
@@ -507,7 +530,7 @@ loop0
 
 The `loop` interface is added. The interface name and index (Idx) are generated. 
 
-Show interfaces
+Show interfaces:
 ```
 agentctl vpp cli show interface
 ```
@@ -518,7 +541,7 @@ local0                            0     down          0/0/0/0
 loop0                             1     down         9000/0/0/0
 ```
 
-Set the interface to the `UP` state. 
+Set the interface to the `UP` state: 
 ```bash
 agentctl vpp cli set interface state loop0 up
 ``` 
@@ -527,23 +550,19 @@ Create a bridge domain:
 ```bash
 agenctl vpp cli create bridge-domain 1 learn 1 forward 1 uu-flood 1 flood 1 arp-term 1
 ```
-output:
-```   
-bridge-domain 1
-```
 
 The bridge domain is currently empty. Assign the interface to the bridge domain:
 ```bash
 agentctl vpp cli set interface l2 bridge loop0 1 
 ``` 
 
-The `loop0` interface to set to the bridge domain with an index of 1. It is not possible to use a non-existing interface because the name, `loop0`, is generated at interface creation. The same holds true for a non-existing bridge domain.
+The `loop0` interface is set to the bridge domain with an index of 1. It is not possible to use a non-existing interface because the name, `loop0`, is generated at interface creation. The same holds true for a non-existing bridge domain.
 
-Configure the FIB table entry:
+Configure the L2FIB table entry:
 ```bash
 agentctl vpp cli l2fib add 52:54:00:53:18:57 1 loop0
 ```
-Show the FIB table entry:
+Show the L2FIB table entry:
 ```json
 agentctl vpp cli show l2fib verbose
 ```
@@ -552,9 +571,12 @@ Output:
     Mac-Address     BD-Idx If-Idx BSN-ISN Age(min) static filter bvi         Interface-Name
  52:54:00:53:18:57    1      1      0/0      no      -      -     -               loop0
 ```
-This command contains dependencies on the `loop0` interface and the bridge domain with ID=1. The order of CLI commands must follow this strict sequence: interface, bridge-domain and l2fib.
+The `l2fib add` command performed above illustrates the dependencies on the `loop0` interface and the bridge domain with ID=1. The order of CLI commands must follow this sequence: interface, bridge-domain and L2FIB.
 
-Now remove the interface:
+---
+
+
+Now, remove the interface:
 ```bash
 vpp# delete loopback interface intfc loop0
 vpp#
@@ -566,18 +588,18 @@ The output of the `show l2fib verbose`command reveals that the interface name wa
  52:54:00:53:18:57    1      1      0/0      no      -      -     -               Stale
 ```
 
-Remove the bridge domain.
+Remove the bridge domain:
 ```bash
 agentctl vpp cli create bridge-domain 1 del
 ```
 
-The output of the `show l2fib verbose` is unchanged. This becomes a problem because attempts to remove the the l2fib dependencies of `bridge domain 1` and interface `loop0` have been performed. 
+The output of the `show l2fib verbose` command is unchanged. This becomes a problem because attempts to remove the L2FIB dependencies of `bridge domain 1` and interface `loop0` have been performed. 
 ```bash
 vpp# sh l2fib verbose
     Mac-Address     BD-Idx If-Idx BSN-ISN Age(min) static filter bvi         Interface-Name        
  52:54:00:53:18:57    1      1      0/0      no      *      -     -               Stale                     
 ``` 
-An attempt to remove the FIB entry is invalid. Note this was performed from the VPP CLI console.
+An attempt to remove the L2FIB entry is invalid. Note this command was performed from the VPP CLI console:
 ```bash
 l2fib del 52:54:00:53:18:57 1 
 ```
@@ -586,17 +608,17 @@ output:
 l2fib del: bridge domain ID 1 invalid
 ```
 
-The end result is a configuration that cannot be removed until the bridge domain and interface are re-created. To avoid similar scenarios and provide more flexibility in the configuration order, the VPP agent uses an automatic configuration sequencing mechanism.
+The end result is a configuration that cannot be removed until the bridge domain and interface are re-created. 
 
 ---
 
-### Using the Ligato VPP agent
+### Using the KV Scheduler
 
-The VPP agent employs a northbound (NB) API definition for every supported configuration item.  NB interface configuration through an API creates the interface, sets its state, MAC address, IP addresses and so on.
+The VPP agent exposes a northbound (NB) API definition for every supported configuration item.  NB interface configuration through an API creates the interface, sets its state, MAC address, IP addresses and so on.
 
-The VPP agent goes further by permitting the configuration of VPP items with non-existent references. Such an item is not configured per se, but rather the VPP agent holds on to the information and postpones VPP configuration programming until all dependencies are resolved. This removes the strict VPP configuration ordering constraint.
+The VPP agent goes further by permitting the configuration of VPP items with non-existent references. Such an item is not configured per se, but rather the KV Scheduler holds on to the information and postpones VPP configuration programming until all dependencies are resolved. This removes the strict VPP configuration ordering constraint.
 
-To illustrate this process, begin by programming the FIB entry into VPP:
+To illustrate this process, begin by programming the L2FIB entry into VPP:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C '{"phys_address":"62:89:C6:A3:6D:5C","bridge_domain":"bd1","outgoing_interface":"if1","action":"FORWARD"}'
 ```
@@ -608,7 +630,7 @@ Log output:
     - value: { phys_address:"62:89:C6:A3:6D:5C"  bridge_domain:"bd1"  outgoing_interface:"if1" } 
 ```
 
-There was one `CREATE` operation performed. A FIB entry with interface `if1`, and bridge domain `bd1`. None of these exist, so the transaction is postponed and flagged as `[NOOP IS-PENDING]`.
+There was one `CREATE` operation performed for an L2FIB entry with interface `if1` and bridge domain `bd1`. None of these exist, so the transaction is postponed and flagged as `[NOOP IS-PENDING]`.
 
 Configure the bridge domain:
 ```json
@@ -643,7 +665,7 @@ vppConfig:
 ...
 ```
 
-Next, add the interface:
+Next, add the `if` interface:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/if1 '{"name":"if1","type":"SOFTWARE_LOOPBACK","enabled":true}'
 ```
@@ -666,7 +688,7 @@ There were three operations performed. The first one is the interface itself tha
 
 The second operation is marked as `DERIVED` (an internal VPP agent designation), and `WAS-PENDING` meaning the cached value can be resolved. This operation shows that the interface was added to the bridge domain as defined in the bridge domain configuration.
 
-The last operation is marked `WAS-PENDING` as well and represents the FIB entry that was cached until now. Since the bridge domain and interface dependencies are fulfilled, the FIB entry was configured.
+The last operation is marked `WAS-PENDING` as well and represents the L2FIB entry that was cached until now. Since the bridge domain and interface dependencies are fulfilled, the L2FIB entry was configured.
 
 Confirm the running configuration with the `agentctl config retrieve` command. Partial output:
 ```json
@@ -706,16 +728,16 @@ Log output:
   - value: { name:"bd1" interfaces:{name:"if1"} } 
 ```
 
-Observe that the first operation was the removal of the FIB entry. The value was not discarded by the VPP agent because it still exists in the etcd data store as confirmed by the `agentctl kvdb list /vnf-agent/vpp1/config/vpp/l2/v2/fib/` command:
+Observe that the first operation was the removal of the L2FIB entry. The value was not discarded by the VPP agent because it still exists in the etcd data store as confirmed by the `agentctl kvdb list /vnf-agent/vpp1/config/vpp/l2/v2/fib/` command:
 ```json
 /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C
 {"phys_address":"62:89:C6:A3:6D:5C","bridge_domain":"bd1","outgoing_interface":"if1","action":"FORWARD"}
 ``` 
-The VPP agent returns this value to the cache. The FIB entry no longer exists in VPP because of unmet dependencies. This eliminates the possibility of an accidental mis-configuration or stranding the value in VPP. However, if the bridge domain reappears, the FIB entry will be added back into VPP without external intervention.
+The KV Scheduler returns this value to the cache. The L2FIB entry no longer exists in VPP because of unmet dependencies. This eliminates the possibility of an accidental mis-configuration or stranded value in VPP. However, if the bridge domain reappears, the L2FIB entry will be added back into VPP without external intervention.
 
 The second operation indicates that the interface `if1` was removed from the bridge domain prior to the removal of the bridge domain itself as shown in the third operation.
 
-The ordering and caching of the configuration data described in this section is performed by the KV Scheduler plugin. For more information on how this works, please refer to the discussion of the [KV Scheduler][KVs].
+For more information on how this works, refer to the discussion of the [KV Scheduler][KVs] in the developer guide.
 
 ---
 
@@ -857,7 +879,8 @@ The majority of plugins support `.conf` files. However, some plugins cannot be l
 The [conf files][config-files] section of the user guide discusses plugin configuration files in more detail.
 
 
-[agentctl model list]: agentctl.md#model)
+[agentctl model list]: agentctl.md#model
+[agentctl dump]: agentctl.md#dump
 [client-v2]: ../user-guide/concepts.md#client-v2
 [confd]: https://confd.io
 [config-files]: config-files.md
@@ -869,7 +892,10 @@ The [conf files][config-files] section of the user guide discusses plugin config
 [govppmux-plugin]: ../plugins/vpp-plugins.md#govppmux-plugin
 [govpp-project]: https://wiki.fd.io/view/GoVPP
 [kvdbsync]: https://github.com/ligato/cn-infra/tree/master/datasync/kvdbsync
+[key reference]: reference.md
+[kvs-system]: ../img/user-guide/2components-ligato-framework-arch-KVS2.svg
 [list-of-supported]: config-files.md
+[protobuf]: https://developers.google.com/protocol-buffers
 [redis-plugin]: ../plugins/db-plugins.md#redis
 [redis-quickstart]: https://redis.io/topics/quickstart
 [telemetry-plugin]: ../plugins/vpp-plugins.md#telemetry
