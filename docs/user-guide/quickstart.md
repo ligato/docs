@@ -3,16 +3,16 @@
 In this guide you will learn how to:
 
 - Install the VPP agent
-- Install and Start etcd
+- Install and start etcd
 - Run the VPP agent container
-- Interact with the VPP agent using REST, CLI, etcdctl and the agentctl interfaces.
+- Interact with the VPP agent using etcdctl, REST, VPP CLI and agentctl. 
 
 The figure below illustrates our quickstart guide environment.
 
 ![quickstart-topology](../img/user-guide/quickstart-topo-w-agentctl.svg)
 
 !!! Note
-    `VPP Agent` is used when discussing the Ligato VPP Agent in a higher level context with examples being an architecture description. `vpp-agent` is a term used to define the actual code itself and/or in describing direct interactions with other associated software components such as docker. You will see this term appear in commands, APIs and code. `VPP` is used to describe the VPP dataplane.  
+    __VPP Agent__ is used when discussing the Ligato VPP Agent in a higher level context with examples being an architecture or functional description. `vpp-agent` is used in code, repository folders, CLI and docker. __VPP__ is used to describe the VPP data plane.  
 
 ---
 
@@ -47,7 +47,7 @@ REPOSITORY              TAG                 IMAGE ID            CREATED         
 ligato/vpp-agent        latest              05ad16109a2b        3 days ago          264MB
 ```
 
-Verify the container is `NOT` running. It should not because we have not started it yet.
+Verify the container is _NOT_ running. It should not because we have not started it yet.
 
 ```
 docker ps
@@ -59,17 +59,14 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 
 ## 3. etcd
 
-[etcd][etcd] is a key-value data store containing VPP configuration information structured as key-value pairs.
+[etcd][etcd] is a Key-Value (KV) data store containing VPP configuration information structured as key-value pairs.
 
 ### 3.1 Start etcd
 
-The following command starts the etcd server in a docker container. If the image is not present on your localhost, docker will download it first.
+Start the etcd server in a docker container with this command. If the image is not present on your localhost, docker will download it for you first.
 ```
 docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
-
-In the default docker environment, the etcd server will be available at `172.17.0.1:2379`. It is possible to change some of the command flags such as the advertise or listen client URLs. 
-More on the etcd command flags can be found in the [etcd configuration guide](https://github.com/etcd-io/etcd/blob/master/Documentation/op-guide/configuration.md).
 
 Open a new terminal session and verify the etcd container is running:
 ```sh
@@ -83,9 +80,9 @@ f3db6e6d8975        quay.io/coreos/etcd:latest   "/usr/local/bin/etcd…"   16 m
 
 ### 3.2 etcdctl
 
-**etcdctl** is an etcd client used to list, put, delete and get key-value pairs from the etcd data store.
+**etcdctl** is an etcd client CLI tool that is used to list, put, delete and get key-value pairs from the etcd data store.
 
-You can install it locally.
+You can install it locally depending on your OS.
 
 ```bash
 // Linux users
@@ -95,7 +92,7 @@ $ apt-get install etcd-client
 $ brew install etcd
 ```
 
-However, it's easier and `recommended` to use the one that comes with the etcd image:
+However, it's easier and __recommended__ to use the one that comes with the etcd image. Use this command to check the version of etcdctl you are running:
 ```
 docker exec -it etcd etcdctl version
 ```
@@ -116,7 +113,7 @@ Sample output:
 
 ## 4. Start VPP Agent
 
-Open a new terminal session. Start the VPP agent together with the compatible version of the VPP dataplane in a new docker container.
+Open a new terminal session. Start the VPP agent and compatible VPP data plane version in a new docker container.
 ```
 docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ``` 
@@ -134,27 +131,20 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 ```
 
 
-
-
 ## 5. Managing the VPP Agent
 
 This section will explain:
 
-- How to configure the VPP dataplane through the etcd data store and VPP agent using etcdctl
+- How to configure the VPP data plane through the etcd data store and VPP agent using etcdctl
 - How to read VPP configuration data with a VPP agent REST API
-- How to connect to the VPP CLI and show the configuration
-- How to use agentctl to manage the VPP agent and Ligato components
+- How to connect to the VPP CLI and show the VPP configuration
+- How to use agentctl to manage the VPP agent
 
 ---
 
 ### 5.1 etcdctl
 
-The etcd data store contains configuration information in the form of key-value pairs.
-
-!!! Note
-    We will use etcdctl to interface to the etcd data store.
-
-VPP agent entries in the etcd data store use a prefix of `/vnf-agent`. List those key-value pairs using this command:
+VPP agent entries in the etcd data store use a prefix of `/vnf-agent/`. List those key-value pairs using this command:
 ```
 docker exec -it etcd etcdctl get --prefix /vnf-agent/
 ```
@@ -226,7 +216,7 @@ Sample output:
 ### 5.2 REST API
 
 !!! Note
-    We will use cURL to run REST APIs.
+    We will use cURL to run REST APIs. Note that REST only supports the retrieval of configuration data. REST cannot be used to add, modify or delete configuration data. 
 
 Get VPP interfaces:
 ```
@@ -336,7 +326,7 @@ Sample response:
 
 ```
 
-More information including URLs with sample responses can be found in the [VPP Agent API Documentation](../api/api-vpp-agent.md) section.
+More information on VPP agent REST APIs including sample responses can be found in the [VPP Agent API Documentation](../api/api-vpp-agent.md) section.
 
 ---
 
@@ -370,7 +360,7 @@ loop0                             1      up          9000/0/0/0
 
 We can see the default `local0` interface, and `loop0` which was the one we configured above. 
 
-Note that the output of this command uses the `internal_name`of the interface contained in the metadata. You can confirm this by looking at the REST API response from above.
+Note that the output of this command uses the `internal_name`of the interface contained in the metadata. You can confirm this by looking at the `interface_meta` in the response to the `GET /dump/vpp/v2/interfaces` we ran above.
 
 Show bridge domains:
 ```
@@ -382,7 +372,7 @@ vpp# show bridge-domain
     1       1      0     off        on        on        drop       off       off       off        N/A
 ```
 
-As an alternative, you can run the commands directly from the terminal CLI like so:
+As an alternative, you can run the commands directly from the terminal CLI:
 ```
 docker exec -it vpp-agent vppctl -s localhost:5002 show interface
 docker exec -it vpp-agent vppctl -s localhost:5002 show interface addr
@@ -486,7 +476,7 @@ The VPP agent container was started and immediately closed.
 
 The etcdctl command returns "Error:  100: Key not found".
 
-- The etcdctl API version was not correctly set. Check the output of the appropriate environment variable with command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3`.
+- The etcdctl API version was not correctly set. Check the output of the appropriate environment variable with command `echo $ETCDCTL_API`. If the version is not set to "3", change it with `export ETCDCTL_API=3` command.
 
 ---
 
