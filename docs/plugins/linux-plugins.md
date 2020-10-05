@@ -6,6 +6,24 @@ This section describes the VPP Agent Linux plugins. Each plugin section provides
 - Pointers to the `*.proto` containing configuration/NB protobuf API definitions, the `models.go` file defining the model, and the conf file if one is available.  
 - Example configuration interactions using an etcd data store, REST and gPRC.
 
+**Agentctl** 
+
+Linux configuration data can also be managed using `agentctl config` commands.
+```
+Usage:	agentctl config COMMAND
+
+Manage agent configuration
+
+COMMANDS
+  get         Get config from agent
+  history     Retrieve config history
+  resync      Run config resync
+  retrieve    Retrieve currently running config
+  update      Update config in agent
+```
+
+Reference: [agentctl config commands][agentctl-config]
+
 !!! Note
     For Linux plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
 

@@ -7,10 +7,30 @@ This section describes the VPP agent plugins. Each plugin section provides:
 - Example configuration interactions using an etcd data store, REST and gPRC.
 
 !!! Note
-    For VPP plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.  
+    For VPP plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. 
 
 ---
 
+**Agentctl** 
+
+VPP configuration data can also be managed using `agentctl config` commands.
+```
+Usage:	agentctl config COMMAND
+
+Manage agent configuration
+
+COMMANDS
+  get         Get config from agent
+  history     Retrieve config history
+  resync      Run config resync
+  retrieve    Retrieve currently running config
+  update      Update config in agent
+```
+
+Reference: [agentctl config commands][agentctl-config]
+
+---
+  
 ## GoVPPMux Plugin
 
 The GoVPPMux plugin allows a VPP agent plugin to access VPP through its own dedicated communication channel. This is accomplished using connection multiplexing.
@@ -1179,33 +1199,36 @@ Items to keep in mind when deploying flowprobe functionality on an interface:
 
 ## IPSec Plugin
 
-The IPSec plugin handles the configuration of **Security Policy Databases** (SPD) and **Security Associations** (SA) in VPP. 
+The IPSec plugin handles the configuration of **Security Policies** (SP), a **Security Policy Database (SPD)**, and **Security Associations** (SA) in VPP. 
 
 !!! Note
- The IPsec plugin does not handle IPSec tunnel programming. This is supported by the IPIP_TUNNEL with ipsec.TunnelProtection. The IPSEC_TUNNEL interface has been deprecated.
- 
---- 
+    The IPsec plugin does not handle IPSec tunnel programming. This is supported by the IPIP_TUNNEL with ipsec.TunnelProtection. The IPSEC_TUNNEL interface has been deprecated.
+    
+
+---
+
 
 ### Security Policy Database
 
-The SPD specifies the policies that determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. The SPD is bound to an SPD interface and contains one or more policy entries. Each policy entry points to an IPsec security association (SA). 
+!!! Warning
+    The previous model of configuring IPsec security policies inside an IPsec security policy database (SPD) is now **deprecated**. In practice, the content of SPDs changes frequently and 
+    using a single SPD model for defining all security policies is not convenient or efficient. A new model, SecurityPolicy, was added that allows one to configure each security policy
+    as a separate proto message instance. Although the new SecurityPolicy model is backward-compatible with the old one, 
+    a request to configure a security policy through the SPD model will return: `error: it is deprecated and no longer supported to define SPs inside SPD model. 
+    (use SecurityPolicy model instead)`. See [PR #1679](https://github.com/ligato/vpp-agent/pull/1679) for more details.  
 
 **References:**
 
 - [VPP SPD proto][ipsec-proto]
 - [VPP SPD model][ipsec-model]
 
-The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent, as it is a part of the SPD key. 
+The SPD defines its own unique index within VPP. The user has an option to set their own index in the `uint32` range. The index is a mandatory field in the model because it serves as a unique identifier for the VPP agent, as it is a part of the [SPD key][vpp-key-reference]. 
 
-!!! Note
-    Pay special attention when defining an index in the model. Despite the fact the field uses a `string` format, it only accepts plain numbers. Attempts to set non-numeric characters will result in an error.     
-
-Every policy entry field includes `sa_index` used in the SPD for reference to the SA. The field is mandatory. A missing value will generate a configuration error.
-
-The SPD defines two bindings: SA and interface. The interface binding is important since VPP needs to create an empty SPD first. This requires an interface binding. After that, all policy entries are configured and associated with a specific SA. 
+In addition, the SPD includes one or more interfaces where configured SA and SP entries are applied. SP entries described below contain an `spd_index` referencing the SPD.
+    
 
 ---
- 
+
 **SPD Configuration Examples**
 
 **KV Data Store**
@@ -1219,34 +1242,12 @@ Example Data:
   "interfaces": [
     { "name": "tap1" }
   ],
-  "policy_entries": [
-    {
-      "priority": 10,
-      "is_outbound": false,
-      "remote_addr_start": "10.0.0.1",
-      "remote_addr_stop": "10.0.0.1",
-      "local_addr_start": "10.0.0.2",
-      "local_addr_stop": "10.0.0.2",
-      "action": 3,
-      "sa_index": "20"
-    },
-    {
-      "priority": 10,
-      "is_outbound": true,
-      "remote_addr_start": "10.0.0.1",
-      "remote_addr_stop": "10.0.0.1",
-      "local_addr_start": "10.0.0.2",
-      "local_addr_stop": "10.0.0.2",
-      "action": 3,
-      "sa_index": "10"
-    }
-  ]
 }
 ```
 
-Use this `etcdctl` command to put the key-value entry:
+Use this `agentctl kvdb put` command to put the key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/spd/1 '{"index":"1","interfaces":[{"name":"tap1"}],"policy_entries":[{"priority":10,"is_outbound":false,"remote_addr_start":"10.0.0.1","remote_addr_stop":"10.0.0.1","local_addr_start":"10.0.0.2","local_addr_stop":"10.0.0.2","action":3,"sa_index":"20"},{"priority":10,"is_outbound":true,"remote_addr_start":"10.0.0.1","remote_addr_stop":"10.0.0.1","local_addr_start":"10.0.0.2","local_addr_stop":"10.0.0.2","action":3,"sa_index":"10"}]}'
+kvdb put /vnf-agent/vpp1/config/vpp/ipsec/v2/spd/1 '{"index":1, "interfaces": [{ "name": "tap1" }]}'
 ```
 
 ---
@@ -1257,68 +1258,8 @@ API Reference: [VPP IPsec SPD][vpp-ipsec-spd]
 
 Use this cURL command to GET SPD configuration data:
 
-```bash
+```json
 curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/spds
-```
-
----
-
-**gRPC**
-
-Prepare the IPSec SPD data:
-```go
-import (
-	"github.com/ligato/vpp-agent/proto/ligato/vpp"
-	"github.com/ligato/vpp-agent/proto/ligato/vpp/ipsec"
-)
-
-spd := ipsec.SecurityPolicyDatabase{
-		Index: "1",
-		Interfaces: []*ipsec.SecurityPolicyDatabase_Interface{
-			{
-				Name: "if1",
-			}
-		},
-		PolicyEntries: []*ipsec.SecurityPolicyDatabase_PolicyEntry{
-			{
-				Priority:        10,
-				IsOutbound:      false,
-				RemoteAddrStart: "10.0.0.1",
-				RemoteAddrStop:  "10.0.0.1",
-				LocalAddrStart:  "10.0.0.2",
-				LocalAddrStop:   "10.0.0.2",
-				Action:          3,
-				SaIndex:         "1",
-			},
-		},
-	}
-```
-
-Prepare the gRPC configuration data:
-```go
-import (
-	"github.com/ligato/vpp-agent/proto/ligato/configurator"
-	"github.com/ligato/vpp-agent/proto/ligato/vpp"
-)
-
-config := &configurator.Config{
-		VppConfig: &vpp.ConfigData{
-			IpsecSpds: []*ipsec.SecurityPolicyDatabase {
-				spd,
-			},	
-		}
-	}
-```
-
-The configuration data can be combined with any other VPP or Linux configuration.
-
-Update data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
-```go
-import (
-	"github.com/ligato/vpp-agent/proto/ligato/configurator"
-)
-
-response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
 
 ---
@@ -1333,9 +1274,10 @@ An IPsec security association (SA) is a set of security behaviors negotiated bet
 - [VPP SA model][ipsec-model] 
 
 !!! Note
- The SPD and SA are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
+    The SPD, SA and associated security policies are applied to an IPIP_TUNNEL interface, and NOT the deprecated IPSEC_TUNNEL interface. 
 
-The SA uses the same indexing system as SPD. The index is a user-defined unique identifier in the `uint32` range. Like the SPD, the SA index is defined as `string` type field in the proto, but can be set only to numerical values. Attempts to use values other than numerical will cause errors. The SA has no dependencies on other configuration types.
+
+Security policy entries described below contain an `sa_index` referencing the SA by its `index` value.
 
 ---
 
@@ -1358,9 +1300,9 @@ Example data:
 }
 ```
 
-Use this `etcdctl` command to put the key-value entry:
+Use this `agentctl kvdb put` command to put the key-value entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/vpp/ipsec/v2/sa/1 '{"index":"1","spi":1001,"protocol":1,"crypto_alg":1,"crypto_key":"4a506a794f574265564551694d653768","integ_alg":2,"integ_key":"4339314b55523947594d6d3547666b45764e6a58"}'
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/ipsec/v2/sa/1 '{"index":"1","spi":1001,"protocol":1,"crypto_alg":1,"crypto_key":"4a506a794f574265564551694d653768","integ_alg":2,"integ_key":"4339314b55523947594d6d3547666b45764e6a58"}'
 ```
 
 ---
@@ -1423,6 +1365,59 @@ import (
 )
 
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
+```
+
+---
+
+### Security Policy
+
+IPsec security policies (SP) determine the disposition of all inbound or outbound IP traffic from either the host, or the security gateway. Each SP entry contains indicies pointing to an SPD and SA respectively.
+
+**References:**
+
+- [VPP SP proto][ipsec-proto]
+- [VPP SP model][ipsec-model]
+
+---
+
+**Security Policy Configuration Examples**
+
+**KV Data Store**
+
+Put the SP data into an etcd data store using the [VPP SP key][vpp-key-reference].
+
+Example security policy data:
+```json
+  {
+    "spd_index": 1,
+    "sa_index": 1,
+    "priority": 5,
+    "is_outbound": true,
+    "remote_addr_start": "0.0.0.0",
+    "remote_addr_stop": "255.255.255.255",
+    "local_addr_start": "0.0.0.0",
+    "local_addr_stop": "255.255.255.255",
+    "protocol": 4,
+    "remote_port_start": 65535,
+    "local_port_start": 65535,
+    "action": 3
+  }
+```
+
+Use this `agentctl kvdb put` command to the put the key-value entry:
+```json
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/ipsec/v2/sp/spd/1/sa/1/outbound/local-addresses/0.0.0.0-255.255.255.255/remote-addresses/0.0.0.0-255.255.255.255 '{"spd_index": 1, "sa_index": 1, "priority": 5, "is_outbound": true, "remote_addr_start": "0.0.0.0", "remote_addr_stop": "255.255.255.255", "local_addr_start": "0.0.0.0", "local_addr_stop": "255.255.255.255", "protocol": 4, "remote_port_start": 65535, "remote_port_stop": 65535, "local_port_start": 65535, "local_port_stop": 65535, "action": 3}'
+```
+
+---
+
+**REST**
+
+API Reference: [VPP IPsec SP][vpp-ipsec-sp]
+
+Use this cURL command to GET SP configuration data:
+```json
+ curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sps
 ```
 
 ---
@@ -2626,6 +2621,7 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [vpp-nat-pool]: ../api/api-vpp-agent.md#vpp-nat-pool
 [vpp-ipsec-spd]: ../api/api-vpp-agent.md#vpp-ipsec-spd
 [vpp-ipsec-sa]: ../api/api-vpp-agent.md#vpp-ipsec-sa
+[vpp-ipsec-sp]: ../api/api-vpp-agent.md#vpp-ipsec-sp
 [vpp-punt-socket]: ../api/api-vpp-agent.md#vpp-punt-socket
 [vpp-ip-acl]: ../api/api-vpp-agent.md#vpp-acl-ip
 [vpp-macip-acl]: ../api/api-vpp-agent.md#vpp-acl-macip
@@ -2647,7 +2643,8 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [telemetry-plugin]: ../api/api-vpp-agent.md#vpp-telemetry
 [telemetry-memory]: ../api/api-vpp-agent.md#vpp-telemetrymemory
 [telemetry-runtime]: ../api/api-vpp-agent.md#vpp-telemetryruntime
-[telemetry-nodecount]: ../api/api-vpp-agent.md#vpp-telemetrynodecount  
+[telemetry-nodecount]: ../api/api-vpp-agent.md#vpp-telemetrynodecount
+[agentctl-config]: ../user-guide/agentctl.md#config  
 
 *[ABF]: ACL-Based Forwarding
 *[ACL]: Access Control List

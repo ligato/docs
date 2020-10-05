@@ -42,7 +42,7 @@ Generated long form key:
 
 The registration method defines a third optional parameter. It enables options to be passed for a given registration of type `ModelOption`. There is currently only one option available: `models.WithNameTemplate(<template>))`. This option enables keys with custom identifiers to be generated.
 
-Keys may also be distinguished by the composition of the custom identifier as explained [here.](../user-guide/concepts.md#keys)
+Keys may also be distinguished by the composition of the custom identifier as explained in the [concepts section of the user guide](../user-guide/concepts.md#keys)
 
 **Example 1:**
 
