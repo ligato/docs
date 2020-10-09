@@ -2,20 +2,15 @@
 
 ---
 
-Link to code: [Adding a REST API to your Plugin][code-link]
+Tutorial code: [REST Handler][code-link]
 
-In this tutorial we will learn how to add a REST API to your plugin. 
-The Ligato infrastructure provides an HTTP server that is used by all plugins
-that wish to expose a REST API to external clients. The HTTP Server is provided
-by the [REST plugin](https://github.com/ligato/cn-infra/tree/master/rpc/rest).
+In this tutorial, you will learn how to add a REST API to a plugin called __MyPlugin__. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin dependencies tutorial](02_plugin-deps.md)
 
-Requirements:
 
-* Complete the ['Hello World Agent'](01_hello-world.md) tutorial
-* Complete the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
+---
 
-Each plugin requiring a REST API will register its own custom
-handler with the REST plugin using the registration API:
+Each plugin requiring a REST API needs to register its own custom
+handler with the REST plugin. You can perform this task by using the registration API:
 
 ```go
 type HandlerProvider func(formatter *render.Render) http.HandlerFunc
@@ -26,7 +21,7 @@ type HTTPHandlers interface {
 }
 ```
 
-To use the REST plugin, we first define it as a dependency in our plugin:
+To use the REST plugin, first define it as a dependency in your plugin:
 
 ```go
 type MyPlugin struct {
@@ -34,13 +29,17 @@ type MyPlugin struct {
 	REST rest.HTTPHandlers
 }
 ```
-Note that the dependency is defined as an `interface`. This means it can be
-satisfied by any object that implements the interface methods. The `rest.HTTPHandlers`
-interface is defined in [`cn-infra/rpc/rest/plugin_api_rest.go`](https://github.com/ligato/cn-infra/blob/master/rpc/rest/plugin_impl_rest.go).
+Note that the dependency is defined as an interface. This means that it can be
+satisfied by any object that implements the interface methods. 
 
-Next, we can "wire" the dependency (i.e. set the instance) in the plugin's 
-constructor. Note that we use the default REST plugin provided by the Ligato
-infrastructure (`rest.DefaultPlugin`). Most Ligato infrastructure plugins
+The `rest.HTTPHandlers`
+interface is defined in [plugin_api_rest.go file](https://github.com/ligato/cn-infra/blob/master/rpc/rest/plugin_impl_rest.go).
+
+---
+
+Next, "wire" the dependency into the plugin's 
+constructor. The default REST plugin of `rest.DefaultPlugin` provided by the Ligato
+infrastructure is used in the code snippet below. Most Ligato infrastructure plugins
 have a default plugin instance defined as a global variable that can be used.
 
 ```go
@@ -51,7 +50,7 @@ func NewMyPlugin() *MyPlugin {
 }
 ```
 
-Now we define our handler:
+Now you can define your handler:
 
 ```go
 func (p *MyPlugin) fooHandler(formatter *render.Render) http.HandlerFunc {
@@ -67,7 +66,7 @@ func (p *MyPlugin) fooHandler(formatter *render.Render) http.HandlerFunc {
 }
 ```
 
-Finally, we register our handler with the REST plugin. This is done in our plugin's 
+Finally, register your handler with the REST plugin. This is done in your plugin's 
 `Init` method:
 
 ```go
@@ -78,26 +77,28 @@ func (p *MyPlugin) Init() error {
 }
 ```
 
+---
 
-__Run the REST Handler code__
+Run the REST Handler code:
 
 ```
 go run main.go
 ```
-Example output on the terminal CLI
+Example output:
 ```
 INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc="agent/agent.go(134)" logger=agent
 INFO[0000] Listening on http://0.0.0.0:9191              loc="rest/plugin_impl_rest.go(109)" logger=http
 INFO[0000] Agent started with 2 plugins (took 1ms)       loc="agent/agent.go(179)" logger=agent
 ```
 
-You might see an deny/allow incoming connection warning message. Either one is okay for this example.
+!!! Note
+    You might see a deny/allow incoming connection warning message. Either one is okay for this example.
 
-Open a new terminal in the `03_rest-handler chrismetz` folder and type in this curl command
+Open a new terminal in the `03_rest-handler` folder and type in this curl command:
 ```
 curl -X POST -d 'John' -H "Content-Type: application/json" http://localhost:9191/greeting
 ```
-Output
+Output:
 ```
 Hello John
 ```
@@ -110,9 +111,6 @@ INFO[0045] Agent stopped                                 loc="agent/agent.go(291
 ```
 
 
-
-
-Complete working example can be found at [examples/tutorials/03_rest-handler](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/03_rest-handler).
 
 [code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/03_rest-handler
 

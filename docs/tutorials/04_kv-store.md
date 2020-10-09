@@ -2,22 +2,15 @@
 
 ---
 
-Link to code: [Working with KV Data Stores][code-link]
+Tutorial code: [KV Data Store][code-link]
 
-In this tutorial we will learn how to use an external key-value (KV) data store.
-The tutorial shows you how to read and write data to/from the data store and how to 
-watch for changes. 
+In this tutorial, you will learn how use an external key-value (KV) data store, read and write to the KV data store, and how to watch for changes. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin dependencies tutorial](02_plugin-deps.md)
 
-Requirements:
+You will be using [etcd][1] as the KV data store in this tutorial. Note that Ligato supports other [KV data stores](../user-guide/concepts.md#key-value-data-store).
 
-* Complete the ['Hello World Agent'](01_hello-world.md) tutorial
-* Complete the ['Plugin Dependencies'](02_plugin-deps.md) tutorial
+---
 
-We will be using [etcd][1] as the KV data store. Note that is not the only choice as the Ligato infrastructure supports several other key-value data stores: [Consul][2], [BoltDB][3], [FileDB][4], 
-[Redis][5].
-
-The common interface for all KV data store implementations is `KvProtoPlugin`, 
-defined in [`cn-infra/db/keyval/plugin_api_keyval.go`][7]:
+The common interface for all KV data store implementations is [`KvProtoPlugin`][7]. 
 
 ```go
 type KvProtoPlugin interface {
@@ -29,13 +22,11 @@ type KvProtoPlugin interface {
 }
 ```
 
-To use etcd as our KV data store plugin, we simply define a field for the 
-`KvProtoPlugin` interface in our plugin and initialize it with an etcd plugin 
-instance in our plugin's constructor. Note that we use the default etcd plugin
-(`etcd.DefaultPlugin`). 
+To use etcd as your KV data store plugin, define a field for the 
+`KvProtoPlugin` interface in your plugin. Then initialize the interface with an etcd plugin 
+instance in your plugin's constructor. 
 
-Essentially we create a dependency on the KV data store in our plugin and satisfy it with the default etcd KV data
-store implementation:
+This creates a dependency on the KV data store in your plugin. You have satisfied this dependency by using the default etcd plugin of `etcd.DefaultPlugin`.
 
 ```go
 type MyPlugin struct {
@@ -50,22 +41,23 @@ func NewMyPlugin() *MyPlugin {
 }
 ```
 
-Once we have the appropriate KV data store plugin set up, we can create a broker. The broker is a facade (mediator) through which we will communicate with the data store. The broker conceals the complexity of interacting with the different data stores and provides a simple read/write API. 
+---
+
+Once you have your KV data store plugin set up, you will need to create a broker. The broker is a facade  for plugins or components communicate with the data store. The broker conceals the complexity of interacting with the different data stores and provides a simple read/write API. 
 
 The broker must be initialized with a key prefix that becomes the root for the
-kv tree that the broker will operate on. The broker uses the key prefix for all
-of  its operations (Get, List, Put, Delete). In this example we will use `/myplugin/`.
+KV tree that the broker will operate on. The broker uses the key prefix for all
+of its get, list, put and delete operations. 
+ 
+The key prefix of `/myplugin/` is used in this code snippet:
 
 ```go
 broker := p.KVStore.NewBroker("/myplugin/")
 ```
 
-!!! note
-    The etcd plugin must be configured with the address of the etcd server. This means the `endpoints` IP address in the `etcd.conf` file must match etcd server's `advertise client URLs` address displayed in the etcd startup log. See the etcd troubleshooting section below for clarification.
+The broker accepts `proto.Message` parameters in its methods. You will need to define a protobuf model for data that we want to put in and read from the data store respectively.
 
-The broker accepts `proto.Message` parameters in its methods. Therefore we need to define a protobuf model for data that we want to put in and read from the data store respectively.
-
-For this tutorial we define a very simple model - `Greetings`. You can find it in
+For this tutorial, a simple model called  `Greetings` is used. You can find it in
 the [`model.proto`][6] file.
 
 ```proto
@@ -73,10 +65,10 @@ message Greetings {
     string greeting = 1;
 }
 ```
-!!! note
-    It is a good practice to put all protobuf definitions for a plugin in a `model` directory.
 
-Next, we need to generate Go code from our model. We will use the generated Go 
+---
+
+Next, you need to generate Go code from your model. We will use the generated Go 
 structures as parameters in calls to the broker. The code generation is controlled
 from the `go:generate` directive. Since we only have one go file in this tutorial,
 we put the directive `model` directory like so:
