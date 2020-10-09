@@ -4,7 +4,7 @@
 
 This page describes the tutorials provided in the tutorials section of the Ligato documentation. The tutorials are designed for developers, but can also be used as a learning aid for those interested in understanding how Ligato works. 
 
-For more details on the topics covered in the tutorials, consult the _Developer Guide_.  
+For more details on the topics covered in the tutorials, consult the _User Guide_ and _Developer Guide_.  
 
 What you need before working with the tutorials:
 
@@ -13,8 +13,15 @@ What you need before working with the tutorials:
 * Knowledge of the Go programming language. If Go is new to you, look over the [Get started with Go](https://golang.org/doc/tutorial/getting-started) tutorial. 
 * Go installed on your laptop. The same _Get started with Go_ tutorial explains how to install Go on your local machine.  
 
+Each tutorial is structured in the following manner:
 
-The first tutorial will show you how to create a Hello World plugin. Each subsequent tutorial will build on that by applying additional Ligato functions to your Hello World plugin. 
+- Programming tasks supported by example code blocks 
+- Link to the complete tutorial code and instructions on how to execute
+
+!!! Note
+    The purpose of the code blocks is to show you possible Go programming patterns for functions executed in the tutorial program. You can also inspect the code blocks to compare them against the code contained in the complete tutorial code.
+
+The first tutorial will show you how to create a Ligato agent containing a Hello World plugin. Subsequent tutorials will explain Ligato functions that build on the first tutorial.
 
 | Tutorial  |  Description | Tutorial Code Repo |
 |---|---|---|

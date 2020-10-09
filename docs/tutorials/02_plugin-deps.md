@@ -20,7 +20,7 @@ In this tutorial, you will learn how to add dependencies to your HelloWorld plug
 
 ---
 
-One of the most commonly used dependencies in your plugins will be 
+One of the most commonly used dependencies in your plugins is  
 `PluginDeps` defined in the [cn-infra/infra](https://github.com/ligato/cn-infra/blob/master/infra/infra.go) package.
 
 `PluginDeps` is a struct that aggregates three plugin essentials: 
@@ -29,7 +29,7 @@ One of the most commonly used dependencies in your plugins will be
 - logging 
 - plugin configuration. 
 
-It is defined as:
+The `PluginDeps` struct is defined as:
 ```go
 type PluginDeps struct {
 	PluginName
@@ -38,7 +38,7 @@ type PluginDeps struct {
 }
 ```
 
-You can embed it into your HelloWorld plugin:
+Add `PluginDeps` to your HelloWorld plugin:
 
 ```go
 type HelloWorld struct {
@@ -47,7 +47,7 @@ type HelloWorld struct {
 ```
 
 `PluginName`, which is defined in the `PluginDeps` struct, provides the `String()`
-method for obtaining the name of the plugin. You can set the name of your plugin by using the 
+method for obtaining the name of the plugin. Set the name of your plugin by using the 
 `SetName(name string)` method:
 
 ```go
@@ -56,12 +56,12 @@ p.SetName("helloworld")
 
 ---
 
-The two other components in `PluginDeps` are `Log` and `Cfg`.
+The two other components in `PluginDeps` are `Log` and `Cfg`:
  
  - `Log` is the plugin's logger that is used to log messages at different log levels. 
  - `Cfg` is used to load configuration data from a configuration file that is in YAML format. 
 
-`PluginDeps` has the `Setup()` method, which initializes `Log` and `Cfg` with the name from `PluginName`. It is typically called in the plugin's constructor:
+`PluginDeps` includes the `Setup()` method, which initializes `Log` and `Cfg` with the name from `PluginName`. The `Setup()` method is called in the plugin's constructor:
 
 ```go
 func NewHelloWorld() *HelloWorld {
@@ -88,7 +88,12 @@ For more details on the Log API, see [infra/logging/log_api.go](https://github.c
 
 ---
 
-Now, you can load the plugin configuration from a file. By default, the name of the config file will be derived from the plugin name with an extension of `.conf`. The configuration file name of your HelloWorld plugin will be `helloworld.conf`.
+!!! Note
+    The Ligato documentation uses the term, __conf file__, to refer to a plugin's config or configuration file. The contents of this file contain parameters defining the plugin's behavior at startup. For more information on conf files, see the [Conf Files](../user-guide/config-files.md) section of the _User Guide_. 
+
+Now, you can load the plugin's conf file. By default, the name of the configuration file is derived from the plugin name with an extension of `.conf`.
+
+The conf file name of your HelloWorld plugin is `helloworld.conf`.
 
 ```go
 type Config struct {
@@ -102,18 +107,24 @@ func (p *HelloWorld) Init() error {
 }
 ```
 
-If the config file is not found, the `LoadValue` will return false. If the configuration inside the conf file cannot be parsed, the function will return an error.
-
-!!! Note
-    The Ligato documentation uses the term, __conf file__, to refer to a plugin's config or configuration file.
+If the conf file is not found, the `LoadValue` will return false. If the configuration inside the conf file cannot be parsed, the function will return an error.
 
 ---
 
-Run the plugin dependency code:
+**Run the Plugin Dependencies tutorial code**
 
+1. Open a terminal session.
+<br>
+<br>
+2. Change to the plugin dependencies tutorial folder:
+```
+cn-infra git:(master) cd examples/tutorials/02_plugin-deps
+```
+3. Run code:
 ```
 go run main.go
 ```
+
 Example output: 
 ```
 INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc="agent/agent.go(134)" logger=agent

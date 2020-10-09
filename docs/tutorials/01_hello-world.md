@@ -44,8 +44,10 @@ func (p *HelloWorld) Close() error {
 }
 ```
 Note that the `HelloWorld` struct is empty. Your plugin does not 
-have any data, so all that you need is an empty structure that satisfies the 
+have any data, so all that you need is an empty struct that supports the 
 `Plugin` interface.
+
+---
 
 Some plugins require additional initialization after the base system is up. 
 If required, you can optionally define the `AfterInit` method for your
@@ -62,6 +64,8 @@ type PostInit interface {
 }
 ```
 
+---
+
 Next, create an instance of the `HelloWorld` plugin. Then, create 
 a new agent and tell it about the `HelloWorld` plugin:
 
@@ -74,12 +78,14 @@ func main() {
 ```
 
 You can use `agent` options to add the list of plugins to the agent at the agent's creation
-time. In the code snippet above, the `agent.Plugins` option is used to add the newly created 
+time. The `agent.Plugins` option is used in the code block above to add the  
 `HelloWorld` plugin instance to the agent.
 
-Alternatively, you could use the `agent.AllPlugins` option. This option would add your `HelloWorld` plugin instance to the agent. It will also add any dependencies that the HelloWorld plugin might have. Since your plugin has no dependencies, the simpler `agent.Plugins` option will suffice.
+`agent.AllPlugins` is another option. This option would add your `HelloWorld` plugin instance to the agent. It will also add any dependencies that the HelloWorld plugin might have. Since your plugin has no dependencies, the simpler `agent.Plugins` option will suffice.
 
-Finally, start the agent using its `Run()` method. This will initialize
+---
+
+Finally, start the agent using the agent's `Run()` method. This method will initialize
 the agent's plugins by calling their `Init` and `AfterInit` methods, and then wait
 for an interrupt from the user.
 
@@ -91,7 +97,18 @@ if err := a.Run(); err != nil {
 ```
 When an interrupt, such as `ctrl-c`, arrives from the user, the `Close` methods will be called on all of the agent's plugins, and the agent will exit.
 
-Run the Hello World code:
+---
+
+**Run the Hello World tutorial code**
+
+1. Open a terminal session.
+<br>
+<br>
+2. Change to the hello world tutorial folder:
+```
+cn-infra git:(master) cd examples/tutorials/01_hello-world
+```
+3. Run code:
 ```
 go run main.go
 ```

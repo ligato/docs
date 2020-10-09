@@ -4,13 +4,13 @@
 
 Tutorial code: [KV Data Store][code-link]
 
-In this tutorial, you will learn how use an external key-value (KV) data store, read and write to the KV data store, and how to watch for changes. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin dependencies tutorial](02_plugin-deps.md)
+In this tutorial, you will learn how use an external key-value (KV) data store. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md). You will also need to install the [gogo protobuf generator](https://github.com/gogo/protobuf) on your local machine. 
 
-You will be using [etcd][1] as the KV data store in this tutorial. Note that Ligato supports other [KV data stores](../user-guide/concepts.md#key-value-data-store).
+[etcd][1] is used as the KV data store in this tutorial. Note that Ligato supports other [KV data stores](../user-guide/concepts.md#key-value-data-store).
 
 ---
 
-The common interface for all KV data store implementations is [`KvProtoPlugin`][7]. 
+The common interface for all KV data store implementations is [`KvProtoPlugin`][7]: 
 
 ```go
 type KvProtoPlugin interface {
@@ -23,10 +23,9 @@ type KvProtoPlugin interface {
 ```
 
 To use etcd as your KV data store plugin, define a field for the 
-`KvProtoPlugin` interface in your plugin. Then initialize the interface with an etcd plugin 
-instance in your plugin's constructor. 
+`KvProtoPlugin` interface in your plugin. Then initialize the interface with an etcd plugin instance in your plugin's constructor. 
 
-This creates a dependency on the KV data store in your plugin. You have satisfied this dependency by using the default etcd plugin of `etcd.DefaultPlugin`.
+This creates a dependency on the KV data store in your plugin. You have satisfied this dependency by using the default etcd plugin of `etcd.DefaultPlugin`:
 
 ```go
 type MyPlugin struct {
@@ -43,24 +42,25 @@ func NewMyPlugin() *MyPlugin {
 
 ---
 
-Once you have your KV data store plugin set up, you will need to create a broker. The broker is a facade  for plugins or components communicate with the data store. The broker conceals the complexity of interacting with the different data stores and provides a simple read/write API. 
+Next, create a broker. The broker is a facade  for plugins or components that communicate with the data store. The broker conceals the complexity of interacting with the different data stores and provides a simple read/write API. 
 
-The broker must be initialized with a key prefix that becomes the root for the
+Initialize the broker with a key prefix that becomes the root of the
 KV tree that the broker will operate on. The broker uses the key prefix for all
 of its get, list, put and delete operations. 
  
-The key prefix of `/myplugin/` is used in this code snippet:
+The key prefix of `/myplugin/` is used in this code block:
 
 ```go
 broker := p.KVStore.NewBroker("/myplugin/")
 ```
 
-The broker accepts `proto.Message` parameters in its methods. You will need to define a protobuf model for data that we want to put in and read from the data store respectively.
+For more information about key prefixes, see the [key prefix section](../user-guide/concepts.md#key-prefix) of the _User Guide_.
 
-For this tutorial, a simple model called  `Greetings` is used. You can find it in
-the [`model.proto`][6] file.
+The broker accepts `proto.Message` parameters in its methods. Define a protobuf model for data that you wish to communicate to and from the data store.
 
-```proto
+A simple [.proto model][6] called  `Greetings` is shown in the code block below:
+
+```json
 message Greetings {
     string greeting = 1;
 }
@@ -68,30 +68,25 @@ message Greetings {
 
 ---
 
-Next, you need to generate Go code from your model. We will use the generated Go 
-structures as parameters in calls to the broker. The code generation is controlled
-from the `go:generate` directive. Since we only have one go file in this tutorial,
-we put the directive `model` directory like so:
+Next, generate Go code based on your model using the [--gogo protobuf generator](https://github.com/gogo/protobuf). You have a single `model.proto` file stored in the `model` folder. It is a good practice to place the generated Go code in the same `model` folder. 
 
+Use the `model` directory in the `go:generate` directive's `--proto_path` and `--gogo_out` flags to achieve this:
 ```go
 //go:generate protoc --proto_path=model --gogo_out=model ./model/model.proto
 ```
-The above directive assumes that we use the gogo protobuf generator.
-The source protobuf files can be found in the model directory and the
-generated files will also be put into the model directory. Note also that to
-use the gogo protobuf generator, you must install it on your machine as 
-described [here](https://github.com/gogo/protobuf).
 
-We use the go compiler to generate Go files from the model with this command:
+To generate Go files using the Go compiler, use this command:
 ```
 go generate
 ``` 
-Go generate must be run explicitly. It scans go files in the current path for
-the `generate` directives and then invokes the protobuf compiler. In our 
-tutorial, `go generate` will create the file `model.pb.go`.
+Go generate must be run explicitly. It scans Go files in the current path for
+the `generate` directives and then invokes the protobuf compiler.
 
-Now we can finally use the generated Go structures to update a value in the 
-KV data store. We will use the broker's `Put` method:
+---
+
+Next, employ the generated Go structures to interact with the KV data store through the broker.
+
+Use the broker's `Put` method to update the value with a key of `/myplugin/greetings/hello`:
 
 ```go
 value := &model.Greetings{
@@ -103,9 +98,9 @@ if err != nil {
 }
 ```
 
-The value above will be updated for key `/myplugin/greetings/hello`.
+---
 
-To retrieve a value from the KV data store we will use broker's `GetValue` method:
+Use the broker's `GetValue` method to retrieve a value from the KV data store:
 
 ```go
 value := new(model.Greetings)
@@ -117,13 +112,15 @@ if err != nil {
 }
 ```
 
-To watch for changes in the KV data store we need to initialize a watcher:
+---
+
+To watch for changes in the KV data store, initialize a watcher:
 
 ```go
 watcher := p.KVStore.NewWatcher("/myplugin/")
 ```
 
-Then we need to define our callback function that will process the changes:
+Then define your callback function that will process the changes:
 
 ```go
 onChange := func(resp keyval.ProtoWatchResp) {
@@ -136,7 +133,7 @@ onChange := func(resp keyval.ProtoWatchResp) {
 }
 ```
 
-Now we can start watching for a key prefix(es):
+Start watching for key prefixes:
 
 ```go
 cancelWatch := make(chan string)
@@ -146,42 +143,70 @@ if err != nil {
 }
 ```
 
-The channel `cancelWatch` can be used to cancel watching.
+Use the `cancelWatch` channel to cancel watching.
 
-Before running the kv-store code, the etcd server must be running.
+---
 
-Start etcd
+**Run the KV Data Store tutorial code**
+
+1. Open a terminal session 
+<br>
+<br>
+2. Change to the KV Data Store tutorial folder:
+```
+cn-infra git:(master) cd examples/tutorials/04_kv-store
+```
+3. Start etcd
+
+First, make sure that the etcd.conf file contained in the 04_kv-store/ folder uses an endpoint of `0.0.0.0`. If not, you will receive an error when attempting to run the tutorial code.
+
+The `etcd.conf` should look like this: 
+```
+insecure-transport: true
+dial-timeout: 1000000000
+endpoints:
+ - "0.0.0.0:2379"
+```
+
+For additional etcd troubleshooting tips, see the _Tutorial etcd troubleshooting_ section below.
+
+To start etcd, use this command:
 ```
 etcd
 ```
-
-__Run the kv-store code__
-
-First open a new terminal in the tutorial folder
+4. Open another terminal session.
+<br>
+<br>
+5. Change to the KV Data Store tutorial folder if necessary:
+```
+cn-infra git:(master) cd examples/tutorials/04_kv-store
+```
+6. Run code:
 ```
 go run main.go
 ```
 
-Output
+
+Output:
 ```
-INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc="agent/agent.go(134)" logger=agent
-INFO[0000] Connected to Etcd (took 1.715168ms)           endpoints="[0.0.0.0:2379]" loc="etcd/bytes_broker_impl.go(60)" logger=etcd
-INFO[0000] Status check for etcd was started             loc="etcd/plugin_impl_etcd.go(122)" logger=etcd
-INFO[0000] Agent started with 4 plugins (took 4ms)       loc="agent/agent.go(179)" logger=agent
-INFO[0000] Found some greetings: greeting:"Hello"        loc="04_kv-store/main.go(112)" logger=myplugin
-INFO[0002] updating..                                    loc="04_kv-store/main.go(118)" logger=myplugin
-INFO[0002] Put change, Key: "greetings/hello" Value: greeting:"Hello"   loc="04_kv-store/main.go(98)" logger=myplugin
-INFO[0005] Agent plugin state update.                    lastErr="<nil>" loc="statuscheck/plugin_impl_statuscheck.go(183)" logger=status-check plugin=etcd state=ok
+INFO[0000] Starting agent version: v0.0.0-dev            CommitHash= BuildDate= logger=agent
+INFO[0000] Connected to Etcd (took 1.423873ms)           endpoints="[0.0.0.0:2379]" logger=etcd
+INFO[0000] Status check for etcd was started             logger=etcd
+INFO[0000] Agent started with 4 plugins (took 5ms)       logger=agent
+INFO[0000] No greetings found..                          logger=myplugin
+INFO[0002] updating..                                    logger=myplugin
+INFO[0002] Put change, Key: "greetings/hello" Value: greeting:"Hello"   logger=myplugin
+INFO[0005] Agent plugin state update.                    lastErr="<nil>" logger=status-check plugin=etcd state=ok
 ```
 
 # __Tutorial etcd troubleshooting__
 
-You might encounter the following if the tutorial code does not complete properly.
+You might encounter the following if the tutorial code does not run to completion properly.
 
 !!! Error
     `etcd.conf` is not present in the tutorial folder
 
-Output
+Output:
 ```
 INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc=“agent/agent.go(134)” logger=agent
 INFO[0000] ETCD config not found, skip loading this plugin  loc="etcd/plugin_impl_etcd.go(293)" logger=etcd
@@ -193,7 +218,7 @@ The etcd plugin must be configured with the address of the etcd server. This is 
 !!! Error
     Incorrect `endpoints` value in the etcd.conf file
 
-Output
+Output:
 ```
 CHMETZ-M-72TZ:04_kv-store chrismetz$ go run main.go
 INFO[0000] Starting agent version: v0.0.0-dev            BuildDate= CommitHash= loc=“agent/agent.go(134)" logger=agent
@@ -216,7 +241,7 @@ dial-timeout: 1000000000
 endpoints:
  - "172.17.0.1:2379"
 ```
-It appears the etcd plugin is not configured with the address of the etcd server. The solution is to edit the etcd.conf so it appears like so
+It appears the etcd plugin is not configured with the address of the etcd server. The solution is to edit the etcd.conf so it looks like this:
 ```
 insecure-transport: true
 dial-timeout: 1000000000
@@ -224,8 +249,6 @@ endpoints:
  - "0.0.0.0:2379"
 ```
 
-
-Complete working example can be found at [examples/tutorials/04_kv-store](https://github.com/ligato/cn-infra/blob/master/examples/tutorials/04_kv-store).
 
 
 [1]: https://github.com/ligato/cn-infra/tree/master/db/keyval/etcd
