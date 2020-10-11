@@ -15,8 +15,9 @@ This tutorial does not use etcd or any other northbound (NB) KV data store for e
 Start by defining a simple NB [proto model][1] that you will use in your HelloWorld plugin. The model defines two messages:
  
  - `Interface` 
- - `Route` that depends on an interface. The model demonstrates a simple
-dependency between two configuration items.
+ - `Route` 
+ 
+ The `route` depends on the `interface`. The model demonstrates a simple dependency between two configuration items.
  
 !!! Note "Important" 
     The VPP agent uses the Orchestrator component. It is responsible for collecting northbound data originating from multiple sources such as a KV data store or a gRPC client. To marshall/unmarshall proto messages defined in NB proto models, the Orchestrator requires `messages` contain `message names`.  
@@ -27,13 +28,13 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 option (gogoproto.messagename_all) = true;
 ```
 
-To register your Hello World plugin with the KV Scheduler, and to work with your new model, you need an `Adapter` and `Descriptor` for every proto.Message.
+To register your HelloWorld plugin with the KV Scheduler, and to work with your new model, you need an `Adapter` and `Descriptor` for every proto.Message.
 
 ---
  
 #### Adapters
  
-Let's start with adapters. An adapter defines conversion methods between a proto-defined type, and
+Let's start with adapters. An adapter handles the conversion of a proto-defined type to
 a bare `proto.Message` that the KV Scheduler works with. Since this is boilerplate code, there is tooling to auto-generate
 adapters. The code generator is called `descriptor-adapter` and can be found in the [KV Scheduler plugin folder][2]. 
 
@@ -43,12 +44,14 @@ You can install the `descriptor-adapter` manually:
 go install github.com/ligato/vpp-agent/plugins/kvscheduler/descriptor-adapter
 ```
 
-Alternatively, and assuming you have a dependency on the VPP agent in your vendor directory, you can put the following target into your project Makefile:
+Alternatively, you can put the following target into your project makefile. This assumes you have a dependency on the VPP agent in your vendor directory: 
 
 ```
 get-generators:
     @go install ./vendor/github.com/ligato/vpp-agent/plugins/kvscheduler/descriptor-adapter
 ```
+
+
 
 Build the binary file from the `.go` files present inside the model folder. Then use the binary file to generate the adapters for the `Interface` and `Route` proto messages:
  
@@ -86,7 +89,9 @@ func NewIfDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 `NewIfDescriptor` is a constructor function that returns a type-safe descriptor object. All potential descriptor 
 dependencies, such as logger for example, are provided using constructor parameters.  
 
-Examine `adapter.InterfaceDescriptor` in the `descriptors.go` file, and you will see several defined fields. The most important of these fields are function-types with CRUD definitions, and the fields resolving dependencies. For a complete list of all descriptor fields, see the [KV Descriptor API definition][3].
+Examine `adapter.InterfaceDescriptor` in the `descriptors.go` file, and you will see several defined fields. The most important of these fields are function-types with CRUD definitions, and the fields resolving dependencies. 
+
+For a complete list of all descriptor fields, see the [KV Descriptor API definition][3].
 
 ---
 
@@ -107,7 +112,7 @@ Set the string representation of the type:
 ValueTypeName: proto.MessageName(&model.Interface{}),
 ```
 
-Add the configuration item identifier, consisting of label, name, and index, that is returned by this method: 
+Add the configuration item identifier, consisting of label, name, and index. This method returns the configuration item identifier. 
 ```go
 KeyLabel: func(key string) string {
     return strings.TrimPrefix(key, "/interface/")
@@ -220,7 +225,7 @@ func (d *RouteDescriptor) Create(key string, value *model.Route) (metadata inter
 
 In addition, there are two new fields:
 
-* Dependencies list that contains a key prefix and unique label value. The key prefix and label are required for any given configuration item. The configuration item will not be created because the dependency key does not exist. The label is informative and should be unique:
+* Dependencies list that contains a key prefix and unique label value. The key prefix and label are required for a configuration item. The configuration item will not be created because the dependency key does not exist. The label is informative and should be unique:
 ```go
 func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dependency {
 	return []api.Dependency{
@@ -234,7 +239,7 @@ func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dep
 
 * Descriptors list where dependent values are processed. 
 
-Return just the interface descriptor since this is the one handling interfaces.
+Return the interface descriptor since this is the one handling interfaces.
 ```go
 RetrieveDependencies: []string{ifDescriptorName},
 ```
@@ -268,7 +273,7 @@ func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 }
 ```
 
-Set function fields as references to the `RouteDescriptor` methods. Here is the complete descriptor:
+Set function fields as references to the `RouteDescriptor` methods. Here is the complete route descriptor:
 ```go
 func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 	descriptorCtx := &RouteDescriptor{
@@ -287,11 +292,13 @@ func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 }
 ```
 
-The descriptor API provides additional methods such as `Update()`, `Delete()`, `Retrieve()` and `Validate()`. For more information about the descriptor API, see the [KV Descriptor API definition][3].
+The descriptor API provides additional methods such as `Update()`, `Delete()`, `Retrieve()` and `Validate()`. 
+
+For more information about the descriptor API, see the [KV Descriptor API definition][3].
 
 #### Wire your plugin into the KV Scheduler
 
-Let's start by registering the three completed descriptors in the `main.go` file. The first step is to add the `KV Scheduler` to your HelloWorld plugin as a plugin dependency:
+Let's start by registering the completed descriptors in the `main.go` file. The first step is to add the `KV Scheduler` to your HelloWorld plugin as a plugin dependency:
 ```go
 type HelloWorld struct {
 	infra.PluginDeps
@@ -334,7 +341,7 @@ An example is programming a route before resolving the interface dependency. The
 
 The tutorial code contains `main.go`, `descriptors.go`, a model, and the generated adapters. The code includes the `AfterInit()` method. This method starts a new Go routine with a testing procedure.
 
-The tutorial code below executes three test cases. All can be built and started without any conf files. The KV Scheduler `StartNBTransaction()` method simulates NB transactions.
+The tutorial code executes three test cases. All can be built and started without any conf files. The KV Scheduler `StartNBTransaction()` method simulates NB transactions.
 
 Steps to run the tutorial code:
 
@@ -351,11 +358,12 @@ go run main.go descriptors.go
 ```
 
 !!! Note
-    The output includes the transaction log for all three cases. To best explain what is happening in the three test cases, only the operations portions of the log are shown.
+    By the running the code, you will print the transaction log for all three cases. The discussion below includes a subset of the transaction log pertaining to the specific test case.
+    
      
 **1. Configure the interface and the route in a single transaction**
 
-This is the part of the output labelled as `planned operations`:
+Transaction log output:
 ```bash
 1. CREATE:
   - key: /interface/if1
@@ -365,11 +373,14 @@ This is the part of the output labelled as `planned operations`:
   - value: { name:"route1" interface_name:"if1"  } 
 ``` 
 
-As expected, the interface creation is first; route creation is second. This follows the order performed in the transaction.
+As expected, the interface creation is first; route creation is second. This follows the configuration order performed in this test case.
 
-**2. Configure the route first, and the interface second, in a single transaction.** This reverses the order performed in the first test case.
+---
 
-Output:
+**2. Configure the route first, and the interface second, in a single transaction.** 
+This reverses the configuration order performed in the first test case.
+
+Transaction log output:
 ```bash
 1. CREATE:
   - key: /interface/if2
@@ -379,20 +390,33 @@ Output:
   - value: { name:"route2" interface_name:"if2"  } 
 ```
 
-The `Create` sequence is exactly the same. This is despite the fact the transaction values are set in the reverse order. As shown, the KV Scheduler re-ordered the configuration items in the correct sequence before generating the transaction.
+The `Create` sequence is exactly the same. This is despite the fact that the code reversed the configuration order. As shown, the KV Scheduler re-ordered the configuration items in the correct sequence before generating the transaction.
+
+
+---
 
 **3. Configure the route and interface in separate transactions**
 
-In this case, you have two outputs since there are two transactions:
+In this case, you have two outputs since there are two transactions. 
 
+The route comes first, but it is cached. The dependent interface does not exist, and the KV Scheduler does not know when it will appear. The route is marked as `[NOOP IS-PENDING]`:
+
+Transaction log output:
 ```bash
 1. CREATE [NOOP IS-PENDING]:
   - key: /route/route3
   - value: { name:"route3" interface_name:"if3"  } 
 ```
 
-The route comes first, but it is cached. The dependent interface does not exist, and the KV Scheduler does not know when it will appear. The route is marked as `[NOOP IS-PENDING]`.
+---
 
+The second transaction introduces the expected interface. The KV Scheduler:
+ 
+- recognizes the interface as a dependency for the cached route.
+- sorts the items into the correct order.
+- calls the appropriate configuration method. 
+
+Transaction log output:
 ```bash
 1. CREATE:
   - key: /interface/if3
@@ -402,13 +426,7 @@ The route comes first, but it is cached. The dependent interface does not exist,
   - value: { name:"route3" interface_name:"if3"  } 
 ```
 
-The second transaction introduces the expected interface. The KV Scheduler:
- 
-- recognized the interface as a dependency for the cached route.
-- sorted the items into the correct order.
-- called the appropriate configuration method. 
-
-The previously cached route is marked as `[WAS-PENDING]`. This indicates the item had been cached previously.
+The KV Scheduler marked the cached route as `[WAS-PENDING]`. This indicates the item had been cached previously.
 
  [1]: https://github.com/ligato/vpp-agent/blob/master/examples/tutorials/05_kv-scheduler/model/model.proto
  [2]: https://github.com/ligato/vpp-agent/tree/master/plugins/kvscheduler/descriptor-adapter
