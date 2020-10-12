@@ -12,7 +12,7 @@ In this tutorial, you will learn how to add dependencies to your HelloWorld plug
         A Ligato-built agent will typically consist of one or more plugins that contain the application logic. There could be other plugins and components providing various services to your application plugins. In other words, your application plugins are dependent on those other plugins and components to provide a service that your plugin needs. Examples include a KV data store, message bus adapters, loggers and health monitors. 
  
     Ligato uses the **dependency injection** design pattern to
-    manage dependencies. This is accomplished by injecting dependencies on other plugins into your plugin when it is initialized. You should use dependency injection to manage all dependencies in your plugin. 
+    manage dependencies. This pattern injects dependencies on other plugins into your plugin when it is initialized. You should use dependency injection to manage all dependencies in your plugin. 
  
     You need dependency injection to be able to create mocks in your unit tests. This is especially true for components that interact with the external world, such as the KV data store or message bus adapters. Without good mocks that incorporate dependency injection, it is almost impossible to achieve production-level unit test coverage.
     
@@ -20,7 +20,7 @@ In this tutorial, you will learn how to add dependencies to your HelloWorld plug
 
 ---
 
-One of the most commonly used dependencies in your plugins is  
+One of the most commonly used dependencies in any plugin you develop is  
 `PluginDeps` defined in the [cn-infra/infra](https://github.com/ligato/cn-infra/blob/master/infra/infra.go) package.
 
 `PluginDeps` is a struct that aggregates three plugin essentials: 
@@ -29,7 +29,7 @@ One of the most commonly used dependencies in your plugins is
 - logging 
 - plugin configuration. 
 
-The `PluginDeps` struct is defined as:
+`PluginDeps` struct:
 ```go
 type PluginDeps struct {
 	PluginName
@@ -37,6 +37,8 @@ type PluginDeps struct {
 	Cfg config.PluginConfig
 }
 ```
+
+---
 
 Add `PluginDeps` to your HelloWorld plugin:
 
@@ -46,10 +48,11 @@ type HelloWorld struct {
 }
 ```
 
-`PluginName`, which is defined in the `PluginDeps` struct, provides the `String()`
-method for obtaining the name of the plugin. Set the name of your plugin by using the 
-`SetName(name string)` method:
+---
 
+`PluginName` is defined in the `PluginDeps` struct. `PluginName` provides the `String()`method for obtaining the name of the plugin. 
+
+Set the name of your plugin by using the `SetName(name string)` method:
 ```go
 p.SetName("helloworld")
 ```
@@ -58,11 +61,10 @@ p.SetName("helloworld")
 
 The two other components in `PluginDeps` are `Log` and `Cfg`:
  
- - `Log` is the plugin's logger that is used to log messages at different log levels. 
- - `Cfg` is used to load configuration data from a configuration file that is in YAML format. 
+ - `Log` is the plugin's logger that logs messages at different log levels.
+ - `Cfg` loads configuration data from a configuration file. The configuration is formatted in YAML. 
 
-`PluginDeps` includes the `Setup()` method, which initializes `Log` and `Cfg` with the name from `PluginName`. The `Setup()` method is called in the plugin's constructor:
-
+`PluginDeps` includes the `Setup()` method, which initializes `Log` and `Cfg` with the name from `PluginName`. The plugin's constructor calls the `Setup()` method: 
 ```go
 func NewHelloWorld() *HelloWorld {
 	p := new(HelloWorld)
@@ -72,10 +74,11 @@ func NewHelloWorld() *HelloWorld {
 }
 ```
 
+---
+
 After initializing `Log` and `Cfg`, they are ready for action. 
 
-Let's log a few messages:
-
+Let's log a few messages using the following:
 ```go
 func (p *HelloWorld) Init() error {
 	p.Log.Info("System ready.")
@@ -116,7 +119,7 @@ If the conf file is not found, the `LoadValue` will return false. If the configu
 1. Open a terminal session.
 <br>
 <br>
-2. Change to the plugin dependencies tutorial folder:
+2. Change to the -2_plugin-deps folder:
 ```
 cn-infra git:(master) cd examples/tutorials/02_plugin-deps
 ```

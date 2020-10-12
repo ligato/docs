@@ -8,7 +8,9 @@ In this tutorial, you will create a Ligato agent that
 contains a plugin called __HelloWorld__. This plugin prints "Hello World" to the log.
 
 !!! Note
-    The term `agent` is used to describe a Ligato software component providing life-cycle management functions for plugins.
+    `agent` is a term used to describe a Ligato software component providing plugin life-cycle management functions. 
+
+---
 
 Let's start with the plugin. Every plugin must implement the `Plugin` interface
 defined in the [cn-infra/infra](https://github.com/ligato/cn-infra/blob/master/infra/infra.go) package:
@@ -24,7 +26,7 @@ type Plugin interface {
 }
 ```
 
-Implement the `Plugin` interface methods for your `HelloWorld` plugin:
+Implement the `Plugin` interface methods for your HelloWorld plugin:
 
 ```go
 type HelloWorld struct{}
@@ -44,7 +46,7 @@ func (p *HelloWorld) Close() error {
 }
 ```
 Note that the `HelloWorld` struct is empty. Your plugin does not 
-have any data, so all that you need is an empty struct that supports the 
+have any data, so all you need is an empty struct that supports the 
 `Plugin` interface.
 
 ---
@@ -66,8 +68,8 @@ type PostInit interface {
 
 ---
 
-Next, create an instance of the `HelloWorld` plugin. Then, create 
-a new agent and tell it about the `HelloWorld` plugin:
+Next, create an instance of the HelloWorld plugin. Then, create 
+a new agent and tell it about the HelloWorld plugin:
 
 ```go
 func main() {
@@ -77,17 +79,13 @@ func main() {
 }
 ```
 
-You can use `agent` options to add the list of plugins to the agent at the agent's creation
-time. The `agent.Plugins` option is used in the code block above to add the  
-`HelloWorld` plugin instance to the agent.
+You can use `agent.` options to add the list of plugins to the agent at the agent's creation time. The code block above demonstrates how the  `agent.Plugins` option adds an instance of the HelloWorld plugin to the agent.
 
-`agent.AllPlugins` is another option. This option would add your `HelloWorld` plugin instance to the agent. It will also add any dependencies that the HelloWorld plugin might have. Since your plugin has no dependencies, the simpler `agent.Plugins` option will suffice.
+`agent.AllPlugins` is another option to add the HelloWorld plugin instance to the agent. In addition, the `agent.AllPlugins` option can add any dependencies that the HelloWorld plugin might have. Since your plugin has no dependencies, the simpler `agent.Plugins` option will suffice.
 
 ---
 
-Finally, start the agent using the agent's `Run()` method. This method will initialize
-the agent's plugins by calling their `Init` and `AfterInit` methods, and then wait
-for an interrupt from the user.
+Finally, start the agent using the agent's `Run()` method. This method will initialize the agent's plugins by calling their `Init` and `AfterInit` methods, and then wait for an interrupt from the user.
 
 
 ```go
@@ -95,7 +93,7 @@ if err := a.Run(); err != nil {
 	log.Fatalln(err)
 }
 ```
-When an interrupt, such as `ctrl-c`, arrives from the user, the `Close` methods will be called on all of the agent's plugins, and the agent will exit.
+When an interrupt, such as `ctrl-c`, arrives from the user, the `Close` method will be called on all of the agent's plugins, and the agent will exit.
 
 ---
 
@@ -104,7 +102,7 @@ When an interrupt, such as `ctrl-c`, arrives from the user, the `Close` methods 
 1. Open a terminal session.
 <br>
 <br>
-2. Change to the hello world tutorial folder:
+2. Change to the 01_hello-world folder:
 ```
 cn-infra git:(master) cd examples/tutorials/01_hello-world
 ```
