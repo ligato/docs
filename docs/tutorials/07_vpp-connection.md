@@ -6,9 +6,9 @@ Tutorial code: [VPP Connection][code-link]
 
 In this tutorial, you will learn how to use the [GoVPPMux plugin][1] with your HelloWorld plugin to connect to VPP. You will also see how to perform synchronous, asynchronous, and multi-request calls in order to put configuration items to the VPP data plane.
 
-Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md). You will also need to install VPP, or the VPP binary file of the supported VPP version. 
+Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md). You will also need to install VPP, or the VPP binary file of the supported VPP version on your local machine. 
 
-This tutorial focuses on the functions performed between the VPP agent and the VPP data plane performed in the southbound (SB) direction. To keep it simple, this tutorial does not use a KV data store. 
+This tutorial focuses on the functions performed in the southbound (SB) direction between the VPP agent and the VPP data plane. To keep it simple, this tutorial does not use a KV data store. 
 
 --- 
 
@@ -19,7 +19,7 @@ type HelloWorld struct {
 }
 ```   
 
-Initialize GoVPPMux plain in the `main()` after the HelloWorld plugin struct definition:
+Initialize GoVPPMux plugin in the `main()` after the HelloWorld plugin struct definition:
 ```go
 func main() {
 	p := new(HelloWorld)
@@ -30,9 +30,9 @@ func main() {
 }
 ``` 
 
-The GoVPPMux API lets other plugins to create their own API channels to communicate with VPP using the GoVPP core. The channel can be either buffered or unbuffered. The channel passes requests and replies between VPP and your plugin. 
+The GoVPPMux API lets other plugins create their own API channels to communicate with VPP using the GoVPP core. The channel can be buffered or unbuffered. The channel passes requests and replies between VPP and your plugin. 
 
-Create a channel in the `Init`. First, add a variable of `Channel` type to have the VPP channel available for all HelloWorld methods:
+Create a channel in the `Init()`. Add a variable of `Channel` type to have the VPP channel available for all HelloWorld methods:
 ```go
 type HelloWorld struct {
 	vppChan api.Channel
@@ -53,7 +53,7 @@ func (p *HelloWorld) Init() (err error) {
 }
 ```
 
-Do not forget to close the channel:
+Close the channel:
 ```go
 func (p *HelloWorld) Close() error {
 	p.vppChan.Close()
@@ -62,33 +62,33 @@ func (p *HelloWorld) Close() error {
 }
 ```
 
-Later, you will use the channel to send or receive data. But first, we need to prepare the data and send it in a way that VPP can understand.
+Later, you will use the channel to send and receive data. But first, you need to prepare the data and send it in a way that VPP can understand.
 
 #### 1. Binary API
 
 !!! note
     This section provides some background on the binary API. This can be skipped, and you can proceed to the _Synchronous VPP call_ section of this tutorial. 
 
-GoVPP is a toolset for VPP management. It provides a high-level API for communication with the GoVPP core and for sending and receiving messages to/from the VPP via adapter. This is a component between GoVPP and VPP responsible for sending and receiving binary-encoded data via the VPP socket client (by default, but the VPP shared memory is also available when needed). It also provides a bindings generator for VPP JSON binary API definitions referred to as the **binapi-generator**.
+GoVPP is a toolset for VPP management. It provides a high-level API for communication with the GoVPP core, and for sending and receiving messages to/from the VPP via adapter. This is a component between GoVPP and VPP responsible for sending and receiving binary-encoded data via the VPP socket client. The socket is the default, but the VPP shared memory is also available when needed. It also provides a bindings generator for VPP JSON binary API definitions referred to as the **binapi-generator**.
  
-Bindings are by default present in the path `/usr/share/vpp/api/` and divided into multiple logical files. Any of the JSON API files can be transformed into the `.go` file using binapi-generator. Generated API calls or messages can be then directly referenced in the go code. The vpp-agent stores generated binary API files in the [binapi directory](https://github.com/ligato/vpp-agent/tree/master/plugins/vpp/binapi) (the tutorial example uses interface bindings from this directory as well)
+Bindings are by default present in the path `/usr/share/vpp/api/` and divided into multiple logical files. Any of the JSON API files can be transformed into the `.go` file using the binapi-generator. Generated API calls or messages can be then directly referenced in the Go code. The VPP agent stores generated binary API files in the [binapi directory](https://github.com/ligato/vpp-agent/tree/master/plugins/vpp/binapi). 
 
 The binapi-generator uses following format:
 ```bash
 binapi-generator --input-file=/usr/share/vpp/api/<name>.api.json --output-dir=<path>
 ```
 
-Remember that the `*.api.json` files are present only when the VPP is installed in the system. This step needs to be done only once, and files must be re-generated only when a new VPP (version) with changes in the API is introduced. 
+Remember that the `*.api.json` files are present only when the VPP is installed on the system. This step needs to be done only once. The binapi-generator must regenerate the files with the introduction of a new VPP version containing API changes.  
 
-In this tutorial, the `binapi-generator` has generated the required messages, so you will not need this step. Only the correct VPP version is mandatory. 
+In this tutorial, the `binapi-generator` has generated the required messages, so you will not need to perform this step. Only the correct VPP version is mandatory. 
 
-To check on the supported VPP versions, see the [vpp.env file ](https://github.com/ligato/vpp-agent/blob/master/vpp.env) in the VPP agent repository.
+To check on the supported VPP versions, see the [vpp.env file ](https://github.com/ligato/vpp-agent/blob/master/vpp.env) in the vpp-agent repository.
 
 To read more about GoVPP, go to the [GoVPP Project wiki](https://wiki.fd.io/view/GoVPP). Or see the discussion on the [GoVPPMux VPP plugin_ section][govppmux] of the _User Guide_.
 
 #### 2. Synchronous VPP call
 
-Let's return to the tutorial. Until now, you have injected the GoVPPMux plugin into the `HelloWorld` plugin , and prepared the VPP channel. In this section, you will configure the loopback interface from the `interfaces.api.json` bindings synchronously. 
+Let's return to the tutorial. So far, you have injected the GoVPPMux plugin into the HelloWorld plugin, and prepared the VPP channel. In this section, you will configure the loopback interface from the `interfaces.api.json` bindings synchronously. 
 
 Define a new method where the message will be processed, and prepare the request:
 ```go
@@ -99,9 +99,9 @@ func (p *HelloWorld) syncVppCall() {
 
 The request struct is from the generated VPP API file. The request type defines a configuration item which will be created. In this case,the configuration item is a loopback interface. The majority of the request messages contain one or more fields which can be set to a given value. 
 
-The `CreateLoopback` method has one field,`MacAddress`, of type `[]byte`. Filling in this value lets you create a new loopback interface with the MAC address already assigned. 
+The `CreateLoopback()` method has one field,`MacAddress`, of type `[]byte`. Filling in this value lets you create a new loopback interface with the MAC address already assigned. 
 
-Since the most convenient method would be to define a MAC address as `string`, prepare a short helper method which transforms your `string` type MAC address to a byte array using the built-in `net` package:
+Since the most convenient method would be to define a MAC address as a `string`, prepare a short helper method which transforms your `string` type MAC address to a byte array using the built-in `net` package:
 ```go
 func macParser(mac string) []byte {
 	hw, err := net.ParseMAC(mac)
@@ -121,7 +121,7 @@ func (p *HelloWorld) syncVppCall() {
 }
 ```
 
-Sending the request can result in success or failure. To learn the request state, define a reply value. The rule within the VPP API is that the message reply has the same message name + `Reply` suffix:
+Sending the request can result in success or failure. To learn the request state, define a reply value. The rule with the VPP API is that the message reply has the same message name + `Reply` suffix:
 ```go
 func (p *HelloWorld) syncVppCall() {
 	request := &interfaces.CreateLoopback{
@@ -137,7 +137,7 @@ After you have prepared the request and reply messages, make a VPP call using yo
 This is performed in two steps:
 
 - Send the request message using `SendRequest`.
-- Receive reply message calling `ReceiveReply` on request context.
+- Receive the reply message by calling `ReceiveReply` on request context.
 
 The call can be done in a single line. Do not forget to handle the error:
 ```go
@@ -155,11 +155,11 @@ func (p *HelloWorld) syncVppCall() {
 
 It is worth noting that the `ReceiveReply` is a blocking call. VPP will return the reply, only after it has fully processed the request. This could take up to (order milliseconds), depending on the request.  
 
-The reply message always provides you with the reply value called `Retval`. It contains a return code in case something went wrong with the API call. It is not required inspect separately, since in such a case, the call always returns error. 
+The reply message always provides you with a reply value called `Retval`. It contains a return code in case something went wrong with the API call. You do not need to inspect the `Retval` separately. This is because the call will always return an error. 
 
-There can be other useful data in the reply. Useful data is represented by the interface index generated within VPP. The interface index is a unique identifier for the interface just created.
+There can be other useful data in the reply. The interface index generated within VPP is considered useful data. The interface index is a unique identifier for the interface that was just created.
 
-Add code to print the index of our loopback:
+Add code to print the index of your loopback:
 ```go
 func (p *HelloWorld) syncVppCall() {
 	request := &interfaces.CreateLoopback{
@@ -174,7 +174,7 @@ func (p *HelloWorld) syncVppCall() {
 }
 ```
 
-Start `syncVppCall` from the `main` :
+Start `syncVppCall` from the `main()`:
 ```go
 func main() {
 	// Create an instance of our plugin.
@@ -207,7 +207,7 @@ loop0                             1     down         9000/0/0/0
 vpp# 
 ``` 
 
-Your loopback interface, internally named 'loop0', is created. Currently, it is down since the admin status changes via another binary API we did not use. But the procedure is the same. 
+Your loopback interface, internally named 'loop0', is created. Currently, it is down since the admin status changes with another binary API you did not use. However, the procedure is the same. 
 
 Check the mac address:
 ```bash
@@ -222,11 +222,11 @@ loop0                              1    down  loop0
 vpp# 
 ``` 
 
-This output shows you that the MAC address is set to the value defined in the binary API call.
+This output shows you that the MAC address equals the value defined in the binary API call.
 
 #### 3. Asynchronous VPP call
 
-In this section, you will configure several loopback interfaces asynchronously. You won't process API calls one-by-one, but rather put all request messages out at once and then process the replies later. 
+In this section, you will configure several loopback interfaces asynchronously. You won't process API calls one-by-one, but rather put all request messages out at once, and then process the replies later. 
 
 Start with another method and prepare two more requests. Use different MAC addresses:
 ```go
@@ -251,7 +251,7 @@ func (p *HelloWorld) asyncVppCall() {
 }
 ```
 
-At this point, every request is sent and VPP request processing is underway. In the meantime, your example can allocate responses:
+At this point, your code has sent every request and VPP request processing is underway. In the meantime, your example can allocate responses:
 ```go
 func (p *HelloWorld) asyncVppCall() {
 	
@@ -262,7 +262,7 @@ func (p *HelloWorld) asyncVppCall() {
 }
 ```
 
-Then, both replies can be obtained using the correct request context:
+Both replies can be obtained using the correct request context:
 ```go
 func (p *HelloWorld) asyncVppCall() {
 	
@@ -328,7 +328,7 @@ func main() {
 }
 ```
 
-Then start the example as before. Three loopback interfaces configured. MAC addresses can be also verified the same way as before.
+Then start the example as before. The code configured three loopback interfaces. The MAC addresses can be verified the same way as performed above.
 ```bash
 vpp# sh int
               Name               Idx    State  MTU (L3/IP4/IP6/MPLS)     Counter          Count     
@@ -344,9 +344,9 @@ The advantage of this approach is that you do not need to wait for every single 
 #### 4. Multi-request VPP call
 
 The VPP binary API also defines multi-request messages, where a single request generates multiple 
-replies. Such a call is often used for reading data from VPP. 
+replies. Programs  will often use such a call for reading data from VPP. 
 
-Multi-request messages contain a `Dump` suffix for request message, and a `Details` suffix for a reply. Let's use a multi-request call to retrieve configured interfaces.
+Multi-request messages contain a `Dump` suffix for a request message, and a `Details` suffix for a reply. Let's use a multi-request call to retrieve configured interfaces.
 
 Prepare a new method and define the request of type `SwInterfaceDump`. Call this request using `SendMultiRequest` and retain the retrieved context: 
 ```go
@@ -356,7 +356,7 @@ func (p *HelloWorld) multiRequest() {
 }
 ```
 
-Since we are expecting multiple replies, process them in a loop and define new reply messages for each iteration:
+Since you are expecting multiple replies, process them in a loop and define new reply messages for each iteration:
 ```go
 func (p *HelloWorld) multiRequest() {
 	request := &interfaces.SwInterfaceDump{}
@@ -414,7 +414,7 @@ func main() {
 }
 ```
 
-The log output of this call is a repeated message. This indicates that the VPP agent received the VPP interface with a given index. In the multi-request scenario, the reply message usually contains several fields where some are VPP specific such as interface admin status, default MTU, and internal names.
+The log output of this call is a repeated message. This indicates that the VPP agent received the VPP interface with a given index. In the multi-request scenario, the reply message usually contains several fields where some are VPP specific such as interface admin status, default MTU, and internal name.
 
 [1]: ../plugins/vpp-plugins.md#govppmux-plugin
 [2]: https://wiki.fd.io/view/GoVPP

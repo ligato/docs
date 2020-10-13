@@ -4,13 +4,18 @@
 
 Tutorial code: [KV Data Store][code-link]
 
-In this tutorial, you will learn how use an external key-value (KV) data store. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md). You will also need to install the [gogo protobuf generator](https://github.com/gogo/protobuf) on your local machine. 
+In this tutorial, you will learn how use an external key-value (KV) data store. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md). In addition, you should be familiar with etcd. To learn about etcd, a good place to start is this [etcd overview](https://www.ibm.com/cloud/learn/etcd). 
+
+You will also need to install the [gogo protobuf generator](https://github.com/gogo/protobuf) on your local machine. 
 
 [etcd][1] is used as the KV data store in this tutorial. Note that Ligato supports other [KV data stores](../user-guide/concepts.md#key-value-data-store).
 
+!!! Note
+    MyPlugin is the name of the plugin used in this tutorial. Note that the concepts, explanations, tasks and code block contents used in this tutorial apply to the HelloWorld plugin used in the previous tutorials.
+
 ---
 
-The common interface for all KV data store implementations is [`KvProtoPlugin`][7]: 
+The common interface for all KV data store implementations is `KvProtoPlugin`: 
 
 ```go
 type KvProtoPlugin interface {
@@ -44,7 +49,7 @@ func NewMyPlugin() *MyPlugin {
 
 Next, create a broker. The broker is a facade  for plugins or components that communicate with the data store. The broker conceals the complexity of interacting with the different data stores and provides a simple read/write API. 
 
-Initialize the broker with a key prefix that becomes the root of the
+Initialize the broker with a key prefix. The key prefix serves as the root of the
 KV tree that the broker will operate on. The broker uses the key prefix for all
 of its get, list, put and delete operations. 
  
@@ -56,10 +61,11 @@ broker := p.KVStore.NewBroker("/myplugin/")
 
 For more information about key prefixes, see the [key prefix section](../user-guide/concepts.md#key-prefix) of the _User Guide_.
 
-The broker accepts `proto.Message` parameters in its methods. Define a protobuf model for data that you wish to communicate to and from the data store.
+---
 
-A simple [.proto model][6] called  `Greetings` is shown in the code block below:
+The broker accepts `proto.Message` parameters in its methods. You will need to define a protobuf model for data that you wish to communicate to and from the data store.
 
+Use the simple [.proto model][6] called  `Greetings`:
 ```json
 message Greetings {
     string greeting = 1;
@@ -68,9 +74,9 @@ message Greetings {
 
 ---
 
-Next, generate Go code based on your model using the [--gogo protobuf generator](https://github.com/gogo/protobuf). You have a single `model.proto` file stored in the `model` folder. It is a good practice to place the generated Go code in the same `model` folder. 
+Next, generate Go code based on your model using the [--gogo protobuf generator](https://github.com/gogo/protobuf). You have a single `model.proto` file stored in the model folder. It is a good practice to place the generated Go code in the same folder. 
 
-Use the `model` directory in the `go:generate` directive's `--proto_path` and `--gogo_out` flags to achieve this:
+To store the proto model and Go code in the same model folder, assign the `model` directory in the `go:generate` directive's `--proto_path` and `--gogo_out` flags:
 ```go
 //go:generate protoc --proto_path=model --gogo_out=model ./model/model.proto
 ```
@@ -79,7 +85,7 @@ To generate Go files using the Go compiler, use this command:
 ```
 go generate
 ``` 
-Go generate must be run explicitly. It scans Go files in the current path for
+`Go generate` must be run explicitly. It scans Go files in the current path for
 the `generate` directives and then invokes the protobuf compiler.
 
 ---
@@ -120,6 +126,8 @@ To watch for changes in the KV data store, initialize a watcher:
 watcher := p.KVStore.NewWatcher("/myplugin/")
 ```
 
+---
+
 Then define your callback function that will process the changes:
 
 ```go
@@ -132,6 +140,8 @@ onChange := func(resp keyval.ProtoWatchResp) {
 	// process change
 }
 ```
+
+---
 
 Start watching for key prefixes:
 
@@ -152,15 +162,16 @@ Use the `cancelWatch` channel to cancel watching.
 1. Open a terminal session 
 <br>
 <br>
-2. Change to the KV Data Store tutorial folder:
+2. Change to the 04_kv-store folder:
 ```
 cn-infra git:(master) cd examples/tutorials/04_kv-store
 ```
 3. Start etcd
 
-First, make sure that the etcd.conf file contained in the 04_kv-store/ folder uses an endpoint of `0.0.0.0`. If not, you will receive an error when attempting to run the tutorial code.
+!!! Note
+    Make sure that the etcd.conf file contained in the 04_kv-store folder uses an endpoint of `0.0.0.0`. If not, you will receive an error when attempting to run the tutorial code.
 
-The `etcd.conf` should look like this: 
+The `etcd.conf` file should look like this: 
 ```
 insecure-transport: true
 dial-timeout: 1000000000
@@ -177,7 +188,7 @@ etcd
 4. Open another terminal session.
 <br>
 <br>
-5. Change to the KV Data Store tutorial folder if necessary:
+5. Change to the 04_kv-store folder
 ```
 cn-infra git:(master) cd examples/tutorials/04_kv-store
 ```
@@ -201,7 +212,7 @@ INFO[0005] Agent plugin state update.                    lastErr="<nil>" logger=
 
 # __Tutorial etcd troubleshooting__
 
-You might encounter the following if the tutorial code does not run to completion properly.
+You might encounter the following problems if the tutorial code does not run to completion properly.
 
 !!! Error
     `etcd.conf` is not present in the tutorial folder

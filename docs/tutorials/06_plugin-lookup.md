@@ -4,33 +4,42 @@
 
 Tutorial code: [Plugin Lookup][code-link]
 
-In this tutorial, we learn how to resolve dependencies between multiple plugins in various scenarios. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md).   
+In this tutorial, you will learn how to resolve dependencies between multiple plugins. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md).   
 
 For more details on plugin lookup, see the [plugin lookup section](../developer-guide/plugin-lookup.md) of the _Developer Guide_.
 
 ---
 
-The VPP agent is based on plugins. The plugin usually performs a specific task such as connecting to the KV data store, starting HTTP handlers, or exposing a VPP configuration API. 
+The VPP agent is based on plugins. The plugin performs a specific task such as connecting to the KV data store, starting HTTP handlers, or exposing a VPP configuration API. 
 
 Often these plugins must work with other plugins. A good example is the kvdbsync plugin which is responsible for synchronizing events from various data stores. It requires one or more KV data store plugins to connect to and provide the actual data. 
 
 The dependencies need to be initialized in the correct order. The rule of thumb is that the plugin listed as a dependency must be started first. 
+
+---
 
 The plugin interface provides two methods to work with:
  
 - `Init()`
 - `AfterInit()`.
 
-The `Init()` is mandatory for every plugin and its purpose is to initialize plugin fields or other tasks such as prepare channel objects, initialize maps, start watchers). If some task cannot be performed during initialization, the plugin can call the `AfterInit()`. These scenarios will be shown in the tutorial.
+The `Init()` method is mandatory for every plugin. Its purpose is to initialize plugin fields, or other tasks such as prepare channel objects, initialize maps, and start watchers. 
 
-This tutorial uses the [HelloWorld](01_hello-world.md) plugin from the Hello World agent example. That original tutorial example contained a single plugin with `main()` preparing and starting the agent. 
+If some task cannot be performed during initialization, the plugin can call the `AfterInit()` method. 
 
-This tutorial requires multiple files. For better clarity and understanding, make the following changes here at the beginning:
+---
+
+!!! Note
+    The original [Hello World](01_hello-world.md) tutorial example contained a single plugin, with `main()` preparing and starting the agent. 
+
+This tutorial is different. It requires multiple files. For better clarity and understanding, make the following changes here at the beginning:
 
 - Create a new go file called `plugin1.go`. 
-- Move the HelloWorld plugin to this file leaving only `main()` in `main.go`.
+- Move the HelloWorld plugin to this file leaving only `main()` in the `main.go` file.
 
-Let's begin by creating another plugin in a separate file called `plugin2.go`:
+---
+
+Let's begin by creating another plugin, called HelloUniverse, in a separate file called `plugin2.go`:
 ```go
 // HelloUniverse represents another plugin.
 type HelloUniverse struct{}
@@ -53,13 +62,15 @@ func (p *HelloUniverse) Close() error {
 }
 ```
 
-Now you have three files: 
+Now, you have three files: 
 
 - `main.go` with the `main()` method 
 - `plugin1.go` with the `HelloWorld` plugin 
 - `plugin2.go` with the `HelloUniverse` plugin.
 
-The next step is to start your second plugin together with the `HelloWorld`. Initialize a new plugin in the `main()` add it to the `Plugins` option. Then rename the first plugin to `p1`):
+---
+
+Next, start your second plugin together with the HelloWorld plugin. Initialize a new plugin in the `main()`, and add it to the `Plugins` option. Then rename the first plugin, HelloWorld, to `p1`:
 ```go
 	p1 := new(HelloWorld)
 	p2 := new(HelloUniverse)
@@ -68,18 +79,22 @@ The next step is to start your second plugin together with the `HelloWorld`. Ini
 
 If you start and stop the program now, you would notice that the code starts the plugins in the same order as they were put to the `agent.Plugin()` method. When the program terminates, the code stops the plugins in the reverse order.  
   
-This is very important because this code pattern ensures the dependency plugin starts first. The primary plugin starts second. The primary plugin will stop before its dependency starts. 
+This is very important because this code pattern ensures the dependency plugin starts first. The primary plugin starts second. 
 
-Now you can create a relationship between plugins. In order to test this, you need a method in the `HelloUniverse` which is called from the outside. 
+---
 
-To address this requirement, create a simple flag which is set in the `Init()`, and can be retrieved via `IsCreated` method. The `IsCreated` method returns true if the code creates the `HelloUniverse` plugin. Otherwise, the method will return false:
+Now, you can create a relationship between plugins. In order to test this, you need a method in the HelloUniverse plugin that is called from the outside. 
+
+To address this requirement, create a flag which is set in the `Init()` method, and can be retrieved via the `IsCreated()` method. The `IsCreated()` method returns true if the code initializes the HelloUniverse plugin. Otherwise, the method will return false:
 ````go
 type HelloUniverse struct{
 	created bool    // add the flag
 }
 ````
 
-Set the `created` field in the `Init()`:
+---
+
+Set the `created` field in the `Init()` method:
 ```go
 func (p *HelloUniverse) Init() error {
 	log.Println("Hello Universe!")
@@ -87,6 +102,8 @@ func (p *HelloUniverse) Init() error {
 	return nil
 }
 ```
+
+---
 
 Define a method to obtain the value:
 ```go
@@ -96,15 +113,17 @@ func (p *HelloUniverse) IsCreated() bool {
 }
 ```
 
-Use this code in our `HelloWorld` plugin, and set a dependency: 
+---
+
+Use this code in your HelloWorld plugin, and set a dependency: 
 ```go
 type HelloWorld struct{
 	Universe *HelloUniverse
 }
 ```
-Let's say that the world cannot exist without the universe. This means yur `HelloWorld` plugin is dependent on the `HelloUniverse` plugin. 
+Let's say that the world cannot exist without the universe. This means your HelloWorld plugin is dependent on the HelloUniverse plugin. 
 
-Use the `IsCreated` method in your `HelloWorld` method `Init()`:
+Use the `IsCreated()` method in your `HelloWorld` method `Init()`:
 ```go
 if p.Universe == nil || !p.Universe.IsCreated() {
     log.Panic("Our world cannot exist without the universe!")
@@ -113,9 +132,11 @@ log.Println("Hello World!")
 return nil
 ``` 
 
-The `HelloWorld` plugin verifies that the `HelloUniverse` plugin already exists, otherwise it panics. If you run the agent now, a panic will result. The reason is that our order of plugin initialization is not correct, but instead reversed. 
+---
+
+The HelloWorld plugin verifies that the HelloUniverse plugin already exists, otherwise it panics. If you run the agent now, a panic will result. The reason is that your order of plugin initialization is not correct. 
  
- Recall `agent.Plugins(p1, p2)`) statement. The order of initialization should be the HelloUniverse dependency plugin started first; The primary HelloWorld started second. 
+ Recall the `agent.Plugins(p1, p2)` statement. The order of initialization should be the HelloUniverse dependency plugin `p2` started first; The primary HelloWorld plugin `p1` started second. 
  
  So what options do you have to ensure the correct order of initialization? 
 
@@ -124,9 +145,9 @@ The `HelloWorld` plugin verifies that the `HelloUniverse` plugin already exists,
 
 ### 1: Use the second layer of initialization - AfterInit()
 
-The first option is to use the `AfterInit()` method. If the primary plugin can "wait" for the dependency to be resolved and make use of it later, you can remove it from the `Init()`, and move it to the second initialization round. 
+The first option is to use the `AfterInit()` method. If the primary plugin can "wait" for the dependency to be resolved and use of it later, you can remove it from the `Init()`, and move it to the second initialization round. 
 
-Let's put the logic aside for a moment. In your scenario, `HelloWorld` will be created without the universe (), and its existence verified later. This action initializes all plugins and their dependencies from the agent's perspective. This achieves the same result, but the order is incorrect.   
+Let's put the logic aside for a moment. In your scenario, the HelloWorld plugin will be created without the HelloUniverse plugin, with its existence verified later. This action initializes all plugins and their dependencies from the agent's perspective. This achieves the same result, but the order is incorrect.   
 
 Move the following code from `HelloWorld` `Init()` to the `AfterInit()`:
 ```go
@@ -135,9 +156,11 @@ if p.Universe == nil || !p.Universe.IsCreated() {
 }
 ```
 
-Your plugin can be started without panicking. In this case the dependency plugin starts before the primary plugin, and stops in reverse order. In other words, the dependency plugin stops first. Any attempt to use it in the primary plugin `Close()`method, will cause panic. 
+Your plugin can be started without panicking. In this case, the dependency plugin starts before the primary plugin, and stops in reverse order. In other words, the dependency plugin stops first. Any attempt to use it in the primary plugin `Close()`method will cause panic. 
 
-Despite the fact that this approach is working and correct in suitable scenarios, you should avoid this approach if possible. The `AfterInit()` can be used more effectively as you will see later in this tutorial.
+Despite the fact that this approach is working and correct in suitable scenarios, you should avoid it if possible. The `AfterInit()` can be used more effectively as you will see in the _3: Order dependencies using plugin lookup_ section of this tutorial.
+
+---
 
 ### 2: Manually order plugins
 
@@ -155,11 +178,11 @@ to:
 a := agent.NewAgent(agent.Plugins(p2, p1))
 ```
 
-The plugin order switch ensures that `HelloUniverse` is started before the `HelloWorld`.  
+The plugin order switch ensures that the HelloUniverse plugin starts before the HelloWorld plugin.  
 
 While this approach is useful for small agents, the disadvantage is that it becomes difficult to manage if there are several plugins with multi-level dependencies. This is especially true when a change in dependency occurs, thus making plugins difficult to update. 
 
-Because of this, cn-Infra provides an automatic process which manages and re-orders dependencies. This is referred to as plugin lookup.
+Because of this, cn-infra provides an automatic process which manages and reorders dependencies. This is referred to as plugin lookup.
 
 ### 3: Order dependencies using plugin lookup
 
@@ -167,15 +190,15 @@ Because of this, cn-Infra provides an automatic process which manages and re-ord
     - If you followed the first approach, please move `IsCreated()` back to `Init()`.
     - If you followed the second approach, please set the plugin order back to `agent.Plugins(p1, p2)`.
 
-The plugin lookup is an automatic process for sorting plugins according to their dependencies. 
+Plugin lookup is an automatic process for sorting plugins according to their dependencies. 
 
 More information about the plugin lookup process can be found in the _Plugin Lookup_ section of the _Developer Guide_. 
 
-In your plugin, replace the `agent.Plugins()` method with the `agent.AllPlugins()` in order to use the plugin lookup feature. Note that you should only list one plugin in this method. Plugin lookup automatically finds all dependencies. The `agent.AllPlugins()` method needs only the top-level plugin to initialize the whole agent. 
+To use the plugin lookup feature, replace the `agent.Plugins()` method with the `agent.AllPlugins()` in your plugin. Note that you should only list one plugin in this method. Plugin lookup automatically finds all dependencies. The `agent.AllPlugins()` method needs only the top-level plugin to initialize the whole agent. 
 
-The best practice if for you to specify another helper plugin which defines all other plugins listed in `agent.Plugins()` as dependencies. This top-level plugin, referred to as `Agent` in the code blocks below, will not specify any inner fields. Only external dependencies and the plugin methods `Init()` and `Close` will be empty.
+The best practice is for you to specify another helper plugin. This plugin defines all other plugins listed in `agent.Plugins()` as dependencies. This top-level plugin, referred to as `Agent` in the code blocks below, will not specify any inner fields. Only external dependencies and the plugin methods `Init()` and `Close` will be empty.
  
- Let's create it in the `main.go` where the `HelloWorld` plugin was used before:
+ Let's create the Agent plugin in the `main.go` file. This is accomplished by replacing the HelloWord plugin with the Agent plugin in the `main.go` file:
 ```go
 type Agent struct {
 	Hw *HelloWorld
@@ -195,7 +218,9 @@ func (p *Agent) String() string {
 }
 ```
 
-Define a function `New()` without a receiver. This sets inner plugin dependencies, and returns an instance of the `Agent` plugin:
+---
+
+Define a function `New()` without a receiver. This sets inner plugin dependencies, and returns an instance of the Agent plugin:
 ```go
 func New() *Agent {
 	hw := &HelloWorld{}
@@ -219,10 +244,14 @@ p2 := new(HelloUniverse)
 p1.Universe = p2
 ```
 
+---
+
 The last step is to provide the `Agent` plugin to the plugin lookup:
 ```go
 a := agent.NewAgent(agent.AllPlugins(New()))
 ```
+
+---
 
 The `main.go` looks like this:
 ```go
@@ -242,13 +271,13 @@ The agent can now be successfully started. This approach could be viewed as exce
 !!! note
     Continuation of this tutorial requires the third option, _3: Order dependencies using plugin lookup_, to be completed.
 
-Now you have two plugins: one dependent on another, and a third top-level starter plugin in `main.go`. Your `HelloWorld` plugin calls a simple method `IsCreated`. This method checks if the universe exists. 
+Now you have two plugins: one dependent on another, and a third top-level starter plugin in `main.go`. Your HelloWorld plugin calls the `IsCreated` method. This method checks if the universe exists. 
 
 However, you should avoid this approach if possible as noted above.
 
 Let's turn it into something more practical.  
 
-First, in the `HelloUniverse` plugin, remove the `IsCreated()` method together with the `created` flag and its assignment in the `Init()`. 
+First, in the HelloUniverse plugin, remove the `IsCreated()` method together with the `created` flag and its assignment in the `Init()`. 
 
 This is how the plugin should look:
 ```go
@@ -269,7 +298,7 @@ func (p *HelloUniverse) Close() error {
 }
 ```
 
-Add the registry map. Since every universe contains many worlds, the plugin maintains the list of their names and sizes, and provides a method to register a new world. It is not uncommon for one plugin to registers itself to another. 
+Add the registry map. Since every universe contains many worlds, the plugin maintains the list of their names and sizes, and provides a method to register a new world. It is not uncommon for one plugin to register itself to another. 
 
 Define a map in the plugin:
 ```go
@@ -287,7 +316,7 @@ func (p *HelloUniverse) Init() error {
 }
 ```
 
-Add the exported method which the `HelloWorld` plugin can use to register:
+Add the exported method which the HelloWorld plugin can use to register:
 ```go
 func (p *HelloUniverse) RegisterWorld(name string, size int) {
 	p.worlds[name] = size
@@ -295,14 +324,14 @@ func (p *HelloUniverse) RegisterWorld(name string, size int) {
 }
 ```
 
-Move to the `HelloWorld` plugin. Remove following code from the `Init()` since the `IsCreated` method does not exist anymore:
+Move to the HelloWorld plugin. Remove following code from the `Init()` since the `IsCreated()` method does not exist anymore:
 ```go
 if p.Universe == nil || !p.Universe.IsCreated() {
     log.Panic("Our world cannot exist without the universe!")
 }
 ```
 
-Instead, register the world under `world1` name:
+Instead, register the world under the `world1` name:
 ```go
 func (p *HelloWorld) Init() error {
 	log.Println("Hello World!")
@@ -311,22 +340,26 @@ func (p *HelloWorld) Init() error {
 }
 ```
 
-Note that the dependency situation is unchanged. The `HelloUniverse` plugin must still be initialized first, or an error occurs since the registration map would not be initialized. Now the code can be built and started. 
+Note that the dependency situation is unchanged. The `HelloUniverse` plugin must still be initialized first, or an error occurs. This is because the registration map would not initialize.  
 
-In the next step, the `HelloUniverse` works with `HelloWorld` using its methods. This requires `HelloUniverse` to treat `HelloWorld` as a dependency, creating cross (or circular) dependencies. 
+Now the code can be built and started. 
+
+---
+
+In the next step, the HelloUniverse plugin works with the HelloWorld plugin using its methods. This requires the HelloUniverse plugin to treat the HelloWorld plugin as a dependency. This creates cross or circular dependencies. 
 
 This case is a bit more complicated, since the order of plugins defined in the top-level plugin matters as well.
 
-Start with the `HelloWorld`. The world needs to be placed somewhere, and the `HelloUniverse` plugin decides where it has some free space.
+Start with the HelloWorld plugin. The world needs to be placed somewhere, and the HelloUniverse plugin decides where it has free space.
 
-Add a new method to `HelloWorld`:
+Add a new method to HelloWorld:
 ```go
 func (p *HelloWorld) SetPlace(place string) {
 	log.Printf("world1 was placed %s", place)
 }
 ```
 
-Now, the question to ask is, when should this method should be called by the `HelloUniverse`? It cannot be called during the `Init()` since the `HelloWorld` does not exist at that point. You must use the `AfterInit()` method. 
+Now, the question to ask is, when should the HellowUniverse plugin call this method? It cannot be called during the `Init()` since the `HelloWorld` does not exist at that point. You must use the `AfterInit()` method. 
 
 The calling sequence will be:
 
@@ -334,7 +367,7 @@ The calling sequence will be:
 - `HelloWorld.Init()` - initialized the plugin and registered it to the `HelloUniverse`
 - `HelloUniverse.AfterInit()` - can now manipulate the `HelloWorld` since it is initialized and registered
 
-Set dependency for `HelloUniverse`:
+Set a dependency for HelloUniverse:
 ```go
 type HelloUniverse struct{
 	worlds map[string]int
@@ -343,7 +376,7 @@ type HelloUniverse struct{
 }
 ```
 
-Add the following code to the `HelloUniverse` plugin:
+Add the following code to the HelloUniverse plugin:
 ```go
 func (p *HelloUniverse) AfterInit() error {
 	for name := range p.worlds {
@@ -353,7 +386,7 @@ func (p *HelloUniverse) AfterInit() error {
 }
 ```
 
-Then go to `main.go` function `New()` and add a dependency:
+Then go to `main.go` function `New()`, and add a dependency:
 ```go
 hw := &HelloWorld{}
 hu := &HelloUniverse{}
@@ -374,11 +407,11 @@ type Agent struct {
 
 The top-level plugin uses your two plugins as dependencies. The plugin lookup takes the provided plugin `Agent` and reads all dependencies in the order they are defined. The first plugin read is `HelloWorld`, but this plugin also has a dependency on another plugin, `HelloUniverse`. 
 
-The `HelloUniverse` has a dependency on `HelloWorld`. But this plugin is already known to the plugin lookup process so it is skipped. The plugin places the `HelloUniverse` first, then `HelloWorld` and the `Agent` plugin is last. The plugin methods `Init()` and `AfterInit()` will be called in this order.
+The `HelloUniverse` has a dependency on `HelloWorld`. However, the plugin lookup process already knows about the HelloWorld plugin, so it is skipped. The plugin lookup process places the HelloUniverse plugin first, then the HelloWorld plugin, and the `Agent` plugin is last. The plugin methods `Init()` and `AfterInit()` will be called in this order.
 
-Note that the plugin resolution for cross dependencies The order of plugins determines the plugin resolution for cross dependencies. 
+The order of plugins determines the plugin resolution for cross dependencies. 
 
-Switch the plugin order in the `Agent`:
+Switch the plugin order in the Agent plugin:
 ```go
 type Agent struct {
 	Hu *HelloUniverse
@@ -386,7 +419,7 @@ type Agent struct {
 }
 ``` 
 
-The agent will end up with an error because according to the resolution key above, plugin lookup puts `HelloWorld` first which is not correct. The rule with cross dependencies is that the plugin which should be started first is placed below all dependency plugins.
+The agent will end up with an error because, according to the resolution key above, plugin lookup puts the HelloWorld plugin first, which is not correct. The rule with cross dependencies is that the plugin which should be started first is placed below all dependency plugins.
 
 [code-link]: https://github.com/ligato/cn-infra/tree/master/examples/tutorials/06_plugin_lookup
 

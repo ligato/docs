@@ -4,8 +4,12 @@
 
 Tutorial code: [REST Handler][code-link]
 
-In this tutorial, you will learn how to add a REST API to a plugin called __MyPlugin__. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md)
+In this tutorial, you will learn how to add a REST API to a plugin. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md).
 
+You should also be familiar with REST APIs. To learn about REST APIs, or if you need a quick refresher, check out the [REST API Tutorial](https://www.freecodecamp.org/news/rest-api-tutorial-rest-client-rest-service-and-api-calls-explained-with-code-examples/). 
+
+!!! Note
+    MyPlugin is the name of the plugin used in this tutorial. Note that concepts, explanations, tasks and code block contents used in this tutorial apply to the HelloWorld plugin used in the previous tutorials. 
 
 ---
 
@@ -37,9 +41,7 @@ interface is defined in [plugin_api_rest.go file](https://github.com/ligato/cn-i
 
 ---
 
-Next, "wire" the dependency into the plugin's 
-constructor. The default REST plugin of `rest.DefaultPlugin` provided by the Ligato
-infrastructure is shown in the code block below. Most Ligato infrastructure plugins
+Next, wire the dependency into the plugin's constructor. The code block below uses the default REST plugin of `rest.DefaultPlugin`. Most Ligato infrastructure plugins
 have a default plugin instance defined as a global variable.
 
 ```go
@@ -86,7 +88,7 @@ func (p *MyPlugin) Init() error {
 1. Open a terminal session.
 <br>
 <br>
-2. Change to the rest handler tutorial folder:
+2. Change to the 03_rest-handler folder:
 ```
 cn-infra git:(master) cd examples/tutorials/03_rest-handler
 ```

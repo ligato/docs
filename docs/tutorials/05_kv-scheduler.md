@@ -17,8 +17,10 @@ Start by defining a simple NB [proto model][1] that you will use in your HelloWo
  - `Interface` 
  - `Route` 
  
- The `route` depends on the `interface`. The model demonstrates a simple dependency between two configuration items.
- 
+ The `route` depends on the `interface`. This model demonstrates a simple dependency between two configuration items.
+
+---
+
 !!! Note "Important" 
     The VPP agent uses the Orchestrator component. It is responsible for collecting northbound data originating from multiple sources such as a KV data store or a gRPC client. To marshall/unmarshall proto messages defined in NB proto models, the Orchestrator requires `messages` contain `message names`.  
 
@@ -51,7 +53,7 @@ get-generators:
     @go install ./vendor/github.com/ligato/vpp-agent/plugins/kvscheduler/descriptor-adapter
 ```
 
-
+---
 
 Build the binary file from the `.go` files present inside the model folder. Then use the binary file to generate the adapters for the `Interface` and `Route` proto messages:
  
@@ -62,6 +64,8 @@ descriptor-adapter --descriptor-name Route --value-type *model.Route --import "g
 
 Include the commands, shown in the code block above, in the plugin's `main.go` file with the `//go:generate` directives. 
 The `descriptor-adapter` generator will put the generated adapters into the `<plugin>/descriptor/adapter` folder.
+
+---
 
 #### Descriptor without dependency
 
@@ -95,22 +99,28 @@ For a complete list of all descriptor fields, see the [KV Descriptor API definit
 
 ---
 
-Next, implement the APIs using the example in this tutorial.
+Next, let's implement the APIs.
 
 Start with a `Name` that must be unique amongst all descriptors:
 ```go
     Name: "if-descriptor",
 ```
 
+---
+
 Define the NB key prefix for the configuration type handled by the descriptor:
 ```go
 NBKeyPrefix: "/interface/",
 ```
 
+---
+
 Set the string representation of the type:
 ```go
 ValueTypeName: proto.MessageName(&model.Interface{}),
 ```
+
+---
 
 Add the configuration item identifier, consisting of label, name, and index. This method returns the configuration item identifier. 
 ```go
@@ -118,9 +128,10 @@ KeyLabel: func(key string) string {
     return strings.TrimPrefix(key, "/interface/")
 },
 ```
+
+---
  
-Key selector returns `true` if the descriptor describes the provided key. A descriptor can support a
-  subset of keys, but it can only process one value type:
+Key selector returns `true` if the descriptor describes the provided key. A descriptor can support a subset of keys, but it can only process one value type:
 ```go
 KeySelector: func(key string) bool {
     if strings.HasPrefix(key, ifPrefix) {
@@ -130,10 +141,14 @@ KeySelector: func(key string) bool {
 },
 ```
 
+---
+
 Enable metadata for the given type:
 ```go
 WithMetadata: true
 ```
+
+---
 
 Add the `Create` method that configures a new interface configuration item:
 ```go
@@ -142,6 +157,8 @@ Create: func(key string, value *model.Interface) (metadata interface{}, err erro
     return value.Name, nil
 },
 ```
+
+---
 
 Here is the complete interface descriptor:
 ```go
@@ -169,10 +186,14 @@ func NewIfDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 }
 ```
 
+---
+
 #### Descriptor with dependency
 
-Let's continue with the route descriptor that has a dependency on an interface. This descriptor defines additional
-fields since you will define the dependency on the interface configuration item. You will also specify the descriptor struct, and implement methods outside of the descriptor constructor.
+Let's continue with the route descriptor that has a dependency on an interface. This descriptor includes additional
+fields since you will specify the dependency on the interface configuration item. You will also define the descriptor struct, and implement methods outside of the descriptor constructor.
+
+---
 
 Define the struct and constructor:
 
@@ -190,6 +211,7 @@ func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 }
 ```
 
+---
 
 In this case, the descriptor fields are methods of the `RouteDescriptor` using their respective function signatures:
 ```go
@@ -214,7 +236,9 @@ func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dep
 }
 ```
 
-There is no requirement for the `WithMetadata` field in the example. The `Create` method will not return any metadata:
+---
+
+There is no requirement for the `WithMetadata` field. The `Create` method will not return any metadata:
 
 ```go
 func (d *RouteDescriptor) Create(key string, value *model.Route) (metadata interface{}, err error) {
@@ -223,9 +247,11 @@ func (d *RouteDescriptor) Create(key string, value *model.Route) (metadata inter
 }
 ``` 
 
+---
+
 In addition, there are two new fields:
 
-* Dependencies list that contains a key prefix and unique label value. The key prefix and label are required for a configuration item. The configuration item will not be created because the dependency key does not exist. The label is informative and should be unique:
+* Dependencies list that contains a key prefix and unique label value. The dependencies list requires a key prefix and label for each configuration item. The configuration item will not be created if the dependency key does not exist. The label is informative and should be unique:
 ```go
 func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dependency {
 	return []api.Dependency{
@@ -239,10 +265,14 @@ func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dep
 
 * Descriptors list where dependent values are processed. 
 
+---
+
 Return the interface descriptor since this is the one handling interfaces.
 ```go
 RetrieveDependencies: []string{ifDescriptorName},
 ```
+
+---
 
 Define the descriptor context of type `RouteDescriptor` within `NewRouteDescriptor`:
 ```go
@@ -256,6 +286,8 @@ func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 	return adapter.NewRouteDescriptor(typedDescriptor)
 }
 ```
+
+---
 
 Set non-function fields:
 ```go
@@ -272,6 +304,8 @@ func NewRouteDescriptor(logger logging.PluginLogger) *api.KVDescriptor {
 	return adapter.NewRouteDescriptor(typedDescriptor)
 }
 ```
+
+---
 
 Set function fields as references to the `RouteDescriptor` methods. Here is the complete route descriptor:
 ```go
@@ -390,7 +424,7 @@ Transaction log output:
   - value: { name:"route2" interface_name:"if2"  } 
 ```
 
-The `Create` sequence is exactly the same. This is despite the fact that the code reversed the configuration order. As shown, the KV Scheduler re-ordered the configuration items in the correct sequence before generating the transaction.
+The `Create` sequence is exactly the same. This is despite the fact that the code reversed the configuration order. The KV Scheduler re-ordered the configuration items in the correct sequence before executing the transaction.
 
 
 ---
