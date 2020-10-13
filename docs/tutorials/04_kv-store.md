@@ -11,7 +11,7 @@ You will also need to install the [gogo protobuf generator](https://github.com/g
 [etcd][1] is used as the KV data store in this tutorial. Note that Ligato supports other [KV data stores](../user-guide/concepts.md#key-value-data-store).
 
 !!! Note
-    MyPlugin is the name of the plugin used in this tutorial. Note that the concepts, explanations, tasks and code block contents used in this tutorial apply to the HelloWorld plugin used in the previous tutorials.
+    MyPlugin is the name of the plugin used in this tutorial. Note that any concepts, explanations, tasks and code block contents used in this tutorial can be applied to the HelloWorld plugin used in the previous tutorials. 
 
 ---
 
@@ -74,9 +74,9 @@ message Greetings {
 
 ---
 
-Next, generate Go code based on your model using the [--gogo protobuf generator](https://github.com/gogo/protobuf). You have a single `model.proto` file stored in the model folder. It is a good practice to place the generated Go code in the same folder. 
+Next, generate Go code based on your model using the [--gogo protobuf generator](https://github.com/gogo/protobuf). You have a single `model.proto` file stored in the model folder. It is good practice for you to place the generated Go code in the same folder. 
 
-To store the proto model and Go code in the same model folder, assign the `model` directory in the `go:generate` directive's `--proto_path` and `--gogo_out` flags:
+To store the proto model and Go code in the same model folder, assign the `model` directory to the `go:generate` directive's `--proto_path` and `--gogo_out` flags:
 ```go
 //go:generate protoc --proto_path=model --gogo_out=model ./model/model.proto
 ```
@@ -143,7 +143,7 @@ onChange := func(resp keyval.ProtoWatchResp) {
 
 ---
 
-Start watching for key prefixes:
+Start watching key prefixes:
 
 ```go
 cancelWatch := make(chan string)
@@ -224,7 +224,7 @@ INFO[0000] ETCD config not found, skip loading this plugin  loc="etcd/plugin_imp
 ERRO[0000] KV store is disabled                          loc="04_kv-store/main.go(43)" logger=defaultLogger
 ```
 
-The etcd plugin must be configured with the address of the etcd server. This is typically done through the etcd.conf file. In most cases, the etcd.conf file must be in the same folder where the agent executable (tutorial) is started.
+The etcd plugin must be configured with the address of the etcd server. This is typically done through the etcd.conf file. In most cases, the etcd.conf file must share the same folder with the agent executable.
 
 !!! Error
     Incorrect `endpoints` value in the etcd.conf file
@@ -237,22 +237,23 @@ WARN[0001] Failed to connect to Etcd: context deadline exceeded  endpoints=“[1
 ERRO[0001] error connecting to ETCD: context deadline exceeded  loc="04_kv-store/main.go(43)" logger=defaultLogger
 ```
 
-The message indicates a connection problem with `172.17.0.1:2379` which presumably is the address of the etcd server.
+The message indicates a connection problem with `172.17.0.1:2379` which is the address of the etcd server.
 
-First look for this value in the log when you started etcd
+First, look for this value in the log when you started etcd:
 ```
 etcdserver: advertise client URLs = http://localhost:2379
 ```
-This is the address the etcd plugin should use to connect to the etcd server. It is okay to use a localhost IP address for running this tutorial on our computer.
+This is the address the etcd plugin should use to connect to the etcd server. It is okay to use a localhost IP address for running this tutorial on your local machine.
 
-Next check the etcd.conf file
+Next, check the etcd.conf file:
 ```
 insecure-transport: true
 dial-timeout: 1000000000
 endpoints:
  - "172.17.0.1:2379"
 ```
-It appears the etcd plugin is not configured with the address of the etcd server. The solution is to edit the etcd.conf so it looks like this:
+
+It appears the endpoint IP address in the etcd.conf file does not match the IP address of the etcd server. 
 ```
 insecure-transport: true
 dial-timeout: 1000000000

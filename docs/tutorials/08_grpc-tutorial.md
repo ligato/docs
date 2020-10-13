@@ -37,12 +37,12 @@ The `options.go` file defines an adapter that is used by the application. The `m
 
 ### gRPC plugin
 
-To create the generic gRPC plugin, you'll need to start with the gRPC client plugin skeleton defined the `/grpc/plugins/grpc/grpc_client.go` file. 
+To create the generic gRPC plugin, you'll need to start with the gRPC client plugin skeleton defined in the `/grpc/plugins/grpc/grpc_client.go` file. 
 
 This file contains the following:
 
 - Main plugin structure and external dependencies.
-- Three functions required to implement the plugin interface: `Init()`, `Close()` and `String()`:
+- Three methods required to implement the plugin interface: `Init()`, `Close()` and `String()`:
 ```go
 package grpc
 
@@ -102,7 +102,7 @@ type Deps struct {
 
 ---
 
-Set up the connection to the gRPC server. The connection requires several parameters which can be provided by flags, or a [conf file](../user-guide/config-files.md#grpc).
+Set up the connection to the gRPC server. The connection requires several parameters which can be provided by flags, or by a [conf file](../user-guide/config-files.md#grpc).
 
 To keep it simple, use hard-coded values:
 ```go
@@ -150,7 +150,7 @@ Next, prepare the gRPC client to perform two tasks:
 - Send northbound configuration data to the VPP agent gRPC server.
 - Watch the gRPC server for notifications. 
 
-The gRPC client object implements the configurator client interface that is generated from the [configurator proto file](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/configurator/configurator.proto).
+The gRPC client object implements the configurator client interface that is generated from the [configurator proto file](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/configurator/configurator.proto):
 ```go
 func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
@@ -282,7 +282,7 @@ type Option func(*Client)
 
 ---
 
-Define the App as a top-level plugin. Prepare the structure in the `/grpc/cmd/client/main.go` file with all methods required to implement the plugin interface. To keep it simple, the structure defines only your gRPC plugin.
+Define the App as a top-level plugin. Prepare the struct in the `/grpc/cmd/client/main.go` file with all methods required to implement the plugin interface. To keep it simple, the struct defines only your gRPC plugin:
 ```go
 package main
 
@@ -316,13 +316,13 @@ func (App) String() string {
 
 ---
 
-You now have two plugins: the GRPC plugin and the top-level application plugin. The top-level plugin uses the gRPC plugin as a direct dependency. By VPP agent convention, a top-level plugin should be created using other plugins as external dependencies. 
+You now have two plugins: the gRPC plugin and the top-level application plugin. The top-level plugin uses the gRPC plugin as a direct dependency. By VPP agent convention, a top-level plugin should be created using other plugins as external dependencies. 
 
-Those plugins can be anything: connectors, VPP-configuration plugins, KV data stores. This approach lets you use the top-level plugin in just the application, with the plugin lookup mechanisms handling the rest.
+Those plugins can be anything: connectors, VPP-configuration plugins, KV data stores. With this approach, all you need is the App top-level plugin and plugin lookup mechanisms handles the rest. 
 
 ---
 
-Finish the App by adding the following code to the `main.go` file. The `New()` method creates an instance of the App (top-level) plugin. The `AllPlugins()` automatically locates and loads our GRPC plugins as an App dependency.
+Finish the App by adding the following code to the `main.go` file. The `New()` method creates an instance of the App top-level plugin. The `AllPlugins()` automatically locates and loads our gRPC plugins as an App dependency:
 ```go
 package main
 
@@ -366,6 +366,8 @@ func (App) String() string {
 }
 ```
 
+---
+
 Start the App with `./client`. This process builds the client agent into an executable binary file, and then initializes it.
 
 The gRPC client communicates with the VPP agent acting as a server. To achieve this, first update the gRPC conf file with the same endpoint and network values that you hard coded in your gRPC client application.  Second, start the VPP agent with the `-grpc-config` flag.
@@ -381,9 +383,9 @@ The next two sections in this tutorial explain how to use the gRPC client applic
 
 Let's simulate configuration provisioning from the client plugin `Init()` method. During the init phase of this method, a new Go routine starts and puts the example configuration to the GRPC server.
 
-Add the following code to the `/grpc/plugins/grpc/grpc_client.go` file:
+Add the following code to the `/grpc/plugins/grpc/grpc_client.go` file.
 
-Set up `configure()` method:
+Set up the `configure()` method:
 ```go
 func (p *Client) configure() {
 	time.Sleep(2*time.Second)
@@ -412,7 +414,7 @@ func (p *Client) configure() {
 
 ---
 
-Update the `Init()` method, and run `configure` in the Go routine. When plugin initialization occurs, make sure you send the example configuration after the initialization of the client object.
+Update the `Init()` method, and run `configure()` in the Go routine. When plugin initialization occurs, make sure you send the example configuration after the initialization of the client object.
 ```go
 func (p *Client) Init() (err error) {
 	p.connection, err = grpc.Dial("unix",
@@ -438,13 +440,15 @@ func (p *Client) Init() (err error) {
 
 Start the App with `./client`. This command passes the example interface config to the VPP agent via the gRPC server. The VPP agent then puts the example interface configuration to the VPP data plane.
 
+---
+
 ### Notification watcher
 
-The gRPC client can receive automatic notifications from the VPP agent GRPC server.
+The gRPC client can receive automatic notifications from the VPP agent gRPC server.
 
-To prepare a notification watcher, perform the steps in the following:
+To prepare a notification watcher, perform the following:
 
-Add a `watchNotif()` method to the `grpc_client.go` code. The gRPC client periodically polls the VPP agent gRPC server for notifications. The server side maintains a history of up to 100 indexed notifications. The gRPC client request provides the next index which is incremented after each iteration. This lets you inspect previous notification as needed. 
+Add a `watchNotif()` method to the `grpc_client.go` code. The gRPC client periodically polls the VPP agent gRPC server for notifications. The server side maintains a history of up to 100 indexed notifications. The gRPC client request provides the next index which is incremented after each iteration. This lets you inspect previous notifications as needed. 
 ```go
 func (p *Client) watchNotif() {
 	p.Log.Info("Notification watcher started")
@@ -509,9 +513,11 @@ func (p *Client) Init() (err error) {
 }
 ```
 !!! danger "Important"
-    This approach is for testing purposes only. In practice, a race condition could occur since you cannot tell which will run first: `watchNotif` or `configure`. Here, this is not harmful because you are reading notifications from the server cache. In theory, this could be a problem if the client configures >100 interfaces before the watcher starts. The result could be loss of some notifications.
+    This approach is for testing purposes only. In practice, a race condition could occur since you cannot tell which will run first: `watchNotif()` or `configure()`. Here, this is not harmful because you are reading notifications from the server cache. In theory, this could be a problem if the client configures >100 interfaces before the watcher starts. The result could be loss of some notifications.
 
-After starting the client, the GRPC plugin sends the interface configuration to the VPP agent server. The VPP agent programs the interface configuration into the VPP data plane. The server then sends a notification back to the gRPC client.
+---
+
+After starting the client, the gRPC plugin sends the interface configuration to the VPP agent server. The VPP agent programs the interface configuration into the VPP data plane. The server then sends a notification back to the gRPC client.
 
 For illustrative purposes, here is the output log from the client application:
 ```bash

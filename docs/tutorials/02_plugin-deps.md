@@ -14,7 +14,7 @@ In this tutorial, you will learn how to add dependencies to your HelloWorld plug
     Ligato uses the **dependency injection** design pattern to
     manage dependencies. This pattern injects dependencies on other plugins into your plugin when it is initialized. You should use dependency injection to manage all dependencies in your plugin. 
  
-    You need dependency injection to be able to create mocks in your unit tests. This is especially true for components that interact with the external world, such as the KV data store or message bus adapters. Without good mocks that incorporate dependency injection, it is almost impossible to achieve production-level unit test coverage.
+    You need dependency injection to be able to create mocks in your unit tests. This is especially true for components that interact with the external entities, such as the KV data store or message bus adapters. Without good mocks that incorporate dependency injection, it is almost impossible to achieve production-level unit test coverage.
     
 
 
@@ -52,17 +52,17 @@ type HelloWorld struct {
 
 `PluginName` is defined in the `PluginDeps` struct. `PluginName` provides the `String()`method for obtaining the name of the plugin. 
 
-Set the name of your plugin by using the `SetName(name string)` method:
+Use the `SetName(name string)` method to set the name of your plugin.
 ```go
 p.SetName("helloworld")
 ```
 
 ---
 
-The two other components in `PluginDeps` are `Log` and `Cfg`:
+The other two components in `PluginDeps` are `Log` and `Cfg`:
  
  - `Log` is the plugin's logger that logs messages at different log levels.
- - `Cfg` loads configuration data from a configuration file. The configuration is formatted in YAML. 
+ - `Cfg` loads configuration data from a configuration file. The configuration file is formatted in YAML. 
 
 `PluginDeps` includes the `Setup()` method, which initializes `Log` and `Cfg` with the name from `PluginName`. The plugin's constructor calls the `Setup()` method: 
 ```go
@@ -119,7 +119,7 @@ If the conf file is not found, the `LoadValue` will return false. If the configu
 1. Open a terminal session.
 <br>
 <br>
-2. Change to the -2_plugin-deps folder:
+2. Change to the 02_plugin-deps folder:
 ```
 cn-infra git:(master) cd examples/tutorials/02_plugin-deps
 ```

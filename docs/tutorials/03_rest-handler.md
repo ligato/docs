@@ -9,7 +9,7 @@ In this tutorial, you will learn how to add a REST API to a plugin. Before runni
 You should also be familiar with REST APIs. To learn about REST APIs, or if you need a quick refresher, check out the [REST API Tutorial](https://www.freecodecamp.org/news/rest-api-tutorial-rest-client-rest-service-and-api-calls-explained-with-code-examples/). 
 
 !!! Note
-    MyPlugin is the name of the plugin used in this tutorial. Note that concepts, explanations, tasks and code block contents used in this tutorial apply to the HelloWorld plugin used in the previous tutorials. 
+    MyPlugin is the name of the plugin used in this tutorial. Note that any concepts, explanations, tasks and code block contents used in this tutorial can be applied to the HelloWorld plugin used in the previous tutorials. 
 
 ---
 
@@ -71,7 +71,7 @@ func (p *MyPlugin) fooHandler(formatter *render.Render) http.HandlerFunc {
 ---
 
 Finally, register your handler with the REST plugin using your plugin's 
-`Init` method:
+`Init()` method:
 
 ```go
 func (p *MyPlugin) Init() error {

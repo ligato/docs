@@ -6,7 +6,7 @@ Tutorial code: [KV Scheduler][code-link]
 
 In this tutorial, you will learn about the KV Scheduler. Before running through this tutorial, you should complete the [Hello World tutorial](01_hello-world.md) and the [Plugin Dependencies tutorial](02_plugin-deps.md). 
 
-To best reinforce what you will learn from this tutorial, read about the KV Scheduler, KV Desciptors and VPP Configuration Order in the _Concepts_ section of the _User Guide_.
+To reinforce what you learn in this tutorial, read about the KV Scheduler, KV Desciptors and VPP Configuration Order in the _Concepts_ section of the _User Guide_.
 
 This tutorial does not use etcd or any other northbound (NB) KV data store for event processing. To keep it simple, this tutorial performs event processing by calling the KV Scheduler API. 
 
@@ -37,7 +37,7 @@ To register your HelloWorld plugin with the KV Scheduler, and to work with your 
 #### Adapters
  
 Let's start with adapters. An adapter handles the conversion of a proto-defined type to
-a bare `proto.Message` that the KV Scheduler works with. Since this is boilerplate code, there is tooling to auto-generate
+a bare `proto.Message`. The KV Scheduler only works with `proto.Message` types. Since this is boilerplate code, there is tooling to auto-generate
 adapters. The code generator is called `descriptor-adapter` and can be found in the [KV Scheduler plugin folder][2]. 
 
 You can install the `descriptor-adapter` manually:
@@ -122,7 +122,7 @@ ValueTypeName: proto.MessageName(&model.Interface{}),
 
 ---
 
-Add the configuration item identifier, consisting of label, name, and index. This method returns the configuration item identifier. 
+Add the configuration item identifier, consisting of label, name, and index. This method returns the configuration item identifier:
 ```go
 KeyLabel: func(key string) string {
     return strings.TrimPrefix(key, "/interface/")
@@ -267,7 +267,7 @@ func (d *RouteDescriptor) Dependencies(key string, value *model.Route) []api.Dep
 
 ---
 
-Return the interface descriptor since this is the one handling interfaces.
+Return the interface descriptor since this is the one handling interfaces:
 ```go
 RetrieveDependencies: []string{ifDescriptorName},
 ```
@@ -330,6 +330,8 @@ The descriptor API provides additional methods such as `Update()`, `Delete()`, `
 
 For more information about the descriptor API, see the [KV Descriptor API definition][3].
 
+---
+
 #### Wire your plugin into the KV Scheduler
 
 Let's start by registering the completed descriptors in the `main.go` file. The first step is to add the `KV Scheduler` to your HelloWorld plugin as a plugin dependency:
@@ -371,6 +373,8 @@ configuration item aren't met, the item will be cached.
 
 An example is programming a route before resolving the interface dependency. The KV Scheduler will cache the route if it has not resolved the interface dependency. 
 
+---
+
 #### Run KV Scheduler tutorial code
 
 The tutorial code contains `main.go`, `descriptors.go`, a model, and the generated adapters. The code includes the `AfterInit()` method. This method starts a new Go routine with a testing procedure.
@@ -392,7 +396,7 @@ go run main.go descriptors.go
 ```
 
 !!! Note
-    By the running the code, you will print the transaction log for all three cases. The discussion below includes a subset of the transaction log pertaining to the specific test case.
+    You will print the transaction log for all three cases when you run the code. The discussion below includes a subset of the transaction log that pertains to the specific test case.
     
      
 **1. Configure the interface and the route in a single transaction**
