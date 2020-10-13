@@ -1,35 +1,45 @@
-This section provides a set of simple tutorials beginning with a “Hello World” plugin. Each highlights a function of the Ligato framework useful in the construction and execution of an application.
+# Setup
 
-The tutorials explain each successive step with code snippets concluding with an executable Go (“go run main.go”) program.
+---
 
-| Tutorial  |  Description |
-|---|---|
-| [Hello World](01_hello-world.md)  |  create a plugin printing a "hello world" message to the log |
-|  [Plugin Dependencies](02_plugin-deps.md) | add dependencies to your plugin  |
-| [REST Handler](03_rest-handler.md)  |  add a REST API to your plugin |
-|  [KV Data Store](04_kv-store.md) | interacting with an external data store (etcd)   |
-| [KV Scheduler](05_kv-scheduler.md)  | have the KV scheduler work with your plugin  |
-|  [Plugin Lookup](06_plugin-lookup.md) |  how to resolve dependencies between different plugins |
-| [VPP Connection](07_vpp-connection.md)  | Using the GoVPPMux plugin with our plugin to connect to VPP  |
-|  [gRPC Handler](08_grpc-tutorial.md) |  use plugins to create a gRPC client |
+This page describes the tutorials included in the Ligato documentation. Developers are the intended audience for the tutorials, but they can also be used as a learning aid for those interested in understanding how Ligato works.
 
-If you are familiar with Go and already have it set up and running on your computer, you can proceed to the tutorial of your choosing.
+For more details on the topics covered in the tutorials, consult the _User Guide_ and _Developer Guide_.  
 
-If you are new to Go and wish to run the Ligato tutorials, you will need to install Go on your computer.
+What you need before working with the tutorials:
 
-## Install Go on your computer
+* Familiarity with the Ligato framework. If you are working with Ligato for the first time, a great place to start is the [QuickStart Guide][quickstart].
+* Access to the Ligato [vpp-agent][vpp-agent] and [cn-infra][cn-infra] git repositories. The code for each tutorial resides in the repository as noted in the table below.   
+* Knowledge of the Go programming language. If Go is new to you, look over the [Get started with Go](https://golang.org/doc/tutorial/getting-started) tutorial. 
+* Go installed on your local machine. The same _Get started with Go_ tutorial explains how to install Go on your local machine.
+* VPP/FD.io open source code. VPP is a high-performance software network function. To find out more about VPP, see [FD.io](https://fd.io/).
+* gRPC. To learn about gRPC, see [gRPC.io](https://grpc.io).   
+---
 
-Refer to [Getting Started](https://golang.org/doc/install) for download and installation procedures.
+Each tutorial includes the following:
 
-Verify it is installed by checking the version
-```
-go version
-```
-
-Example output
-```
-go version go1.13.6 darwin/amd64
-```
+- Sequence of incremental programming tasks supported by example code blocks. 
+- Link to the complete tutorial code and, where possible, instructions on how to run the code. 
 
 !!! Note
-    The tutorial code is contained in the examples/tutorials folders of the cn-infra or vpp-agent repositories. You will need to clone these repos and change to the tutorial folder to run the examples. A link to each folder is provided at the top of each tutorial page.
+    The purpose of the code blocks is to show you possible Go programming patterns and examples for functions executed in the tutorial program. You can also inspect the code blocks to compare them against the code contained in the complete tutorial code, or your own project code.
+
+---
+
+The first tutorial will show you how to create a Ligato agent containing a HelloWorld plugin. Subsequent tutorials will cover Ligato functions that build on the first tutorial.
+
+| Tutorial  |  Description | Tutorial Code Repo |
+|---|---|---|
+| [Hello World](01_hello-world.md)  |  Create a plugin printing a "hello world" message to the log | cn-infra |
+|  [Plugin Dependencies](02_plugin-deps.md) | Add dependencies to your plugin  | cn-infra |
+| [REST Handler](03_rest-handler.md)  |  Add a REST API to your plugin | cn-infra |
+|  [KV Data Store](04_kv-store.md) | Interacting with an external KV data store (etcd)   | cn-infra |
+| [KV Scheduler](05_kv-scheduler.md)  | Using the KV scheduler with your plugin  | vpp-agent |
+|  [Plugin Lookup](06_plugin-lookup.md) |  How to resolve dependencies between different plugins |  cn-infra |
+| [VPP Connection](07_vpp-connection.md)  | Using the GoVPPMux plugin with your plugin to connect to VPP  | vpp-agent |
+|  [gRPC Handler](08_grpc-tutorial.md) |  Use plugins to create a gRPC client | vpp-agent |
+
+
+[vpp-agent]: https://github.com/ligato/vpp-agent
+[cn-infra]: https://github.com/ligato/cn-infra
+[quickstart]: ../user-guide/quickstart.md
