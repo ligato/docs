@@ -2,18 +2,46 @@
 
 ---
 
+This section describes the Plugin Lookup function. 
+
 !!! Note
-    In this section, `Agent` defines a set of plugins, which are started and initialized in the correct order according to their relationship between one another.
+    In this section, `agent` defines a set of plugins, that start and initialize in the correct order according to their relationship between one another.
+
+---
+
+Ligato-supplied and custom plugins define the functions supported by your agent. In many cases, one plugin will depend on another. For example, interface plugin initialization should precede route plugin initialization. The same route plugin may have dependencies on other plugins, which in turn have their own dependencies on other plugins. All plugins and dependencies must start and initialize in the correct order. 
+
+The plugin lookup function simplifies the process of plugin lifecycle management by supporting the following:
+
+- Adds plugins and associated dependencies to the agent's plugin list.
+- Sorts the plugins and dependenices into the correct initialization order.         
+  
+!!! Note
+    In this section, `Agent` defines a set of plugins, that start and initialize in the correct order according to their relationship between one another.
 
 ### Quick Agent Setup
 
-1. Define your plugin. Every plugin must implement the `infra.Plugin` interface.
-2. Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`. This configuration stanza informs the VPP agent about your plugin. Pass the plugin defined in the preceding step as a parameter into `agent.Plugins(<plugin>...)`. This is a variadic function which means you can pass multiple parameters into it if you need to define multiple plugins. If there are relationships/dependencies between your plugins, and/or if one or more of your plugins depends on other plugins, which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
+If you wish to skip the details, and set up an agent, follow the steps below.  
+
+1. Define your plugin. Every plugin must implement the infra.Plugin interface.
+</br>
+</br>
+2. Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`. This configuration stanza informs the VPP agent about your plugin. Pass the plugin defined in the preceding step as a parameter into `agent.Plugins(<plugin>...)`. You can pass multiple plugins and dependencies into this function. Note that you must explicitly list all plugins and dependencies in the correct order initialization.
+</br>
+</br>
+If your agent there are relationships/dependencies between your plugins, and/or if one or more of your plugins depends on other plugins, which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
+</br>
+</br>
+
 
 3. Use the `agent.NewAgent(opts ...Option)` function to create a new instance of the agent.
+</br>
+</br>
+
 
 4. Use the `Run()` method (blocking), or the `Start()` method (non-blocking) to initiate the agent created in Step 3.
-
+</br>
+</br>
 5. Stop the agent with the `Stop()` method. Alternatively, define a struct-type channel and add it to the agent using the option `agent.QuitOnClose(<channel>)`. Closing the channel stops the agent.
 
 
