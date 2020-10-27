@@ -13,38 +13,33 @@ Ligato-supplied and custom plugins define the functions supported by your agent.
 
 The plugin lookup function simplifies the process of plugin lifecycle management by supporting the following:
 
-- Adds plugins and associated dependencies to the agent's plugin list.
-- Sorts the plugins and dependenices into the correct initialization order.         
+- Add plugins and associated dependencies to the agent's plugin list.
+- Sort plugins and dependenices into the correct initialization order.         
   
-!!! Note
-    In this section, `Agent` defines a set of plugins, that start and initialize in the correct order according to their relationship between one another.
 
 ### Quick Agent Setup
 
 If you wish to skip the details, and set up an agent, follow the steps below.  
 
-1. Define your plugin. Every plugin must implement the infra.Plugin interface.
+1. Define your plugin. Every plugin must implement the [infra.Plugin][infra-plugin] interface.
 </br>
 </br>
-2. Use the `agent.Plugins(<plugin>...)` function to create an instance of `agent.Option`. This configuration stanza informs the VPP agent about your plugin. Pass the plugin defined in the preceding step as a parameter into `agent.Plugins(<plugin>...)`. You can pass multiple plugins and dependencies into this function. Note that you must explicitly list all plugins and dependencies in the correct order initialization.
-</br>
-</br>
-If your agent there are relationships/dependencies between your plugins, and/or if one or more of your plugins depends on other plugins, which are not explicitly listed, use the `agent.AllPlugins(<plugin>...)` function to create the `agent.Options` object. `agent.AllPlugins(<plugin>...)` will automatically sort plugins into the correct initialization order.
-</br>
-</br>
+2. Use the `agent.Plugins(<plugin>...)` with the plugin created in the previous step. This function creates an instance of `agent.Option`, and informs the VPP agent about your plugin. You can pass multiple plugins and dependencies to this function. You must manually list all plugins and dependencies in the correct order of initialization.  
 
+!!! Note
+    Alternatively, you can use the `agent.AllPlugins(<plugin>...)` function if you wish to avoid manually listing all plugins, and their dependencies, in a specific order of initialization. The `agent.AllPlugins(<plugin>...)` function will invoke plugin lookup which *automatically* sorts plugins and dependencies into the correct initialization order. 
 
-3. Use the `agent.NewAgent(opts ...Option)` function to create a new instance of the agent.
+3. Use the agent.NewAgent(opts ...Option) function to create a new instance of the agent.
 </br>
 </br>
-
-
+ 
 4. Use the `Run()` method (blocking), or the `Start()` method (non-blocking) to initiate the agent created in Step 3.
 </br>
 </br>
+
 5. Stop the agent with the `Stop()` method. Alternatively, define a struct-type channel and add it to the agent using the option `agent.QuitOnClose(<channel>)`. Closing the channel stops the agent.
 
-
+This code block shows the func main() for the plugin called `plugin`. 
 ```go
 func main() {
 	plugin := myplugin.NewPlugin()
@@ -58,35 +53,52 @@ func main() {
 }
 ```
 
+---
+
 ### Definitions
 
-**Agent** is an object that implements the `Agent` interface. It is created using the `agent.NewAgent(<options>...)` function. Every instance of the agent contains configuration data, a channel which can gracefully stop the agent, and a tracer time-measurement utility. The options provided by the user are utilized to configure the agent when it is initialized. Every agent instance possesses a mechanism to prevent it from starting/stopping multiple times.
+**Agent** 
 
-**Options** are configuration stanzas used to customize an agent. The most important option is the *plugin list*, which tells the agent about the plugins it needs to control. If the initialization order of your plugins and their dependencies is not required, use the `agent.Plugins(<plugin>....)` function to create the plugin list option.  If your plugins require initialization in a specific order because of dependencies to resolve, use the `agent.Allplugins(<plugin>)` function to create the plugin list option.
+The `agent` object defines a set of plugins, that start and initialize in the correct order according to their relationship between one another. The agent object implements the [agent interface](https://github.com/ligato/cn-infra/blob/master/agent/agent.go), and the `agent.NewAgent(<options>...)` function creates an agent. 
 
-The available [options](https://godoc.org/github.com/ligato/cn-infra/agent#Option) to customize an agent are:
+Every instance of the agent contains configuration data, a channel which can gracefully stop the agent, and a tracer time-measurement utility. You provide options to configure the agent, and every agent instance possesses a mechanism to prevent it from starting/stopping multiple times.
 
-* `Plugins(...)` adds one or more plugins that will be started in the same order they were added
-* `AllPlugins(...)` adds one or more plugins and sorts them into the correct startup order; this option will automatically add all plugins listed as dependencies in other plugins
-* `Version(<version>, <date>, <id>)` sets the version of the program
-* `QuitOnClose(<channel>)` sets the channel which can be used to terminate the running agent when closed
-* `QuitSignals(<signals>)` sets the OS signals which can be used to quit the running agent (default: SIGINT, SIGTERM)
+---
+
+**Options**
+
+You can configure and customize an agent with options. The *plugin list* option contains the plugins that you control as part of your agent. If a specific initialization order of your plugins, and their dependencies, isn't required, use the `agent.Plugins(<plugin>....)` function to create the plugin list option.  If your plugins require a specific initialization order because of dependencies to resolve, use the `agent.Allplugins(<plugin>)` function to create the plugin list option.
+
+The available [options](https://godoc.org/github.com/ligato/cn-infra/agent#Option) to customize your agent consist of the following:
+
+* `Plugins(...)` adds one or more plugins in the order of initialization.
+* `AllPlugins(...)` adds one or more plugins and sorts them into the correct startup order. This option will automatically add all plugins listed as dependencies in other plugins.
+* `Version(<version>, <date>, <id>)` sets the version of the program.
+* `QuitOnClose(<channel>)` sets the channel to terminate the running agent when it is closed.
+* `QuitSignals(<signals>)` sets the OS signals to quit the running agent. SIGINT and SIGTERM serve as defaults.
 * `StartTimeout(duration)/StopTimeout(duration)` sets the start/stop timeout (defaults: 15s/5s)
   
-**Plugin** is an object that implements the `Plugin` interface, which defines methods required for plugin lifecycle management. At program startup, a list of plugins is read from options.
+---
 
-At this point plugins are already sorted for initialization, either done manually or by plugin lookup. Agent initialization is then performed in two steps:
+**Plugin**
 
-* startup procedure calls the `Init()` method for every plugin, one-by-one in a single thread, in the order they are sorted for initialization.
-* startup procedure calls the `AfterInit()` method for each plugin one-by-one, in a single thread, in the order they are sorted for initialization.
+The plugin object implements the [plugin interface](https://github.com/ligato/cn-infra/blob/master/infra/infra.go), which defines methods required for plugin lifecycle management. The plugin list option contains the list of plugins to read at agent startup.
 
-This two-step procedure ensures that certain initialization tasks are only performed after all plugins in the agent were pre-initialized (See [this tutorial][hw-tutorial] for more details). Note that you may leave the `AfterInit()` method empty if you do not need the second initialization phase.
+At this point, manual or plugin lookup have performed plugin initialization sorting. The plugin interface defines agent initialization consisting of two steps:
+
+* Startup procedure calls the `Init()` method for every plugin, one-by-one in a single thread, in their initialization order.
+* Startup procedure calls the `AfterInit()` method for each plugin one-by-one, in a single thread, in their initialization order.
+
+This two-step procedure ensures the execution of certain initialization tasks only occur following the pre-initialization of your agent's plugins. Note that you may leave the `AfterInit()` method empty if you do not need the second initialization phase.
+
+---
 
 ### Plugin Lifecycle
 
-The plugin is initialized in an `Init()` method, which allocates all resources required by the plugin. For example, this method can generate channels or maps, or initialize other fields used within the plugin.
+You initialize a plugin using the `Init()`method. This allocates all resources needed by your plugin.
+For example, this method can generate channels or maps, or initialize other fields used by your plugin.
 
-If a plugin reqquires another plugin in order to be initialized properly, such a relation is called *dependency*. If there are dependencies, plugins must be initialized in proper order. This means that the "dependency" plugin must be initialized before the plugin that depends on it.
+The plugins in your agent likely include dependencies. This occurs when the initialization of one plugin depends on the successful initialization of another *dependency* plugin. Therefore, the dependency plugin must initialize before the plugin that depends on it.    
 
 Consider the following example:
 ```go
@@ -104,19 +116,33 @@ type Deps struct {
 type P2 struct {}
 ```
 
-There is code for two plugins, P1 and P2. P1 uses P2 as a dependency. It is good practice to move all plugin-type dependencies into a separate structure usually called `Dep`. To execute the startup sequence properly, P2 must be initialized first. Otherwise, P1 may work with an empty reference, which will result in unexpected behavior during agent startup. In most cases, this is indicated with `panics` using a nil pointer reference.
+The code block above includes two plugins, P1 and P2. P1 uses P2 as a dependency. Keep your code clean by moving all plugin-type dependencies into a separate structure usually called `Deps`. To execute the startup sequence properly, P2 initializes first. Otherwise, P1 may work with an empty reference, which will result in unexpected behavior during agent startup. You might see`panics` using a nil pointer as one indication of unexpected behavior. 
 
-Every plugin must satisfy two methods:
+Every plugin you define must satisfy two methods:
 
-- `Close()` which releases all plugin resources such as close channels or close connections
-- `String()` which should return a text representation of the plugin
+- `Close()` which releases all plugin resources, such as close channels, or close connections.
+- `String()` which should return a text representation of the plugin.
 
-The responsibility for the correct initialization order depends on the function used to create the *plugin list* option:
+---
 
-*  `agent.Plugins(<plugin>...)` starts only those plugins set as a parameter, and in the same order as they were set. All plugins, including dependencies, must be listed. Plugins, including their dependencies, that are `NOT` listed will `NOT` be initialized. This method is best for scenarios with one plugin, or for multiple plugins which are not dependent. Otherwise, it is the developer's responsibility to sequence them in the correct order.
-* `agent.AllPlugins(<plugin>...)` resolves the dependency tree itself using [plugin lookup](plugin-lookup.md#plugin-lookup-procedure). It is not a requirement to list all dependencies. Plugin lookup will handle that process.
+The responsibility for the correct initialization order depends on the function used to create the *plugin list* option. You have two choices: `agent.Plugins()` and `agent.AllPlugins()`.
 
-Let's try a simple example:
+Items to note if you choose the `agent.Plugins()` for plugin initialization ordering: 
+
+* Parameter field lists the plugins and start order.  
+* Parameter field must list all plugins, including any dependencies. 
+* Plugins and dependencies `NOT` listed will `NOT` initialize. 
+
+In general, use the `agent.Plugins()` function if your agent contains one plugin, or you have multiple plugins with no dependencies. However, if your agent includes plugin dependencies, then you must define the correct plugin initialization sequence in the parameters field of the `agent.Plugins()` function. 
+
+`agent.AllPlugins(<plugin>...)` as the plugin list option:
+
+* Automatically resolves the plugin dependency tree itself using [plugin lookup](plugin-lookup.md#plugin-lookup-procedure). 
+* you do not need to list all plugin dependencies. 
+
+You should use the `agent.AllPlugins()` function if your agent includes multiple plugins with dependencies. Plugin lookup automatically figures out dependency relationships and sorts them into the correct  initialization sequence. 
+
+Let's look at an example:
 
 ```go
 // Top level plugin
@@ -134,15 +160,17 @@ type P2 struct {}
 type P3 struct {}
 ```
 
-The correct initialization order for the example above is **[P2, P3, P1]** or **[P3 P2, P1]**. The latter is possible because P2 and P3 are independent of each other, and thus the initialization order is not required. Again `agent.Plugins()` requires all plugins to be listed in the desired initialization order.
+The example above shows that **P1** depends on **P2** and **P3**. Therefore, **P2** and **P3** must initialize before **P1**. However, no dependency exists between **P2** and **P3**, so they can initialize in any order.  The example yields two correct answers for the initialization sequence: **[P2, P3, P1]** or **[P3, P2, P1]**. 
 
-If `agent.AllPlugins()` is used, only P1 needs to be listed. Since P2 and P3 are dependencies, the plugin lookup mechanism will locate and sequence all plugins into the correct initialization order.
+If you use the `agent.Plugins()` function in your agent, you must list all plugins in one of the correct initialization sequences as noted.
+
+If you use the `agent.AllPlugins()` function in your agent, you only need to list **P1**. Plugin lookup locates the **P2** and **P3** dependencies, and then sequences all plugins in the correct initialization order. 
 
 ### Plugin Options
 
-Dependency management is complicated. To simplify this task, every plugin comes with a helper file called `options.go`. This is the naming convention used in cn-infra, however developers are free to use any name of their choosing.
+Dependency management can introduce complexity into your agent development efforts. To simplify this task, Ligato cn-infra includes an `option.go` helper file for every plugin. `option.go` represents the standard naming convention used by cn-infra. However, you can use any name of your choosing. 
 
-Let's start with a template:
+Let's stay on the topic of dependencies and start with a template:
 
 ```go
 // DefaultPlugin is helper global variable - default plugin instance
@@ -191,9 +219,9 @@ func UseDep3(d3 dep3.SomePlugin) Option {
 }
 ```
 
-Almost all cn-infra plugins use the `DefaultPlugin` global variable. It constructs a new instance of the plugin with pre-defined dependency fields. A good practice is to ensure the default plugin instance is usable and able to init without any customization.
+Almost all cn-infra plugins use the `DefaultPlugin` global variable. It constructs a new instance of the plugin with pre-defined dependency fields. Keep your code clean by ensuring the default plugin instance can call the `init()` method without any customization.
 
-The `NewPlugin()` is a base constructor. If used without any options, the default instance is returned. Note that some dependencies in the example are set to default instances of other plugins. This method should be used only if one needs to customize plugin dependencies.
+Cn-infra defines `NewPlugin()` as a base constructor. This constructor returns a default instance of the plugin if you use without any options. Note that some dependencies in the example above rely on the default instances of other plugins. You should use this method only if you need to customize plugin dependencies.
 
 The example uses three options:
 
@@ -497,3 +525,4 @@ Only `MyApp` (top-level plugin) needs to be set to `agent.AllPlugins()`. Plugin 
 
 *[REST]: Representational State Transfer
 *[VPP]: Vector Packet Processing
+[infra-plugin]: https://github.com/ligato/cn-infra/blob/master/infra/infra.go
