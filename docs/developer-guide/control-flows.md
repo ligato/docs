@@ -2,66 +2,64 @@
 
 ---
 
-This section describes the behavior of the KV Scheduler system using examples accompanied by UML control-flow diagrams. Each example covers a specific scenario using
-configuration items supported by the VPP and Linux plugins. The diagrams illustrate the interactions between the KV Scheduler, NB plane and KV Descriptors for an executed configuration transaction.
+This section describes the behavior of the KV Scheduler system using examples that include UML control-flow diagrams.
+ 
+ ---
+ 
+ Each example covers a specific scenario using configuration items supported by VPP and Linux plugins. The diagrams illustrate the interactions between the KV Scheduler, northbound (NB) control plane, and KV Descriptors for a configuration transaction.
 
-To improve readability, the examples use shortened keys without prefixes, or in some cases, more descriptive aliases, as object identifiers. For example, `my-route` is used as a placeholder for a user-defined route, which otherwise would be identified by a [VPP route key][vpp-key] composed of a destination network, outgoing interface and next hop address. 
-
-In addition, most of the configuration items that are automatically created in the SB plane are omitted from the diagrams since they do not play any role in the scenarios described below. These items are retrieved from the VPP and Linux plugins during the first resync. Examples include routes and physical interfaces.
+To improve readability, the examples use shortened keys without prefixes, or in some cases, more descriptive aliases as object identifiers. For example, `my-route` replaces the [VPP route key][vpp-key] for a user-defined route. In addition, the examples omit southbound (SB) configuration activities since they do not factor in the control flow scenarios. Note that the first resync retrieves configuration items such as routes and interfaces.
 
 
 !!! Note
-    The UML diagrams are plotted as SVG images. They contain links to diagrams
+    The UML diagrams incorporate SVG images. They contain links to diagrams
     presenting the state of the graph with values at the end of every transaction.
-    To access these links, the UML diagrams must be opened as standalone inside a separate web browser tab.
+    To access these links, open a separate web browser tab and click on the link.
 
 ---
 
 ### Example: AF-Packet interface
 
-`AF-Packet` is a VPP interface type attached to a host OS interface. It captures all incoming traffic, and permits Tx packet injection through a socket interface.
+Let's examine the creation of an `AF_Packet` interface. This interface type attaches to a host OS interface. It captures all incoming traffic, and permits tx packet injection through a socket interface. 
 
-The host OS interface must exist before the `AF-Packet` interface is created. This could be problematic because the VPP agent does not control or configure the host OS interface. Instead, this task could be handled by an external process or
-an administrator during VPP agent run-time. In this situation, there is no key-value pair to resolve `AF-Packet` dependencies.
+The host OS interface must exist before you create an `AF_Packet` interface. This could be problematic because the VPP agent does not control or configure the host OS interface. Typically, an external process or network administrator configures host OS interfaces during VPP run-time. You do not have a key value pair to resolve this `AF_Packet` "dependency".
 
-The KV Scheduler solves this problem by supporting external object notifications through the use of the `PushSBNotification(key, value, metadata)` method. Values received through notifications are denoted as `OBTAINED`. They cannot be removed by a resync even
-though they are not explicitly configured by NB. Obtained values are allowed to have their own descriptors. The `Retrieve()` operation is called to refresh the graph.
- `Create`, `Delete` and `Update` operations are never used because:
+The KV Scheduler solves this problem by supporting external object notifications with the `PushSBNotification(key, value, metadata)` method. Values received through notifications are marked as `OBTAINED`. A resync cannot remove these values even though they are not explicitly configured by NB. `OBTAINED` values to have their own descriptors. 
 
- - obtained values are updated externally.
- - VPP agent is notified about any changes _after_ they have occurred.
+The `Retrieve()` operation refreshes the graph. The `Create`, `Delete` and `Update` operations aren't  used because of the following:
 
-The Linux plugin support an `InterfaceWatcher` descriptor. It retrieves
-and generates notifications regarding Linux interfaces in the default network namespace of the VPP agent. Linux interfaces are assigned unique
-keys using their host names with `linux/interface/host-name/eth1` serving as an example.
-The `AF-Packet` interface then defines the dependency referencing the key with the
-host name of the interface it is supposed to attach to. Note that it cannot attach
+ - `OBTAINED` values update externally.
+ - VPP agent is notified of changes only _after_ they have occurred.
+
+The Linux plugin supports an `InterfaceWatcher` descriptor. It retrieves
+and generates notifications regarding Linux interfaces in the default network namespace of the VPP agent. Linux interfaces use keys containing the name of the host with  `linux/interface/host-name/eth1` serving as an example. The `AF_PACKET` interface then defines the dependency referencing the key with the
+host name of the interface it attaches to. Note that you can't attach
 to interfaces from other namespaces.
 
-In this example, the host OS interface is created after the request to configure
-`AF-Packet` is received. Therefore, the KV Scheduler holds the `AF-Packet` in the
-`PENDING` state until the notification is received. 
+In this example, the system creates the host OS interface only after it receives the request to configure an `AF_PACKET` interface. The KV Scheduler holds the `AF-Packet` in the
+`PENDING` state until it receives the notification.
+
+ 
 
 ![CFD][cfd-af-packet]
 
 ---
 
-### Example: Bridge Domain
+### Example: Bridge Domain 
 
-A bridge domain consists of a group of interfaces that share a common L2 broadcast subnetwork. Mac-layer L2 broadcast packets originating from one interface will be flooded to all other interfaces in the bridge domain.
+It this example, let's look over the flows for creating a bridge domain. You will recall that a bridge domain consists of a group of interfaces that share a common L2 broadcast subnetwork. One interface will flood mac-layer L2 broadcast packets to all other interfaces in the bridge domain.
 
-An empty bridge domain has no dependencies, and can be created
-independently from interfaces. However, to install an interface into a bridge domain,
-both the interface and the bridge domain must be created first. The KV Scheduler could treat the bridge domain as a single key-value pair, with a dependency that  _all_ interfaces intended for that bridge domain are configured.
+An empty bridge domain has no dependencies. You can create a bridge domain without first creating the interfaces. However, to install an interface into a bridge domain, you must first create the interface and bridge domain. 
 
-This approach introduces several challenges:
+The KV Scheduler could treat the bridge domain as a single key-value pair, with a dependency that you configure _all_ interfaces intended for that bridge domain. This approach introduces several challenges:
 
-* prevents the existence of the bridge domain even if a single interface is missing.
-* request to the KV data store to remove the interface could overtake the bridge domain  configuration update to delist the interface. This results in the bridge domain being temporarily removed and then re-created.
+* Prevents the existence of the bridge domain even if a single interface is missing.
+* Request to the KV data store to remove the interface could overtake a bridge domain configuration update to remove interface. This results in the temporary removal and recreation of the bridge domain.
 
-The KV Scheduler addresses these challenges through the use of derived values. The idea is to break apart the configuration item into multiple distinct pieces, each with their own CRUD operations and dependencies. In this scenario, a binding is established between the bridge domain and every bridge domain interface. This is treated as derived value, each coming with their own `BDInterfaceDescriptor` descriptor. A `Create()` operation puts the interface into the bridge domain; a `Delete()` operation removes the interface by breaking the binding.
+The KV Scheduler addresses these challenges through the use of derived values. This technique breaks the configuration item into multiple distinct pieces, each with their own CRUD operations and dependencies. A binding exists between the bridge domain and every bridge interface. The binding functions as a derived value, each coming with its own `BDInterfaceDescriptor` descriptor. A `Create()` operation puts the interface into the bridge domain; a `Delete()` operation removes the interface by breaking the binding.
 
-The bridge domain itself has no dependencies, and will be configured as requested by the NB. However, the individual bindings will have a dependency on its associated interface and implicitly on the bridge domain it is derived from. Even if one or more interfaces are missing or in the process of being deleted, the bridge domain and its remaining interfaces will not be impacted and function will continue.
+A request to NB configures a bridge domain, which itself does not have any dependencies.
+However, the individual bindings will have a dependency on its associated interface, and implicitly on the bridge domain it is derived from. Even if one or more interfaces are missing, or in the process of being deleted, the bridge domain and its remaining interfaces will not be impacted and function will continue.
 
 The control-flow diagram shows that the bridge domain is created even if an interface is configured later. The binding remains in the `PENDING` state until the interface is configured.
 
@@ -72,30 +70,29 @@ The control-flow diagram shows that the bridge domain is created even if an inte
 
 ### Example: Interface Re-creation
 
-Incremental configuration updates for some items are not supported by the SB. Instead, the given item may need to be deleted and re-created with the new configuration. The KV Scheduler supports this scenario using the `UpdateWithRecreate()` method. It enables a descriptor to inform the KV Scheduler if an item requires
-   full re-creation for the configuration update to be applied.
+The SB doesn't support incremental configuration updates for some items. Instead, the given item must be deleted, and re-created with the new configuration. The KV Scheduler supports this scenario using the `UpdateWithRecreate()` method. It enables a descriptor to inform the KV Scheduler if an item requires full re-creation before applying the configuration update. 
 
-This example demonstrates re-creation using a VPP TAP interface and a NB request
+This example demonstrates re-creation using a VPP TAP interface, and a NB request
 to modify the RX ring size. Modifying this configuration item is not supported for an interface that has already been created. In addition, an L3 route is attached to the interface. The route
 cannot exist without the interface. Therefore, the route must be deleted and moved into
-the `PENDING` state before interface re-creation. The route configuration can then be performed once the interface re-creation process has completed.
+the `PENDING` state before interface re-creation. Route configuration can proceed once the interface re-creation process has completed.
 
 
 ![CFD][cfd-interface-recreation]
 
 ---
 
-### Example: Retry of Failed Operation
+### Example: Retry of a Failed Operation
 
-Transactions can run in `BestEffort` mode meaning that the KV Scheduler will _retry_ failed operations rather than reverting back to previously applied configuration operations.
+Transactions can run in `BestEffort` mode. The KV Scheduler will _retry_ failed operations rather than reverting back to previously applied configuration operations.
 
-In this example, the create() operation for the TAP interface `my-tap` fails. Before terminating
-the transaction, the KV Scheduler retrieves the current value of `my-value`. It cannot assume this is the current state because the create() operation failed somewhere in-progress.
+In this example, the `Create()` operation for the TAP interface `my-tap` fails. Before terminating
+the transaction, the KV Scheduler retrieves the current value of `my-value`. It cannot assume this is the current state, because the `Create()` operation failed somewhere in-progress.
 
 The KV Scheduler then schedules a *retry transaction*. This will attempt to repair
 the failure by re-applying the same configuration. Since the value retrieval
-has not found `my-tap` to be configured, the retry transaction will repeat
-the `Create(my-tap)` operation and ultimately succeed as shown.
+has not found a configured `my-tap`, the retry transaction will repeat
+the `Create(my-tap)` operation. 
 
 
 ![CFD][cfd-retry-failed]
@@ -104,16 +101,17 @@ the `Create(my-tap)` operation and ultimately succeed as shown.
 
 ### Example: Transaction Revert
 
-A update transaction can be configured to run in either best-effort mode supporting partial completion,
-or to terminate upon first failure and revert back to successfully applied changes. The latter ensures there are no visible effects of the failure remaining in the system.  This behaviour is only supported with gRPC or localclient serving as the NB. With a KV data sore, best-effort mode will run to attempt to arrive as close as possible to the desired configuration.
+A configuration update transaction can terminate upon the first failure, and revert back to successfully applied changes. This ensures any visible effects of the failure do not remain in the system.  Note that only gRPC or localclient serving as the NB support this behavior. With a KV data sore, best-effort mode will run in an attempt to arrive as close as possible to the desired configuration.
 
 In this example, a transaction is planned and executed to create a VPP interface
-`my-tap` with an attached route `my-route`. The interface configuration succeeds but the route configuration fails.
+`my-tap` with an attached route `my-route`. The interface configuration succeeds, but the route configuration fails.
 
-The KV Scheduler then triggers the `revert procedure`. First, the current value of `my-route` is
-retrieved. It cannot assume this is the current state because the create() operation failed somewhere in-progress. Second, it is determined that the route has not been configured. Therefore,
-only the interface must be deleted to undo any executed changes. Once
-the interface is removed, the system is returned to its pre-transaction state. Finally, the transaction error is returned back to NB.
+In this example, a transaction to create a VPP interface
+`my-tap` with an attached route `my-route`. is planned and executed. The interface configuration succeeds, but the route configuration fails.
+
+The KV Scheduler then triggers the `revert procedure`. First, it retrieves the current value of `my-route`. It cannot assume this is the current state because the `Create()` operation failed somewhere in-progress. Second, it determines that the route has not been configured. Only the interface must be deleted to undo any executed changes. 
+
+Once the interface is removed, the system returns to its pre-transaction state. Finally, the transaction error is returned to the NB.
 
 
 ![CFD][cfd-transaction-revert]
@@ -122,21 +120,15 @@ the interface is removed, the system is returned to its pre-transaction state. F
 
 ### Example: Unnumbered Interface
 
-An unnumbered interface is an interface that has not been configured with an IP address. It can borrow an IP address from another interface. This can conserve network address space.
-
-The interface that will "loan" IP addresses to unnumbered interfaces must be configured with at least one IP address. Normally, the VPP agent represents a given VPP interface using a single key-value
-pair. Depending on this key alone would only ensure that the target interface is already configured when a dependent object is being created.
+An unnumbered interface is not configured with an IP address. It can borrow an IP address from another target interface. The target interface that "loans" IP addresses to unnumbered interfaces must be configured with at least one IP address. Normally, the VPP agent represents a given VPP interface using a single key-value pair. Depending on this key alone would only ensure that the target interface is configured when a dependent object is being created. 
 
 !!! Note
-    The paragragh above only refers to a VPP interface. It is not referring to a VPP interface configured with an IP address.
+    The paragraph above only refers to a VPP interface. It is not referring to a VPP interface configured with an IP address.
 
-In order to restrict an object's existence based on the set of assigned IP addresses to
-an interface, every VPP interface value must `derive` a unique
-key-value pair for each assigned IP address. This enables the KV Scheduler to reference IP
-address assignments and build dependencies around them.
+An object's existence can be restricted based on IP addresses assigned to an interface. To accomplish this, every VPP interface value must derive a unique key-value pair for each assigned address. This enables the KV Scheduler to reference IP address assignments and build dependencies around them.
 
-An unnumbered interface can derive a single value from every interface, with a key that would allow it to determine if the interface has at least one assigned IP address.
-
+An unnumbered interface derives a single value from every interface. The key can indicate if the interface has at least one assigned IP address.
+                                                                                                           
 Here is an example:
 ```
 vpp/interface/<interface-name>/has-ip/<true/false>
@@ -147,36 +139,28 @@ Dependency for an unnumbered interface could reference this key:
 vpp/interface/<interface-name-to-borrow-IP-from>/has-ip/true
 ```
 
+---
 
-For more complex cases, which are outside of the scope of this example, it may
-be desirable to define a dependency based on the presence and value of an assigned IP address. To achieve this, we could derive an empty value for each
-assigned IP address with key template like so:
+For more complex cases, you can define a dependency based on the presence and value of an assigned IP address. To achieve this, you derive an empty value for each assigned IP address with key template.
+
+Here is an example of a key template:
 ```
 vpp/interface/address/<interface-name>/<address>
 ```
 
-This complicates the situation for unnumbered interfaces. They are not
-able to reference a key of a specific value. Instead, they would need to
-match any address-representing key, so that the dependency is satisfied with at least one match.
+This complicates the situation for unnumbered interfaces. They can't reference a key of a specific value. Instead, they would need to match any address-representing key. A single match satisfies the dependency. 
 
-With wildcards this could be expressed like so:
+Here is an example of a key with a wildcard: 
 ```
 vpp/interface/address/<interface-name>/*
 ```
 
-The KV Scheduler offers a more generic solution than
-wildcards. The dependency is expressed using a callback denoted as `AnyOf`. The callback
-is a predicate, returning `true` or `false` for a given key. The semantics is
-similar to that of the wildcards. The dependency is considered satisfied, when the callback,
-for at least one of the existing configured or derived keys, returns `true`.
+The KV Scheduler offers a more generic solution than wildcards. The dependency is expressed using a callback denoted as `AnyOf`. The callback returns `true` or `false` for a given key. A callback returning `true`, for at least one of the existing configured or derived keys, satisfies the dependency.
 
 Lastly, it is possible for an unnumbered interface to exist even if the IP address(es)
-to borrow are not available. In this case, an unnumbered interface is
-derived from the interface value and processed by a separate `UnnumberedIfDescriptor` descriptor. It is this derived value that uses the `AnyOf` callback to trigger an IP address borrow action once the IP addresses become available.
+to borrow are not available. In this case, an unnumbered interface is derived from the interface value and processed by a separate `UnnumberedIfDescriptor` descriptor. This derived value uses the `AnyOf` callback to trigger an IP address borrow action once the IP addresses become available.
 
-The example also demonstrates that when the borrowed IP address is removed,
-the configuration of the unnumbered interface will not be impacted. It will only return
-the address before it is unassigned, and becomes an interface in L2 mode.
+This example demonstrates that an unnumbered interface configuration is not impacted by the removal of the borrowed IP address. It will only return the address before it is unassigned, and becomes an interface in L2 mode.
 
 
 ![CFD][cfd-unnumbered]

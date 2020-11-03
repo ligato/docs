@@ -4,6 +4,8 @@
 
 This section describes the plugin Lookup function. 
 
+Package references: [cninfra](https://godoc.org/github.com/ligato/cn-infra), [agent](https://godoc.org/github.com/ligato/cn-infra/agent) 
+
 !!! Note
     In this section, `agent` defines a set of plugins, that start and initialize in the correct order according to their relationship to one another.
 
@@ -11,7 +13,7 @@ This section describes the plugin Lookup function.
 
 Ligato-supplied and custom plugins define the functions supported by your agent. In many cases, one plugin will depend on another. For example, interface plugin initialization should precede route plugin initialization. The same route plugin may have dependencies on other plugins, which in turn have their own dependencies on other plugins. All plugins and dependencies must start and initialize in the correct order. 
 
-The plugin lookup function simplifies the process of plugin lifecycle management by automating the following functions:
+The plugin lookup function simplifies plugin lifecycle management by automating the following functions:
 
 - Adds plugins and associated dependencies to the agent's plugin list.
 - Sorts plugins and dependencies in the correct initialization order.         
@@ -28,7 +30,7 @@ If you wish to skip the details, and quickly set up an agent, follow the steps b
 2. Use the `agent.Plugins(<plugin>...)` function with the plugin created in the previous step. This function creates an instance of `agent.Option`, and informs the VPP agent about your plugin. You can pass multiple plugins and dependencies to this function. You must manually list all plugins and dependencies in the correct order of initialization.  
 
 !!! Note
-    Alternatively, you can use the `agent.AllPlugins(<plugin>...)` function if you wish to avoid manually listing all plugins, and their dependencies, in a specific order of initialization. The `agent.AllPlugins(<plugin>...)` function invokes plugin lookup which *automatically* locates dependency plugins, and sorts all plugins and dependencies in the correct initialization order. 
+    Alternatively, you can use the `agent.AllPlugins(<plugin>...)` function if you wish to avoid manually listing all plugins, and their dependencies, in a specific order of initialization. This function invokes plugin lookup which *automatically* locates dependency plugins, and sorts all plugins and dependencies in the correct initialization order. 
 
 3. Use the `agent.NewAgent(opts ...Option)` function to create a new instance of the agent.
 </br>
