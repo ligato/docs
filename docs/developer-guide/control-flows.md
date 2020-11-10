@@ -41,7 +41,7 @@ and generates notifications for Linux interfaces in the VPP agent's default netw
 
 Linux interfaces use keys containing host name with  `linux/interface/host-name/eth1` key serving as an example. The `AF_PACKET` interface then defines the dependency referencing this key with the host name of the host OS interface it attaches to. Note that you can't attach to interfaces from other namespaces.
 
-In the control-flow diagram below, host OS interface is created _after_ the request to configure an `AF_PACKET` interface is received. The KV Scheduler holds the `AF-Packet` in the `PENDING` state until it receives the notification from the Linux interface watcher that the host OS interface is created.  
+In the control-flow diagram below, the host OS interface is created _after_ the request to configure an `AF_PACKET` interface is received. The KV Scheduler holds the `AF-Packet` in the `PENDING` state until it receives the notification from the Linux interface watcher that the host OS interface is created.  
 
  
 

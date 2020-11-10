@@ -10,7 +10,7 @@ Package references: [kvscheduler](https://godoc.org/github.com/ligato/vpp-agent/
 
 ### Introduction
 
-The KV Scheduler is a transaction-based configuration processing system. It includes a generic mechanism for dependency resolution between configuration items. The KV Scheduler ships as a separate plugin, and is a core component used by all VPP and Linux plugins.
+The KV Scheduler is a transaction-based configuration processing system. It includes a generic mechanism for dependency resolution between configuration items. The KV Scheduler ships as a separate plugin, and is used by all VPP and Linux plugins.
 
 ---
 
@@ -19,8 +19,12 @@ The KV Scheduler is a transaction-based configuration processing system. It incl
 The KV Scheduler addresses several challenges encountered in the original VPP agent design. These challenges arose as the variety and complexity of different configuration items increased.
 
 * VPP and Linux plugins became bloated, complicated, and suffered from race conditions and a lack of visibility.
+</br>
+</br>
 
 * `configurator` components of VPP and Linux plugins, each processing a specific configuration item type (e.g. interface, route, etc.) were built from scratch, solving the same set of problems, with frequent code duplication.
+</br>
+</br>
 
 * Plugin configurators would communicate with each other through notifications, and react to changes asynchronously to ensure proper operational sequence. Dependency resolution was distributed across all configurators, making it difficult to understand, predict, and stabilize the system behavior.
 
@@ -57,35 +61,35 @@ Furthermore, the set of supported configuration items can grow without altering 
 
 The KV Scheduler's graph-based representation uses the following terminology to describe the higher level abstractions of specific objects:
 
-* **Model** builds a representation of a single configuration item type such as interface, route, or bridge domain. Details on models and the model specification that includes proto. Messages can be found [here](../user-guide/concepts.md#what-is-a-model). The [bridge domain model][bd-model-example] is an example. Details regarding model registration can be found [here][model-registration].
+* **Model** represents a single configuration item type such as interface, route, or bridge domain. For more details, see the  [User Guide model section](../user-guide/concepts.md#what-is-a-model). To look over an implementation, see the [bridge domain model][bd-model-example].
 </br>
 </br>
   
-* **Value** (`proto.Message`) is a run-time instance of a given model. Details on proto.Message can be found [here](../user-guide/concepts.md).
+* **Value** (`proto.Message`) is a run-time instance of a given model. For more details, see the [proto.Message section ](../user-guide/concepts.md#protomessage) of the User Guide.
 </br>
 </br>
 
-* **Key** (`string`) identifies a specific value that is built using the model specification and value attributes that identify a unique instance. More on keys can be found  [here](../user-guide/concepts.md#keys).
+* **Key** (`string`) identifies a specific and value built from the model specification and value attributes. For more information, see the [keys section](../user-guide/concepts.md#keys) of User Guide.
 </br>
 </br>
 
-* **Label** (`string`) provides an identifier unique only across the value of the same type (e.g. interface name). It is generated from the model specification and value fields.
+* **Label** (`string`) identifies a unique value associated with the same type such as interface name. 
 </br>
 </br>
 
-* **Value State** (`enum ValueState`) is the operational state of a value. For example, a value can be successfully `CONFIGURED`, `PENDING` due to unmet dependencies, or `FAILED` after the last CRUD operation returned an error. The set of value states is defined using the protobuf enumerated type [here][value-states].
+* **Value State** (`enum ValueState`) defines the operational state of a value. For example, a value can be successfully `CONFIGURED`, `PENDING` due to unmet dependencies, or `FAILED` after the last CRUD operation returned an error. [Value state proto][value-states] defines the possible value states.
 </br>
 </br>
 
-* **Value Status** (`struct BaseValueStatus`) includes additional details such as the last executed operation, the last returned error, and the list of unmet dependencies. The status of one or more values and their updates can be read and watched for via the [KVScheduler API][value-states-api]. More information on this API can be found [below](#api).
+* **Value Status** (`struct BaseValueStatus`) provides details on the executed operation, the last returned error, and the list of unmet dependencies. The status of one or more values and their updates can be read and watched for via the [KVScheduler API][value-states-api]. More information on this API can be found [below](#api).
 </br>
 </br>
 
-* **Metadata** (`interface{}` is additional run-time information of an undefined type that is assigned to a value. It is updated following a CRUD operation or agent restart. An example of metadata is the [sw_if_index][vpp-iface-idx], which is maintained for every interface alongside its value.
+* **Metadata** (`interface{}`) is additional run-time information of an undefined type assigned to a value. It is updated following a CRUD operation or agent restart. An example of metadata is the [sw_if_index][vpp-iface-idx], which is maintained for every interface alongside its value.
 </br>
 </br>
 
-* **Metadata Map**, also known as index-map, implements the mapping between a value label and its metadata for a given value type. It is exposed in read-only mode to allow other plugins to read and reference metadata. For example, the interface plugin exposes its metadata map [here][vpp-iface-map]. It is used by the ARP plugin, the route plugin, and other plugins to read the sw_if_index of target interfaces. Metadata maps are automatically created and updated by the KV Scheduler.
+* **Metadata Map**, also known as index-map, implements the mapping between a value label and its metadata for a given value type. It is exposed in read-only mode to allow other plugins to read and reference metadata. For example, the interface plugin exposes its metadata map [here][vpp-iface-map]. It is used by the ARP plugin, the route plugin, and other plugins to read the sw_if_index of target interfaces. KV Scheduler creates and updates Metadata maps.
 </br>
 </br>
 
@@ -127,22 +131,37 @@ The KV Scheduler must learn about two types of relationships between values util
 1. `A` **depends on** `B`:
 
 - `A` cannot exist without `B`.
+</br>
+</br>
+
 - a request to _create_ `A` without the existence of `B` must be postponed by marking `A` as `PENDING` in the in-memory graph.
+</br>
+</br>
+
 - If `B` needs to be removed and `A` exists, `A` must be removed first and set to the `PENDING` state in case `B` is restored in the future.
 
 !!! note
     Values obtained from SB via notifications are not checked for dependencies
+
+---
+
 2. `B` **is derived from** `A`:
 
 - value `B` is not created directly by either NB or SB. Rather, it is derived from a base value `A` using the `DerivedValues()` method of the descriptor for `A`.
+</br>
+</br>
+
 - a derived value `B` exists for only as long as its base `A` exists. It is removed immediately when the base value `A` disappears.
+</br>
+</br>
+
 - a derived value may be represented by a descriptor different from the base value. It usually represents some property of the base value that other values may depend on, or an extra action to be taken when additional dependencies are met.
 
 ---
 
 ### Diagram
 
-The following diagram shows the interactions between the KV Scheduler and the layers above and below. Using [Bridge Domain][bd-cfd] as an example, it depicts both the dependency and the derivation relationships, together with a pending value (of unspecified type) waiting for an interface to be created first.
+The diagram below shows the interactions between the KV Scheduler and the layers above and below. Using [Bridge Domain][bd-cfd] as an example, it depicts both the dependency and the derivation relationships, together with a pending value (of unspecified type) waiting for an interface to be created first.
 
 ![KVScheduler diagram](../img/developer-guide/kvscheduler.svg)
 
@@ -150,28 +169,57 @@ The following diagram shows the interactions between the KV Scheduler and the la
 
 ### Resync
 
-Plugins no longer need to implement their own resync mechanisms. By providing a KV Descriptor with CRUD operation callbacks to the KV Scheduler, a plugin "teaches" the KV Scheduler how to handle the plugin's configuration items. The KV Scheduler can determine and execute the set of operations needed to perform complete resynchronization.
+Plugins are not required to implement their own resync mechanisms. By providing a KV Descriptor with CRUD operation callbacks to the KV Scheduler, a plugin "teaches" the KV Scheduler how to handle the plugin's configuration items. The KV Scheduler can determine and execute the set of operations needed to perform complete resynchronization.
 
-The KV Scheduler further enhances the concept of state reconciliation by defining three resync types:
+---
 
-* **Full resync**: the intended configuration is re-read from NB, the view of SB is refreshed via one or more `Retrieve` operations. Inconsistencies are resolved using `Create`\\`Delete`\\`Update` operations.
-* **Upstream resync**: a partial resync, similar to the Full resync, except the view of SB state is not refreshed. It is either assumed to be up-to-date and/or is not required in the resync. This is because it may be easier to re-calculate the intended state rather than determine the minimal difference.
-* **Downstream resync**: a partial resync, similar to the Full resync, except the intended configuration is assumed to be up-to-date and will not be re-read from the NB. Downstream resync can be used periodically to resync, even without interacting with the NB.
+The KV Scheduler further enhances the concept of state reconciliation by defining three resync types: full resync, upstream resync, and downstream resync.
+
+- **Full resync:**
+    - Re-reads intended configuration from NB.
+    - Refreshes SB view via one or more `Retrieve` operations.
+    - Resolves inconsistencies using `Create`\\`Delete`\\`Update` operations.
+</br>
+</br>
+
+- **Upstream resync:**
+    - Partial resync, similar to the full resync.
+    - _DOES NOT_ refresh SB view, and assumes SB view is up-to-date and/or not required in the resync. This is because it may be easier to re-calculate the intended state rather than determine the minimal difference.
+</br>
+</br>
+
+- **Downstream resync:** 
+     - Partial resync, similar to the full resync
+     - _DOES NOT_ re-read intended configuration from NB, and assumes it is up-to-date  
+     -  Used periodically to resync, even without interacting with the NB.
 
 ---
 
 ### Transactions
 
-The KV Scheduler can group related changes and apply them as a transaction. This is not supported, however, by all agent NB interfaces. For example, changes from the `etcd` data store are always received one at a time. To leverage the transaction support, localclient (the same process) or gRPC API (remote access) must be used instead. Both are defined [here][clientv2].
+The KV Scheduler can group related changes and apply them as a transaction. This is not supported by all NB interfaces. For example, changes from the etcd data store are received one at a time. 
 
-Inside the KV Scheduler, transactions are queued and executed synchronously to simplify the algorithm and avoid concurrency issues. The processing of a transaction is split into two stages:
+To leverage the transaction support, you must use the [localclient](../user-guide/concepts.md#client-v2) for the same process, or [gRPC](https://github.com/ligato/cn-infra/tree/master/rpc/grpc) for remote access.  
 
-* **Simulation**: set of sequenced operations (so-called *transaction plan*), without actually calling any CRUD callbacks from the descriptors. This assumes no failures.
-* **Execution**: executing the operations in the correct order. If any operation fails, applied changes are reverted, unless the `BestEffort` mode is enabled. In this case, the KV Scheduler attempts to apply the maximum possible set of required changes. `BestEffort` is the  default for resync.
+Inside the KV Scheduler, transactions are queued and executed synchronously. This simplifies the algorithm and avoids concurrency issues. 
 
-Following simulation, transaction metadata (sequence number printed as `#xxx`, description, values to apply, etc.) is generated, together with the transaction plan. This is done before execution, so that the user is informed of pending operations. This occurs even if any of the operations cause the agent to crash. After the transaction has executed, the set of completed operations and encountered errors is printed.
+---
 
-An example transaction output log is shown below. There are no errors, therefore the planned operations match the executed operations:
+The KV Scheduler splits transaction processing into two stages: simulation and execution.
+
+- **Simulation:** 
+    - Set of sequenced operations referred to as the *transaction plan*.
+    - _DOES NOT_ perform CRUD callbacks to descriptors.
+    - Assumes no failures. 
+</br>
+</br>
+- **Execution:**
+    - Set of executed operations in the correct order. 
+    - If any operation fails, reverts applied changes, unless the `BestEffort` mode is enabled. In this case, the KV Scheduler attempts to apply the maximum possible set of required changes. `BestEffort` is the default for resync.
+
+Following simulation, the KV Scheduler generates transaction metadata and the transaction plan. This process happens before execution to inform you of pending operations. Note this process occurs even if any of the operations cause the agent to crash. After the transaction has executed, the set of completed operations and encountered errors is printed.
+
+The example below shows a transaction output log. Observe that the planned operations match the executed operations which indicates no errors . 
 ```
 +======================================================================================================================+
 | Transaction #5                                                                                        NB transaction |
@@ -212,11 +260,24 @@ x-------------------------------------------------------------------------------
 
 ---
 
-### API
+### KV Scheduler API
 
-The KV Scheduler API is defined in a separate [sub-package "api"][kvscheduler-api-dir] of the [plugin][plugin]. The interfaces that constitute the KV Scheduler API are defined in multiple files:
+A separate [sub-package "api"][kvscheduler-api-dir] of the [KV Scheduler plugin][plugin] defines the KV Scheduler API. 
 
- * `errors.go`: definitions of errors that can be returned from within the KV Scheduler; additionally the `InvalidValueError` error wrapper is defined to allow plugins to further specify the reason for a validation error, which is then exposed through the [value status][value-states].
+Multiple files define interfaces that constitute the KV Scheduler API. The table below includes file name, repo pointer along with a brief description. 
+
+| File  |  Description |
+|---|---|
+|[errors.go][errors-go]|defines errors returned from the KV Scheduler. `InvalidValueError` error wrapper allows plugins to specify the specific reason for a validation error.|
+|[kv_scheduler_api.go][kv-scheduler-api]  |NB uses for transaction commit, or read and watch for value status updates; SB uses to push notifications.|
+|[kv_descriptor_api.go][kv-descriptor-api] | defines the KV Descriptor interface. |
+|[txn_options.go][txn-options-go] |Set of available options for transactions.  |
+|[txn_record.go][txn-record-go] | Type definition used to store processed transaction records.  |
+|value_status.proto  |Operational value status proto. [API][value-states-api] can read the current status of one or more values, and watch for updates through a channel|
+|value_status.pb.go  | Go code generated from value status proto.  |
+|value_status.go | extends `value_status.pb.go` to implement proper (un)marshalling for proto.Messages. |
+
+ * `errors.go`: defines errors that can be returned from within the KV Scheduler; additionally the `InvalidValueError` error wrapper is defined to allow plugins to further specify the reason for a validation error, which is then exposed through the [value status][value-states].
 
  * `kv_scheduler_api.go`: the KV Scheduler API used by: NB to commit a transaction, or to read and watch for value status updates; SB to push notifications regarding values that are, automatically or externally, created and/or updated.
 
@@ -355,6 +416,12 @@ Reference: [How to visualize the graph][kvs-graph-api] section of the Developer 
 [kvs-status-api]: ../api/api-kvs.md#status
 [kvs-flag-stats]: ../api/api-kvs.md#flag-stats
 [kvs-graph-api]: ../developer-guide/kvs-troubleshooting.md#how-to-visualize-the-graph
+[errors-go]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/errors.go
+[txn-options-go]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/txn_options.go
+[txn-record-go]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/txn_record.go
+[kv-descriptor-api]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/kv_descriptor_api.go
+[kv-scheduler-api]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/api/kv_scheduler_api.go
+  
 
 *[ARP]: Address Resolution Protocol
 *[REST]: Representational State Transfer
