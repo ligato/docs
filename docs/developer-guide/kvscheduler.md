@@ -2,81 +2,119 @@
 
 ---
 
+This section describes the KV Scheduler.
+
+Package references: [kvscheduler](https://godoc.org/github.com/ligato/vpp-agent/plugins/kvscheduler), [api](https://godoc.org/github.com/ligato/vpp-agent/plugins/kvscheduler/api), [graph](https://godoc.org/github.com/ligato/vpp-agent/plugins/kvscheduler/internal/graph) 
+
+---
+
 ### Introduction
 
-The KV Scheduler is a transaction-based configuration processing system. It includes a generic mechanism for dependency resolution between configuration items. The KV Scheduler is shipped as a separate [plugin], and is a core component used by all VPP and Linux plugins.
+The KV Scheduler is a transaction-based configuration processing system. It includes a generic mechanism for dependency resolution between configuration items. The KV Scheduler ships as a separate plugin, and is a core component used by all VPP and Linux plugins.
 
 ---
 
 ### Motivation
 
-The KV Scheduler addresses several challenges encountered in the original VPP agent design, which became apparent as the variety and complexity of different configuration items increased.
+The KV Scheduler addresses several challenges encountered in the original VPP agent design. These challenges arose as the variety and complexity of different configuration items increased.
 
-* `VPP` and `Linux` plugins became bloated and complicated, suffering from race conditions and a lack of visibility.
+* VPP and Linux plugins became bloated, complicated, and suffered from race conditions and a lack of visibility.
 
-* `configurator` components of `vpp` and `linux` plugins, each processing a specific configuration item type (e.g. interface, route, etc.) were built from scratch, solving the same set of problems again and again, with frequent code duplication.
+* `configurator` components of VPP and Linux plugins, each processing a specific configuration item type (e.g. interface, route, etc.) were built from scratch, solving the same set of problems, with frequent code duplication.
 
-* plugin configurators would communicate with each other through notifications, and react to changes asynchronously to ensure proper operational sequence. Dependency resolution was distributed across all configurators, making it difficult to understand, predict and stabilize the system behavior.
+* Plugin configurators would communicate with each other through notifications, and react to changes asynchronously to ensure proper operational sequence. Dependency resolution was distributed across all configurators, making it difficult to understand, predict, and stabilize the system behavior.
 
-The result was an unreliable and unpredictable re-synchronization (resync) occurring between the desired configuration state and the runtime configuration state.
+Re-synchronization (resync) occurring between the desired northbound (NB) configuration state and the southbound (SB) runtime configuration state became unreliable and unpredictable.
 
 ---
 
 !!! Terminology
-    `Northbound (NB)` describes the desired or intended configuration state. `Southbound (SB)` describes the actual run-time configuration state. `Resync` is also referred to as state reconciliation. `CRUD` stands for create, read, update and delete. It standard nomenclature describing the basic actions performed by APIs. The KV Scheduler is referred to as the scheduler. KV Descriptors are also referred to as just `descriptors`.
+    `Northbound (NB)` describes the desired or intended configuration state. `Southbound (SB)` describes the actual run-time configuration state. `Resync` is also referred to as state reconciliation. `CRUD` stands for create, read, update and delete. KV Descriptors are referred to as just `descriptors`.
 
 ---
 
-### Basic concepts
+### Basic Concepts
 
-The KV Scheduler uses graph theory concepts to manage dependencies between configuration items, and the order by which they are programmed into the network. A level of abstraction is built on top of the plugins, where the state of the system is modeled as a graph. Configuration items are represented as vertices and the relationship between them are represented as edges. The graph is then walked through to generate transaction plans, refresh the state, and perform resync.
+The KV Scheduler uses graph theory concepts to manage dependencies between configuration items, and the order they are programmed into the network. It applies a level of abstraction on top of the plugins, and models the state of the system as a graph. Vertices represent configuration items; edges represent the relationship between configuration items. The KV Scheduler walks through the graph to generate transaction plans, refresh the state, and perform resync.
 
-The transaction plan that is prepared using the graph representation consists of a series of CRUD operations that can be executed on graph vertices. To abstract away from specific configuration items and accompanying details, graph vertices are "described" to the KV Scheduler using [KVDescriptors][kvdescriptor-guide]. KVDescriptors are basically handlers, each assigned to a distinct subset of graph vertices. They provide the KV Scheduler with pointers to callbacks that implement CRUD operations.
+A transaction plan consists of a series of CRUD operations to perform on the graph vertices. To abstract away from specific configuration items and accompanying details, graph vertices are "described" to the KV Scheduler using [KV Descriptors][kvdescriptor-guide]. 
+
+You can think of a KV Descriptor as a handler, each assigned to a distinct subset of graph vertices. They provide the KV Scheduler with pointers to callbacks that implement CRUD operations.
 
 ---
 
 ### Mediator Pattern
 
-KV Descriptors are based on the [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern), where plugins are decoupled and no longer communicate directly with each other. Instead, interactions between plugins are handled through the KV Scheduler mediator.
+KV Descriptors are based on the [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern), where plugins are decoupled and no longer communicate directly with each other. Instead, any interactions between plugins occur through the KV Scheduler mediator. 
 
-Plugins need only provide CRUD callbacks, and describe their dependencies on other plugins through one or more KVDescriptors. The KV Scheduler is then able to plan operations without knowing what the graph vertices represent in the configured system. Furthermore, the set of supported configuration items can be extended without altering the transaction processing engine or increasing the complexity of any of the components. All that is required is to implement and register new KVDescriptors.
+Plugins need only provide CRUD callbacks, and describe their dependencies on other plugins through one or more KV Descriptors. The KV Scheduler can then plan operations without knowing what the graph vertices represent in the configured system. 
+
+Furthermore, the set of supported configuration items can grow without altering the transaction processing engine, or increasing the complexity of any of the components. You just need to implement and register new KV Descriptors.
 
 ---
 
 ### Terminology
 
-The graph-based representation uses the following terminology to describe the higher level abstractions of specific objects.
+The KV Scheduler's graph-based representation uses the following terminology to describe the higher level abstractions of specific objects:
 
 * **Model** builds a representation of a single configuration item type such as interface, route, or bridge domain. Details on models and the model specification that includes proto. Messages can be found [here](../user-guide/concepts.md#what-is-a-model). The [bridge domain model][bd-model-example] is an example. Details regarding model registration can be found [here][model-registration].
+</br>
+</br>
   
 * **Value** (`proto.Message`) is a run-time instance of a given model. Details on proto.Message can be found [here](../user-guide/concepts.md).
+</br>
+</br>
 
 * **Key** (`string`) identifies a specific value that is built using the model specification and value attributes that identify a unique instance. More on keys can be found  [here](../user-guide/concepts.md#keys).
+</br>
+</br>
 
 * **Label** (`string`) provides an identifier unique only across the value of the same type (e.g. interface name). It is generated from the model specification and value fields.
+</br>
+</br>
 
 * **Value State** (`enum ValueState`) is the operational state of a value. For example, a value can be successfully `CONFIGURED`, `PENDING` due to unmet dependencies, or `FAILED` after the last CRUD operation returned an error. The set of value states is defined using the protobuf enumerated type [here][value-states].
+</br>
+</br>
 
 * **Value Status** (`struct BaseValueStatus`) includes additional details such as the last executed operation, the last returned error, and the list of unmet dependencies. The status of one or more values and their updates can be read and watched for via the [KVScheduler API][value-states-api]. More information on this API can be found [below](#api).
+</br>
+</br>
 
 * **Metadata** (`interface{}` is additional run-time information of an undefined type that is assigned to a value. It is updated following a CRUD operation or agent restart. An example of metadata is the [sw_if_index][vpp-iface-idx], which is maintained for every interface alongside its value.
+</br>
+</br>
 
 * **Metadata Map**, also known as index-map, implements the mapping between a value label and its metadata for a given value type. It is exposed in read-only mode to allow other plugins to read and reference metadata. For example, the interface plugin exposes its metadata map [here][vpp-iface-map]. It is used by the ARP plugin, the route plugin, and other plugins to read the sw_if_index of target interfaces. Metadata maps are automatically created and updated by the KV Scheduler.
+</br>
+</br>
 
 * **[Value origin][value-origin]** defines the source of the value. For example, it could be configuration data received from the NB, or data that was automatically created in the SB such as default routes and the loop0 interface.
+</br>
+</br>
 
 * **Key-value pairs** are manipulated by CRUD operations.
+</br>
+</br>
 
 * **Dependency** is defined for a value, and it references another key-value pair that must be created and exist before the dependent value can be created. If a dependency is not satisfied, the dependent value must remain cached in the `PENDING` state. Multiple dependencies can be defined for a dependent value; All dependencies must be satisfied before the dependent value can be created.
+</br>
+</br>
 
 * **Derived value** is a single field of the original value or its property. It is manipulated separately (possibly using its own dependencies) through custom CRUD operations. It can be used as a target for dependencies of other key-value pairs. For example, every [interface to be assigned to a bridge domain][bd-interface] is treated as a [separate key-value pair][bd-derived-vals], dependent on the [target interface to be created first][bd-iface-deps], but otherwise not blocking the rest of the bridge domain to be programmed. See this [control-flow][bd-cfd] demonstrating the order of operations needed to create a bridge domain.
+</br>
+</br>
 
 * **Graph** of values is KV Scheduler-internal in-memory storage for all configured and pending key-value pairs.  Graph edges represent inter-value relations, such as "depends-on" or "is-derived-from", and graph nodes are the key-value pairs themselves.
+
 
 !!! note    
     Plugin configurators no longer need to implement their own caches for pending values.
   
+
 * **Graph Refresh** is the process of updating the graph content to reflect the real SB state. This is achieved by calling the `Retrieve` function of every descriptor that supports this operation, and adding/updating graph vertices with the retrieved values. Refresh is performed just before the [Full or Downstream resync](#resync). Or after a failed CRUD operation for only those vertices impacted by the failure.
+</br>
+</br>
 
 * **KV Descriptor** implements CRUD operations and defines derived values and dependencies for a single value type. To learn more, please read how to [implement your own KVDescriptor](kvdescriptor.md).
 

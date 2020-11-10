@@ -1,21 +1,30 @@
 ### Build without Image
 
-This section explains how to build VPP and and the VPP agent directly without an image.
+---
+
+This section explains how to build VPP and the VPP agent without an image.
 
 !!! Note
     This option is recommended for **development or testing purposes only**.
 
-Start with cloning the VPP Agent code:
+---
+
+Start by cloning the VPP Agent code:
 
 ```
 git clone git@github.com:ligato/vpp-agent.git
 ```
 
+---
+
 **Build VPP**
 
-VPP should be built first in order to provide required libraries for the host OS.
+You should build VPP first in order to provide required libraries for the host OS.
 
-1. Clone the VPP code (described above) and checkout the defined commit. Use the `vpp.env` as a source. It can be found in the ligato/vpp-agent folder. Building different VPP commit/versions can cause the VPP agent to fail at startup due to incompatibilities.
+
+1. Clone the VPP code as described above, and then checkout the defined commit. Use the `vpp.env` as a source. It can be found in the ligato/vpp-agent folder. Building different VPP commit/versions can cause the VPP agent to fail at startup due to incompatibilities.
+</br>
+</br>
 
 2. Use the following commands to build VPP:
 
