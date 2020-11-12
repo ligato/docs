@@ -4,13 +4,17 @@
 
 ## KV Scheduler Plugin
 
-More in: [KV Scheduler Plugin][kvscheduler]
+More at: [KV Scheduler Plugin][kvscheduler]
 
-The KV Scheduler is the first step in any VPP or Linux related data processing. It validates the existence of the configuration item dependencies, handles local caching, and performs retries if possible or allowed by the underlying plugin. The KV Scheduler does not operate with data directly nor does it call any VPP binary API); It only determines what operations are needed to achieve the desired configuration result. 
+The KV Scheduler is the first step in any VPP or Linux related data processing. It validates the existence of the configuration item dependencies, handles local caching, and performs retries if possible or allowed by the underlying plugin.
+ 
+ The KV Scheduler does not operate with user data directly, nor does it call any VPP binary API. It simply determines operations required to achieve the desired configuration result. 
 
 ## VPP Plugins
 
-VPP agent core VPP plugins (e.g. plugins which are always required when working with VPP). Plugin list:
+VPP agent core VPP plugins are required when you work with a VPP data plane. 
+
+Plugin list:
 
 - GoVPPMux
 - Interface
