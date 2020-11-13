@@ -2,6 +2,10 @@
 
 ---
 
+This section describes KV Descriptors
+
+---
+
 ## Introduction
 
 KV Descriptors implement CRUD operations, and define derived values and dependencies for an individual value type. With these "descriptions", the [KV Scheduler](kvscheduler.md) is able to manipulate the key-value pairs in a generic fashion, without having to understand what they actually represent. The KV Scheduler processes the acquired dependency information, reads the SB state, and performs add, delete and modify operations as needed to synchronize NB with SB.

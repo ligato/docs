@@ -24,7 +24,7 @@ In addition, the examples omit southbound (SB) configuration activities since th
 
 This example covers the creation of an `AF_Packet` interface. This interface type attaches to a host OS interface. It captures all incoming traffic, and permits tx packet injection through a socket interface. 
 
-The host OS interface _must_ exist before you create an `AF_Packet` interface. This presents a challenge because the VPP agent does not control or configure the host OS interface. Typically, an external process or network administrator configures host OS interfaces during VPP run-time. In addition, you do not have a key value pair to resolve this `AF_Packet` "host interface" dependency.
+The host OS interface _must_ exist before you create an `AF_Packet` interface. This presents a challenge because the VPP agent does not control or configure the host OS interface. Typically, an external process or network administrator configures host OS interfaces during VPP runtime. In addition, you do not have a key value pair to resolve this `AF_Packet` "host interface" dependency.
 
 The KV Scheduler solves this problem by supporting external object notifications with the `PushSBNotification(key, value, metadata)` method. Values received through notifications are marked as `OBTAINED`, and can have their own descriptors. 
 

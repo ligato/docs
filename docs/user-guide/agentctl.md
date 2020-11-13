@@ -1156,7 +1156,7 @@ agentctl service call SERVICE METHOD
 
 ### Metrics
 
-Use this command to collect and view run-time metrics.
+Use this command to collect and view runtime metrics.
 ```
 Usage:	agentctl metrics [options] COMMAND
 
