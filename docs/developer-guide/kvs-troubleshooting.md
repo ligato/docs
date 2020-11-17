@@ -1,6 +1,6 @@
 # KVS Troubleshooting
 
-This page contains troubleshooting information for the KV Scheduler.
+This section contains troubleshooting information for the KV Scheduler.
 
 ---
 
@@ -12,12 +12,12 @@ to configure the value:
 
 1. **Transaction is not triggered** (not found in the logs), or the **value is
    missing** in the transaction input
-    - make sure the model is registered
+    - Make sure you register the model
    
 !!! danger "Important"
     Not using a model is considered a programming error
     
-- [check if the plugin implementing the value is loaded][debug-plugin-lookup]
+- [Check if the plugin implementing the value is loaded][debug-plugin-lookup]
 - [check if the descriptor associated with the value is registered][how-to-descriptors]
 - [check if the key prefix is being watched][how-to-descriptors]
 - for NB KV data store, verify the key used to put the value is correct

@@ -115,7 +115,7 @@ The KV Scheduler's graph-based representation uses the following terminology:
 </br>
 </br>
 
-* **Graph** of values is KV Scheduler-internal in-memory storage for all configured and pending key-value pairs. Graph edges represent inter-value relations, such as "depends-on" or "is-derived-from". Graph nodes represent the key-value pairs.
+* **Graph** of values contains all configured and pending key-value pairs inside KV Scheduler-internal in-memory. Graph edges represent inter-value relations, such as "depends-on" or "is-derived-from". Graph nodes represent the key-value pairs.
 </br>
 </br>
   
