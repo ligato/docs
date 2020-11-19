@@ -1,11 +1,12 @@
 # Agentctl
 
 ---
+This section describes the Agentctl CLI tool.
 
+---
 ## Introduction
 
-Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. 
-It provides a simple and intuitive CLI that enables the developer or operator to perform the following:
+Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. You can perform the following:
 
 - Manage VPP agent configurations 
 - Inspect and generate models
@@ -14,7 +15,8 @@ It provides a simple and intuitive CLI that enables the developer or operator to
 - Manage services
 - Configure logs
 - Gather stats
-- Perform system dumps   
+- Perform system dumps
+- Extract runtime reports for troubleshooting   
 
 ![agentctl](../img/tools/agentctl.png)
 
@@ -24,9 +26,9 @@ It provides a simple and intuitive CLI that enables the developer or operator to
 
 ### Docker Image Pull
 
-Agentctl is included in the official docker images for the VPP agent. The [Quickstart Guide](quickstart.md) covers the steps, in detail, from initial image pull to agentctl command execution. 
+Agentctl is included in the official docker images for the VPP agent. The [Quickstart Guide](quickstart.md) covers the steps from initial image pull to agentctl command execution. 
 
-For convenience, here are the commands for image pull, start etcd, start VPP agent, and agentctl help. 
+For convenience, use the following commands for image pull, start etcd, start VPP agent, and agentctl help: 
 
 Pull the VPP agent image from dockerhub:
 ```
@@ -49,23 +51,15 @@ docker exec -it vpp-agent agentctl --help
 
 ### Build from Source
 
-A local image can be built from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide. 
+You can build a local image from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide.
 
-Start the VPP agent:
-```
-vpp-agent
-```
-
-Agentctl help:
-```
-agentctl --help
-```
+You can run agentctl commands after you start the vpp-agent. 
 
 ---
 
 ## Setup
 
-Run Agentctl:
+Run agentctl:
 ```
 agentctl
 ```
@@ -87,6 +81,7 @@ COMMANDS
   log         Manage agent logging
   metrics     Get runtime metrics
   model       Manage known models
+  report      Create error report
   service     Manage agent services
   status      Retrieve agent status and version info
   values      Retrieve values from scheduler
@@ -98,26 +93,24 @@ OPTIONS:
   -e, --etcd-endpoints strings   Etcd endpoints to connect to, default from ETCD_ENDPOINTS env var (default
                                  [127.0.0.1:2379])
       --grpc-port int            gRPC server port (default 9111)
-  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var
-                                 (default "127.0.0.1")
+  -H, --host string              Address on which agent is reachable, default from AGENT_HOST env var (default "127.0.0.1")
       --http-basic-auth string   Basic auth for HTTP connection in form "user:pass"
       --http-port int            HTTP server port (default 9191)
       --insecure-tls             Use TLS without server's certificate validation
   -l, --log-level string         Set the logging level ("debug"|"info"|"warn"|"error"|"fatal")
-      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL
-                                 env var
+      --service-label string     Service label for specific agent instance, default from MICROSERVICE_LABEL env var
   -v, --version                  Print version info and quit
 
 Run 'agentctl COMMAND --help' for more information on a command.
 ```
 !!! note
-    Bears worth repeating: Use `agentctl <ANY COMMAND> --help` for explanations and in some cases, examples for any of the agentctl commands and subcommands. 
+    Bears worth repeating: Use `agentctl <ANY COMMAND> --help` for explanations and, in some cases, examples for any of the agentctl commands and subcommands. 
 
 ---
 
 ### NB Access Methods
 
-Agentctl currently uses various NB access methods provided by the Ligato agents. The default values can be modified as needed.
+Agentctl uses various NB access methods provided by the Ligato agents. You can modify the default values as needed.
 
 - Agent host instance running on `127.0.0.1` by default
     * use option `-H`/`--host` or env var `AGENT_HOST` to change this
@@ -143,6 +136,7 @@ Agentctl subcommands:
 - [log](#log)
 - [metrics](#metrics)
 - [model](#model)
+- [report](#report)
 - [service](#service)
 - [status](#status)
 - [values](#values)
@@ -152,16 +146,15 @@ Agentctl subcommands:
 
 ### Config
 
-Use this command to manage VPP agent configuration data.
+Use `agentctl config` with the appropriate command, to manage VPP agent configuration data.
 
 ```
-Usage:	agentctl config COMMAND
-
 Manage agent configuration
 
 COMMANDS
+  delete      Delete config in agent
   get         Get config from agent
-  history     Retrieve config history
+  history     Show config history
   resync      Run config resync
   retrieve    Retrieve currently running config
   update      Update config in agent
@@ -169,7 +162,7 @@ COMMANDS
 
 ---
 
-**Config get:**
+#### Config get
 ```sh
 agentctl config get
 ```
@@ -194,7 +187,7 @@ netallocConfig: {}
 
 ---
 
-**Config history:**
+#### Config history
 ```json
 agentctl config history
 ```
@@ -209,18 +202,32 @@ Sample output:
 
 ---
 
-Config history using transaction log format:
-```json
-agentctl config history --format=log
+Config history for seqNum=3:
 ```
+agentctl config history 3
+```
+
 Config history with more details:
 ```json
 agentctl config history --details
 ```
+Config history details for seqNum=3:
+```json
+agentctl config history 3 --details
+```
+Config history using transaction log format:
+```json
+agentctl config history -f log
+```
+Config history using transaction log format for seqNum=3:
+```json
+agentctl config history -f log 3
+```
+
 
 ---
 
-**Config [resync](../developer-guide/kvscheduler.md#resync):**
+#### Config [resync](../developer-guide/kvscheduler.md#resync)
 ```
 agentctl config resync
 ```
@@ -232,12 +239,17 @@ Sample output:
   "SeqNum": 2,
   "TxnType": "NBTransaction",
   "ResyncType": "DownstreamResync"
+  // one or more executed operations will follow,
 }
 ```
+For a detailed example of the resync output, check out the [downstream resync API](../api/api-kvs.md#downstream-resync).
 
 ---
 
-**Config retrieve** (a running config)
+#### Config retrieve 
+
+Retrieves the runtime VPP configuration.
+
 ```sh
 agentctl config retrieve
 ```
@@ -312,77 +324,82 @@ dump:
 
 ---
 
-**Config update**
+#### Config update
 
-Example of an existing config:
+Use this command to update a VPP agent configuration. You must define your configuration inside a file. 
+
+```
+Update configuration in agent from file
+
+OPTIONS:
+  -f, --format string      Format output
+  -t, --timeout duration   Timeout for sending updated data (default 5m0s)
+```
+
+Config example contained in the update1.yaml file:
 ```json
+# update1.yaml
 vppConfig:
   interfaces:
-  - name: loop1
-    type: SOFTWARE_LOOPBACK
+  - name: "afpacket1"
+    type: AF_PACKET
     enabled: true
     ipAddresses:
-    - 192.168.1.1/24
-  bridgeDomains:
-  - name: bd1
-    forward: true
-    learn: true
-    interfaces:
-    - name: loop1
-linuxConfig: {}
-netallocConfig: {}
-```
-We want to update the existing config with a new `loop2` interface. This is saved in our example file called `update.txt`.
-```json
-vppConfig:
+    - 192.168.99.1/30
+    afpacket:
+      host_if_name: "veth-1"
+linuxConfig:
   interfaces:
-  - name: loop2
-    type: SOFTWARE_LOOPBACK
+  - name: "veth1"
+    type: VETH
     enabled: true
-    ipAddresses:
-    - 192.168.3.1/24
+    ip_addresses:
+    - 10.0.2.1/30
+    host_if_name: "veth-1"
+    veth:
+      peer_if_name: "veth2"
+  - name: "veth2"
+    type: VETH
+    enabled: true
+    ip_addresses:
+    - 10.0.3.1/30
+    veth:
+      peer_if_name: "veth1"
 ```
 
-Run the config update command:
+Config update using the update1.yaml file with a timeout duration of 6m0s:
 ```json
-agentctl config update ./update.txt
-```
-
-You can run the config update command and print the transaction log using `--verbose`:
-```json
-agentctl config update ./update.txt --verbose
-``` 
-
-Updated config now contains the `loop2` interface config item:
-```json
-vppConfig:
-  interfaces:
-  - name: loop1
-    type: SOFTWARE_LOOPBACK
-    enabled: true
-    ipAddresses:
-    - 192.168.1.1/24
-  - name: loop2
-    type: SOFTWARE_LOOPBACK
-    enabled: true
-    ipAddresses:
-    - 192.168.3.1/24
-  bridgeDomains:
-  - name: bd1
-    forward: true
-    learn: true
-    interfaces:
-    - name: loop1
-linuxConfig: {}
-netallocConfig: {}
-```
-
-Use the `replace` flag to swap the existing config with a new config contained in `update.txt`:
-```json
-agentctl config update --replace ./update.txt
+agentctl config update --timeout=6m0s update1.yaml
 ```
 
 ---
+
+#### Config delete
+
+Use this command to delete a VPP agent configuration. You must define your configuration inside a file.
+
+```
+Usage:	agentctl config delete
+
+Delete configuration in agent
+
+OPTIONS:
+  -f, --format string   Format output
+  -v, --verbose         Show verbose output
+      --waitdone        Waits until config update is done
+```
+Config delete using the update1.yaml file:
+```
+agentctl config delete update1.yaml
+```
+Config delete using update1.yaml file with --waitdone flag:
+```
+agentctl config delete --waitdone update1.yaml
+```
+
+---
+
+
 
 ### Dump
 
@@ -410,12 +427,12 @@ OPTIONS:
 ```
 
 
-**Dump all:**
+Dump all:
 ```
 agentctl dump all
 ```
 
-Sample Output:
+Sample output:
 ```
 +----------------------+---------+-----------------------------------+----------------------+-----------------------------------------+
 |        MODEL         | ORIGIN  |               VALUE               |       METADATA       |                   KEY                   |
@@ -515,11 +532,11 @@ Sample Output:
 
 ---
 
-**Dump the `vpp.interfaces` model:**
+Dump the `vpp.interfaces` model:
 ```
 agentctl dump vpp.interfaces
 ```
-Sample Output:
+Sample output:
 ```
 +----------------+---------+-----------------------------------+----------------------+-----------------+
 |     MODEL      | ORIGIN  |               VALUE               |       METADATA       |       KEY       |
@@ -545,11 +562,11 @@ Sample Output:
 
 ---
 
-**Dump the `vpp.interfaces` model using a NB view:**
+Dump the `vpp.interfaces` model using a NB view:
 ```
 agentctl dump --view=NB vpp.interfaces
 ```
-Sample Output:
+Sample output:
 ```
 +----------------+---------+-----------------------------------+---------------------+-------+
 |     MODEL      | ORIGIN  |               VALUE               |      METADATA       |  KEY  |
@@ -572,7 +589,7 @@ Dump the `vpp.interfaces` model using json format:
 ```
 agentctl dump -f json vpp.interfaces
 ```
-Sample Output:
+Sample output:
 ```json
 [
   {
@@ -629,11 +646,11 @@ COMMANDS
   ls          List models
 ```
 
-**List all supported models:**
+List all supported models:
 ```
 agentctl model ls
 ```
-Sample Output:
+Sample output:
 ```
 MODEL                       CLASS    PROTO MESSAGE                            KEY PREFIX
 govppmux.stats              metrics  ligato.govppmux.Metrics                  metrics/govppmux/v0/stats
@@ -679,7 +696,7 @@ Show details about a specific model using `vpp.interfaces` as an example:
 ```
 agentctl model inspect vpp.interfaces
 ```
-Sample Output:
+Sample output:
 ```
 [
   {
@@ -699,9 +716,74 @@ Sample Output:
 ```
 ---
 
+### Report
+
+Use this command to generate a report on the runtime system. The report is packaged as a zipfile consisting of multiple subreport files. 
+
+Most of the subreport files contain or replicate the output of individual CLI commands or REST API calls. In addition, the files contain information about a problem source.
+
+You do not need to separately run each command or API call. This will save you time and effort, and reduce problem resolution times.
+
+```
+Usage:	agentctl report
+
+Create report about running software stack (VPP-Agent, VPP, AgentCtl,...) to allow quicker resolving of problems. The report will be a zip file containing information grouped in multiple files
+
+EXAMPLES
+
+  # Default reporting (creates report file in current directory, whole reporting fails on subreport error)
+  agentctl report
+
+  # Reporting into custom directory ("/tmp")
+  agentctl report -o /tmp
+
+  # Reporting and ignoring errors from subreports (writing successful reports and
+  # errors from failed subreports into zip report file)
+  agentctl report -i
+
+OPTIONS:
+  -i, --ignore-errors             Ignore subreport errors and create report zip file with all successfully
+                                  retrieved/processed information (the errors will be part of the report too)
+  -o, --output-directory string   Output directory (as absolute path) where report zip file will be written. Default
+                                  is current directory.
+```  
+
+Generate report that ignores subreport errors:
+```
+agentctl report -i
+```
+Sample output zipfile name:
+```
+agentctl-report--2020-11-17--01-28-13-403.zip
+```
+Sample output after unpacking the report zipfile:
+```
+-rw------- 1 root root     980 Nov 17 01:07  _failed-reports.txt
+-rw------- 1 root root    3582 Nov 17 01:07  _report.txt
+-rw------- 1 root root     259 Nov 17 01:07  agent-NB-config.yaml
+-rw------- 1 root root    2238 Nov 17 01:07  agent-kvscheduler-NB-config-view.txt
+-rw------- 1 root root   18818 Nov 17 01:07  agent-kvscheduler-SB-config-view.txt
+-rw------- 1 root root   13866 Nov 17 01:07  agent-kvscheduler-cached-config-view.txt
+-rw------- 1 root root     375 Nov 17 01:07  agent-status.txt
+-rw------- 1 root root    2253 Nov 17 01:07  agent-transaction-history.txt
+-rw------- 1 root root    1669 Nov 17 01:07  hardware.txt
+-rw------- 1 root root    1039 Nov 17 01:07  software-versions.txt
+-rw------- 1 root root     174 Nov 17 01:07  vpp-api-trace.txt
+-rw------- 1 root root 1136716 Nov 17 01:07  vpp-event-log.txt
+-rw------- 1 root root    8505 Nov 17 01:07  vpp-log.txt
+-rw------- 1 root root     198 Nov 17 01:07  vpp-other-srv6.txt
+-rw------- 1 root root    1329 Nov 17 01:07 'vpp-running-config(vpp-agent-SB-dump).yaml'
+-rw------- 1 root root     331 Nov 17 01:07  vpp-startup-config.txt
+-rw------- 1 root root  339360 Nov 17 01:07  vpp-statistics-errors.txt
+-rw------- 1 root root    2958 Nov 17 01:07  vpp-statistics-interfaces.txt
+```
+
+The `_report.txt` describes each subreport file. 
+
+---
 ### Status
 
-Use this command to return VPP agent status, version, build and plugin info. 
+Use this command to return VPP agent status, version, build and plugin information. 
 
 ```
 Usage:	agentctl status
@@ -712,11 +794,11 @@ OPTIONS:
   -f, --format string   Format output
 ```
 
-**Status command**
+Return status:
 ```
 agentctl status
 ```
-Sample Output:
+Sample output:
 ```
 AGENT
     App name:    vpp-agent
@@ -768,12 +850,12 @@ OPTIONS:
   -f, --format string   Format output
 
 ```
-**Values command:**
+Retrieve values:
 ```
 agentctl values
 ```
 
-Sample Output:
+Sample output:
 ```
 MODEL                  NAME                                                STATE        DETAILS   LAST OP   ERROR
 vpp.l2.bridge-domain   bd1                                                 CONFIGURED             CREATE
@@ -804,8 +886,7 @@ vpp.vrf-table          id/0/protocol/IPV6                                  obtai
 
 ### KVDB
 
-Use this command to perform get, put, del or list operations against the KV data store. It is similar to etcdctl, but supports short form [keys][keys], 
-which requires setting the `--service-label` flag in the specific command.
+Use this command to perform get, put, del or list operations against the KV data store. This looks and functions much like `etcdctl`. It supports short form [keys][keys], but you must use the `--service-label` flag in the specific command.
 
 ```
 Usage:	agentctl kvdb [options] COMMAND
@@ -826,11 +907,11 @@ COMMANDS
 
 ---
 
-**kvdb list:**
+kvdb list:
 ```json
 agentctl kvdb list
 ```
-Sample Output:
+Sample output:
 ```json
 /vnf-agent/vpp1/check/status/v1/agent
 {"build_version":"v3.2.0-alpha-1-g615f9fd36","build_date":"Wed Mar 18 17:59:27 UTC 2020","state":"OK","start_time":"1586275960","last_change":"1586275967","last_update":"1586280942","commit_hash":"615f9fd","plugins":[{"name":"govpp","state":"OK"},{"name":"VPPAgent","state":"OK"},{"name":"etcd","state":"OK"},{"name":"vpp-ifplugin","state":"OK"}]}
@@ -838,8 +919,7 @@ Sample Output:
 {"state":"OK","last_change":"1586275962","last_update":"1586280942"}
 ...
 ```
-Depending on the number of entries in the KV data store, the output could be massive and difficult to read. 
-You can whittle this down by using a more specific key.
+Depending on the number of entries in your KV data store, you could find the returned output large and difficult to read. You can whittle this down by using a more specific key.
 
 ---
 
@@ -857,32 +937,29 @@ Sample output:
 
 ---
 
-**kvdb put** example using a loopback interface
+kvdb put using a `loop1` loopback interface:
 ```json
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
-Response is `OK`.
 
 ---
 
-**kvdb get** example for the loopback interface using the long form key:
+kvdb get `loop1` loopback interface using the long form key:
 ```
 agentctl kvdb get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 Sample output:
 ```json
 {"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}
-
+```
 ---
 
-```
-**kvdb delete** example for the loopback interface using the long form key:
+kvdb delete `loop1` loopback interface using the long form key:
 ```
 agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
-Response is `OK`
 
-Attempting to `get` the deleted entry will result in a `key not found` message. 
+Attempting to `get` the deleted entry results in a `key not found` message. 
 
 
 
@@ -890,7 +967,7 @@ Attempting to `get` the deleted entry will result in a `key not found` message.
 
 ### VPP
 
-Use this command to manage the connected VPP instance. The CLI option saves time for the developer or operator by avoiding the need to "jump to" the actual VPP command line interface. 
+Use this command to manage the connected VPP instance. The CLI option saves you time by avoiding the need to "jump to" the actual VPP command line interface. 
 
 ```
 Usage:	agentctl vpp [options] COMMAND
@@ -917,7 +994,7 @@ Use the `info` option to show VPP information:
 ```
 agentctl vpp info
 ```
-Sample Output:
+Sample output:
 ```
 VERSION:
 Version:                  v20.01-rc2~11-gfce396738~b17
@@ -1010,18 +1087,18 @@ OPTIONS:
 
 ---
 
-Here is another example using short form keys with the microservice label. The contents of the `myconfig` configuration data file are:
+Here is an example using short form keys with the microservice label. The `myconfig` file contains the following:
 ```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
 config/vpp/v2/interfaces/loop2 {"name":"loop2","type":"MEMIF"}
 config/vpp/l2/v2/bridge-domain/bd1 {"name":"bd1","interfaces":[{"name":"loop1"},{"name":"loop2"}]}
 ```
 
-Import command:
+Import the `myconfig` file contents with the `agent1` service-label:
 ```
 agentctl --service-label=agent1 import ./myconfig
 ```
-Results:
+Output:
 ```
 importing 3 key vals
  - /vnf-agent/agent1/config/vpp/v2/interfaces/loop1
@@ -1058,7 +1135,7 @@ Generate a configuration sample for a VPP route:
 agentctl generate vpp.route
 ```
 
-Sample Output:
+Sample output:
 ```
 {
   "type": "INTRA_VRF",
@@ -1099,7 +1176,7 @@ Example of setting the KV Scheduler log level to `debug`:
 ```
 agentctl log set kvscheduler debug
 ```
-Result:
+Output:
 ```
 logger kvscheduler has been set to level debug
 ```
@@ -1184,7 +1261,7 @@ Get metrics:
 ```
 agentctl metrics get govppmux.stats
 ```
-Sample Output:
+Sample output:
 ```json
 {
   "channels_created": 35,
