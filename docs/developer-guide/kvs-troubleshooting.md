@@ -1,30 +1,71 @@
 # KVS Troubleshooting
 
+---
+
 This section contains troubleshooting information for the KV Scheduler.
 
 ---
 
+## Tools
+
+You have a number of tools to help troubleshoot KV Scheduler.    
+
+* [Agentctl](../user-guide/agentctl.md)
+
+* [KV Scheduler](../api/api-kvs.md) and [VPP agent](../api/api-vpp-agent.md) REST APIs
+
+* Transaction Logs.
+
+* Agent log levels.
+
+* KV data store access using `agentctl kvdb`. 
+
+* Environment Variables:
+    - export KVSCHED_VERIFY_MODE=1
+    - export DEBUG_INFRA=lookup
+
+* Source code
+
+* Other system tools including kubectl and vppctl.
+
+!!! Note
+    To identify and resolve problems as quickly as possible, you should first run the [agentctl report command](../user-guide/agentctl.md#report). In most cases, the information contained in the subreports describes specific information on the error and cause.
+
+---
+
+## Problems
+
+You might encounter one or more problems described in this section. Follow the troubleshooting checklist to identify the problem source. 
+
 ### NB value not configured in SB
 
-[Look over the transaction logs][understand-transaction-logs], printed
-by the agent into `stdout`, and locate the transaction triggered
-to configure the value:
+Data collect:
+
+* Run the [agentctl report command](../user-guide/agentctl.md#report).  
+* Set log levels for the `kvscheduler` and related component loggers to `debug`. 
+* [Review the transaction logs][understand-transaction-logs]. Locate the transaction triggered to configure the value.  
 
 1. **Transaction is not triggered** (not found in the logs), or the **value is
-   missing** in the transaction input
-    - Make sure you register the model
+   missing** in the transaction input. 
+   
+Checklist:
+
+- Review the `_failed-reports.txt` subreport for errors.  
+</br>
+    
+- Make sure you register the model.
    
 !!! danger "Important"
-    Not using a model is considered a programming error
+    Not using a model is considered a programming error.
     
-- [Check if the plugin implementing the value is loaded][debug-plugin-lookup]
-- [check if the descriptor associated with the value is registered][how-to-descriptors]
-- [check if the key prefix is being watched][how-to-descriptors]
-- for NB KV data store, verify the key used to put the value is correct
-- check if an incorrect key prefix is used. Note that an incorrect `suffix` renders the value `UNIMPLEMENTED`, but is still included in the transaction input.
-- [check the debug logs][debug-logs] of the Orchestrator (NB of KV Scheduler). These can also be used to learn the set of key-value pairs received with each event from NB.
+- [Check if plugin implementing the value is loaded][debug-plugin-lookup].
+- [Check if descriptor associated with the value is registered][how-to-descriptors].
+- [Check if the key prefix is being watched][how-to-descriptors].
+- For NB KV data store, verify the key used to put the value is correct
+- Check if an incorrect key prefix is used. Note that an incorrect `suffix` renders the value `UNIMPLEMENTED`, but is still included in the transaction input.
+- [check the debug logs][debug-logs] of the Orchestrator (NB of KV Scheduler). Logs show the set of key-value pairs received with each NB event.
 
-Here is a RESYNC example:
+RESYNC example orchestrator logger set to `debug`:
 ```
 DEBU[0005] => received RESYNC event (1 prefixes)         loc="orchestrator/orchestrator.go(150)" logger=orchestrator.dispatcher
 DEBU[0005]  -- key: config/mock/v1/interfaces/tap1       loc="orchestrator/orchestrator.go(168)" logger=orchestrator.dispatcher
@@ -38,141 +79,185 @@ KV pairs (source: watcher)  loc="orchestrator/dispatcher.go(67)" logger=orchestr
 DEBU[0005]  - PUT: "config/mock/v1/interfaces/tap1"      loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
 DEBU[0005]  - PUT: "config/mock/v1/interfaces/loopback1"   loc="orchestrator/dispatcher.go(78)" logger=orchestrator.dispatcher
 ```
-Here is a CHANGE example:
+NB event CHANGE example:
 ```
 DEBU[0012] => received CHANGE event (1 changes)          loc="orchestrator/orchestrator.go(121)" logger=orchestrator.dispatcher
 DEBU[0012] Pushing data with 1 KV pairs (source: watcher)  loc="orchestrator/dispatcher.go(67)" logger=orchestrator.dispatcher
 DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispatcher.go(93)" logger=orchestrator.dispatcher
 ```
 
-2. **Transaction containing the value was triggered**, yet the value is not configured in SB. This could be the result of one of the following:
+2. **Transaction containing the value was triggered**, yet the value is not configured in SB. Possible causes of this problem consist of the following:
 
-* Value is `PENDING`
+* Value is `PENDING`. Checklist:
 
-    - [display the graph][how-to-graph] and check the state of dependencies
-    - dependency is missing so state is `NONEXISTENT`), or in a failed state indicated by `INVALID`/`FAILED`/`RETRYING`
-    - plugin implementing the dependency [is not loaded][debug-plugin-lookup], thus the dependency state is `UNIMPLEMENTED`
-    - unintended dependency was added. Verify the implementation of the dependencies method of the value descriptor
-
----
-
-* Value in the `UNIMPLEMENTED` state
-    - for NB KV data store, verify the key suffix used to put the value is correct. The prefix is valid and watched by the VPP agent, but the suffix, normally composed of value primary fields, is malformed. There is a mismatch with the descriptor's `KeySelector`
-    - `KeySelector` or `NBKeyPrefix` of the descriptor do not use the model, or does use it, but incorrectly. `NBKeyPrefix` of this or another descriptor selects the value, but `KeySelector` does not
+    - GET [KV Scheduler tnx history](../api/api-kvs.md#transaction-history) 
+    - GET [KV Scheduler graph snapshot](../api/api-kvs.md#graph-snapshot)
+    - Run the [agentctl report command](../user-guide/agentctl.md#report). Review the `_failed-reports.txt` subreport for errors.
+    - [Display the KV Scheduler internal graph][how-to-graph].
+    - Check dependencies state.
+    - Missing dependency is `NONEXISTENT`, or failed state indicated by `INVALID`/`FAILED`/`RETRYING`.
+    - Plugin implementing the dependency [is not loaded][debug-plugin-lookup]. Dependency state is `UNIMPLEMENTED`
+    - You added an unintended dependency. Verify your implementation of the [dependencies method](kvdescriptor.md#descriptor-api) for the value descriptor.
 
 ---
 
-* Value *failed* to be applied
-    - [display the graph after txn][how-to-graph] and check the state of the value. As long as it is `FAILED`, `RETRYING` or `INVALID`, it is not assumed to be applied properly to SB
-    - common error `value has invalid type for key` appears.  This is usually caused by a mismatch between the descriptor and the model
-    - set of value dependencies as listed by the descriptor is not complete. Look over the descriptor/ folders of the respective VPP or Linux plugins for additional dependencies needed for the value to be applied properly to SB
+* Value in the `UNIMPLEMENTED` state. Checklist:
+
+     - Run the [agentctl report command](../user-guide/agentctl.md#report). Review the `_failed-reports.txt` subreport for errors.
+     - GET [KV Scheduler Dump](../api/api-kvs.md#dump-viewkey-prefix) for the key prefix in the NB view.
+   - Verify a correct key suffix for the value put to the NB KV data store. You might have a malformed key suffix for a valid prefix watched by the VPP agent. You may have a mismatch between the key and the descriptor's `KeySelector`. 
+    - Check if the descriptor's `KeySelector` or `NBKeyPrefix` does not use the model, or does use it, but incorrectly. You could have the descriptor's `NBKeyPrefix`, or the `NBKePrefix` of another descriptor select the value, but `KeySelector` does not.
 
 ---
 
-* Derived Value is treated as `PROPERTY` when it should have CRUD operations assigned
-    - Tools to define models for derived values are not available. Developers must implement their own key building/parsing methods which, unless diligently covered by UTs, are prone to error. In corner cases, a mismatch in the assignment of derived values to descriptors could occur.
+* Value SB apply *failed* 
+
+    - Run the [agentctl report command](../user-guide/agentctl.md#report). Review the `_failed-reports.txt` subreport for errors.
+    - Review the `agent-transaction-history.txt` subreport or transaction logs. Check the value state. A `FAILED`, `RETRYING` or `INVALID` indicates SB apply did not properly complete. 
+    - Look for a `value has invalid type for key` error. This error indicates a possible mismatch between the descriptor and the model.
+    - You might have an incomplete Descriptor's value dependencies list. Look over the descriptor/ folders of your VPP or Linux plugins for additional dependencies needed for proper SB value apply.
+
+---
+
+* Treat derived value as `PROPERTY`
+
+    - Run the [agentctl report command](../user-guide/agentctl.md#report). Review the `_failed-reports.txt` subreport for errors.
+    - Review the `agent-transaction-history.txt` subreport or transaction logs. Check the value state. A `FAILED`, `RETRYING` or `INVALID` indicates SB apply did not properly complete. &&&   
+    - Instead, you should assign CRUD operations. 
+    - You _DO NOT_ have programming techniques to define models for derived values.
+     - You must implement your own key building/parsing methods. If UT does not cover this, errors likely appear.  
+     - A mismatch assigning derived values to descriptors could occur.
 
 ---
 
 ### Resync triggers operations with SB in-sync with NB
 
-- [Run KV Scheduler in verification mode][crud-verification] to check for CRUD inconsistencies
-- descriptors of values unnecessarily updated by every resync forget to consider equivalency between attribute values inside [ValueComparator](kvdescriptor.md#descriptor-api). For example, NB defined interface with MTU 0 should be configured in SB with default MTU. For most interface types, this means MTU 0 is equivalent to MTU 1500. This avoids an `update` operation trigger to go from 0 to 1500 or vice-versa.
-- if `ValueComparator` is implemented as a separate method, and not as a function literal inside the descriptor structure, do not forget to plug it in via reference
+- [Run KV Scheduler in verification mode][crud-verification] to check for CRUD inconsistencies.
+
+- Resync updates of value descriptors do not consider attribute value value equivalency inside [ValueComparator](kvdescriptor.md#descriptor-api). For example, you should configure NB-defined MTU 0 with SB default MTU. You then avoid an `update` operation trigger to switch from 0 to 1500 or vice-versa. 
+ 
+
+- You implement `ValueComparator`as a separate method.
+- You _DO NOT_ implement `ValueComparator` as a function literal inside the descriptor structure
+- Do not forget to plug it in via reference.
+
+ 
 
 ---
 
 ### Resync tries to create objects which already exist
 
-- verify `Retrieve` method is implemented for the descriptor of the created objects duplicates, or the method has returned an error:
+- Check that you implement `Retrieve` method for the descriptor of the created objects duplicat
+-  `Retrieve` method returns an error:
 ```
  ERRO[0005] failed to retrieve values, refresh for the descriptor will be skipped  descriptor=mock-interface loc="kvscheduler/refresh.go(104)" logger=kvscheduler
 ```
-- avoid implementing an empty Retrieve method when the operation is not supported by SB
+- You should avoid implementing an empty `Retrieve()` method for an unsupported SB operation.
+
 
 ---
 
 ### Resync removes item not configured by NB
 
-- use Retrieved with Origin `FromSB` for objects automatically created in SB such as default routes
-- `UnknownOrigin` can be used and the KV Scheduler will search the history of transactions to determine if the given value has been configured by the VPP agent
+- check REFS
+- Use origin `FromSB` orig for an automatically created in SB object. Default route is an example.
+- You can use `UnknownOrigin`. KV Scheduler searches transaction history to determine if the VPP agent configured the specific value.
 - defaults to `FromSB` when the first resync and transactions history is empty
+- `FromSB` defaults for value upon first resync. Transaction history is empty.
 
 ---
 
 ### Retrieve cannot find dependency metadata
 
-- for example, when VPP routes are retrieved, the route descriptor must read the interfaces metadata to translate `sw_if_index` from the routes dump into logical interface names used in NB models. This means interfaces must be dumped first so current metadata is present for the routes retrieval
-- `Dependencies` descriptor method is used for the ordering of `Create`, `Update` and `Delete` operations between values. The `RetrieveDependencies` method determines the order of the `Retrieve` operations between descriptors
-- if the implementation of the `Retrieve` method reads the metadata of another descriptor, it must be mentioned inside `RetrieveDependencies`
+- REFS
+- KV Scheduler dumps VPP routes. Route descriptor reads interfaces metadata to translate `sw_if_index` from the routes dump into NB model logical interface names. Therefore, interface dump must occur before routes dump.  
+- `Dependencies` descriptor method defines the ordering of `Create`, `Update` and `Delete` operations between values.
+- `RetrieveDependencies` method determines the order of the `Retrieve` operations between descriptors.
+- If your `Retrieve` method implementation reads another descriptor's metadata, you must mention this in your `RetrieveDependencies` CRUD callback. 
 
 ---
 
-### Value re-created when Update should be called
+### Value re-created when update should be called
 
-- verify implementation of the `Update` method is plugged into the descriptor structure. Without `Update`, re-creation becomes the only way to apply changes
-- verify implementation of `UpdateWithRecreate`. This will result in an unintentional re-creation for the given update
+- REFS in code
+- Verify your `Update` method implementation plugs into the descriptor structure.  
+- Without `Update`, re-creation becomes the only way to apply changes.
+- Verify your `UpdateWithRecreate` implementation. An unintentional re-creation for the given update  will occur. 
 
 ---
 
 ### Metadata passed to `Update` or `Delete` is nil
 
-- descriptor attribute `WithMetadata` is not set to `true`. It is insufficient to define the factory only with `MetadataMapFactory`
-- metadata for derived values is not supported
-- return new metadata in `Update` even if unchanged
+
+- You did not set the `WithMetadata` to `true`. You cannot define the factory using only the `MetadataMapFactory`.
+- Metadata for derived values is not supported.
+- You should return new metadata in `Update` even if the derived values are unchanged. 
 
 ---
 
 ### Unexpected transaction plan (wrong ordering, missing operations)
 
-* [display the graph visualization][how-to-graph] and check:
-     - derived values and dependencies (relations, i.e. graph edges) are correct
-     - value states before and after the transaction are correct
-  - as a last resort, [follow the KV Scheduler as it walks through the graph][graph-walk] during the transaction processing. Attempt to locate the point where it diverges from the expected path. The descriptor of the value where this occurs is likely to contain bug(s)
+
+- Tnx plan reveals wrong ordering or mission operations.
+- [display the graph visualization][how-to-graph] REF
+- check that you have correct derived values and dependencies.
+- Check that you have correct value states before and after the transaction.
+
+- [follow the KV Scheduler as it walks through the graph][graph-walk] during the transaction processing.
+- Locate the point where it diverges from the expected path. The descriptor of the value where this occurs likely contains.
+
 
 ---
 
-### Commonly Returned Errors
+### Common Returned Errors
 
- * <a name="retrieve-failed"></a>
-   **`value (...) has invalid type for key: ...`; Transaction Error**
-      - mismatch between the proto message registered with the model and the value type name defined for the [descriptor adapter][descriptor-adapter]
+ 
 
----
+* **value (...) has invalid type for key: ...**
 
- * <a name="retrieve-failed"></a>
-   **`failed to retrieve values, refresh for the descriptor will be skipped`; Logs**
-    - `Retrieve` of the given descriptor has failed and returned an error
-    - KV Scheduler treats failed retrieval as non-fatal. The error is printed to the log as a warning and graph refresh is skipped for the values of the descriptor
-    - if this occurs often for a given descriptor, verify implementation of the `Retrieve` operation, ensure  `RetrieveDependencies` mentions all of the dependencies
+    - Transaction Error.
+    - Mismatch between the proto message registered with the model, and the value type name defined for the [descriptor adapter][descriptor-adapter].
 
 ---
 
- * <a name="unimplemented-create"></a>
-   **`Create operation is not implemented`; Transaction Error**
-    - descriptor of the value for which this error was returned is missing the `Create` method. Or it is not plugged into the descriptor structure
+
+*  **failed to retrieve values, refresh for the descriptor will be skipped**
+    - Logs
+    - Descriptor `Retreive()` method fails and returns an error.
+    - KV Scheduler treats failed retrieval as non-fatal. Error prints to the log as a warning. Graph refresh skips for the descriptor values.
+    - If you observe this often for a given descriptor, check your `Retrieve` operation implentation, and ensure  `RetrieveDependencies` mentions all of the dependencies
 
 ---
 
- * <a name="unimplemented-delete"></a>
-   **`Delete operation is not implemented`; Transaction error**
-    - descriptor of the value for which this error was returned is missing the `Delete` method. Or it is not plugged into the descriptor structure
+ * **Create operation is not implemented**
+ 
+    - Transaction Error*
+    - Value descriptor is missing the `Create` method, or `Create` method is not plugged into the descriptor structure. REFS
+    - 
 
 ---
 
- * <a name="descriptor-exists"></a>
-   **`descriptor already exists` returned by `KVScheduler.RegisterKVDescriptor()`**
-    - same descriptor is being registered more than once
-    - verify the `Name` attribute of the descriptor is unique across all descriptors for all initialized plugins
+ * **Delete operation is not implemented** 
+ 
+    - Transaction error
+    - Value descriptor is missing the `Create` method, or `Create` method is not plugged into the descriptor structure. REFS
+
+---
+
+*  **descriptor already exists**
+ 
+    - Returned by `KVScheduler.RegisterKVDescriptor()`
+    - Same descriptor is registered more than once.
+    - Verify descriptor `Name` attribute is unique across all descriptors for all initialized plugins.
 
 ---
 
 ### Common Programming Mistakes / Bad Practices
 
- * <a name="changing-value"></a>
-   **changing value content inside descriptor methods**
-    - values should be treated as if they were mutable, otherwise it could confuse the scheduling algorithm and lead to incorrect transaction plans
-    - for example, this is a bug:
+*  **changing value content inside descriptor methods**
+
+    - You should treat values as mutable objects. Otherwise, you could confuse the scheduling algorithm, and incorrect transaction plans will result.
+    - Example code block showing a bug:
 ``` golang
     func (d *InterfaceDescriptor) Create(key string, iface *interfaces.Interface) (metadata *ifaceidx.IfaceMetadata, err error) {
 	    if iface.Mtu == 0 {
@@ -182,7 +267,9 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
         //...
     }
 ```
-   - only exception in which an input argument can be edited in place is metadata passed to the `Update` method, and are allowed to be re-used. Here is an example:
+
+   - Passing metadata to the `Update` method is the only exception in which you can edit an input argument.
+   - Example code block:
 ```
     func (d *InterfaceDescriptor) Update(key string, oldIntf, newIntf *interfaces.Interface, oldMetadata *ifaceidx.IfaceMetadata) (newMetadata *ifaceidx.IfaceMetadata, err error) {
         // ...
@@ -196,13 +283,29 @@ DEBU[0012]  - UPDATE: "config/mock/v1/interfaces/tap2"   loc="orchestrator/dispa
 
 ---
 
- * <a name="stateful-descriptor"></a>
-   **implementing stateful descriptors**
-    - descriptors are meant to be stateless. Inside callbacks, they should operate only with method input arguments, as received from the KV Scheduler (i.e. key, value, metadata)
-    - it is still permitted to implement CRUD operations as methods of a structure. But the structure should only act as a "static context" for the descriptor. Storing references to the logger and SB handler(s) are examples. These are items that do not change once the descriptor is constructed, and typically received as input arguments for the descriptor constructor
-    - all key-value pairs and the associated metadata are stored inside the graph, and exposed through [transaction logs](../developer-guide/kvs-troubleshootingmd#understanding-the-kv-scheduler-transaction-log) and [REST APIs][rest-kv-system]. If descriptors do not hide any state internally, the system state will be visible from the outside, and issues will be easier to reproduce
-    - use metadata to maintain extra run-time data alongside values. Do `NOT` use context
-    - this is considered bad practice:
+ 
+* **Implementing stateful descriptors**
+
+    - Descriptors are stateless. Inside callbacks, descriptors should operate only with method input arguments, as received from the KV Scheduler. 
+</br>
+</br>
+ 
+    - You can implement CRUD operations as methods of a structure.
+</br>
+</br>
+ 
+    - However, the structure should only act as a "static context" for the descriptor. Storing references to the logger and SB handler(s) are examples. These items:
+        - do not change once you construct the the descriptor.
+        - typically received as input arguments for the descriptor constructor.  
+ </br>
+ </br>
+     
+    - all key-value pairs and associated metadata:
+         - stored inside the graph
+         - exposed through [transaction logs](../developer-guide/kvs-troubleshootingmd#understanding-the-kv-scheduler-transaction-log) and [REST APIs][rest-kv-system]. 
+     - If descriptors do not hide any state internally, you have external system visibilty. You can more easily reproduce issues.
+    - Use metadata to maintain extra run-time data alongside values. Do _NOT_ use context.
+    - Code block shows bad practice:
 
 ``` golang
 func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (metadata *ifaceidx.IfaceMetadata, err error) {
@@ -220,10 +323,12 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 
 ---
 
-* <a name="metadata-with-derived"></a>
-  **using metadata with unsupported derived values**
-    - associating metadata with a derived value is not supported. Use the parent value instead
-    - limitation exists because derived values cannot be retrieved directly. They are derived from from parent values that have already been retrieved. Parent values may have metadata for additional run-time state. Derived values cannot carry additional state-data, beyond what is already included in the metadata of their parent values
+*  **Using metadata with unsupported derived values**
+    - Associating metadata with a derived value is not supported. Use the parent value instead.
+    - limitation exists because the KV Scheduler cannot directly retrieve derived values. 
+    - Derived values are derived from the retrieved parent values. 
+    - Parent values may have metadata for additional run-time state. 
+    - Derived values cannot carry additional state-data, beyond any metadata associated with their parent value. 
 
 ---
 
@@ -302,27 +407,67 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
   * <a name="metadata-map-with-write"></a>
     **exposing metadata map with write access**
       - KV Scheduler is the owner of metadata maps, making sure they are current. This is why custom metadata maps are not created by descriptors, but instead given to the KV Scheduler in the form of factories (`KVDescriptor.MetadataMapFactory`)
-      - maps retrieved from the KV Scheduler using `KVScheduler.GetMetadataMap()` should remain read-only and exposed to other plugins
+      - maps retrieved from the KV Scheduler using `KVScheduler.GetMetadataMap()` should remain read-only, and exposed to other plugins
 
 ---
 
 ## Debugging
 
-You can change the agent's log level globally, or individually per logger
+### Logging
 
- - via the [logs.conf][logs-conf-file] configuration file
- - environment variable `INITIAL_LOGLVL=<level>`
- - during run-time through the agent's REST API: `POST /log/<logger-name>/<log-level>`.
+You can change the agent's log level globally, or individually per logger.
 
- Detailed info about setting log levels in the agent can be found in the [log manager plugin documentation][logmanager-readme].
+The log level choice consist of one of the following: `debug`,`info`,`warning`,`error`,`fatal`, and `panic`.
+ 
+**Using the conf file or env variable**
 
-The KV Scheduler prints [transaction logs][understand-transaction-logs] or [graph walk logs][graph-walk] directly to `stdout`. The output is intended to provide sufficient information and visibility to debug and resolve KV Scheduler issues.
+* To set a default for all loggers, per-logger levels, and external link hooks, use the [logs.conf][logs-conf-file] configuration file.
+</br>
+</br>
+* To override the entries in the logs conf file, use the `INITIAL_LOGLVL=<level>` environment variable.
 
-KV Scheduler-internal debug messages, which require some knowledge of the underlying implementation, are logged to `kvscheduler` logger.
+The KV Scheduler prints [transaction logs][understand-transaction-logs] to stdout. The logs can provide information and visibility to debug and resolve KV Scheduler issues.
+
+KV Scheduler internal debug messages require some knowledge of the underlying implementation. Internal debug messages are also logged to the `kvscheduler` logger.
+
+
+**Using agentctl log**
+
+* To manage individual log levels, use the [agentctl log](../user-guide/agentctl.md#log).
+
+To list loggers and their log levels:
+```
+agentctl log list
+```
+
+Example of setting the KV Scheduler log level to `debug`:
+```
+agentctl log set kvscheduler debug
+```
+
+**Using a REST API**
+
+* To set an individual log level, use the log REST API
+
+** Using Log REST API:
+
+```
+curl -X POST http://localhost:9191/log/<logger-name>/<log-level>`.
+```
+
+The KV Scheduler prints [transaction logs][understand-transaction-logs] to stdout. The logs can provide sufficient information and visibility to debug and resolve KV Scheduler issues.
+
+KV Scheduler internal debug messages, which require some knowledge of the underlying implementation, are logged to the `kvscheduler` logger.
+
+To review more details about managing agent log levels, see the [log manager plugin documentation][logmanager-readme].
+
+
 
 ---
 
 ### How-to debug agent plugin lookup
+
+
 
 The easiest way to determine if your plugin has been found and properly initialized by the [plugin lookup](plugin-lookup.md) procedure is to enable verbose lookup logs. Before the agent
 is started, set the `DEBUG_INFRA` environment variable as follows:

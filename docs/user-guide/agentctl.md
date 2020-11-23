@@ -371,6 +371,13 @@ Config update using the update1.yaml file with a timeout duration of 6m0s:
 ```json
 agentctl config update --timeout=6m0s update1.yaml
 ```
+You can replace an existing configuration with a new configuration using the `--replace` flag. Define your new configuration in a separate file.
+
+Config update replaces the update1.yaml configuratio file with an updateNew.yaml configuration file:
+```
+agentctl config update --replace ./update.txt
+```
+
 
 ---
 
@@ -748,7 +755,7 @@ OPTIONS:
                                   is current directory.
 ```  
 
-Generate report that ignores subreport errors:
+Generate report and ignore subreport errors:
 ```
 agentctl report -i
 ```
@@ -778,7 +785,23 @@ Sample output after unpacking the report zipfile:
 -rw------- 1 root root    2958 Nov 17 01:07  vpp-statistics-interfaces.txt
 ```
 
-The `_report.txt` describes each subreport file. 
+The `_report.txt` describes each subreport file. Errors appear in three places:
+
+* `_failed-reports.txt` file lists all errors from all subreports.
+* console while running the report command
+* Subreport file in the location where the retreived information should appear.   
+
+Example of subreport error contained in the `_failed-reports.txt` file:
+```
+######################################################################
+Retrieving agent kvscheduler NB configuration... failed due to:
+dumping kvscheduler data failed due to:
+Failed to get data for NB view and key prefix config/vpp/wg/v1/peer/ due to: Error response from daemon: [500] {
+  "Error": "unknown key prefix"
+}
+```
+
+Note this error appears in the related subreport of `agent-kvscheduler-NB-config-view.txt`.
 
 ---
 ### Status
