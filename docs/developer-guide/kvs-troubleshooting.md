@@ -324,22 +324,23 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 ---
 
 *  **Using metadata with unsupported derived values**
+
     - Associating metadata with a derived value is not supported. Use the parent value instead.
     - limitation exists because the KV Scheduler cannot directly retrieve derived values. 
-    - Derived values are derived from the retrieved parent values. 
+    - Derived values derive from the retrieved parent values. 
     - Parent values may have metadata for additional run-time state. 
     - Derived values cannot carry additional state-data, beyond any metadata associated with their parent value. 
 
 ---
 
- * <a name="derived-key-collision"></a>
-   **deriving the same key from different values**
-    - include the parent value ID inside a derived key, so that derived values do not collide with key-value pairs across the entire system
+
+*  **Same key derived from different values**
+    - include the parent value ID inside a derived key.
+    - Ensures derived values do not collide with key-value pairs across the entire system
 
 ---
 
- * <a name="models-bad-usage"></a>
-   **not using models for non-derived values; mixing with custom key building/parsing methods**
+* **not using models for non-derived values; mixing with custom key building/parsing methods**
       - models are `NOT` supported with derived values at this time
       - for non-derived values, the models are mandatory and should be used to define these four descriptor fields: `NBKeyPrefix`, `ValueTypeName`, `KeySelector`, `KeySelector`
       - eventually these fields will all be replaced with a single `Model` reference. It is recommended to prepare and use the models for an easy transition to a new release
@@ -357,57 +358,68 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 
 ---
 
-  * <a name="empty-descriptor-methods"></a>
-    **defining unused descriptor methods**
-      - over-relying on copy-pasting from [prepared skeletons][descriptor-skeleton] can lead to unused callback skeleton leftovers
-      - for example, if the `Update` method is not required, then do not define the method. There is no value in retaining the method, even if empty, in the code
-      - descriptors are defined as structures and not as interfaces. This allows unused methods to remain undefined, rather than defined and empty
+
+*  **Defining unused descriptor methods**
+
+      - Careful with copy/paste from [prepared skeletons][descriptor-skeleton]. 
+      - You might retain unused callback skeleton leftovers. 
+      - For example, if you do not require the `Update` method, then do not define it. Retaining the method in your code, even if emtpy, adds no value.
+      - Note that descriptors are defined as structures, and not as interfaces.
+      - Unused methods remain undefined, rather than defined and empty.
 
 ---
 
-  * <a name="empty-retrieve"></a>
-    **using unsupported `Retrieve` to return empty set of values**
-      - if the `Retrieve` operation is not supported by SB for a particular value type, then leave the callback undefined in the descriptor
-      - KV Scheduler skips refresh for values which cannot be retrieved (undefined `Retrieve`). It assumes that what has been set through previous transactions corresponds with current SB state
-      - if instead, `Retrieve` always returns an empty set of values, then the KV Scheduler will re-create every value defined by NB with each resync under the belief the values are missing. This could result in duplicate-value errors
+*  **Using unsupported `Retrieve` to return empty set of values**
+
+      - Do not define the `Retrieve` callback in your descriptor, if the SB does not support this operation for a particular value type.
+      - KV Scheduler skips refresh for these values. 
+      - KV Scheduler assumes value state set through previous transactions corresponds with current SB state. 
+      - If your `Retrieve` callback always returns an empty value set, then the KV Scheduler re-creates each NB-defined value, with each resync. KV Scheduler believes the values are missing. 
+      - You could encounter duplicate value errors. 
 
 ---
 
-  * <a name="manipulating-with-derived"></a>
-    **manipulating (derived) value attributes**
-      - value attribute derived into a separate key-value pair and handled by CRUD operations of another descriptor, can be imagined as a slice of the original value that was "split off". An implicit dependency on its original value remains, but should no longer be considered as a part of it
-      - for example, [if we define a separate derived value for every IP address to be assigned to an interface][derived-if-img], and a separate descriptor which implements these assignments (i.e. `Create` = add IP, `Delete` = unassign IP, etc.), then the descriptor for interfaces should no longer:
+*  **Manipulating (derived) value attributes**
+
+      - If you have a value attribute derived into a separate key-value pair, and handled by CRUD operations of another descriptor, you should think of this value attribute as a slice carved out from the original value. 
+      - An implicit dependency on its original value remains. However, this value is no longer a part of the original value. 
+      - For example, [if you define a separate derived value for every IP address to assign to an interface][derived-if-img], and a separate descriptor which implements these assignments (i.e. `Create` = add IP, `Delete` = unassign IP, etc.), then the interfaces descriptor should no longer:
          - consider IP addresses when comparing interfaces in `ValueComparator`
-         - (un)assign IP addresses in `Create`/`Update`/`Delete`
-         - consider IP addresses for interface dependencies
+         - Assign or unassign IP addresses in `Create`/`Update`/`Delete` operations.
+         - Consider IP addresses for interface dependencies
 
 ---
 
-  * <a name="retrieve-derived"></a>
-    **implementing Retrieve method for descriptor with only derived values in the scope**
-      - derived values should never be Retrieved directly (returned by `Retrieve`), but only returned by `DerivedValues()` of the descriptor with retrieved parent values
+
+* **Implementing a Retrieve method for a descriptor with only derived values in scope**
+      - You should never return derived values using a `Retrieve` operation.
+      - Instead, use the `DerivedValues()` callback of the descriptor with retrieved parent values.
 
 ---
 
-  * <a name="obtained-without-retrieve"></a>
-    **not implementing Retrieve() method for values announced to the KV Scheduler as `OBTAINED` via notifications**
-      - note that  `OBTAINED` values need to be refreshed, even though they are not touched by resync
-      - this is because NB-defined values may depend on `OBTAINED` values. The KV Scheduler needs to know their state to determine if the dependencies are satisfied and plan the resync accordingly
+
+* **Not implementing a Retrieve() method for values announced to the KV Scheduler as `OBTAINED` via notifications**
+
+      - Note you must refresh `OBTAINED` values, even if resync does not touch them. 
+      - You may have NB-defined values that depend on `OBTAINED` values. The KV Scheduler must know their state to determine if the dependencies are satisfied, and plan the resync.
 
 ---
 
-  * <a name="blocking-crud"></a>
-    **sleeping/blocking inside descriptor methods**
-     - transaction processing is synchronous. Sleeping inside a CRUD method would not only delay the remaining operations of the transactions, but other queued transactions as well
-     - if a CRUD operation needs to wait for "something", then express that "something" as a separate key-value pair and add it into the list of dependencies. When it becomes available, send notifications using `KVScheduler.PushSBNotification()` and the KV Scheduler will automatically apply pending operations ready for execution
-     - in other words, do not hide dependencies inside CRUD operations. Instead, use the framework to express them in a way that is visible to the scheduling algorithm
+* **Sleeping/blocking inside descriptor methods**
+
+     - Transaction processing is synchronous. Sleeping inside a CRUD method delays remaining transaction operations, and queued transactions.
+     - If you have a CRUD operation that wait for "something", then you should define that "something" as a separate key-value pair, and add it to the dependencies list.
+     - When it becomes available, send notifications using `KVScheduler.PushSBNotification()`. The KV Scheduler will automatically apply pending operations ready for execution.
+     - Do not hide dependencies inside CRUD operations. 
 
 ---
 
-  * <a name="metadata-map-with-write"></a>
-    **exposing metadata map with write access**
-      - KV Scheduler is the owner of metadata maps, making sure they are current. This is why custom metadata maps are not created by descriptors, but instead given to the KV Scheduler in the form of factories (`KVDescriptor.MetadataMapFactory`)
-      - maps retrieved from the KV Scheduler using `KVScheduler.GetMetadataMap()` should remain read-only, and exposed to other plugins
+* **Exposing metadata map with write access**
+
+     - KV Scheduler owns and maintains metadata maps.
+     - Descriptors do not create custom metadata maps.
+     - Descriptors convey custom metadata maps to the KV Scheduler as factories `KVDescriptor.MetadataMapFactory`.
+      - Maps retrieved from the KV Scheduler using `KVScheduler.GetMetadataMap()` should remain read-only, and exposed to other plugins.
 
 ---
 
@@ -424,18 +436,18 @@ The log level choice consist of one of the following: `debug`,`info`,`warning`,`
 * To set a default for all loggers, per-logger levels, and external link hooks, use the [logs.conf][logs-conf-file] configuration file.
 </br>
 </br>
-* To override the entries in the logs conf file, use the `INITIAL_LOGLVL=<level>` environment variable.
+* To override the entries in the `logs.conf` file, use the `INITIAL_LOGLVL=<level>` environment variable.
 
-The KV Scheduler prints [transaction logs][understand-transaction-logs] to stdout. The logs can provide information and visibility to debug and resolve KV Scheduler issues.
+The KV Scheduler prints [transaction logs][understand-transaction-logs] to stdout. The logs provide information and visibility to debug and resolve KV Scheduler issues.
 
-KV Scheduler internal debug messages require some knowledge of the underlying implementation. Internal debug messages are also logged to the `kvscheduler` logger.
+KV Scheduler internal debug messages require some knowledge of the underlying implementation. The `kvscheduler` logger prints internal debug messages. 
 
 
 **Using agentctl log**
 
-* To manage individual log levels, use the [agentctl log](../user-guide/agentctl.md#log).
+* To manage individual log levels, use the [agentctl log command](../user-guide/agentctl.md#log).
 
-To list loggers and their log levels:
+list individual loggers and their log levels:
 ```
 agentctl log list
 ```
@@ -447,12 +459,10 @@ agentctl log set kvscheduler debug
 
 **Using a REST API**
 
-* To set an individual log level, use the log REST API
-
-** Using Log REST API:
+* To set an individual log level, use the logger REST API.
 
 ```
-curl -X POST http://localhost:9191/log/<logger-name>/<log-level>`.
+curl -X POST http://localhost:9191/log/<logger-name>/<log-level>
 ```
 
 The KV Scheduler prints [transaction logs][understand-transaction-logs] to stdout. The logs can provide sufficient information and visibility to debug and resolve KV Scheduler issues.
