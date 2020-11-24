@@ -425,11 +425,11 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 
 ## Debugging
 
-### Logging
+### How to set up logging
 
 You can change the agent's log level globally, or individually per logger.
 
-The log level choice consist of one of the following: `debug`,`info`,`warning`,`error`,`fatal`, and `panic`.
+The log level choices consist of one of the following: `debug`,`info`,`warning`,`error`,`fatal`, `panic`.
  
 **Using the conf file or env variable**
 
@@ -475,28 +475,33 @@ To review more details about managing agent log levels, see the [log manager plu
 
 ---
 
-### How-to debug agent plugin lookup
+### How to debug agent plugin lookup
 
+You can determine if [plugin lookup](plugin-lookup.md) can find and initialize your plugin by enabling verbose logs:
 
-
-The easiest way to determine if your plugin has been found and properly initialized by the [plugin lookup](plugin-lookup.md) procedure is to enable verbose lookup logs. Before the agent
-is started, set the `DEBUG_INFRA` environment variable as follows:
+* Before you start the agent, set the `DEBUG_INFRA` environment variable as follows:
 ``` 
-export DEBUG_INFRA=lookup
+  export DEBUG_INFRA=lookup
 ```
+* Search for `FOUND PLUGIN: <your-plugin-name>` in the logs. 
 
-Then search for `FOUND PLUGIN: <your-plugin-name>` in the logs. If you do not find a log entry for your plugin, it means that it is either not listed among 
-the agent dependencies or it does not implement the [plugin interface][plugin-interface].
+If you do not find a log entry for your plugin, check the following:
+
+* You did not include the plugin in your agent's dependencies list.
+  
+* Your plugin does not implement the [plugin interface][plugin-interface].
 
 ---
 
-### How-to list registered descriptors and watched key prefixes
+### How to list registered descriptors and watched key prefixes
 
-To determine what descriptors are registered with the KV Scheduler, use the REST API `GET /scheduler/dump` without any arguments.
+You can list registered descriptors, and NB-watched key prefixes using the [KV Scheduler Dump REST API](../api/api-kvs.md#dump):
 
-For example:
+```json
+curl -X GET http://localhost:9191/scheduler/dump
 ```
-$ curl localhost:9191/scheduler/dump
+Sample output:
+```
 {
   "Descriptors": [
     "vpp-bd-interface",
@@ -521,39 +526,63 @@ $ curl localhost:9191/scheduler/dump
 }
 ```
 
-With this API, you can also find out which key prefixes are being watched for in the agent NB. This is useful when a value requested by NB is not being applied to SB. If the value key prefix or the associated descriptor are not registered, the value will not be delivered to the KV Scheduler.
+The KV Scheduler will not receive the value if you do not watch the value's key prefix or register the associated descriptor.
 
 ---
 
 ### Understanding the KV Scheduler transaction log
 
-The KV Scheduler prints a summary of every executed transaction to `stdout`. The output describes
+The KV Scheduler exposes a summary of every executed transaction. You can retrieve the transaction log using one of the following:
 
-- transaction type
-- assigned sequence number
-- values to be changed
-- transaction plan prepared by the scheduling algorithm
-- actual sequence of executed operations, which may differ from the plan if there were any errors.
- 
-An example of transaction log output with explanations:
+* Print to `stdout`.
+
+* [agentctl config history command](../user-guide/agentctl.md#config-history)
+
+* [agentctl report command](../user-guide/agentctl.md#report) and the `agent-transaction-history.txt` subreport.
+
+The transaction log output describes the following:
+
+- Transaction type
+- Assigned sequence number
+- Values to be changed
+- Transaction plan prepared by the scheduling algorithm
+- Actual sequence of executed operations, which may differ from the plan if errors occur.
+
+
+---
+
+!!! Note
+    For easier viewing of the examples below, open the svg figure in your browser.  
+
+---
+
+**Transaction log output with explanations:**
 
 ![NB transaction][txn-update-img]
 
+<br>
+</br>
+
 ---
 
-resync transaction that failed to apply one value:
+
+**Resync transaction that failed to apply one value:**
 
 ![Full Resync with error][resync-with-error-img]
 
+<br>
+</br>
+
 ---
 
-Retry transaction automatically triggered for the failed operation from the resync transaction shown above
+**Retry transaction automatically triggered for the failed operation**. This example uses the resync transaction shown above:
 
 ![Retry of failed operations][retry-txn-img]
 
+
 ---
 
-In addition, before a [Full or Downstream Resync][resync] (but not for Upstream Resync), or after a transaction error, the KV Scheduler dumps the state of the graph to `stdout` *after* it was refreshed:
+In addition, before a [full or downstream Resync][resync], or after a transaction error, the KV Scheduler dumps the graph state *after* a refresh:
 
 ![Graph dump][graph-dump-img]
 
