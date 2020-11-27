@@ -590,68 +590,77 @@ In addition, before a [full or downstream Resync][resync], or after a transactio
 
 ### CRUD verification mode
 
-The KV Scheduler supports a verification mode to check the correctness of CRUD operations provided by descriptors. If enabled, the KV Scheduler will trigger verification inside the post-processing stage of every transaction. The values changed by the transaction (i.e the created / updated / deleted values) are re-read using the `Retrieve` methods from the descriptors, and compared to the intended values to verify they have been applied correctly.
+The KV Scheduler supports a verification mode to check the correctness of CRUD operations provided by descriptors. If you enable this function, the KV Scheduler triggers verification inside the post-processing stage of every transaction. 
 
-A failed check may mean that the affected values have been changed by some external entity, or that some of the CRUD operations of the corresponding descriptor(s) are not implemented correctly. Note that since the SB values are re-read  immediately after the changes have been applied, it is unlikely that they have been modified by an external entity.
+Verification mode functions consist of the following:
 
-The verification mode is costly. `Retrieve` operations are run after every transaction for descriptors with changed values. Because of this overhead, verification mode is disabled by default and not recommended for use in production environments.
+* Values changed by transaction CRUD create, update, or delete operations are re-read using the descriptor's `Retrieve` methods. 
+* Changed values are compared to the intended values to verify they have been correctly applied. 
 
-However, for development and testing purposes, the feature is very handy. CRUD implementation bugs can be quickly discovered. We recommend testing newly implemented descriptors in verification mode before they are released. Also, consider the use of the feature with regression test suites.
+A failed check can indicate an external entity modified the affected values, or you have not correctly implemented the CRUD operations the corresponding descriptor or descriptors. 
 
-The verification mode is enabled using the environment variable before the agent is started: `export KVSCHED_VERIFY_MODE=1`
+!!! Note
+    Since verification mode re-reads the SB values after changes have been applied, it's not likely an external entity modified these values.
+    
+You add overhead when performing verification mode. `Retrieve` operations run after every transaction for descriptors with changed values. Because of this overhead, verification mode is disabled by default, and not recommended for use in production environments.
 
-Values with read-write inconsistencies are reported in the transaction output with the [verification error information][verification-error] attached.
+However, for your development and testing purposes, you will find this feature handy. You can quickly discover CRUD implementation bugs. You should run verification mode for new descriptors prior to production release, or with regression test suites.
+
+Values with read-write inconsistencies appear in the transaction log with the [verification error information][verification-error] attached.
+
+You can enable verification mode with the `KVSCHED_VERIFY_MODE=1` environment variable before starting the agent:
+```
+export KVSCHED_VERIFY_MODE=1
+```
 
 ---
 
 ### How to visualize the graph
 
-A graph-based representation of the system state, used internally by the KV Scheduler, can be displayed using any modern web browser supporting SVG.
+You can display a graph-based representation of the KV Scheduler's internal system state. You just need a modern web browser that supports SVG images, and the graphviz `dot` renderer that ships with the Graphviz package. 
 
-Here is the URL:
-```
-http://<host>:9191/scheduler/graph
-```
-!!! note  
-    9191 is the default port number for the REST API, but it can be changed in the conf file of the [REST plugin][rest-plugin].
+For information on installing and customizing the graphviz `dot` renderer, see the [Graphviz - Graph Visualization Software](http://graphviz.org) website. You must install and run the graphviz `dot` renderer on the host running the agent. 
 
-The requirement is to have the `dot` renderer from graphviz installed on the host which is running the agent. The renderer is shipped with the [graphviz package](http://graphviz.org/).
-
-Ubuntu version install command:
+You retrieve the KV Scheduler internal system for input to the Graphviz tool using the following REST API:
 ```
-root$ apt-get install graphviz
+curl -X GET http://localhost:9191/scheduler/graph
 ```
 
-An example of a rendered graph can be seen below. Graph vertices, drawn as rectangles, are used to represent key-value pairs. Derived values have rounded corners. Different fill-colors represent different value states. If you hover over a graph node, a tooltip will pop up, describing the state and content of the corresponding value.
+An example of a rendered graph is shown below. Graph vertices, drawn as rectangles, represent key-value pairs. Derived values have rounded corners. Different fill-colors represent different value states. If you hover over a graph node, a tooltip pops up, describing the state and content of the corresponding value.
 
-The edges are used to show the relationships between values:
+The edges depict the relationships between values:
 
- * black arrows point to dependencies of values they originate from
- * gold arrows connect derived values with their parent values, with cursors
-   oriented backwards, pointing to the parents
+ * Black arrows point to dependencies of values that they originate from.
+ * Gold arrows connect derived values with their parent values, with cursors pointing to the parents in the backwards direction.
 
 ![graph example][graph-visualization-img]
 
-Without any GET arguments, the API returns the rendering of the graph in its current state. Alternatively, it is possible to pass argument `txn=<seq-num>`, to display the graph state as it was when the given transaction had just finalized, highlighting the vertices updated by the transaction with a yellow border. For example, to display the state of the graph after the first transaction, access URL:
+If you call the graph API without query parameters, it returns the rendering of the graph in its current state. 
+
+Alternatively, if you include `txn=<seq-num>` query parameter, you can display the graph state after the given transaction is finalized. A yellow border illustrates the vertices updated by the transaction.  
+
+Example graph API to display graph state after the first transaction: 
 ```
 http://<host>:9191/scheduler/graph?txn=0
 ```
 
-See the [KV Scheduler REST API](kvscheduler.md#rest-api) section for more information.
-
-The graph visualization tool is quite helpful for debugging. It provides an instantaneous global view of the system state. The source of potential problems can be easily pinpointed. The result is reduced time and effort in development and troubleshooting.
+This tool provides you with an instantaneous global view of the system state. You can quickly pinpoint and debug potential problems. This will save you time and effort. 
 
 ---
 
 ### Understanding the graph walk (advanced)
 
-To observe and understand how the KV Scheduler walks through the graph to process transactions, define the environment variable `KVSCHED_LOG_GRAPH_WALK` before the agent is started. This generates verbose logs showing how the graph nodes are visited by the scheduling algorithm.
+You can observe and better understand how the KV Scheduler walks through the graph to process transactions using the log graph walk function. The KV Scheduler visits a graph node in one of the transaction processing stages:
 
-The KV Scheduler may visit a graph node in one of the transaction processing stages:
+1. Graph refresh
+2. Transaction simulation
+3. Transaction execution
 
-1. graph refresh
-2. transaction simulation
-3. transaction execution
+You can enable this function with the `KVSCHED_LOG_GRAPH_WALK` environment variable before starting the agent:
+```
+export `KVSCHED_LOG_GRAPH_WALK`
+```
+This generates verbose logs showing how the KV Scheduler visits the graph nodes. 
 
 ---
 
@@ -661,11 +670,16 @@ During the graph refresh, some or all the registered descriptors are asked to `R
 
 Obsolete derived values (those previously derived, but no longer relevant given the the latest retrieved revision of the value), are visited with `refreshUnavailNode()`, marking them as unavailable in the SB. Finally, the graph refresh procedure visits all nodes for which the values were `not` retrieved and marks them as unavailable through method `refreshUnavailNode()`.
 
-The control-flow is depicted in the following diagram:
+The `refreshUnavailNode()` method visits obsolete derived values and marks them as unavailable in the SB. The `refreshUnavailNode()` method visits all nodes with un-retrieved values and marks them as unavailable. 
+
+!!! Note
+    Obsolete derived values were previously derived, but no longer relevant because a new revision of the value has been retrieved.    
+
+The following diagram depicts a graph refresh control flow:
 
 ![Graph refresh diagram][graph-refresh]
 
-Example verbose log of graph refresh as printed by the KV Scheduler to stdout:
+Example verbose log of graph refresh as printed by the KV Scheduler to the transaction log:
 ```
 [BEGIN] refreshGrap (keys=<ALL>)
   [BEGIN] refreshValue (key=config/vpp/v2/interfaces/loopback1)
