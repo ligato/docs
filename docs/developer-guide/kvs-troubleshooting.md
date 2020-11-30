@@ -650,7 +650,7 @@ This tool provides you with an instantaneous global view of the system state. Yo
 
 ### Understanding the graph walk (advanced)
 
-You can observe and better understand how the KV Scheduler walks through the graph to process transactions using the log graph walk function. The KV Scheduler visits a graph node in one of the transaction processing stages:
+You can observe how the KV Scheduler walks through the graph to process transactions using the log graph walk function. The KV Scheduler visits a graph node in one of the following transaction processing stages:
 
 1. Graph refresh
 2. Transaction simulation
@@ -660,26 +660,27 @@ You can enable this function with the `KVSCHED_LOG_GRAPH_WALK` environment varia
 ```
 export `KVSCHED_LOG_GRAPH_WALK`
 ```
-This generates verbose logs showing how the KV Scheduler visits the graph nodes. 
+You can generate verbose logs showing how the KV Scheduler visits the graph nodes. 
 
 ---
 
 ### Graph refresh
 
-During the graph refresh, some or all the registered descriptors are asked to `Retrieve` the values currently created in the SB. Nodes corresponding to the retrieved values are refreshed by the method `refreshValue()`. This method propagates the call to `refreshAvailNode()` for the node itself, and for every value which is derived from the node, and therefore subject to refresh. The method updates the value state and its content to reflect the retrieved data.
+During [graph refresh][graph-refresh-code], some or all of the registered descriptors `Retrieve()` the current SB values. The `refreshValue()` method refreshes the node state corresponding to the retrieved values. This method propagates the call to the `refreshAvailNode()` method for the node itself, and for every value derived from the node. The `refreshAvailNode()`method updates the value state and its content to reflect the retrieved data.
 
-Obsolete derived values (those previously derived, but no longer relevant given the the latest retrieved revision of the value), are visited with `refreshUnavailNode()`, marking them as unavailable in the SB. Finally, the graph refresh procedure visits all nodes for which the values were `not` retrieved and marks them as unavailable through method `refreshUnavailNode()`.
-
-The `refreshUnavailNode()` method visits obsolete derived values and marks them as unavailable in the SB. The `refreshUnavailNode()` method visits all nodes with un-retrieved values and marks them as unavailable. 
-
+Graph refresh uses `refreshUnavailNode()` method to visit nodes with obsolete derived values, and mark these values as unavailable in the SB. The same method marks values no longer present in the SB as unavailable.  
+ 
 !!! Note
-    Obsolete derived values were previously derived, but no longer relevant because a new revision of the value has been retrieved.    
+    Obsolete derived values were previously derived, but no longer relevant because a new value has been retrieved.    
 
-The following diagram depicts a graph refresh control flow:
+Diagram the graph refresh control flow:
 
 ![Graph refresh diagram][graph-refresh]
 
-Example verbose log of graph refresh as printed by the KV Scheduler to the transaction log:
+
+---
+
+Example graph refresh verbose log printed by the KV Scheduler to the transaction log:
 ```
 [BEGIN] refreshGrap (keys=<ALL>)
   [BEGIN] refreshValue (key=config/vpp/v2/interfaces/loopback1)
@@ -717,17 +718,24 @@ Example verbose log of graph refresh as printed by the KV Scheduler to the trans
 
 ### Transaction simulation / execution
 
-Both transaction simulation and execution follow the same algorithm. The only difference is that during the simulation, the CRUD operations provided by descriptors are `not executed`. Instead, the calls are simulated with a nil error value returned. In addition, all graph updates performed during the simulation are discarded at the end. If a transaction executes without any errors, however, the path taken through the graph by the scheduling algorithm will be the same for both simulation and execution.
+Transaction simulation and execution follow the same algorithm. During simulation, the CRUD operations provided by descriptors are _not executed_. Instead, the scheduling algorithm simulates the calls with a nil error value returned. In addition, the algorithm discards graph refresh updates. If a transaction executes without any errors, the algorithm uses the same path through the graph for simulation and execution. 
 
-The main for-cycle of the transaction processing engine visits every value to be modified by the transaction using the method `applyValue()`. This method determines which of the `applyCreate()` / `applyUpdate()` / `applyDelete()` methods to execute, based on the current and the new value data to be applied.
+Transaction processing uses the `applyValue()` method for every value to modify during the transaction. This method determines which of the `applyCreate()` / `applyUpdate()` / `applyDelete()` methods to execute, based on the current, and the new value data to apply.
 
-Update of a value often requires some related values to be updated as well. This is handled through *recursion*. For example, `applyCreate()` will use `applyDerived()` method to call `applyValue()` for every derived value to be created. Additionally, once the value is created, `applyCreate()` will call `runDepUpdates()` to recursively call `applyValue()` for values which are dependent on the created value.  These are currently in a `PENDING` state from previous transaction, but now with the dependency satisfied, are ready to be created. Similarly, `applyUpdate()` and `applyDelete()` may also cause the KV Scheduler to recursively continue and *walk* through the edges of the graph to update related values.
+Recursion handles the situation when value updates require updates of some related values. For example, `applyCreate()` uses the `applyDerived()` method to call `applyValue()` for every derived value to create Once the KV Scheduler creates the value, `applyCreate()` calls `runDepUpdates()` to recursively call `applyValue()`, for values dependent on the created value. The KV Scheduler marked the dependent values as `PENDING` in the previous transaction. Now, having recursed through the graph to satisfy dependencies, the KV Scheduler creates the dependent values.    
 
-The control-flow of transaction processing is depicted in the following diagram:
+Similarly, `applyUpdate()` and `applyDelete()` may also cause the KV Scheduler to recursively continue and walk through the edges of the graph to update related values.
+
+---
+
+Diagram showing the transaction processing control flow:
  
 ![KVScheduler diagram][graph-wal-img]
 
-Example verbose log of transaction processing as printed by the KV Scheduler to stdout:
+
+---
+
+Example transaction processing verbose log printed by the KV Scheduler to the transaction log:
 ```
 [BEGIN] simulate transaction (seqNum=1)
   [BEGIN] applyValue (key = config/vpp/v2/interfaces/tap2)
@@ -804,6 +812,7 @@ Example verbose log of transaction processing as printed by the KV Scheduler to 
 [descriptor-skeleton]: ../developer-guide/kvdescriptor.md#descriptor-skeletons
 [graph-dump-img]: ../img/developer-guide/graph-dump.png
 [graph-refresh]: ../img/developer-guide/graph-refresh.svg
+[graph-refresh-code]: https://github.com/ligato/vpp-agent/blob/master/plugins/kvscheduler/refresh.go
 [graph-visualization-img]: ../img/developer-guide/graph-visualization.svg
 [graph-walk]: kvs-troubleshooting.md#understanding-the-graph-walk-advanced
 [graph-wal-img]: ../img/developer-guide/graph-walk.svg
