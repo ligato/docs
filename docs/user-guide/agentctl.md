@@ -6,7 +6,7 @@ This section describes the Agentctl CLI tool.
 ---
 ## Introduction
 
-Agenctl is a CLI command line tool for managing and interacting with the software components of the Ligato framework. You can perform the following:
+You can manage and interact with Ligato software components using the agentctl CLI command line tool. Agentctl supports the following functions:
 
 - Manage VPP agent configurations 
 - Inspect and generate models
@@ -16,7 +16,8 @@ Agenctl is a CLI command line tool for managing and interacting with the softwar
 - Configure logs
 - Gather stats
 - Perform system dumps
-- Extract runtime reports for troubleshooting   
+- Extract runtime reports for troubleshooting
+- Configure watch for events   
 
 ![agentctl](../img/tools/agentctl.png)
 
@@ -26,9 +27,9 @@ Agenctl is a CLI command line tool for managing and interacting with the softwar
 
 ### Docker Image Pull
 
-Agentctl is included in the official docker images for the VPP agent. The [Quickstart Guide](quickstart.md) covers the steps from initial image pull to agentctl command execution. 
+The official docker images for the VPP agent include agentctl. The [Quickstart Guide](quickstart.md) covers the steps from initial image pull to agentctl command execution. 
 
-For convenience, use the following commands for image pull, start etcd, start VPP agent, and agentctl help: 
+For convenience, use the following commands for image pull, start etcd, start VPP agent, and agentctl help. 
 
 Pull the VPP agent image from dockerhub:
 ```
@@ -51,7 +52,7 @@ docker exec -it vpp-agent agentctl --help
 
 ### Build from Source
 
-You can build a local image from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions contained in the VPP Agent Setup section of the User Guide.
+You can build a local image from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions in the [VPP Agent Setup](get-vpp-agent.md) section.
 
 You can run agentctl commands after you start the vpp-agent. 
 
@@ -104,7 +105,7 @@ OPTIONS:
 Run 'agentctl COMMAND --help' for more information on a command.
 ```
 !!! note
-    Bears worth repeating: Use `agentctl <ANY COMMAND> --help` for explanations and, in some cases, examples for any of the agentctl commands and subcommands. 
+    Bears worth repeating: Use `agentctl <ANY COMMAND> --help` for explanations and examples for any agentctl commands and subcommands. 
 
 ---
 
@@ -863,10 +864,10 @@ Sample output after unpacking the report zipfile:
 The `_report.txt` describes each subreport file. Errors appear in three places:
 
 * `_failed-reports.txt` file lists all errors from all subreports.
-* console while running the report command
-* Subreport file in the location where the retreived information should appear.   
+* console while running agentctl report.
+* Subreport file in the location where the retrieved information should appear.   
 
-Example of subreport error contained in the `_failed-reports.txt` file:
+Example of an error contained in the `_failed-reports.txt` file:
 ```
 ######################################################################
 Retrieving agent kvscheduler NB configuration... failed due to:
@@ -876,7 +877,7 @@ Failed to get data for NB view and key prefix config/vpp/wg/v1/peer/ due to: Err
 }
 ```
 
-Note this error appears in the related subreport of `agent-kvscheduler-NB-config-view.txt`.
+Note this error appears in the `agent-kvscheduler-NB-config-view.txt` subreport.
 
 ---
 ### Status
@@ -1185,7 +1186,7 @@ OPTIONS:
 
 ---
 
-Here is an example using short form keys with the microservice label. The `myconfig` file contains the following:
+Example using short form keys with the microservice label. The `myconfig` file contains the following:
 ```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
 config/vpp/v2/interfaces/loop2 {"name":"loop2","type":"MEMIF"}
