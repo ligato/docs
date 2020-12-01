@@ -158,11 +158,12 @@ COMMANDS
   resync      Run config resync
   retrieve    Retrieve currently running config
   update      Update config in agent
+  watch       Watch events
 ```
 
 ---
 
-#### Config get
+#### config get
 ```sh
 agentctl config get
 ```
@@ -187,7 +188,7 @@ netallocConfig: {}
 
 ---
 
-#### Config history
+#### config history
 ```json
 agentctl config history
 ```
@@ -227,7 +228,7 @@ agentctl config history -f log 3
 
 ---
 
-#### Config [resync](../developer-guide/kvscheduler.md#resync)
+#### config [resync](../developer-guide/kvscheduler.md#resync)
 ```
 agentctl config resync
 ```
@@ -246,7 +247,7 @@ For a detailed example of the resync output, check out the [downstream resync AP
 
 ---
 
-#### Config retrieve 
+#### config retrieve 
 
 Retrieves the runtime VPP configuration.
 
@@ -324,7 +325,7 @@ dump:
 
 ---
 
-#### Config update
+#### config update
 
 Use this command to update a VPP agent configuration. You must define your configuration inside a file. 
 
@@ -373,15 +374,15 @@ agentctl config update --timeout=6m0s update1.yaml
 ```
 You can replace an existing configuration with a new configuration using the `--replace` flag. Define your new configuration in a separate file.
 
-Config update replaces the update1.yaml configuratio file with an updateNew.yaml configuration file:
+Config update replaces the update1.yaml configuration file with an updateNew.yaml configuration file:
 ```
-agentctl config update --replace ./update.txt
+agentctl config update --replace ./updateNew.yaml
 ```
 
 
 ---
 
-#### Config delete
+#### config delete
 
 Use this command to delete a VPP agent configuration. You must define your configuration inside a file.
 
@@ -406,7 +407,81 @@ agentctl config delete --waitdone update1.yaml
 
 ---
 
+#### config watch
 
+Use this command to watch events.
+
+```
+Usage:	agentctl config watch
+
+Watch events
+
+OPTIONS:
+      --filter stringArray   Filter(s) for notifications (multiple filters are used
+                             with AND operator). Value should be JSON data of
+                             configurator.Notification.
+  -f, --format string        Format output
+
+```
+
+Watch for events from VPP interface name of `loop1`:
+```
+agentctl config watch --filter='{"vpp_notification":{"interface":{"state":{"name":"loop1"}}}}'
+```
+
+Watch for VPP interface `UPDOWN` events:
+```
+agentctl config watch --filter='{"vpp_notification":{"interface":{"type":"UPDOWN"}}}'
+``` 
+
+Sample output for `loop1` state UP:
+```
+
+------------------
+ NOTIFICATION #6
+------------------
+Source: VPP
+Value: interface: {
+  type: UPDOWN
+  state: {
+    name: "loop1"
+    internal_name: "loop0"
+    if_index: 1
+    admin_status: UP
+    oper_status: UP
+    last_change: 1606782814
+    phys_address: "de:ad:00:00:00:00"
+    mtu: 9216
+    statistics: {}
+  }
+}
+```
+Sample output for `loop1` state DOWN:
+
+```
+
+------------------
+ NOTIFICATION #7
+------------------
+Source: VPP
+Value: interface: {
+  type: UPDOWN
+  state: {
+    name: "loop1"
+    internal_name: "loop0"
+    if_index: 1
+    admin_status: DOWN
+    oper_status: DOWN
+    last_change: 1606782834
+    phys_address: "de:ad:00:00:00:00"
+    mtu: 9216
+    statistics: {}
+  }
+}
+
+```
+
+---
 
 ### Dump
 
