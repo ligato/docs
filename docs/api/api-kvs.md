@@ -1,13 +1,19 @@
 # KV Scheduler 
 
-This section describes the REST APIs exposed by the KV Scheduler. The URLs and sample responses (in some cases partial) were generated using the [Quickstart Guide][quickstart-guide] environment.
+---
+
+This section describes the REST APIs exposed by the KV Scheduler. 
+
+---
 
 Reference: [KV Scheduler plugin rest.go file][kvs-rest-go]
 
 !!! Note
-    `9191` is the default port number for Ligato REST APIs, however it can be changed using one of the [REST plugin configuration options][rest-plugin-config-options]. Note that the [Agentctl][agentctl] CLI tool is another option for retrieving KV Scheduler system state.
+    Ligato REST APIs use `9191` as the default port number. You can change this value using one of the [REST plugin configuration options][rest-plugin-config-options]. 
 
 ---
+
+## OpenAPI Definitions
 
 OpenAPI (swagger) definitions provide additional details for describing, producing and consuming KV Scheduler REST APIs.  
 
@@ -16,6 +22,21 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 </div>
 
 ---
+
+## Index
+
+* [GET /scheduler/dump](#dump)
+* [GET /scheduler/dump?view&key-prefix](#dump-viewkey-prefix)
+* [GET /scheduler/txn-history](#transaction-history)
+* [GET /scheduler/key-timeline](#key-timeline)
+* [GET /scheduler/graph](#graph)
+* [GET /scheduler/graph-snapshot](#graph-snapshot)
+* [GET /scheduler/status](#status)
+* [GET /scheduler/flag-stats](#flag-stats)
+* [POST /scheduler/downstream-resync](#downstream-resync)
+
+---
+
 
 ## Dump
 
