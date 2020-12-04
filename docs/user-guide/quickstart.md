@@ -150,7 +150,9 @@ In this section, you will learn:
 
 ### 5.1 etcdctl
 
-VPP agent entries in the etcd data store use a prefix of `/vnf-agent/`. List those key-value pairs using this command:
+VPP agent entries in the etcd data store use a prefix of `/vnf-agent/`. 
+
+Use this command to list key-value pairs with the  `/vnf-agent/` prefix:
 ```
 docker exec -it etcd etcdctl get --prefix /vnf-agent/
 ```
@@ -180,7 +182,8 @@ Sample output:
 {"last_change":"1563220274","last_update":"1563220475"}
 ```
 
-
+!!! Note
+    In this example, the etcdctl command runs in the _etcd_ container, not the _vpp-agent_ container. 
 
 Configure a loopback interface with an IP address by putting the key-value pair into the etcd data store:
 ```
@@ -469,7 +472,9 @@ netallocConfig: {}
 Refer to the [agentctl](agentctl.md) section of this user guide for more information and examples.
  
 !!! Note
-    Attempts to interact with the etcd data store using the `agentctl kvdb` command could encounter a `Failed to connect to Etcd` message. This is because the VPP agent that includes `agentctl` is started in one container, and etcd is started another. Agentctl uses a default address of `127.0.0.1` to reach the etcd server; The etcd server is started with a default address of `172.17.0.2:2379`. The solution is to pass the etcd server address to agentctl using the `e` or `--etcd-endpoints` flags like so: `agentctl -e 172.17.0.2:2379 kvdb <command>`.  
+    If you run `agentctl kvdb` and receive an `ERROR: connecting to KVDB failed` message, see [agentctl kvdb](agentctl.md#kvdb) on how to resolve. 
+
+---
 
 ## Troubleshooting
 
@@ -497,11 +502,11 @@ The cURL or postman command to access VPP CLI does not work (connection refused)
 
 ---
 
-Agentctl kvdb `Failed to connect to Etcd` problem.
+Agentctl kvdb `ERROR: connecting to KVDB failed` problem.
 
-- Agentctl uses `127.0.0.1:2379 as the etcd server address. But in the examples above, etcd is running in a separate container. To resolve:
+- Agentctl uses `127.0.0.1:2379 as the etcd server address. However, in the examples above, the etcd data store runs in a separate container. To resolve:
 
-Use this command obtain the IP address of the etcd server:
+Obtain the IP address of the etcd server:
 ```json
 docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' etcd
 ``` 
@@ -509,22 +514,20 @@ Output:
 ```json
 172.17.0.2
 ```
-Then pass this address to agentctl using the `-e` or `--etcd-endpoints` flag like so:
+Then pass this address to agentctl using the `-e` or `--etcd-endpoints`:
 ```json
-docker exec -it vpp-agent agentctl -e 172.17.0.2:2379 kvdb list
+docker exec -it vpp-agent agentctl -e 172.17.0.2:2379 kvdb <COMMAND>
 ```
 
 ---
 
-Restart VPP agent steps:
+Restart the VPP agent container:
 
     docker ps -f name=vpp-agent
     docker stop <XX> ; with <XX> equals first to 2 characters of container ID
     // restart with correct port numbers if needed
     docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
     
-<br/>
-
 
 [docker-install]: https://docs.docker.com/cs-engine/1.13/
 [dockerhub]: https://hub.docker.com/u/ligato

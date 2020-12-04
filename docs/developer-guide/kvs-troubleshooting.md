@@ -10,7 +10,7 @@ This section contains troubleshooting information for the KV Scheduler.
 
 You have a number of tools to help troubleshoot KV Scheduler.    
 
-* [Agentctl](../user-guide/agentctl.md)
+* [agentctl](../user-guide/agentctl.md)
 
 * [KV Scheduler](../api/api-kvs.md) and [VPP agent](../api/api-vpp-agent.md) REST APIs
 
@@ -157,7 +157,7 @@ Checklist:
 - [Run KV Scheduler in verification mode][crud-verification] to check for CRUD inconsistencies.
 <br>
 </br>
-- Resync updates of value descriptors do not consider attribute value equivalency inside [ValueComparator](kvdescriptor.md#descriptor-api). For example, you should configure NB-defined MTU 0 with SB default MTU. You avoid an `update` operation trigger to switch from 0 to 1500 or vice-versa.
+- Resync updates of value descriptors do not consider attribute value equivalency inside [ValueComparator](kvdescriptor.md#descriptor-api). For example, you should configure NB-defined MTU 0 with SB default MTU. You avoid an `update()` operation trigger to switch from 0 to 1500 or vice-versa.
 <br></br>  
 - If you implement `ValueComparator`as a separate method, and not as a function literal inside the descriptor structure, do not forget to plug it in via reference.
 
@@ -194,7 +194,7 @@ Checklist:
 
 - As an example, the KV Scheduler dumps VPP routes. The route descriptor reads interfaces metadata to translate `sw_if_index` from the routes dump into NB model logical interface names. Therefore, the interface dump must occur _before_ the routes dump.
 <br></br>  
-- `Dependencies()` descriptor method defines the ordering of `Create`, `Update` and `Delete` operations between values.
+- `Dependencies()` descriptor method defines the ordering of `create()`, `update()` and `delete()` operations between values.
 <br></br>
 - `RetrieveDependencies()` method determines the order of the `Retrieve()` operations between descriptors.<br></br>
 - If your `Retrieve()` method implementation reads another descriptor's metadata, you must mention this in your `RetrieveDependencies()` CRUD callback. 
@@ -441,9 +441,9 @@ func (d *InterfaceDescriptor) Create(key string, intf *interfaces.Interface) (me
 <br>
 </br>
  
-      - For example, [you might define a separate derived value for every IP address to assign to an interface][derived-if-img]. A separate descriptor implements assignments composed of `Create` to add IP, `Delete` to unassign an IP, and `Update` for another operation. Your interfaces descriptor should no longer:
+      - For example, [you might define a separate derived value for every IP address to assign to an interface][derived-if-img]. A separate descriptor implements assignments composed of `create()` to add IP, `delete()` to unassign an IP, and `update()` for another operation. Your interfaces descriptor should no longer:
          - consider IP addresses when comparing interfaces in `ValueComparator`
-         - Assign or unassign IP addresses in `Create`/`Update`/`Delete` operations.
+         - Assign or unassign IP addresses in `create()`/`update()`/`delete()` operations.
          - Consider IP addresses for interface dependencies.
 
 ---

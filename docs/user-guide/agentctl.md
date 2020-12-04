@@ -8,16 +8,16 @@ This section describes the Agentctl CLI tool.
 
 You can manage and interact with Ligato software components using the agentctl CLI command line tool. Agentctl supports the following functions:
 
-- Manage VPP agent configurations 
-- Inspect and generate models
-- List, get, put and delete operations against a KV data store
-- Check status
-- Manage services
-- Configure logs
-- Gather stats
-- Perform system dumps
-- Extract runtime reports for troubleshooting
-- Configure watch for events   
+- Manage VPP agent configurations. 
+- Inspect and generate models.
+- KV data store list, get, put and delete operations.
+- Check status.
+- Manage services.
+- Configure logs.
+- Gather stats.
+- Perform system dumps.
+- Extract runtime reports for troubleshooting.
+- Configure event watch.  
 
 ![agentctl](../img/tools/agentctl.png)
 
@@ -29,7 +29,7 @@ You can manage and interact with Ligato software components using the agentctl C
 
 The official docker images for the VPP agent include agentctl. The [Quickstart Guide](quickstart.md) covers the steps from initial image pull to agentctl command execution. 
 
-For convenience, use the following commands for image pull, start etcd, start VPP agent, and agentctl help. 
+To install and run the VPP agent that includes agentctl, use the following commands for image pull, start etcd, start VPP agent, and agentctl help. 
 
 Pull the VPP agent image from dockerhub:
 ```
@@ -43,18 +43,17 @@ Start VPP Agent:
 ```
 docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ``` 
-Agentctl help to get started:
+Agentctl help:
 ```
 docker exec -it vpp-agent agentctl --help
 ```
 ---
 
-
 ### Build from Source
 
-You can build a local image from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions in the [VPP Agent Setup](get-vpp-agent.md) section.
+You can build a local image from the [VPP agent repository][ligato-vpp-agent-repo]. Follow the [Local Image Build](get-vpp-agent.md#local-image-build) instructions in [VPP Agent Setup](get-vpp-agent.md).
 
-You can run agentctl commands after you start the vpp-agent. 
+You can run agentctl commands after you start the VPP agent. 
 
 ---
 
@@ -113,15 +112,18 @@ Run 'agentctl COMMAND --help' for more information on a command.
 
 Agentctl uses various NB access methods provided by the Ligato agents. You can modify the default values as needed.
 
-- Agent host instance running on `127.0.0.1` by default
-    * use option `-H`/`--host` or env var `AGENT_HOST` to change this
-    * this is used for both gRPC and REST access
-- gRPC running on port `9111` by default
-    * use option `--grpc-port` to change this
-- REST running on port `9191` by default
-    * use option `--http-port` to change this
-- etcd datastore used by the agent on `127.0.0.1:2379 `by default 
-    * use option `--etcd-endpoints` or env var `ETCD_ENDPOINTS` to change this
+- Agent host instance runs on `127.0.0.1` by default.
+    * Use option `-H`/`--host` or env var `AGENT_HOST` to update.
+    * Use this option for gRPC and REST access.
+<br></br>
+- gRPC runs on port `9111` by default.
+    * Use option `--grpc-port` to update.
+<br></br>
+- REST runs on port `9191` by default.
+    * use option `--http-port` to update.
+<br></br>
+- etcd server reachable on `127.0.0.1:2379 `by default. 
+    * use option `-e`, `--etcd-endpoints`, or the `ETCD_ENDPOINTS` environment variable to update. For more details, see [kvdb](#kvdb) below.
 
 ---
 
@@ -165,6 +167,8 @@ COMMANDS
 ---
 
 #### config get
+
+Get the VPP agent configuration.
 ```sh
 agentctl config get
 ```
@@ -190,6 +194,8 @@ netallocConfig: {}
 ---
 
 #### config history
+
+Show the configuration history for all transactions, or by seqNum.
 ```json
 agentctl config history
 ```
@@ -230,6 +236,8 @@ agentctl config history -f log 3
 ---
 
 #### config [resync](../developer-guide/kvscheduler.md#resync)
+
+Peform downstream resync.
 ```
 agentctl config resync
 ```
@@ -241,10 +249,10 @@ Sample output:
   "SeqNum": 2,
   "TxnType": "NBTransaction",
   "ResyncType": "DownstreamResync"
-  // one or more executed operations will follow,
+  // one or more planned and executed operations follow,
 }
 ```
-For a detailed example of the resync output, check out the [downstream resync API](../api/api-kvs.md#downstream-resync).
+For a detailed example of resync output, see [downstream resync API](../api/api-kvs.md#downstream-resync).
 
 ---
 
@@ -328,7 +336,7 @@ dump:
 
 #### config update
 
-Use this command to update a VPP agent configuration. You must define your configuration inside a file. 
+Update a VPP agent configuration. You must define the configuration inside a file. 
 
 ```
 Update configuration in agent from file
@@ -338,7 +346,7 @@ OPTIONS:
   -t, --timeout duration   Timeout for sending updated data (default 5m0s)
 ```
 
-Config example contained in the update1.yaml file:
+Update1.yaml file containing configuration:
 ```json
 # update1.yaml
 vppConfig:
@@ -369,7 +377,7 @@ linuxConfig:
       peer_if_name: "veth1"
 ```
 
-Config update using the update1.yaml file with a timeout duration of 6m0s:
+Update using the update1.yaml file with a timeout duration of 6m0s:
 ```json
 agentctl config update --timeout=6m0s update1.yaml
 ```
@@ -385,7 +393,7 @@ agentctl config update --replace ./updateNew.yaml
 
 #### config delete
 
-Use this command to delete a VPP agent configuration. You must define your configuration inside a file.
+Delete a VPP agent configuration. You must define your configuration inside a file.
 
 ```
 Usage:	agentctl config delete
@@ -401,16 +409,19 @@ Config delete using the update1.yaml file:
 ```
 agentctl config delete update1.yaml
 ```
-Config delete using update1.yaml file with --waitdone flag:
+Config delete using the update1.yaml file with --waitdone flag:
 ```
 agentctl config delete --waitdone update1.yaml
 ```
+
+!!! note  
+    The `--waitdone` flag tells the configurator to block an update or delete request until all transaction keys are non-pending.<br></br>To learn more about this feature, see [configurator proto](https://github.com/ligato/vpp-agent/blob/effbcadbb8d02cf89caaf8bcbfd6d134eae9361d/proto/ligato/configurator/configurator.proto#L26), [issue #1732](https://github.com/ligato/vpp-agent/issues/1732), [PR #1734](https://github.com/ligato/vpp-agent/pull/1734), and [PR #1745](https://github.com/ligato/vpp-agent/pull/1756).  
 
 ---
 
 #### config watch
 
-Use this command to watch events.
+Watch events.
 
 ```
 Usage:	agentctl config watch
@@ -425,12 +436,12 @@ OPTIONS:
 
 ```
 
-Watch for events from VPP interface name of `loop1`:
+Watch events from VPP interface name of `loop1`:
 ```
 agentctl config watch --filter='{"vpp_notification":{"interface":{"state":{"name":"loop1"}}}}'
 ```
 
-Watch for VPP interface `UPDOWN` events:
+Watch VPP interface `UPDOWN` events:
 ```
 agentctl config watch --filter='{"vpp_notification":{"interface":{"type":"UPDOWN"}}}'
 ``` 
@@ -486,7 +497,7 @@ Value: interface: {
 
 ### Dump
 
-Use this command to dump the running state from the KV Scheduler.
+Use this command to dump the KV Scheduler running state.
 
 ```
 Usage:	agentctl dump MODEL
@@ -801,11 +812,9 @@ Sample output:
 
 ### Report
 
-Use this command to generate a report on the runtime system. The report is packaged as a zipfile consisting of multiple subreport files. 
+Use this command to generate runtime system reports. The report is packaged as a zipfile containing multiple subreport files. 
 
-Most of the subreport files contain or replicate the output of individual CLI commands or REST API calls. In addition, the files contain information about a problem source.
-
-You do not need to separately run each command or API call. This will save you time and effort, and reduce problem resolution times.
+Most of the subreport files contain output of individual CLI commands or REST API calls. In addition, the files contain error and problem source information. You will save time and effort, and reduce problem resolution time.
 
 ```
 Usage:	agentctl report
@@ -861,15 +870,16 @@ Sample output after unpacking the report zipfile:
 -rw------- 1 root root    2958 Nov 17 01:07  vpp-statistics-interfaces.txt
 ```
 
-The `_report.txt` describes each subreport file. Errors appear in three places:
+The `_report.txt` describes each subreport file. For user convenience, errors appear in three places:
 
 * `_failed-reports.txt` file lists all errors from all subreports.
-* console while running agentctl report.
-* Subreport file in the location where the retrieved information should appear.   
+<br></br>
+* Console while running `agentctl report`.
+<br></br>
+* Subreport file contains location where retrieved information should appear when running.   
 
-Example of an error contained in the `_failed-reports.txt` file:
-```
-######################################################################
+Example error contained in the `_failed-reports.txt` file:
+```json
 Retrieving agent kvscheduler NB configuration... failed due to:
 dumping kvscheduler data failed due to:
 Failed to get data for NB view and key prefix config/vpp/wg/v1/peer/ due to: Error response from daemon: [500] {
@@ -938,7 +948,7 @@ PLUGINS
 
 ### Values
 
-Use this command to retrieve the key-value pairs and derived keys from the KV scheduler.
+Use this command to retrieve the key-value pairs and derived keys from the KV Scheduler.
 
 ```
 Usage:	agentctl values [MODEL]
@@ -985,7 +995,7 @@ vpp.vrf-table          id/0/protocol/IPV6                                  obtai
 
 ### KVDB
 
-Use this command to perform get, put, del or list operations against the KV data store. This looks and functions much like `etcdctl`. It supports short form [keys][keys], but you must use the `--service-label` flag in the specific command.
+Use this command to perform KV data store get, put, del, or list operations. This looks and functions much like `etcdctl`. It supports short form [keys][keys], but you must use the `--service-label` flag in the specific command operation.
 
 ```
 Usage:	agentctl kvdb [options] COMMAND
@@ -1002,7 +1012,7 @@ COMMANDS
   put         Put key-value entry
 ```
 !!! Note
-    Attempts to interact with the etcd data store using the `agentctl kvdb` command could encounter a `Failed to connect to Etcd` message. This is because the VPP agent that includes `agentctl` is started in one container, and etcd is started another. Agentctl uses a default address of `127.0.0.1` to reach the etcd server; The etcd server is started with a default address of `172.17.0.2:2379`. The solution is to pass the etcd server address to agentctl using the `e` or `--etcd-endpoints` flags like so: `agentctl -e 172.17.0.2:2379 kvdb <command>`.
+    You might receive an `ERROR: connecting to KVDB failed: connecting to Etcd failed` message when using `agentctl kvdb` commands. This is because the VPP agent and etcd server start in separate containers. Agentctl uses the `127.0.0.1:2379` default address to reach the etcd server. The etcd server starts with a default `172.17.0.2:2379` address.<br></br>To reach the etcd server container from the agentctl container, pass the etcd server address to agentctl using the `-e` or `--etcd-endpoints` flags.<br></br>Example:  `agentctl -e 172.17.0.2:2379 kvdb list`.
 
 ---
 
@@ -1022,7 +1032,7 @@ Depending on the number of entries in your KV data store, you could find the ret
 
 ---
 
-For example, use this command to list only the configured interfaces:
+**list** only the configured interfaces:
 ```json
 agentctl kvdb list /vnf-agent/vpp1/config/vpp/v2/interfaces/ 
 ``` 
@@ -1036,14 +1046,14 @@ Sample output:
 
 ---
 
-kvdb put using a `loop1` loopback interface:
+**put** a `loop1` loopback interface:
 ```json
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
 
 ---
 
-kvdb get `loop1` loopback interface using the long form key:
+**get** `loop1` loopback interface using the long form key:
 ```
 agentctl kvdb get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
@@ -1053,12 +1063,12 @@ Sample output:
 ```
 ---
 
-kvdb delete `loop1` loopback interface using the long form key:
+**delete** `loop1` loopback interface using the long form key:
 ```
 agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 
-Attempting to `get` the deleted entry results in a `key not found` message. 
+You will generate a `key not found` message if you attempt to **get** a deleted entry. 
 
 
 
@@ -1066,7 +1076,7 @@ Attempting to `get` the deleted entry results in a `key not found` message.
 
 ### VPP
 
-Use this command to manage the connected VPP instance. The CLI option saves you time by avoiding the need to "jump to" the actual VPP command line interface. 
+Use this command to manage the connected VPP instance. You will save time by avoiding the need to "jump to" the VPP CLI. 
 
 ```
 Usage:	agentctl vpp [options] COMMAND
@@ -1077,7 +1087,7 @@ COMMANDS
   cli         Execute VPP CLI command
   info        Retrieve info about VPP
 ```
-Example using the `CLI` option to run the VPP `show version` command:
+Use the `cli` option to run the VPP `show version` command:
 ```
 agentctl vpp cli show version
 ```
@@ -1186,14 +1196,14 @@ OPTIONS:
 
 ---
 
-Example using short form keys with the microservice label. The `myconfig` file contains the following:
+Use short form keys with the microservice label. The `myconfig` file contains the following:
 ```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
 config/vpp/v2/interfaces/loop2 {"name":"loop2","type":"MEMIF"}
 config/vpp/l2/v2/bridge-domain/bd1 {"name":"bd1","interfaces":[{"name":"loop1"},{"name":"loop2"}]}
 ```
 
-Import the `myconfig` file contents with the `agent1` service-label:
+Import the `myconfig` file contents using the `agent1` service-label:
 ```
 agentctl --service-label=agent1 import ./myconfig
 ```
@@ -1210,7 +1220,7 @@ commiting tx with 3 ops
 
 ### Generate
 
-Use this command to generate a configuration sample for a model.
+Use this command to generate a model configuration sample.
 
 
 ```
@@ -1271,7 +1281,7 @@ List current loggers and their log levels:
 agentctl log list
 ```
 
-Example of setting the KV Scheduler log level to `debug`:
+Set KV Scheduler log level to `debug`:
 ```
 agentctl log set kvscheduler debug
 ```
@@ -1279,6 +1289,8 @@ Output:
 ```
 logger kvscheduler has been set to level debug
 ```
+
+For more details on logging, see [how to setup logging](../developer-guide/kvs-troubleshooting.md#how-to-set-up-logging).
 
 ---
 
@@ -1323,12 +1335,15 @@ service ligato.generic.ManagerService (ligato/generic/manager.proto)
 service ligato.generic.MetaService (ligato/generic/meta.proto)
  - rpc KnownModels (KnownModelsRequest) returns (KnownModelsResponse)
 ```
+
 ---
 
 Call service and method:
 ```
 agentctl service call SERVICE METHOD
 ```
+
+---
 
 ### Metrics
 

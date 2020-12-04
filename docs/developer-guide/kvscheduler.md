@@ -4,6 +4,8 @@
 
 This section describes the KV Scheduler.
 
+---
+
 Package references: [kvscheduler](https://godoc.org/github.com/ligato/vpp-agent/plugins/kvscheduler), [api](https://godoc.org/github.com/ligato/vpp-agent/plugins/kvscheduler/api), [graph](https://godoc.org/github.com/ligato/vpp-agent/plugins/kvscheduler/internal/graph) 
 
 ---
@@ -33,13 +35,13 @@ Re-synchronization (resync) occurring between the desired northbound (NB) config
 ---
 
 !!! Terminology
-    `Northbound (NB)` describes the desired or intended configuration state. `Southbound (SB)` describes the actual runtime configuration state. `Resync` is also referred to as state reconciliation. `CRUD` stands for create, read, update and delete. KV Descriptors are referred to as `descriptors`.
+    `Northbound (NB)` describes the desired or intended configuration state originating from NB entities such as a KV data store or gRPC.<br></br>`Southbound (SB)` describes the actual runtime configuration state running the data plane. `Resync` stands for state reconciliation. `CRUD` means create, read, update and delete. KV Descriptors are referred to as `descriptors`.
 
 ---
 
 ### Basic Concepts
 
-Internally, the KV Scheduler builds a graph to model system state. The vertices represent configuration items; the edges represent relationships between the configuration items. The KV Scheduler walks the tree to mark dependencies, and compute the sequence of programming actions to perform. In addition, it builds transaction plans, refreshes state, and performs resync. 
+Internally, the KV Scheduler builds a graph to model system state. The vertices represent configuration items; the edges represent the relationships between the configuration items. The KV Scheduler walks the tree to mark dependencies, and compute the sequence of programming actions to perform. In addition, it builds transaction plans, refreshes state, and performs resync. 
 
 The KV Scheduler generates a transaction plan that drives CRUD operations to the VPP or Linux agents in the SB direction. It will cache configuration items until outstanding dependencies are resolved. It coordinates and performs partial or full state synchronization for NB and SB. 
 
@@ -48,18 +50,19 @@ To abstract away from the details of specific configuration items, graph vertice
 
 ![kvs-system](../img/user-guide/2components-ligato-framework-arch-KVS2.svg)
 
-</br>You can retrieve information for the KV Scheduler using [agentctl][agentctl] and [REST APIs][kvs-rest-api].
+</br>You can retrieve information from the KV Scheduler using [agentctl][agentctl] and [REST APIs][kvs-rest-api].
 
-Note that you can use the KV Scheduler system for any application containing an object with other dependent objects. 
+!!! Note
+    You can use the KV Scheduler system for any application containing an object with other dependent objects. 
 
 
 ---
 
 ### Mediator Pattern
 
-KV Descriptors employ a [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern), where plugins are decoupled and no longer communicate directly with each other. Instead, any interactions between plugins occur through the KV Scheduler mediator. 
+KV Descriptors employ a [mediator pattern](https://en.wikipedia.org/wiki/Mediator_pattern), where plugins are decoupled, and do not directly communicate with each other. Instead, any interactions between plugins occur through the KV Scheduler mediator. 
 
-Plugins provide CRUD callbacks, and describe their dependencies on other plugins through one or more KV Descriptors. The KV Scheduler can then plan operations without knowing what the graph vertices stand for in the system. 
+Plugins provide CRUD callbacks, and describe their dependencies on other plugins through one or more KV Descriptors. The KV Scheduler plans operations without knowing what the graph vertices stand for in the system. 
 
 Furthermore, the number and variety of configuration items can grow without altering the transaction processing engine, or increasing the complexity of the components in your application. You just need to implement and register new KV Descriptors.
 
@@ -69,15 +72,15 @@ Furthermore, the number and variety of configuration items can grow without alte
 
 The KV Scheduler's graph-based representation uses the following terminology: 
 
-* **Model** describes a single configuration item type such as an interface, route, or bridge domain. For more details, see the  [User Guide model section](../user-guide/concepts.md#what-is-a-model). To look over an implementation, see the [bridge domain model][bd-model-example].
+* **Model** describes a single configuration item type such as an interface, route, or bridge domain. For more details, see  [model](../user-guide/concepts.md#what-is-a-model). To look over an implementation, see the [bridge domain model][bd-model-example].
 </br>
 </br>
   
-* **Value** (`proto.Message`) is a runtime instance of a given model. For more details, see the [proto.Message section ](../user-guide/concepts.md#protomessage) of the User Guide.
+* **Value** (`proto.Message`) is a runtime instance of a given model. For more details, see [proto.Message](../user-guide/concepts.md#protomessage).
 </br>
 </br>
 
-* **Key** (`string`) identifies a specific indentifier built from the model specification and value attributes. For more information, see the [User Guide keys section](../user-guide/concepts.md#keys).
+* **Key** (`string`) identifies a specific indentifier built from the model specification and value attributes. For more information, see [keys](../user-guide/concepts.md#keys).
 </br>
 </br>
 
@@ -93,7 +96,7 @@ The KV Scheduler's graph-based representation uses the following terminology:
 </br>
 </br>
 
-* **Metadata** (`interface{}`) consists of additional runtime information of an undefined type, and assigned to a value. Metadata updates follow a CRUD operation or agent restart. As an example, the KV Scheduler graph contains [sw_if_index][vpp-iface-idx] metadata for each interface. 
+* **Metadata** (`interface{}`) consists of additional runtime information of an undefined type, and assigned to a value. Metadata updates follow a CRUD operation or agent restart. For example, the KV Scheduler graph contains [sw_if_index][vpp-iface-idx] metadata for each interface. 
 </br>
 </br>
 
@@ -105,13 +108,13 @@ The KV Scheduler's graph-based representation uses the following terminology:
 </br>
 </br>
 
-* **Key-value pairs** specify a key and associated value. CRUD operations such as `CREATE` manipulate key-value pairs. Every key-value pair must have at most one KV Descriptor.   
+* **Key-value pairs** specify a key and associated value. CRUD operations such as `CREATE()` manipulate key-value pairs. Every key-value pair must have, at most, one KV Descriptor.   
 </br>
-* **[Dependency](#dependencies)** represents a dependency value. It references another key-value pair that must be created and exist before the dependent value is created. </br></br>If a dependency is not satisfied, the dependent value remains cached in the `PENDING` state. Multiple dependencies can be defined for a dependent value. All dependencies must be satisfied before creating the dependent value.
+* **[Dependency](#dependencies)** represents a dependency value. It references another key-value pair that must be created and exist before the dependent value is created. </br></br>If a dependency is not satisfied, the dependent value remains cached in the `PENDING` state. A dependent value can have multiple dependencies. All dependencies must be satisfied before creating the dependent value.
 </br>
 </br>
 
-* **Derived value** is single field associated with an original value or its property. Custom CRUD operations manipulate the derived value, possibly using its own dependencies. A derived value can serve as a target for dependencies of other key-value pairs. </br></br>For example, every [interface assigned to a bridge domain][bd-interface] is treated as a [separate key-value pair][bd-derived-vals], dependent on the [existing target interface][bd-iface-deps]. Additionally, it does not block the remaining bridge domain programming. See the [bridge domain control-flow][bd-cfd] demonstrating the order of operations required to create a bridge domain.
+* **Derived value** is single field associated with an original value or its property. Custom CRUD operations manipulate the derived value, possibly using its own dependencies. A derived value can serve as a target for dependencies of other key-value pairs. </br></br>For example, every [interface assigned to a bridge domain][bd-interface] is treated as a [separate key-value pair][bd-derived-vals], dependent on the [existing target interface][bd-iface-deps]. Additionally, it does not block the remaining bridge domain programming.<br></br>See the [bridge domain control-flow][bd-cfd] demonstrating the order of operations required to create a bridge domain.
 </br>
 </br>
 
@@ -119,21 +122,15 @@ The KV Scheduler's graph-based representation uses the following terminology:
 </br>
 </br>
   
-* **Graph Refresh** updates the graph content to reflect the real SB state. This process calls the `Retrieve()` function of every descriptor supporting this operation. It adds or updates graph vertices with the retrieved values. Refresh executes just prior to [full or downstream resync](#resync), or after a CRUD operation failure impacts any vertices.  
-</br>
-</br>
+* **Graph Refresh** updates the graph content to reflect the real SB state. This process calls the `Retrieve()` function of every descriptor supporting this operation. It adds or updates graph vertices with the retrieved values. Refresh executes just prior to [full or downstream resync](#resync), or after a CRUD operation failure impacts any vertices.
+<br></br>
 
-* **KV Descriptor** implements CRUD operations and defines derived values and dependencies for a single value type. </br></br>To learn more, read how to [implement your own KVDescriptor](kvdescriptor.md). For an in-depth discussion, see the [KV Descriptors section](kvdescriptor.md).
+* **KV Descriptor** implements CRUD operations and defines derived values and dependencies for a single value type. </br></br>To learn more, read how to [implement your own KV Descriptor](kvdescriptor.md). For an in-depth discussion, see [KV Descriptors](kvdescriptor.md).
 
-To retrieve KV Scheduler graph details, use the [graph snapshot API](../api/api-kvs.md#graph-snapshot), or the [agentctl dump](../user-guide/agentctl.md#dump) command. 
+To retrieve KV Scheduler graph details, use [GET /scheduler/graph-snapshot](../api/api-kvs.md#graph-snapshot), or [agentctl dump](../user-guide/agentctl.md#dump). 
 
 ---
 
-
-- check can be and ed
-- add active voice examples or comments
-- update text from concepts section
-- look over rest pointer in kvs troubleshooting
 
 ### Dependencies
 
@@ -178,13 +175,13 @@ The diagram below illustrates the interactions between the KV Scheduler and the 
 
 ![KVScheduler diagram](../img/developer-guide/kvscheduler.svg)
 
-If you wish to re-create the transactions shown in the graph, use a combination of agentctl put, dump and config history commands. The [Quick Start](../user-guide/quickstart.md), [Plugin](../plugins/plugin-overview.md) and [Agentctl][agentctl] sections of this documentation provide examples for configuring interfaces and bridge domains. 
+If you wish to re-create the transactions shown in the graph, use a combination of agentctl put, dump and config history. [Quick Start](../user-guide/quickstart.md), [Plugin](../plugins/plugin-overview.md) and [agentctl][agentctl] provide examples for configuring interfaces and bridge domains. 
 
 ---
 
 ### Resync
 
-You don't have to implement plugin-specific resync functions. By providing a KV Descriptor with CRUD operation callbacks to the KV Scheduler, your plugin "teaches" the KV Scheduler how to handle the plugin's configuration items. The KV Scheduler can then determine and execute the set of operations that perform a complete resynchronization.
+You don't have to implement plugin-specific resync functions. By providing a KV Descriptor with CRUD operation callbacks to the KV Scheduler, your plugin "teaches" the KV Scheduler how to handle the plugin's configuration items. The KV Scheduler computes and executes the operations to perform a complete resynchronization.
 
 ---
 
@@ -192,23 +189,28 @@ The KV Scheduler further enhances the concept of state reconciliation by definin
 
 - **Full resync:**
     - Re-reads intended configuration from NB.
-    - Refreshes the SB view using one or more `Retrieve` operations.
-    - Resolves inconsistencies using `Create`\\`Delete`\\`Update` operations.
+<br></br>
+    - Refreshes the SB view using one or more `Retrieve()` operations.
+<br></br>
+    - Resolves inconsistencies using `Create()`\\`Delete()`\\`Update()` operations.
 </br>
 </br>
 
 - **Upstream resync:**
-    - Partial resync, similar to the full resync.
+    - Partial resync, similar to full resync.
+<br></br>
     - _DOES NOT_ refresh SB view, and assumes the SB view is up-to-date and/or not required in the resync. Upstream resync excludes the SB refresh because it is easier to re-calculate the intended state, rather than determine the minimal difference.
 </br>
 </br>
 
 - **Downstream resync:** 
-     - Partial resync, similar to the full resync
-     - _DOES NOT_ re-read intended configuration from NB, and assumes it is up-to-date  
+     - Partial resync, similar to full resync.
+<br></br>
+     - _DOES NOT_ re-read intended configuration from NB, and assumes it is up-to-date.
+<br></br>   
      -  Used periodically to resync, even without interacting with the NB.
 
-You can initiate a downstream resync using the [agentctl config resync](../user-guide/agentctl.md#config) command, or the [KV Scheduler resync REST API](../api/api-kvs.md#downstream-resync) 
+You can initiate a downstream resync using [agentctl](../user-guide/agentctl.md#config), or [POST /scheduler/downstream-resync](../api/api-kvs.md#downstream-resync) 
 
 ---
 
@@ -226,19 +228,24 @@ The KV Scheduler splits [transaction processing](https://github.com/ligato/vpp-a
 
 The primary functions of the simulation and execution stages consist of the following:
 
-- **Simulation:** 
+- **Simulation:**
+<br></br> 
     - generates the transaction plan consisting of a set of _planned operations_.
+<br></br>
     - _DOES NOT_ perform CRUD callbacks to descriptors.
+<br></br>
     - Assumes no failures. 
 </br>
 </br>
 - **Execution:**
-    - Executes operations sorted in the correct order. 
-    - If any operation fails, it reverts to applied changes, unless the `BestEffort` mode is enabled. In the best effort case, the KV Scheduler attempts to apply the maximum possible set of required changes. `BestEffort` is the default for resync.
+<br></br>
+    - Executes operations sorted in the correct order.
+<br></br> 
+    - If any operation fails, it reverts to applied changes, unless you enable `BestEffort` mode. In the best effort case, the KV Scheduler attempts to apply the maximum possible set of required changes.<br></br>`BestEffort` is the default for resync.
 
-Following simulation, The KV Scheduler generates transaction metadata, and the transaction plan. This process happens before execution to inform you of pending operations. Note this process occurs even if any of the operations cause the agent to crash. 
+Following simulation, the KV Scheduler generates transaction metadata, and the transaction plan. This process happens before execution to inform you of pending operations. Note this process occurs even if any of the operations cause the agent to crash. 
 
-After the transaction has executed, the set of completed operations and any errors prints to a log. You can view the transaction logs using the [agentctl config history](../user-guide/agentctl.md#config) command, or the [KV Scheduler transaction history REST API](../api/api-kvs.md#transaction-history).
+After the transaction has executed, the set of completed operations and any errors prints to a log. You can view the transaction logs using [agentctl](../user-guide/agentctl.md#config), or [GET /scheduler/txn-history](../api/api-kvs.md#transaction-history).
 
 The example below shows an abbreviated transaction log. Observe that the planned operations match the executed operations. This indicates no errors. 
 ```
@@ -285,18 +292,16 @@ x-------------------------------------------------------------------------------
 
 A separate [sub-package "api"][kvscheduler-api-dir] of the [KV Scheduler plugin][plugin] defines the KV Scheduler API. 
 
-Multiple files describe interfaces that constitute the KV Scheduler API. The table below contains the file name and brief description. 
-
-For more details on the specific files, click on the file name. 
+Multiple files describe interfaces that constitute the KV Scheduler API. The table below contains the file name and brief description. For more details on the specific files, click on the file name. 
 
 | File  |  Description |
 |---|---|
 |[errors.go][errors-go]|defines errors returned from the KV Scheduler. `InvalidValueError` error wrapper allows plugins to specify the specific reason for a validation error.|
-|[kv_scheduler_api.go][kv-scheduler-api]  |NB uses for transaction commit, or read and watch for value status updates; SB uses to push notifications.|
+|[kv_scheduler_api.go][kv-scheduler-api]  |used by NB for transaction commit, or read and watch for value status updates; used by SB push notifications.|
 |[kv_descriptor_api.go][kv-descriptor-api] | defines the KV Descriptor interface. |
 |[txn_options.go][txn-options-go] |Set of available options for transactions.  |
 |[txn_record.go][txn-record-go] | Type definition for storing processed transaction records.  |
-|[value_status.proto][value-status-proto]|Operational value status proto. [API][value-states-api] can read the current status of one or more values, and watch for updates through a channel|
+|[value_status.proto][value-status-proto]|Operational value status proto. [API][value-states-api] reads the current status of one or more values, and watches for updates through a channel.|
 |[value_status.pb.go][value-status-pb]| Go code generated from value status proto.  |
 |[value_status.go][value-status] | extends `value_status.pb.go` to implement proper (un)marshalling for proto.Messages. |
  
@@ -305,17 +310,13 @@ For more details on the specific files, click on the file name.
 
 ### REST API
 
-You can retrieve the KV Scheduler system state through a set of REST APIs. 
-
-For more information, see the [KV Scheduler REST API Section][kv-scheduler-rest-api].
+You can retrieve the KV Scheduler runtime state through REST APIs. For more information, see [KV Scheduler REST API][kv-scheduler-rest-api].
 
 ---
 
 ### Agentctl Dump
 
-You can use the agentctl dump command to dump the running state of the KV Scheduler. 
-
-For more information, see the [agentctl dump](../user-guide/agentctl.md#dump) command section of the User Guide. 
+You can use the agentctl to dump the KV Scheduler runtime state. For more information, see [agentctl dump](../user-guide/agentctl.md#dump). 
 
 
 

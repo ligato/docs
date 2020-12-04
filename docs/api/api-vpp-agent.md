@@ -29,7 +29,7 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 * [GET /dump/vpp/v2/interfaces/loopback](#vpp-interfacesloopback)
 * [GET /dump/vpp/v2/interfaces/ethernet](#vpp-interfacesethernet)
 * [GET /dump/vpp/v2/interfaces/vxlan](#vpp-interfacesvxlan)
-* [GET /dump/vpp/v2/interfaces](#vpp-interfacestap)
+* [GET /dump/vpp/v2/interfaces/tap](#vpp-interfacestap)
 * [GET /dump/vpp/v2/interfaces/memif](#vpp-interfacesmemif)
 * [GET /dump/vpp/v2/interfaces/afpacket](#vpp-interfacesafpacket)
 
@@ -124,7 +124,7 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 
 ## RESTAPI Plugin
 
-Description: Returns an html-formatted index of REST APIs defined in the restapi plugin [urls.go](https://github.com/ligato/vpp-agent/blob/master/plugins/restapi/resturl/urls.go). This file contains all VPP and Linux APIs documented above. 
+Description: Returns an html-formatted index of REST APIs defined in the restapi plugin [urls.go](https://github.com/ligato/vpp-agent/blob/master/plugins/restapi/resturl/urls.go). This file contains the VPP and Linux APIs documented above. 
 
 ```
 curl -X GET http://localhost:9191/

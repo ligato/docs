@@ -32,7 +32,7 @@ Supported architectures:
 * ARM64 (AArch64)
 
 !!! Note
-    Details and procedures for working with ARM64 images are found [here](arm64.md). The steps covered in this section are based on the AMD64 x86_64 images.
+    For more details and for working with ARM64, see [arm64](arm64.md). The steps covered in this section use the AMD64 x86_64 images.
 
 ** Included in the pre-built production image:**
 
@@ -192,7 +192,7 @@ List the plugin .conf files and optional ENV variable configuration options:
 vpp-agent -h
 ```
 
-Details on .conf files can be found [here][config-files].
+For more details, see [conf files][config-files].
 
 ---
 
@@ -226,7 +226,7 @@ Start the VPP agent with the config flag. This uses the default path to the etcd
 vpp-agent --etcd-config=/opt/vpp-agent/dev/etcd.conf
 ```
 
-More information on the etcd plugin configuration options can be found [here](config-files.md#etcd).
+More information on the etcd plugin configuration options, see [etcd conf files](config-files.md#etcd).
 
 **Example with Kafka (optional):**
 
@@ -250,14 +250,14 @@ Start the VPP agent with the `--kafka-config` flag using the default path to the
 vpp-agent --kafka-config=/opt/vpp-agent/dev/kafka.conf
 ```
 
-More information on the Kafka plugin configuration options can be found [here](config-files.md#kafka).
+For more information on the Kafka plugin configuration options, see [kafka conf file](config-files.md#kafka).
 
 ---
 
 ### Executables
 
 
-The `/cmd` package groups executables that can be built from sources in the VPP agent repository:
+The `/cmd` package groups executables built from sources in the VPP agent repository:
 
 **VPP agent** - the default off-the-shelf VPP agent
   executable with no app or extension plugins. It is bundled with
