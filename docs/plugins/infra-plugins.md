@@ -153,7 +153,7 @@ Set log level for a registered logger:
 curl -X PUT http://<host>:<port>/log/<logger-name>/<log-level>
 ```
  
-where `<log-level>` is one of the following: `debug`,`info`,`warning`,`error`,`fatal`, and `panic`.
+where `<log-level>` consists of one of the following: `debug`,`info`,`warning`,`error`,`fatal`, and `panic`.
    
 **Conf File**
 

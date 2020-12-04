@@ -379,7 +379,7 @@ func (p *HelloWorld) SetPlace(place string) {
 
 ---
 
-Now, the question to ask is, when should the HellowUniverse plugin call this method? It cannot be called during the `Init()` since the `HelloWorld` does not exist at that point. You must use the `AfterInit()` method. 
+Now, the question to ask is, when should the HelloUniverse plugin call this method? It cannot be called during the `Init()` since the `HelloWorld` does not exist at that point. You must use the `AfterInit()` method. 
 
 The calling sequence will be:
 

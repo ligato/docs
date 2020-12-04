@@ -1,11 +1,17 @@
 # VPP Agent
 
-This section describes the REST APIs exposed by the VPP agent REST plugin. The URLs and sample responses (in some cases partial) were generated using the environment described in the [Quickstart Guide][quickstart-guide].
+---
 
-!!! Note
-    For VPP and Linux plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. Note also that `9191` is the default port number for the REST API, however it can be changed using one of the [REST plugin configuration options][rest-plugin-config-options]. In addition, the [Agentctl][agentctl] CLI tool is another option for retrieving VPP data from the system.
+This section describes the REST APIs exposed by the VPP agent. 
 
 ---
+
+!!! Note
+    REST supports the retrieval of the existing configuration for VPP and Linux plugins. You cannot use REST APIs to add, modify, or delete configuration data. Use [agentctl](../user-guide/agentctl.md) to perform those tasks.<br></br>Note that Ligato REST APIs use `9191` as the default port number. You can change this value using one of the [REST plugin configuration options][rest-plugin-config-options]. 
+
+---
+
+##OpenAPI
 
 OpenAPI (swagger) definitions provide additional details for describing, producing and consuming VPP agent REST APIs.  
 
@@ -17,7 +23,108 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 
 ## Index
 
-Description: Returns an html-formatted index of supported REST APIs. 
+**VPP Interfaces**
+
+* [GET /dump/vpp/v2/interfaces](#vpp-interfaces)
+* [GET /dump/vpp/v2/interfaces/loopback](#vpp-interfacesloopback)
+* [GET /dump/vpp/v2/interfaces/ethernet](#vpp-interfacesethernet)
+* [GET /dump/vpp/v2/interfaces/vxlan](#vpp-interfacesvxlan)
+* [GET /dump/vpp/v2/interfaces/tap](#vpp-interfacestap)
+* [GET /dump/vpp/v2/interfaces/memif](#vpp-interfacesmemif)
+* [GET /dump/vpp/v2/interfaces/afpacket](#vpp-interfacesafpacket)
+
+---
+
+**ACL/ABF**
+
+* [GET /dump/vpp/v2/acl/ip](#vpp-acl-ip)
+* [GET /dump/vpp/v2/acl/macip](#vpp-acl-macip)
+* [GET /dump/vpp/v2/abf](#vpp-abf)
+
+---
+
+**L2**
+
+* [GET /dump/vpp/v2/bd](#vpp-l2-bridge-domain)
+* [GET /dump/vpp/v2/fib](#vpp-l2-fib)
+* [GET /dump/vpp/v2/xc](#vpp-l2-x-connect)
+
+---
+
+**L3**
+
+* [GET /dump/vpp/v2/routes](#vpp-l3-routes)
+* [GET /dump/vpp/v2/arps](#vpp-l3-arps)
+* [GET /dump/vpp/v2/ipscanneigh](#vpp-l3-ip-scan-neighbor)
+* [GET /dump/vpp/v2/proxyarp/interfaces](#vpp-l3-proxy-arp-interfaces)
+* [GET /dump/vpp/v2/proxyarp/ranges](#vpp-l3-proxy-arp-ranges)
+* [GET /dump/vpp/v2/vrrps](#vpp-l3-vrrp)
+
+---
+
+**NAT**
+
+* [GET /dump/vpp/v2/nat/global](#vpp-nat-global)
+* [GET /dump/vpp/v2/nat/dnat](#vpp-nat-dnat)
+* [GET /dump/vpp/v2/nat/interfaces](#vpp-nat-interfaces)
+* [GET /dump/vpp/v2/nat/pools](#vpp-nat-pools)
+
+---
+
+**VPP IPsec**
+
+* [GET /dump/vpp/v2/ipsec/spds](#vpp-ipsec-spd)
+* [GET /dump/vpp/v2/ipsec/sas](#vpp-ipsec-sa)
+* [GET /dump/vpp/v2/ipsec/sps](#vpp-ipsec-sp)
+
+---
+
+**VPP Punt Socket**
+
+* [GET /dump/vpp/v2/punt/sockets](#vpp-punt-socket)
+
+---
+
+**VPP Telemetry**
+
+* [GET /dump/vpp/telemetry](#vpp-telemetry)
+* [GET /dump/vpp/telemetry/memory](#vpp-telemetrymemory)
+* [GET /dump/vpp/telemetry/runtime](#vpp-telemetryruntime)
+* [GET /dump/vpp/telemetry/nodecount](#vpp-telemetrynodecount)
+
+---
+
+**VPP Agent Version**
+
+* [GET /dump/info/version](#version)
+
+---
+
+**VPP CLI**
+
+* [GET /dump/command](#vpp-cli-command)
+
+---
+
+**Linux**
+
+* [GET /dump/linux/v2/interfaces](#linux-interfaces)
+* [GET /dump/linux/v2/arps](#linux-l3-arps)
+* [GET /dump/linux/v2/routes](#linux-l3-routes)
+* [GET /dump/stats/linux/interfaces](#linux-interface-stats)
+
+---
+
+**Configurator**
+
+* [GET /dump/stats/configurator](#statsconfigurator)
+
+---
+
+
+## RESTAPI Plugin
+
+Description: Returns an html-formatted index of REST APIs defined in the restapi plugin [urls.go](https://github.com/ligato/vpp-agent/blob/master/plugins/restapi/resturl/urls.go). This file contains the VPP and Linux APIs documented above. 
 
 ```
 curl -X GET http://localhost:9191/
@@ -720,6 +827,16 @@ curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/ranges
 
 ---
 
+## VPP L3 VRRP
+
+Description: GET VRRP
+
+```
+curl -X GET http://localhost:9191/dump/vpp/v2/vrrps
+```
+
+---
+
 ## VPP NAT Global
 
 Description: GET NAT global configuration information.
@@ -1065,6 +1182,43 @@ Sample response:
 
 ---
 
+## Version
+
+Description: GET VPP Agent Version Info
+```json
+curl -X GET http://localhost:9191/info/version
+```
+
+Sample Response:
+```json
+{
+  "App": "vpp-agent",
+  "Version": "v3.2.0-alpha-22-ge9aa3556d",
+  "GitCommit": "e9aa3556defe818904670e3f5051246fdd11746d",
+  "GitBranch": "HEAD",
+  "BuildUser": "root",
+  "BuildHost": "06a7eb7fd825",
+  "BuildTime": 1593781318,
+  "GoVersion": "go1.14.4",
+  "OS": "linux",
+  "Arch": "amd64"
+}
+```
+---
+
+## VPP CLI Command
+
+Description: Execute VPP CLI commands through a REST API.
+
+For a `show version` command, use
+```json
+curl -X POST   'http://localhost:9191/vpp/command?Content-Type=application/json'   -H 'Content-Type: application/json' -d '{"vppclicommand":"show version"}'
+```
+Sample response:
+```json
+"vpp v20.01-rc2~11-gfce396738~b17 built by root on b81dced13911 at 2020-01-29T21:07:15\n"
+`
+
 ## Linux Interfaces
 
 Description: GET all Linux interfaces.
@@ -1215,42 +1369,6 @@ curl -X GET http://localhost:9191/stats/configurator
 ```
 ---
 
-## Version
-
-Description: GET VPP Agent Version Info
-```json
-curl -X GET http://localhost:9191/info/version
-```
-
-Sample Response:
-```json
-{
-  "App": "vpp-agent",
-  "Version": "v3.2.0-alpha-22-ge9aa3556d",
-  "GitCommit": "e9aa3556defe818904670e3f5051246fdd11746d",
-  "GitBranch": "HEAD",
-  "BuildUser": "root",
-  "BuildHost": "06a7eb7fd825",
-  "BuildTime": 1593781318,
-  "GoVersion": "go1.14.4",
-  "OS": "linux",
-  "Arch": "amd64"
-}
-```
----
-
-## VPP CLI Command
-
-Description: Execute VPP CLI commands through a REST API.
-
-For a `show version` command, use
-```json
-curl -X POST   'http://localhost:9191/vpp/command?Content-Type=application/json'   -H 'Content-Type: application/json' -d '{"vppclicommand":"show version"}'
-```
-Sample response:
-```json
-"vpp v20.01-rc2~11-gfce396738~b17 built by root on b81dced13911 at 2020-01-29T21:07:15\n"
-```
 [agentctl]: ../user-guide/agentctl.md
 [quickstart-guide]: ../user-guide/quickstart.md
 [rest-plugin-config-options]: ../plugins/connection-plugins.md#configuration

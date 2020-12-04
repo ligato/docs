@@ -65,6 +65,10 @@ a {
     background: #f8f8f8 !important;
 }
 
+.hljs-deletion {
+    background: #f8f8f8
+}
+
 code {
     white-space: pre !important;
     word-wrap: normal !important;

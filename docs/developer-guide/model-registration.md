@@ -2,15 +2,29 @@
 
 ---
 
+This section describes model registration.
+
+Package reference: [models](https://godoc.org/github.com/ligato/vpp-agent/pkg/models) 
+
+---
+
 ### Concept
 
-Every top-level `message` from a proto definition is expected to have its own key. For example, `message ABF { ...` from the [abf.proto file](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/abf/abf.proto) requires the generation and registration of a key for accessing ABF information.
+Every top-level `message` from a proto definition must have its own key. For example, `message ABF { ...` from the [abf.proto file](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/abf/abf.proto) requires the generation and registration of the following key to access ABF information:
+```
+/vnf-agent/vpp1/config/vpp/abfs/v2/abf/<index>
+```
 
-A model and proto definition are prerequisites for generating a key. A description of the model, model spec, proto.Messages, and the various types of keys is provided in the [model concepts portion of the user guide](../user-guide/concepts.md#what-is-a-model).
+
+To generate a key, you must define a model and proto definition. To review a model description, model spec, proto.Messages, and key types, see [model concepts](../user-guide/concepts.md#what-is-a-model).
+
+---
 
 ### Registration
 
-The model is registered to the VPP agent `spec.go`. The key, paths, and names are generated and stored in the registration map. An example registration is illustrated in the `models` package shown here.
+You register a model using the `models.Register()` function. This function stores your generated keys, paths and names in the registration map. 
+
+`models.Register()` function: 
 
 ```go
 models.Register(&ProtoMessage{}, models.Spec{
@@ -20,9 +34,15 @@ models.Register(&ProtoMessage{}, models.Spec{
 })
 ```
 
-The example above registers the `ProtoMessage` type with the given `Spec`. The first parameter is a [proto.Message](../user-guide/concepts.md#protomessage). The second parameter defines the [model specification](../user-guide/concepts.md#model-specification). The method `Register` also returns a registration object, which is stored in the registration map. This can be used for easy access to various parts of the model key definition. For example, `KeyPrefix()` returns a key prefix; `IsKeyValid(<key>)` validates the key for the given model.
+The example above registers the `ProtoMessage` type with the given `Spec`. The details of this function consist of the following:
 
-Here is the registration for ABF:
+* [proto.Message](../user-guide/concepts.md#protomessage) parameter contains your model's top-level message.
+<br></br> 
+* [model.Spec](../user-guide/concepts.md#model-specification) parameter contains your model's specification
+<br></br>
+* `Register`method returns a registration object, and stores it in the registration map. This simplifies access to various parts of the model key definition. For example, `KeyPrefix()` returns a key prefix; `IsKeyValid(<key>)` validates the key for the given model.
+
+Example of ABF model registration:
 ```
 var (
 	ModelABF = models.Register(&ABF{}, models.Spec{
@@ -37,16 +57,19 @@ Generated long form key:
 /vnf-agent/vpp1/config/vpp/abfs/v2/abf/<index>
 ```
 
+---
 
 ### Custom Templates
 
-The registration method defines a third optional parameter. It enables options to be passed for a given registration of type `ModelOption`. There is currently only one option available: `models.WithNameTemplate(<template>))`. This option enables keys with custom identifiers to be generated.
+The registration method defines a third optional parameter. It lets you pass options for a given registration of type `ModelOption`. The `models.WithNameTemplate(<template>))` option generates keys with customer identifiers using the `<template>` parameter.
 
-Keys may also be distinguished by the composition of the custom identifier as explained in the [concepts section of the user guide](../user-guide/concepts.md#keys)
+The composition of the custom identifier can distinguish between different keys. For more information about custom identifiers, see [concepts](../user-guide/concepts.md#keys).  
+
+---
 
 **Example 1:**
 
-The proto model defines a field named `Index`, to serve as an identifier in the key. We use a custom template so that model registration will include this field in the key generation process.
+The proto model defines a an `Index` field to serve as an identifier in the key. Use a custom template so that model registration includes this field in the key generation process:
 ```go
 models.Register(&ProtoMessage{}, models.Spec{
     Module:  "module",
@@ -61,13 +84,15 @@ Generated `specific` long form key:
 ```
  
 !!! note
-    The module name dots are transformed to slashes in the key.  For example, `ModuleName = "vpp.abfs"` will be shown as `vpp/abfs` in the key.
+    Model registration transforms the dots in the module name to slashes in the key. For example, module name of `ModuleName = "vpp.abfs"` becomes `vpp/abfs` in the key.
+
+---
  
 **Example 2:**
 
-Other models cannot be defined with a single unique field, but rather require a combination of fields. Consider a proto model with fields `Index` and `Tag`, both of which need to be included in the key.
+You can define models with a combination of fields. Consider a proto model with fields `Index` and `Tag`. The key must include both.
 
-Define the template as follows:
+Define the template:
 ```go
 models.Register(&ProtoMessage{}, models.Spec{
     Module:  "mp",
@@ -81,8 +106,6 @@ Generated `composite` long form key:
 <microservice-label-prefix>/<config/status>/<module>/<version>/<type>/<index>/tag/<tag>
 ```
 
-*[SPD]: Security Policy Database
-*[VPP]: Vector Packet Processing
 
 
 
