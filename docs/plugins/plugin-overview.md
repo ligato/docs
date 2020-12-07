@@ -29,6 +29,7 @@ Plugin list:
 - Segment Routing
 - STN 
 - Telemetry
+- Wireguard
 
 ### GoVPPMux Plugin
 
@@ -65,7 +66,7 @@ Handles VPP access control lists. If rules defined in the access list are met by
 
 Implementation of the ACL-based forwarding feature. Performs policy-based routing (PBR) where forwarding is performed based on ACL matches rather than destination address prefix.
 
-More at: [ABF plugin][abf-plugin]
+Details: [ABF plugin][abf-plugin]
 
 ### IPFIX
 
@@ -97,15 +98,25 @@ More at: [SR plugin][sr-plugin]
 
 Configure segment routing IPv6 (SRv6)
 
+---
+
 ### STN Plugin
 
-Implementation of the `control plane` for the VPP STN (Steal the NIC) feature
+Implementation of the VPP STN (Steal the NIC) control plane.
 
 ### Telemetry
 
 More at: [telemetry plugin][telemetry-plugin]
 
 Collects telemetry statistics from VPP for export to external monitoring and management tools.
+
+### Wireguard
+
+Details: [wireguard plugin](vpp-plugins.md#wireguard-plugin)
+
+Program wireguard VPN tunnels in VPP.
+
+---
 
 ## Linux Plugins
 

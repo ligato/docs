@@ -7,27 +7,25 @@ This section describes the VPP agent plugins. Each plugin section provides:
 - Example configuration interactions using an etcd data store, REST and gPRC.
 
 !!! Note
-    For VPP plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data. 
+    For VPP plugins, REST supports the retrieval of the existing configuration. You can't use REST to add, modify or delete configuration data. 
 
 ---
 
 **Agentctl** 
 
-VPP configuration data can also be managed using `agentctl config` commands.
+You can manage VPP configurations using [agentctl][agentctl].
 ```
 Usage:	agentctl config COMMAND
 
-Manage agent configuration
-
 COMMANDS
+  delete      Delete config in agent
   get         Get config from agent
-  history     Retrieve config history
+  history     Show config history
   resync      Run config resync
   retrieve    Retrieve currently running config
   update      Update config in agent
+  watch       Watch events
 ```
-
-Reference: [agentctl config commands][agentctl-config]
 
 ---
   
@@ -185,7 +183,9 @@ The VPP agent provides an option to automatically set the MTU size for an interf
 | BOND_INTERFACE | Support the Link Aggregation Control Protocol (LACP). Bonding is the process of combining or joining two or more network interfaces together into a single logical interface. |
 | GRE_TUNNEL | IP encapsulation protocol defined in RFC2784|
 | GTPU_TUNNEL |GPRS Tunneling  Protocol (GTP) for user data (U) employed in GPRS networks|
-|IPIP_TUNNEL |IP encapsulation of IP packets defined in RFC1853. Used with ipsec.TunnelProtection as replacement for IPSEC_TUNNEL interface. See [PR #1638][ipip-tunn-prot-pr] for details.|   
+|IPIP_TUNNEL |IP encapsulation of IP packets defined in RFC1853. Used with ipsec.TunnelProtection as replacement for IPSEC_TUNNEL interface. See [PR #1638][ipip-tunn-prot-pr] for details.| 
+|WIREGUARD_TUNNEL | VPP wireguard interface. For more information on VPP wireguard support, see [VPP wireguard plugin](https://github.com/FDio/vpp/tree/master/src/plugins/wireguard).
+|RDMA | RDMA Ethernet Driver for accessing Mellanox NICs in VPP . For more information, see [VPP rdma readme](https://github.com/FDio/vpp/blob/master/src/plugins/rdma/rdma_doc.md). | 
  
 
 ---
@@ -216,7 +216,7 @@ Use `agentctl` to put the software_loopback interface key-value entry:
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
 ```
 
-Another example with a memif type interface. Note the memif-specific fields in the `memif` section:
+Example with a memif type interface. Note the memif-specific fields in the `memif` section:
 ```json
 {  
     "name":"memif1",
@@ -247,7 +247,7 @@ agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memi
 
 API Reference: [VPP Interfaces][vpp-interface-rest-api]
 
-Use this cURL command to GET all VPP interfaces:
+GET all VPP interfaces:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
@@ -1422,9 +1422,53 @@ Use this cURL command to GET SP configuration data:
 
 ---
 
+## Wireguard Plugin
+
+Use the wireguard plugin to configure [wireguard][wireguard] VPN tunnels in VPP.
+
+**References**
+
+- [Wireguard proto][wireguard-proto]
+- [Wireguard model][wireguard-model]
+
+**Wireguard Configuration Examples**
+
+**KV Data Store**
+
+Example wireguard configuration:
+```json
+{
+  "public_key": "xxxYYYzzz"
+  "port": 12314,
+  "persistent_keepalive": 10,
+  "endpoint": "10.10.2.1",
+  "wg_if_name": "wg1",
+  "flags": 0,
+  "allowed_ips": ["10.10.0.0/24"
+  ]
+}
+```
+
+
+Put wireguard configuration to KV data store:
+```
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/wg/v1/peer/wg1/endpoint/12314 '{
+  "public_key": "xxxYYYzzz"
+  "port": 12314,
+  "persistent_keepalive": 10,
+  "endpoint": "10.10.2.1",
+  "wg_if_name": "wg1",
+  "flags": 0,
+  "allowed_ips": ["10.10.0.0/24"
+  ]
+}'
+```
+
+---
+
 ## Punt Plugin
 
-The punt plugin is used to configure VPP to punt (re-direct) packets to the TCP/IP host stack. The plugin supports `punt to the host` either directly, or via a Unix domain socket.
+Use the punt plugin to configure VPP to punt (re-direct) packets to the TCP/IP host stack. The plugin supports `punt to the host` either directly, or via a Unix domain socket.
 
 **References:**
 
@@ -1441,7 +1485,7 @@ All incoming traffic that match the following criteria will be punted to the hos
 - matching a defined L3 protocol, L4 protocol, and port
 - and would otherwise be dropped
 
-If an optional Unix domain socket path is defined, traffic will be punted using that socket. All fields which serve as a traffic filter are mandatory.
+If you define an optional Unix domain socket path, the plugin will use it to punt traffic. All fields which serve as a traffic filter are mandatory.
 
 The punt plugin supports two configuration items defined by different keys: L3/L4 protocol and IP redirect. The former in the key is defined as a `string` value. However, that value is transformed to a numeric representation in the VPP binary API call. 
 
@@ -2566,6 +2610,7 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [acl-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/acl/models.go
 [acl-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/acl/acl.proto
 [arp-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/arp.proto
+[agentctl]: ../user-guide/agentctl.md
 [bd-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/models.go
 [bd-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/bridge_domain.proto
 [concept-keys]: ../user-guide/concepts.md#keys
@@ -2644,7 +2689,10 @@ The telemetry plugin conf file allows one to change the polling interval, or tur
 [telemetry-memory]: ../api/api-vpp-agent.md#vpp-telemetrymemory
 [telemetry-runtime]: ../api/api-vpp-agent.md#vpp-telemetryruntime
 [telemetry-nodecount]: ../api/api-vpp-agent.md#vpp-telemetrynodecount
-[agentctl-config]: ../user-guide/agentctl.md#config  
+[agentctl-config]: ../user-guide/agentctl.md#config
+[wireguard]: https://www.wireguard.com/
+[wireguard-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/wireguard/wireguard.proto
+[wireguard-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/wireguard/models.go 
 
 *[ABF]: ACL-Based Forwarding
 *[ACL]: Access Control List
