@@ -1211,13 +1211,16 @@ Sample Response:
 Description: Execute VPP CLI commands through a REST API.
 
 For a `show version` command, use
+
 ```json
 curl -X POST   'http://localhost:9191/vpp/command?Content-Type=application/json'   -H 'Content-Type: application/json' -d '{"vppclicommand":"show version"}'
 ```
 Sample response:
 ```json
 "vpp v20.01-rc2~11-gfce396738~b17 built by root on b81dced13911 at 2020-01-29T21:07:15\n"
-`
+```
+
+---
 
 ## Linux Interfaces
 
