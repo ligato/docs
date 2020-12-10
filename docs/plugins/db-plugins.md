@@ -2,9 +2,6 @@
 
 This section discusses the set of [Ligato infrastructure][cn-infra-github] database plugins.
 
-!!! Note
-    Database plugins can also be referred to as connectors.
-
 ---
 
 ## Datasync
@@ -72,7 +69,7 @@ The Data Broker abstraction is based on the broker and watcher APIs:
 ![db][db-image]
 <p style="text-align: center; font-weight: bold">Broker and Watcher APIs Functions</p>
 
-The broker amd watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between KV-based and sql-based data stores. Therefore the broker and watcher Go interfaces are defined in each package separately. The method names for a given operation are the same, the method arguments are different.
+The broker and watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between KV-based and sql-based data stores. Therefore, each package separately defines the Go broker and watcher interfaces. They use the same method names, but with different method arguments.
 
 ---
 

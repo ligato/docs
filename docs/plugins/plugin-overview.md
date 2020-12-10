@@ -2,7 +2,7 @@
 
 ---
 
-This section provides a brief description of the Ligato plugins. For more information, click details.
+This section provides a brief description of the Ligato plugins. For more information on each plugin, click details.
 
 ---
 
@@ -10,7 +10,7 @@ This section provides a brief description of the Ligato plugins. For more inform
 
 [Details: KV Scheduler Plugin][kvscheduler]
  
- Core plugin that works with SB VPP and Linux agents, and NB KV data stores and rpc clients. It resolves configuration item dependencies, and computes the correct VPP configuration item programming sequence. 
+Core plugin that works with SB VPP and Linux agents, and NB KV data stores and rpc clients. It manages configuration item dependencies, and computes the correct VPP configuration item programming sequence. 
  
  ---
 
@@ -37,66 +37,66 @@ Plugins:
 
 ---
 
-### GoVPPMux plugin
+### GoVPPMux
 
-Details: [GoVPPMux plugin][govppmux-plugin]
+[Details: GoVPPMux plugin][govppmux-plugin]
 
-Use this plugin for VPP agent - VPP data plane communication using [GoVPP][govpp-readme]. This plugin serves as the VPP agent's G0VPP wrapper, and provides access to VPP through an independent communication channel using a shared memory segment prefix, or socket client. It supports custom prefixes to connect to the correct VPP instance in a multi-VPP environment. 
+Use this plugin for communication between the VPP agent and the VPP data plane using [GoVPP][govpp-readme]. This plugin serves as the VPP agent's G0VPP wrapper, and provides access to VPP through an independent communication channel using a shared memory segment prefix, or socket client. It supports custom prefixes to connect to the correct VPP instance in a multi-VPP environment. 
 
 ---
 
-### Interface plugin
+### Interface
 
-Details: [Interface plugin][interface-plugin]
+[Details: Interface plugin][interface-plugin]
 
 Use this plugin to configure VPP interfaces. You can configure base fields including IP and MAC address, and more advanced features such as unnumbered interfaces or RX-mode. 
 
 ---
 
-### L2 plugin
+### L2 
 
-Details: [L2 plugin][l2-plugin]
+[Details: L2 plugin][l2-plugin]
 
-Use this plugin to program link-layer configuration items: bridge domains,  L2 forwarding tables (FIBs), and VPP cross connects. Dependent on the [interface plugin][interface-plugin-guide].
+Use this plugin to program bridge domains, L2 forwarding tables (FIBs), and VPP cross connects. Dependent on the [interface plugin][interface-plugin-guide].
 
 
 --- 
 
-### L3 plugin
+### L3 
 
-Details: [L3 plugin][l3-plugin]
+[Details: L3 plugin][l3-plugin]
 
-Use this plugin to program L3 configuration items: ARP entries, proxy ARP, VPP routes, IP scan neighbor, VRFs, tunnel endpoint base entries, L3 cross connects, and VRRP. Dependent on the [interface plugin][interface-plugin-guide].
+Use this plugin to program L3 ARP entries, proxy ARP, VPP routes, IP scan neighbor, VRFs, tunnel endpoint base entries, L3 cross connects, and VRRP. Dependent on the [interface plugin][interface-plugin-guide].
 
 ---
 
-### ACL plugin
+### ACL 
 
-Details: [ACL plugin][acl-plugin]
+[Details: ACL plugin][acl-plugin]
 
 Use this plugin to program VPP access control lists (ACL). If incoming traffic meets the ACL rules, VPP will perform the configured action on the packets.
 
 ---
 
-### ACL-based forwarding (ABF) plugin
+### ACL-based forwarding (ABF)
 
-Details: [ABF plugin][abf-plugin]
+[Details: ABF plugin][abf-plugin]
 
 Use this plugin to program ACL-based forwarding rules. Performs policy-based routing (PBR) where ACL matches determine packet forwarding.
 
 ---
 
-### IPFIX plugin
+### IPFIX
 
-Details: [IPFIX plugin][ipfix-plugin]
+[Details: IPFIX plugin][ipfix-plugin]
 
-Use this plugin to implement VPP IPFIX monitoring and flow information export.
+Use this plugin to implement VPP IPFIX monitoring and flow export.
 
 ---
 
-### IPSec plugin
+### IPSec
 
-Details: [IPSec plugin][ipsec-plugin]
+[Details: IPSec plugin][ipsec-plugin]
 
 Use this plugin to program VPP security policy databases (SPD), and security associations (SA). It handles relationships between the SPD and SA, or between SPD and an assigned interface. 
 
@@ -106,51 +106,51 @@ Use this plugin to program VPP security policy databases (SPD), and security ass
 
 ---
 
-### NAT plugin
+### NAT
 
-Details: [NAT-plugin][nat-plugins]
+[Details: NAT plugin][nat-plugin]
 
 Use this plugin to program VPP NAT. It provides a control plane function for the VPP NAT44 data plane. This plugin also supports DNAT44 with load balancing for optimized resource efficiency in K8s network clusters. Dependent on the [interface plugin][interface-plugin-guide].
 
 ---
 
-### Punt plugin
+### Punt
 
-Details: [punt-plugin][punt-plugin]
+[Details: Punt plugin][punt-plugin]
 
 Use this plugin to access the VPP punt feature. Incoming VPP traffic matching a set of pre-defined rules is punted, or redirected, to the host stack or socket.
 
 ---
 
-### Segment routing plugin
+### Segment routing
 
-Details: [SR plugin][sr-plugin]
+[Details: SR plugin][sr-plugin]
 
 Use this plugin to program VPP segment routing IPv6 (SRv6).
 
 ---
 
-### STN plugin
+### STN
 
-Details: [STN plugin][stn-plugin]
+[Details: STN plugin][stn-plugin]
 
 Use this plugin to implement the VPP STN (Steal the NIC) control plane.
 
 ---
 
-### Telemetry plugin
+### Telemetry 
 
-Details: [telemetry plugin][telemetry-plugin]
+[Details: telemetry plugin][telemetry-plugin]
 
 Use this plugin to collect VPP telemetry stats for export to external monitoring and management tools.
 
 ---
 
-### Wireguard plugin
+### Wireguard
 
-Details: [wireguard plugin](vpp-plugins.md#wireguard-plugin)
+[Details: Wireguard plugin](vpp-plugins.md#wireguard-plugin)
 
-Use this plugin to program [wireguard VPN tunnels](https://www.wireguard.com/) in VPP.
+Use this plugin to program VPP [wireguard VPN tunnels](https://www.wireguard.com/).
 
 ---
 
@@ -168,47 +168,47 @@ Plugins:
 
 ---
 
-### Linux Interface plugin
+### Linux Interface
 
-Details: [Linux Interface plugin][linux-interface-pluign]
+[Details: Linux Interface plugin][linux-interface-pluign]
 
 Use this plugin to program Linux interfaces. Interface types include VETH, TAP, loopback, existing, VRF, and dummy. 
 
 --- 
 
-### Linux L3 plugin
+### Linux L3 
 
-Details: [Linux L3 plugin][linux-l3-plugin]
+[Details: Linux L3 plugin][linux-l3-plugin]
 
 Use this plugin to program Linux routes and ARP entries. Dependent on the Linux interface plugin.
 
 ---
 
-### IP Tables plugin
+### IP Tables 
 
-Details: [Linux iptables plugin][linux-iptables-plugin]
+[Details: Linux iptables plugin][linux-iptables-plugin]
 
 Use this plugin to program [Linux IPtables][linux-iptables].
 
 ---
 
-### Namespace plugin
+### Namespace 
 
-Details: [Namespace plugin][linux-namespace-pluign]
+[Details: Namespace plugin][linux-namespace-pluign]
 
-Use this plugin to provide a helper function tied in with the Linux interface/l3 plugins. It manages Linux namespaces, or as a microservice in container-based environment. 
+Use this plugin to provide a helper function tied in with the Linux interface and l3 plugins. It manages Linux namespaces, or as a microservice in container-based environment. 
 
 ---
 
-### Punt plugin
+### Punt 
 
-Details: [Punt plugin](https://github.com/ligato/vpp-agent/tree/master/proto/ligato/linux/punt)
+[Details: Punt plugin](https://github.com/ligato/vpp-agent/tree/master/proto/ligato/linux/punt)
 
 Use this plugin to implement the Linux punt-to-host function.
 
 ---
 
-## Connection plugins
+## Connection plugins 
 
 VPP agent connection plugins enable external data read/write without the use of a data store.
 
@@ -219,17 +219,17 @@ Plugins:
 
 ---
 
-### REST plugin
+### REST 
 
-Details: [REST plugin][rest-plugin]
+[Details: REST plugin][rest-plugin]
 
-Use this plugin to implement REST API support for a plugin or agent access. 
+Use this plugin to implement REST API support for a plugin or agent. 
 
 ---
 
-### gRPC plugin
+### gRPC 
 
-Details: [GRPC plugin][grpc-plugin]
+[Details: GRPC plugin][grpc-plugin]
 
 Use this plugin to enable VPP agent gRPC communications. 
 
@@ -237,10 +237,12 @@ Use this plugin to enable VPP agent gRPC communications.
 
 ## Database plugins
 
+Ligato provides plugins for external data store connectivity and integration.
 
+Plugins:
 
-- Datasync abstraction plugin
-- Data Broker plugin
+- Datasync
+- Data Broker
 - etcd
 - Redis
 - Consul
@@ -248,115 +250,154 @@ Use this plugin to enable VPP agent gRPC communications.
 - Cassandra
 - FileDB
 
-### Datasync plugin
+### Datasync
 
-Details: [Datasync plugin][datasync-plugin]
+[Details: Datasync plugin][datasync-plugin]
 
-defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources.
+Use this plugin to define data synchronization abstractions between your app plugins and different backend data sources such as data stores, message buses, or rpc-connected clients. 
 
-### Data Broker plugin
+---
 
-Details: [Data Broker plugin][data-broker-plugin]
+### Data broker
 
-data broker abstraction.
+[Details: Data Broker plugin][data-broker-plugin]
+
+Use this plugin as a common API abstraction for client access to KV data stores and sql databases.  
+
+---
 
 ### etcd
 
-Details: [etcd plugin][etcd-plugin]
+[Details: etcd plugin][etcd-plugin]
 
-Provides access to an etcd KV data store.
+Use this plugin for access to an etcd data store.
+
+---
 
 ### Redis
 
-Details: [Redis plugin][redis-plugin]
+[Details: Redis plugin][redis-plugin]
 
-Provides access to an Redis KV data store.
+Use this plugin for access to a Redis KV data store.
+
+---
 
 ### Consul
 
-Details: [Consul plugin][consul-plugin]
+[Details: Consul plugin][consul-plugin]
 
-Provides access to a consul KV data store.
+Use this plugin for access to a consul KV data store.
+
+---
 
 ### Bolt
 
-Details: [Bolt plugin][bolt-plugin]
+[Details: Bolt plugin][bolt-plugin]
 
-Provides access to a Bolt data store.
+Use this plugin for access to a Bolt data store.
+
+---
 
 ### Cassandra
 
-Details: [Cassandra][cassandra-plugin]
+[Details: Cassandra][cassandra-plugin]
 
-Provides access to a Cassandra MYSQL data store.
+Use this plugin for access to a Cassandra MYSQL data store.
+
+---
 
 ### FileDB 
 
-Details: [FileDB plugin][file-db-plugin]
+[Details: FileDB plugin][file-db-plugin]
 
-Uses the OS file system as a KV data store.
+Use this plugin to access the OS file system serving as an KV data store.
+
+---
 
 ## Infra Plugins
 
-Discusses the Ligato infra plugins.
+Ligato provides infra plugins for logging, messaging, process management, status checking and service label. 
+
+Plugins:
 
 - Configurator
 - Orchestrator
 - Status Check 
-- Index Map plugin
+- Index Map
 - Log Manager
 - Messaging/Kafka
 - Process Manager
-- Service Label plugin
+- Service Label
+
+---
 
 ### Configurator
 
-Configurator plugin.
+[Details: Configurator plugin][configurator-plugin]
+
+Use this plugin to perform operations on the VPP agent configuration. 
+
+---
 
 ### Orchestrator
 
-In a scenario where a single VPP agent instance receives configuration data from multiple sources (KV data store, GRPC, etc), the orchestrator plugin synchronizes retrieved data and resolve conflicts from individual sources. Data-processing plugins then see the data as coming from a single source.
+[Details: Orchestrator plugin][orchestrator-plugin]
+
+Use this plugin to synchronize retrieved data from multiple sources, resolve conflicts, and convey configuration data to the KV Scheduler. The orchestrator reads/watches for config updates from NB clients, and communicates config status, running state, metadata, and metrics for NB client consumption.
+
+---
 
 ### Status Check 
 
 Details: [Status Check plugin][status-check]
 
-Monitors the status of a Ligato infra app by collecting and aggregating partial status of VPP agent plugins.
+Use this plugin to monitor agent status by collecting and aggregating partial status of VPP agent plugins.
+
+---
 
 ### Index Map plugin
 
 Details: [Index Map plugin][index-map]
 
-Provides an enhanced mapping structure.
+Use this plugin to employ a mapping structure that supports configuration item change notifications and retrieval by fields in the value structure.
+
+---
 
 ### Log Manager
 
 Details: [Log Manager plugin][log-manager]
 
-View and modify log levels of loggers using a REST API.
+Use this plugin to manage global and per-logger log levels.
+
+---
 
 ### Messaging/Kafka
 
 Details: [Messaging/Kafka plugin][messaging-kafka]
 
-Provides single purpose clients for publishing synchronous/asynchronous messages and for consuming selected topics.
+Use this plugin so agents can publish synchronous/asynchronous messages, and consume selected topics. 
+
+---
 
 ### Process Manager
 
 Details: [Process Manager plugin][process-manager]
 
-Set of methods to create a process instance to manage and monitor plugins.
+Use this plugin to create a process instance that manages and monitors plugins.
 
-### Service Label plugin
+---
+
+### Service Label 
 
 Details: [Service Label plugin][service-label]
 
-Other plugins can use this plugin to obtain the microservice label, or more specifically the string used to identify a particular VPP instance. 
+Use this plugin with other plugins to obtain the microservice label string that identifies a particular VPP instance. 
 
 [abf-plugin]: vpp-plugins.md#abf-plugin
 [acl-plugin]: vpp-plugins.md#access-control-lists-plugin
 [bolt-plugin]: https://github.com/ligato/cn-infra/tree/master/db/keyval/bolt
 [cassandra-plugin]: https://github.com/ligato/cn-infra/tree/master/db/sql/cassandra
+[configurator-plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/configurator 
 [consul-plugin]: db-plugins.md#consul-plugin
 [data-broker-plugin]: db-plugins.md#data-broker
 [datasync-plugin]: db-plugins.md#datasync-plugin
@@ -381,6 +422,7 @@ Other plugins can use this plugin to obtain the microservice label, or more spec
 [log-manager]: infra-plugins.md#log-manager
 [messaging-kafka]: infra-plugins.md#messagingkafka
 [nat-plugin]: vpp-plugins.md#nat-plugin
+[orchestrator-plugin]: https://github.com/ligato/vpp-agent/tree/master/plugins/orchestrator
 [process-manager]: infra-plugins.md#process-manager
 [punt-plugin]: vpp-plugins.md#punt-plugin
 [redis-plugin]: db-plugins.md#redis
