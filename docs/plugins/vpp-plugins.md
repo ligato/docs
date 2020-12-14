@@ -2,7 +2,7 @@
 
 This section describes the VPP agent plugins. The information provided for each plugin consists of the following:
 
-- Description.
+- Short description.
 - Pointers to the `.proto` files containing configuration/NB protobuf API definitions, the 'models.go' file defining the model, and conf file if available.  
 - Configuration programming example using an etcd data store, REST and gPRC.
 
@@ -187,21 +187,21 @@ The VPP agent provides an option to automatically set the MTU size for an interf
 | Type| Description |
 | --- | ---|   
 | UNDEFINED_TYPE | |
-| SUB_INTERFACE | Derived from other interfaces by adding a VLAN ID. The sub-interface link of type `SubInterface` requires a name of the parent interface, and the VLAN ID.|
+| SUB_INTERFACE | Derived from other interfaces by adding a VLAN ID. The sub-interface link of type `SubInterface` link type requires parent interface name, and the VLAN ID.|
 | SOFTWARE_LOOPBACK| internal software interface|
-| DPDK | You cannot add or remove physical interfaces with the VPP agent. The PCI interface must be connected to the VPP and should be configured for use by the Linux kernel. <br></br>You can configure the interface IP and MAC addresses, or set as enable. No special configuration fields are defined. |
-| MEMIF | Shared memory packet interface types provide high-performance send and receive functions between VPP instances. Additional fields are defined in `MemifLink`. The most important is the socket filename. The default uses a default socket filename with a zero index which can be used to create memif interfaces. Note that the VPP agent needs to be resynced to register the new memif interface. |
-| TAP |exists in two versions, TAPv1 and TAPv2, but only the latter can be configured. TAPv2 is based on [virtio][virtio] which means it runs in a virtual environment, and cooperates with the hypervisor. The `TapLink` provides several setup options available for TAPv2.|
-| AF_PACKET |VPP "host" interface. Its primary function is to connect to the host via the OS VEth interface. The af-packet interface cannot exist without its host interface. If the VEth is missing, the configuration is postponed. If the host interface was removed, the VPP agent "un-configures" and caches related af-packet information. The `AfpacketLink` contains only one field with the name of the host interface as defined in the [Linux interface plugin][linux-interface-plugin-guide].
+| DPDK | DPDK provides user space drivers to talk directly to physical NICs. You cannot add or remove physical interfaces with the VPP agent. You must connect the PCI to VPP, and you should configure for Linux kernel user. <br></br>You can configure the interface IP and MAC addresses, or set enable/disable. No special configuration fields are defined. |
+| MEMIF | Provides high-performance send/receive functions between VPP instances. `MemifLink` contains additional fields. <br></br>`socket_filename` is the most important. Default is default socket filename with a zero index. Must use to create memif interfaces. You must resync to register a new memif interface. |
+| TAP |Exists in two versions, TAPv1 and TAPv2, but you can only configure TAPv2.<br></br>TAPv2 is based on [virtio][virtio]. It runs in a virtual environment, and cooperates with the hypervisor. `TapLink` provides setup options.|
+| AF_PACKET |VPP "host" interface to connect to host via the OS VETH interface. The af-packet interface cannot exist without its host interface. <br></br>If you do not configure the VETH, KV Scheduler postpones the configuration. If you remove the host interface, the VPP agent "un-configures" and caches related af-packet information. <br></br>The `AfpacketLink` contains only one field with the host interface defined as in the [Linux interface plugin][linux-interface-plugin-guide].<br></br>To look over config example, see [afpacket control flow][afpacket-control-flow].
 | VXLAN_TUNNEL |Tunneling protocol for encapsulating L2 frames in IP/UDP packets. |
 | IPSEC_TUNNEL | Deprecated in VPP 20.01+. [Use IPIP_TUNNEL + ipsec.TunnelProtection] [ipsec-model] instead. See [PR #1638][ipip-tunn-prot-pr] for details.|
-| VMXNET3_INTERFACE | High performance virtual network adapter used in VMware networks.  VmxNet3 requires VMware tools to be used. Setup options are described in `VmxNet3Link`.|
-| BOND_INTERFACE | Support the Link Aggregation Control Protocol (LACP). Bonding is the process of combining or joining two or more network interfaces together into a single logical interface. |
+| VMXNET3_INTERFACE | VMware virtual network adapter. `VmxNet3Link` contains setup options.|
+| BOND_INTERFACE | Supports the Link Aggregation Control Protocol (LACP). Bonding combines two or more network interfaces into a single logical interface. |
 | GRE_TUNNEL | IP encapsulation protocol defined in RFC2784|
 | GTPU_TUNNEL |GPRS Tunneling  Protocol (GTP) for user data (U) employed in GPRS networks|
-|IPIP_TUNNEL |IP encapsulation of IP packets defined in RFC1853. Used with ipsec.TunnelProtection as replacement for IPSEC_TUNNEL interface. See [PR #1638][ipip-tunn-prot-pr] for details.| 
-|WIREGUARD_TUNNEL | VPP wireguard interface. For more information on VPP wireguard support, see [VPP wireguard plugin](https://github.com/FDio/vpp/tree/master/src/plugins/wireguard).
-|RDMA | RDMA Ethernet Driver for accessing Mellanox NICs in VPP . For more information, see [VPP rdma readme](https://github.com/FDio/vpp/blob/master/src/plugins/rdma/rdma_doc.md). | 
+|IPIP_TUNNEL |IP encapsulation of IP packets defined in RFC1853. This interface + ipsec.TunnelProtection replaces IPSEC_TUNNEL interface. <br></br>See [PR #1638][ipip-tunn-prot-pr] for details.| 
+|WIREGUARD_TUNNEL | VPP wireguard interface. See [VPP wireguard plugin](https://github.com/FDio/vpp/tree/master/src/plugins/wireguard) for details.
+|RDMA | RDMA Ethernet Driver for accessing Mellanox NICs in VPP. See [VPP rdma readme](https://github.com/FDio/vpp/blob/master/src/plugins/rdma/rdma_doc.md) for details.| 
  
 
 ---
@@ -225,7 +225,7 @@ Example `SOFTWARE_LOOPBACK` interface data:
 }
 ```
 
-Put the `SOFTWARE_LOOPBACK` interface:
+Put `SOFTWARE_LOOPBACK` interface:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
 ```
@@ -250,7 +250,7 @@ Example `MEMIF` interface data. Note the memif-specific fields in the `memif` se
 }
 ```
 
-Put the `MEMIF` interface:
+Put `MEMIF` interface:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memif1","type":"MEMIF","enabled":true,"phys_address":"4E:93:2A:38:A7:77","ip_addresses":["172.125.40.1/24"],"mtu":1478,"memif":{"master":true,"id":1,"socket_filename":"/tmp/memif1.sock","secret":"secret"}}'
 ```
@@ -266,7 +266,7 @@ GET all VPP interfaces:
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
 
-Interface type-specific calls:
+GET VPP interface by type:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/loopback
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/ethernet
@@ -276,11 +276,14 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/vxlan
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/afpacket
 ```
 
+!!! Note
+    Some interface types do not support REST at this time.
+
 ---
 
 **gRPC**
 
-Prepare memif interface data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -304,7 +307,7 @@ memoryInterface := &vpp.Interface{
 
 ---
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -353,7 +356,7 @@ The VPP agent waits on several types of VPP events such as object creation, obje
 Using the collected information, the VPP agent builds a notification, and then sends this information, and any errors, to all registered publishers or databases. Stats readout occurs every second. Interface status is read-only, and published only by the VPP agent.
 
 !!! Note
-    Publishing interface status is disabled by default, since no default publishers are defined. You can configure interface status publishing by adding one or more `StatusPublishers` to the [VPP interface conf file][vpp-interface-conf-file].  
+    Publishing interface status is disabled by default. VPP interface conf file does not contain any default status publishers. Configure interface status publishing by adding one or more `StatusPublishers` to the [VPP interface conf file][vpp-interface-conf-file].  
 
 **References:**
 
@@ -383,7 +386,7 @@ Keys used for interface status and errors:
 
 **Interface Status Usage**
 
-To read status data, use any tool with access to a given database. etcdctl and agentctl to access etcd; redis-cli to access Redis; boltbrowser to access BoltDB). 
+To read status data, use any tool with access to a given database. etcdctl and agentctl to access etcd; redis-cli to access Redis; boltbrowser to access BoltDB, consul cli for consul, and so on.. 
 
 Use `agentctl kvdb list` to read interface status for all interfaces:
 ```
@@ -398,7 +401,7 @@ agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/loop1
 agentctl kvdb list /vnf-agent/vpp1/vpp/status/v2/interface/memif1
 ```
 !!! note
-    Do not forget to enable status in the conf file. Otherwise, the VPP agent will not publish interface status to the KV data store or database.
+    Do not forget to enable status publishing in the VPP interface conf file. Otherwise, the VPP agent will not publish interface status to the KV data store or database.
 
 
 ---
@@ -1240,7 +1243,40 @@ The VRF table proto defines an ID, protocol setting for IPv4 or IPv6, optional l
 
 ### VRRP
 
+The virtual router redundancy protocol (VRRP). This protocol enables hosts on a LAN access to one of several gateway routers on the same LAN. You configure a group of VRRP routers as a single virtual router supporting a single gateway address. If the primary router in the group fails, a secondary router with the same gateway address takes over.   
 
+**References:**
+
+- [VRRP proto][vrrp-proto]
+- [VRRP model][vrrp-model][L3-models]
+- [fd.io VRRP API](https://git.fd.io/vpp/tree/src/plugins/vrrp/vrrp.api) 
+
+Example VRRP data:
+
+```
+{
+    "interface": "if1"
+    "vrID": 4
+    "priority": 100
+    "interval": 100
+    "preempt": false
+    "accept": false
+    "unicast": unicast
+    "ip_addresses": [
+        "192.168.10.1",
+        ]
+    "enabled": true
+}
+            
+```
+**REST**
+
+API Reference: [VPP VRRP](../api/api-vpp-agent.md#vpp-l3-vrrp)
+
+GET VRRP configuration data:
+```json
+curl -X GET http://localhost:9191/dump/vpp/v2/vrrps
+```
 ---
 
 ## IPFIX Plugin
@@ -1553,14 +1589,14 @@ All incoming traffic that match the following criteria will be punted to the hos
 - matching a defined L3 protocol, L4 protocol, and port
 - and would otherwise be dropped
 
-If you define an optional Unix domain socket path, the plugin will use it to punt traffic. All fields which serve as a traffic filter are mandatory.
+You can define an optional Unix domain socket path to punt traffic. You must include all mandatory traffic filter fields.
 
 The punt plugin supports two configuration items defined by different keys: L3/L4 protocol and IP redirect. The former in the key is defined as a `string` value. However, that value is transformed to a numeric representation in the VPP binary API call. 
 
 The usage of the L3 protocol, `ALL`, is exclusive for IP punt to host (without socket registration) in the VPP binary VPP API. If used for the IP punt with socket registration, the VPP agent calls the VPP binary API twice with the same parameters for both, IPv4 and IPv6.
 
 !!! danger "Important"
-    In order to configure a punt to host via a Unix domain socket, a specific VPP startup-config is required. The attempt to set punt without this results in errors in VPP. This is an example startup-config `punt { socket /tmp/socket/punt }`. The path must match with the one in the northbound data. 
+    To configure a punt-to-host via a Unix domain socket, you must include a VPP startup-config. Attempts to set punt without this file results in VPP errors. An example startup-config is `punt { socket /tmp/socket/punt }`. The path must match the one in the NB data. 
 
 ---
 
@@ -2115,13 +2151,13 @@ For more details and examples using gRPC, see the following:
 
 ## NAT Plugin
 
-Network address translation (NAT) is a method for translating IP addresses belonging to different address domains by modifying the address information in the packet header. The NAT plugin provides control plane functionality for the VPP data plane implementation of NAT44. 
+Network address translation (NAT) translates IP addresses belonging to different address domains by modifying the address information in the packet header. The NAT plugin provides control plane functionality for the VPP data plane implementation of NAT44. 
 
 ---
 
 ### NAT Global Configuration
 
-The global NAT configuration is a special case of data grouped under single key. This means there is no unique character as a part of the key, so there is only one global NAT configuration. Interfaces marked as NAT-enabled should be present in VPP but if not, the KV scheduler caches the configuration for later use when the interface becomes available. 
+The NAT global configuration groups configuration data under single global key. You require configured NAT-enabled interfaces in VPP but if not present, the KV scheduler caches the configuration for later use when the interface becomes available. 
 
 **References:**
 
@@ -2129,16 +2165,14 @@ The global NAT configuration is a special case of data grouped under single key.
 - [VPP NAT global model ][nat-model]
 
 
-The NAT global configuration is divided into several independent parts pertaining to specific VPP NAT features:
+The NAT proto divides the global configuration into several independent parts that align to VPP NAT features:
 
-  - **Forwarding** is a boolean field to enable or disable forwarding.
-  - **NAT interfaces** represents a list of interfaces enabled for NAT. If the interface does not exist in VPP, it is cached and potentially configured later. Every interface is defined by its logical name and whether it is an `inside` or an `outside` interface. Use the [NAT Interfaces REST API][vpp-nat-interfaces] to GET this configuration data.
-  - **Address pools** is a list of "NAT-able" IP addresses for a given VRF table. Despite the name, only one address is defined in the single "pool" entry. Use the [NAT Pools REST API][vpp-nat-pool] to GET this configuration data.
-  - **Virtual reassembly** support for datagram fragmentation handling to allow the correct recalculation of higher-level checksums.
+  - **Forwarding** to enable or disable forwarding.
+  - **NAT interfaces** list of interfaces enabled for NAT. If the interface does not exist in VPP, The KV scheduler caches it, for use later. You must define very interface with a logical name and boolean for `is_outside`.
+  - **Address pools** list of "NAT-able" IP addresses for a given VRF table. You should define only one interface in the `address pool` field. 
+  - **Virtual reassembly** for datagram fragmentation handling, to allow  correct recalculation of higher-level checksums.
 
 ---
-
-**NAT Global Configuration Examples**
 
 **KV Data Store**
 
@@ -2194,7 +2228,7 @@ agentctl kvdb del /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings
 
 API Reference: [NAT Global][vpp-nat-global]
 
-GET NAT global configuration data:
+GET NAT global:
 ```bash
 curl -X GET http://localhost:9191/dump/vpp/v2/nat/global
 ```
@@ -2283,16 +2317,18 @@ For more details and examples using gRPC, see the following:
 
 ### DNAT44
 
-Destination network address translation (DNAT) translates the destination IP address of a packet in one direction and performs the inverse NAT function for packets returning in the opposite direction. In the VPP agent, the DNAT configuration is composed of a list of static and/or identity mappings labelled under a single key. DNAT44 configuration is defined in the [NAT model][nat-model].
+Destination network address translation (DNAT) translates the destination IP address of a packet in one direction, and performs the inverse NAT function for returning packets in the opposite direction. 
+
+The DNAT configuration contains a list of static and/or identity mappings labelled under a single key. 
 
 **References:**
 
 - [VPP DNAT44 proto][nat-proto]
 - [VPP DNAT44 model][nat-model]
 
-DNAT44 consists from two main parts: static mappings and identity mappings.
+The nAT proto for DNAT44 consists of two parts: static mappings and identity mappings.
 
-- static mapping is the case where a single external interface, IP address and port number is mapped to one or more local IP address and port numbers in a static configuration. When packets arrive on the external interface, DNAT44 can load balance packets across two or more local IP address and port number entries present in the static mapping. In other words, if more than one local IP address is defined for single static mapping, the [VPP NAT load balancer][vpp-nat-lb] is automatically invoked.
+- Static mapping maps a single external interface, IP address, and port number to one or more local IP address and port numbers . When packets arrive on the external interface, DNAT44 can load balance packets across two or more local IP address and port number entries by invoking the [VPP NAT load balancer][vpp-nat-lb]. 
 - Identity mapping defines the interface and IP address from which packets originated from.   
 
 DNAT44 contains a unique label serving as an identifier. However, the DNAT44 configuration is not limited. An arbitrary number of static and identity mappings can be listed under a single label. 
@@ -2493,7 +2529,7 @@ Note that ```<name>``` is a unique name for the steering configuration.
 
 ## STN Plugin
 
-In some deployments, you might outfit a host with two NICs: one controlled by VPP, and the other controlled by the host stack for K8s control plane communications. 
+In some deployments, you might deploy a host with two NICs: one controlled by VPP, and the other controlled by the host stack. 
 
 You can implement the steal-the-NIC (STN) plugin when your host only supports a single NIC. In this [single-NIC setup][stn-contiv-vpp], the plugin steals the interface and its IP address from the host network stack just before VPP startup. Note that the VPP agent uses the same VPP interface IP address on the host-to-VPP interconnect TAP interface.  
 
@@ -2725,6 +2761,7 @@ You can change the polling interval, disable export to prometheus, and disable/e
 [acl-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/acl/acl.proto
 [arp-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/arp.proto
 [agentctl]: ../user-guide/agentctl.md
+[afpacket-control-flow]: ../developer-guide/control-flows.md#example-af-packet-interface
 [bd-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/models.go
 [bd-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l2/bridge_domain.proto
 [concept-keys]: ../user-guide/concepts.md#keys
@@ -2765,6 +2802,7 @@ You can change the polling interval, disable export to prometheus, and disable/e
 [stn-model]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/stn/models.go
 [stn-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/stn/stn.proto
 [virtio]: https://wiki.libvirt.org/page/Virtio
+[vrrp-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/vrrp.proto
 [vpp-interface-rest-api]: ../api/api-vpp-agent.md#vpp-interfaces
 [vpp-bd-rest-api]: ../api/api-vpp-agent.md#vpp-l2-bridge-domain
 [vpp-l2fib-rest-api]: ../api/api-vpp-agent.md#vpp-l2-fib
