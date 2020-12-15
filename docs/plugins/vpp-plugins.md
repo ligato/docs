@@ -2151,13 +2151,13 @@ For more details and examples using gRPC, see the following:
 
 ## NAT Plugin
 
-Network address translation (NAT) translates IP addresses belonging to different address domains by modifying the address information in the packet header. The NAT plugin provides control plane functionality for the VPP data plane implementation of NAT44. 
+Network address translation (NAT) translates IP addresses belonging to different address domains by modifying the address information in the packet header. The NAT plugin provides control plane functionality for the VPP NAT44 data plane implementation. 
 
 ---
 
 ### NAT Global Configuration
 
-The NAT global configuration groups configuration data under single global key. You require configured NAT-enabled interfaces in VPP but if not present, the KV scheduler caches the configuration for later use when the interface becomes available. 
+The NAT global configuration groups configuration data under single global key. You require configured NAT-enabled interfaces in VPP, but if not present, the KV scheduler caches the configuration for later use when the interfaces becomes available. 
 
 **References:**
 
@@ -2168,9 +2168,12 @@ The NAT global configuration groups configuration data under single global key. 
 The NAT proto divides the global configuration into several independent parts that align to VPP NAT features:
 
   - **Forwarding** to enable or disable forwarding.
-  - **NAT interfaces** list of interfaces enabled for NAT. If the interface does not exist in VPP, The KV scheduler caches it, for use later. You must define very interface with a logical name and boolean for `is_outside`.
-  - **Address pools** list of "NAT-able" IP addresses for a given VRF table. You should define only one interface in the `address pool` field. 
-  - **Virtual reassembly** for datagram fragmentation handling, to allow  correct recalculation of higher-level checksums.
+<br></br>
+  - **NAT interfaces** list of interfaces enabled for NAT. If the interface does not exist in VPP, The KV scheduler caches it, for use later. You must define every interface with a logical name, and the `is_outside` boolean.
+<br></br>
+  - **Address pools** list of "NAT-able" IP addresses for a given VRF table. You should define only one interface in the `address pool` field.
+<br></br> 
+  - **Virtual reassembly** for datagram fragmentation handling. This allows th  correct recalculation of higher-level checksums.
 
 ---
 
@@ -2317,7 +2320,7 @@ For more details and examples using gRPC, see the following:
 
 ### DNAT44
 
-Destination network address translation (DNAT) translates the destination IP address of a packet in one direction, and performs the inverse NAT function for returning packets in the opposite direction. 
+Destination network address translation (DNAT) translates the destination IP address of a packet in one direction, and performs the inverse NAT function for packets  returning in the opposite direction. 
 
 The DNAT configuration contains a list of static and/or identity mappings labelled under a single key. 
 
@@ -2326,12 +2329,41 @@ The DNAT configuration contains a list of static and/or identity mappings labell
 - [VPP DNAT44 proto][nat-proto]
 - [VPP DNAT44 model][nat-model]
 
-The nAT proto for DNAT44 consists of two parts: static mappings and identity mappings.
+The NAT proto for DNAT44 consists of two parts: static mappings and identity mappings.
 
-- Static mapping maps a single external interface, IP address, and port number to one or more local IP address and port numbers . When packets arrive on the external interface, DNAT44 can load balance packets across two or more local IP address and port number entries by invoking the [VPP NAT load balancer][vpp-nat-lb]. 
-- Identity mapping defines the interface and IP address from which packets originated from.   
+Static mapping maps a single external interface, IP address, and port number to one or more local IP address and port numbers. When packets originating from an external network arrive on the external interface, DNAT44 can load balance packets across two or more local IP address and port number entries by invoking the [VPP NAT load balancer][vpp-nat-lb].
 
-DNAT44 contains a unique label serving as an identifier. However, the DNAT44 configuration is not limited. An arbitrary number of static and identity mappings can be listed under a single label. 
+Identity mapping defines the interface and IP address from which packets originated from.
+
+DNAT44 contains a unique label serving as an identifier. You can define an arbitrary number of static and identity mappings under a single label.
+
+---
+
+**Twice NAT**
+
+You can specify the source and destination addresses in a single rule using twice NAT. For example, you might require the following:
+
+- source **A** translates to **B** for destination **C**
+<br></br>
+- source **A** translates to **Y** for destination **Z**
+ 
+In addition, you can configure address pool to support twice NAT using the `twice_nat` boolean. This lets you specify a source IP address to use in twice NAT processing. 
+
+You can override the default behavior of selecting the first IP address in the address pool with at least one free available port. You may have use cases where multiple twice-nat translations require different source IP addresses.
+
+!!! Note
+    VPP does not support the twice NAT address pool feature with load balancing. You can either use static mappings without load balancing where you have only one local IP, or use twice NAT without the twice NAT address pool feature.
+ 
+You can configure static mapping twice NAT function using the following:
+
+- `twice-nat` defines the twice NAT mode options of enable, disable or self.
+<br></br>
+- `twice_nat_pool_ip` specifies the source IP address. 
+
+Identity mapping defines the interface and IP address from which packets originated from.   
+
+!!! Note
+    In some corner DNAT44 cases, you might have the same source and destination after a DNAT44 translation. For more details on self Twice NAT and a VPP NAT plugin implementations, see [Contiv VPP NAT plugin](https://github.com/contiv/vpp/blob/master/docs/dev-guide/SERVICES.md#the-vpp-nat-plugin).
 
 ---
 
