@@ -59,6 +59,8 @@ Channel multiplexing figure from the [fd.io/govpp repository][fdio-govpp-repo].
     +--------------+
 ```
 
+---
+
 ### Connection
 
 Tho GoVPP multiplexer supports two connection types:
@@ -71,6 +73,8 @@ By default, GoVPP connects to VPP using the `socket client`. You can change this
 The default behaviour assumes only a single VPP running with the VPP agent. In the case where VPP runs with a customized SHM prefix, or you have several VPP instances running side-by-side, GoVPP needs to know the SHM prefix to connect to the correct VPP instance. 
 
 You must include the SHM prefix in the [GoVPPMux conf file][govppmux-conf-file], with the key `shm-prefix`, and the value matching the VPP shared memory prefix name.
+
+---
 
 ### Multiplexing
 
@@ -575,7 +579,7 @@ L2 forwarding switches incoming packets to an outbound interface defined in a FI
 - [FIB proto][bd-proto]
 - [FIB model][bd-model] 
 
-To configure a FIB entry, you need a mac address, interface, and bridge domain (BD). You must configure the interface in the bridge domain. The FIB entries reference the interface and BD with logical names. Note that the FIB entry will not appear in VPP until all conditions are met. 
+To configure a FIB entry, you need a mac address, interface, and bridge domain (BD). You must configure the interface in the bridge domain. The FIB entries reference the interface and BD with logical names. Note that the FIB entry will not appear in VPP until you meet all conditions. 
 
 ---
 
@@ -936,7 +940,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/ranges
 
 **gRPC**
 
-Prepare proxy ARP data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -951,7 +955,7 @@ xc := &l2.XConnectPair{
 
 ---
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -1066,7 +1070,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/routes
 
 **gRPC**
 
-Prepare the VPP route data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -1084,7 +1088,7 @@ route := &l3.Route{
 
 ---
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -1168,7 +1172,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/ipscanneigh
 
 **gRPC**
 
-Prepare the IP scan neighbor data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -1185,7 +1189,7 @@ ipScanNeigh := &l3.IPScanNeighbor{
 	}
 ```
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -1255,7 +1259,7 @@ The L3 plugin supports the [virtual router redundancy protocol](https://tools.ie
 **References:**
 
 - [VRRP proto][vrrp-proto]
-- [VRRP model][vrrp-model][L3-models]
+- [VRRP model][L3-models]
 - [fd.io VRRP API](https://git.fd.io/vpp/tree/src/plugins/vrrp/vrrp.api) 
 
 Example VRRP data:
@@ -1426,7 +1430,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/ipsec/sas
 
 **gRPC**
 
-Prepare the IPSec SA data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -1445,7 +1449,7 @@ sa := ipsec.SecurityAssociation{
 	}
 ```
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -1643,7 +1647,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/punt/sockets
 
 **gRPC**
 
-Prepare the Punt data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -1660,7 +1664,7 @@ punt := &punt.ToHost{
 
 ---
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -1742,7 +1746,7 @@ agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/ipredirect/l3/IPv4/tx/tap1 '{"l3
 
 **gRPC**
 
-Prepare the IP redirect data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -1758,7 +1762,7 @@ punt := &punt.IPRedirect{
 
 ---
 
-Prepare configuration data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -1823,20 +1827,26 @@ If you define the Unix domain socket path in the startup config, the path _must 
 
 ## ACL Plugin
 
-Access Control Lists (ACL) filter network traffic by controlling whether packets are forwarded (permitted), or blocked (deny) at the router’s interfaces, based on the criteria specified in the access list.
+Access Control Lists (ACL) filter network traffic by applying "match-action" rules to ingress or egress packets. The match function classifies the packets; the action defines packet processing functions to perform on matching packets. 
+
+Actions you can define in an ACL:
+
+- deny
+- permit 
+- reflect
 
 **References:**
 
 - [VPP ACL proto][acl-proto]
 - [VPP ACL model][acl-model]
 
-The VPP agent ACL plugin uses the binary API of the VPP data plane ACL plugin. The version of the VPP ACL plugin is displayed at VPP agent startup. Every ACL includes `match` rules that classify the packets to act upon, and  `action` rules defining to perform on packets.
+The VPP agent ACL plugin uses the binary API of the [VPP data plane ACL plugin](https://docs.fd.io/vpp/18.01/dir_9e97495e78c4182e4b3c22b8c511d67b.html). The VPP agent displays the VPP ACL plugin version at startup. Every ACL includes match rules defining a match criteria, and `action` rules defining actions to perform on those packets.
 
-The VPP agent defines an access list with a unique name. VPP generates an index, but the association is under the purview of the VPP agent. Every ACL must contain match rules, and action rules. 
+The VPP agent associates each ACL with a unique name. VPP generates an index; VPP agent manages the ACL-index binding. You must define match rules, and action rules, for each ACL. 
 
-The IP match rule can be specified for a variety of protocols, each with their own parameters. For example, the IP rule for the IP protocol can define the source and destination network addresses that the packet must match in order to execute the defined action. Other supported protocols are TCP, UDP and ICMP. 
+IP match rules let you specify interfaces, different IP protocols, IP address, port numbers, and L4 protocol, each with their own parameters.For example, you could define your IP rule to match on, ingress interface foo IPv4, port 6231, TCP, source address **A**, and destination address **B**. IP match rules support TCP, UDP, and ICMP.
 
-A single ACL rule can cover multiple protocol-based rules. The MAC-IP match (MACIP rule) defines IP address + mask, and MAC address + mask as filtering rules. Note that the IP rules and MACIP rules cannot be combined in the same ACL.
+You cannot mix IP rules and macip rules in the same ACL.
 
 ---
 
@@ -1911,7 +1921,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/acl/macip
 
 **gRPC**
 
-Prepare the ACL data:
+Prepare data:
 ```go
 import acl "github.com/ligato/vpp-agent/proto/ligato/vpp/acl"
 
@@ -1987,7 +1997,7 @@ acl := &acl.ACL{
 	}
 ```
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -2024,16 +2034,16 @@ For more details and examples using gRPC, see:
 
 ## ABF Plugin
 
-The ACL-based forwarding plugin is an implementation of policy-based routing (PBR). With ABF, packets are forwarded based on user-defined fields expressed by ACLs, rather than by a longest match lookup in a routing table.  
+The ACL-based forwarding (ABF) plugin implements policy-based routing (PBR). With ABF, you forward packets using ACL rules, rather than a destination longest match lookup into a routing table performed in normal IP forwarding.  
 
 **References:**
 
 - [VPP ABF proto][abf-proto]
 - [VPP ABF model][abf-model]
 
-The ABF entry is identifed by a numeric index. ABF data includes a list of interfaces the ABF attache to, the forwarding paths, and the associated ACL name. 
+The plugin defines an ABF entry with a numeric index. ABF data includes a list of interfaces the ABF attaches to, the forwarding paths, and the associated ACL name. 
 
-The ACL represents a dependency for the given ABF; If the ACL is not present, the KV Scheduler will cache the until the ACL is created. The same applies for ABF interfaces.   
+The ACL represents a dependency for the given ABF; The KV Scheduler will cache the ABF configuration until you create the ACL. The same applies for ABF interfaces.   
 
 ---
 
@@ -2087,7 +2097,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/abf
 
 **gRPC**
 
-Prepare ABF data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -2124,7 +2134,7 @@ abfData := vpp.ABF{
 	}
 ```
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -2174,16 +2184,6 @@ The NAT global configuration groups configuration data under single global key. 
 - [VPP NAT global proto][nat-proto]
 - [VPP NAT global model ][nat-model]
 
-
-The NAT proto global configuration includes:
-
-  - `forwarding` to enable or disable forwarding.
-<br></br>
-  - `nat_interfaces` list of interfaces enabled for NAT. If the interface does not exist in VPP, The KV scheduler caches it, for use later. You must define every interface with a logical name, and the `is_outside` boolean.
-<br></br>
-  - **Address pools** list of "NAT-able" IP addresses for a given VRF table. You should define only one interface in the `address pool` field.
-<br></br> 
-  - **Virtual reassembly** for datagram fragmentation handling. This allows th  correct recalculation of higher-level checksums.
 
 ---
 
@@ -2250,7 +2250,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/nat/global
 
 **gRPC**
 
-Prepare the global NAT data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/vpp"
@@ -2292,7 +2292,7 @@ natGlobal := &nat.Nat44Global{
 	}
 ```
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -2436,7 +2436,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/nat/dnat
 
 **gRPC**
 
-Prepare the DNAT data:
+Prepare data:
 ```go
 dNat := &nat.DNat44{
     Label: "dnat1",
@@ -2474,7 +2474,7 @@ dNat := &nat.DNat44{
 }
 ```
 
-Prepare configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
