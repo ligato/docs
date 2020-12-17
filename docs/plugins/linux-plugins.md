@@ -1,31 +1,28 @@
 # Linux Plugins
 
-This section describes the VPP Agent Linux plugins. Each plugin section provides:
+This section describes the VPP agent's Linux plugins. The information provided for each plugin includes:
 
-- Short description
-- Pointers to the `*.proto` containing configuration/NB protobuf API definitions, the `models.go` file defining the model, and the conf file if one is available.  
-- Example configuration interactions using an etcd data store, REST and gPRC.
+- Short description.
+- Pointers to the `.proto` files containing configuration/NB protobuf API definitions, the `models.go` file defining the model, and conf file if available.  
+- Configuration programming examples, if available, using an etcd data store, REST and gPRC. 
+
+---
 
 **Agentctl** 
 
-Linux configuration data can also be managed using `agentctl config` commands.
+You can manage Linux configurations using [agentctl][agentctl].
 ```
 Usage:	agentctl config COMMAND
 
-Manage agent configuration
-
 COMMANDS
+  delete      Delete config in agent
   get         Get config from agent
-  history     Retrieve config history
+  history     Show config history
   resync      Run config resync
   retrieve    Retrieve currently running config
   update      Update config in agent
+  watch       Watch events
 ```
-
-Reference: [agentctl config commands][agentctl-config]
-
-!!! Note
-    For Linux plugins, REST supports the retrieval of the existing configuration. REST cannot be used to add, modify or delete configuration data.
 
 ---
 
@@ -39,32 +36,33 @@ The Linux interface plugin manages Linux-based host OS interfaces. It supports V
 - [Linux interface model][linux-interface-model]
 - [Linux interface conf file][linux-interface-conf-file] 
 
-The Linux interface plugin watches for changes to the supported interface types. The difference between the VPP and Linux interface plugin is that the latter does not remove any "redundant" configuration. Instead, the plugin holds on to the state of all VETH and TAP interfaces present in the default namespace.
+The Linux interface plugin watches for changes to the supported interface types. The VPP interface plugin removes "redundant" configuration. The Linux interface plugin does not. Instead, it holds on to the state of all VETH and TAP interfaces present in the default namespace.
 
-Namespaces are also supported but handled separately by the [Namespace plugin](#namespace-plugin). Interfaces in non-default namespaces remain unknown if not registered during resync, or in other words not listed in the NB configuration. The VPP agent uses an [external library][netlink-repo] to manage and control OS interfaces.   
+Namespaces are supported but handled separately by the [Namespace plugin](#namespace-plugin). Interfaces in non-default namespaces remain unknown and not listed in the NB configuration, if not registered during a resync. The VPP agent uses an [external library][netlink-repo] to manage and control OS interfaces.   
 
-The Linux interface proto describes the interface including type, name, namespace, host OS name, IP addresses, and sections specific to TAP or VETH links. The interface name is required, and the host OS name can be specified. If not specified, the host name will be the same as the logical name.
+The Linux interface proto describes the interface including type, name, namespace, host OS name, IP addresses, and items specific to TAP or VETH links. You must include an logical interface `name`, and can define a `host_if_name`. If you do not define one, the host interface name will match the logical interface `name`. 
 
 ---
 
 ### VETH
 
-The Linux interface plugin supports a [VETH interface][veth-man-page]. The characteristics of a VETH interface are: 
+The Linux interface plugin supports a [VETH interface][veth-man-page]. The characteristics of a VETH interface: 
  
 - VETH device is a local Ethernet tunnel 
 - Devices are created in pairs. 
-- Packets transmitted on one device in the pair are immediately received by the other device in the pair.
+- Each device can send and receive packets to each other.
 - When either device is down, the link state of the pair is down. 
 
-The VETH device is needed when namespaces need to communicate to the main host namespace or between each other.
+You need a VETH device to communicate between namespaces, including the host namespace.
 
 !!! Note
-    At different times, VETHs are characterized as `devices`, `interfaces`, and `local tunnels`, and `connection endpoint`. Note that the VPP agent considers VETH to be an interface.
+    At different times, VETHs are characterized as devices, interfaces, local tunnels, and connection endpoints. The VPP agent views a VETH as an interface.
 
 
-VETH interfaces are created after both ends are defined and made known to the VPP agent. The single VETH can be conveyed to the VPP agent, but it is cached until its counterpart configuration appears. 
+You create VETH interfaces after defining both VETH devices, and making each known to the VPP agent. You can configure a single VETH device, but the KV Scheduler will cache the configuration until you define the other peer VETH device.
 
-The VETH configuration is of type `VethLink` and contains a mandatory field `peer_if_name`.  This is the name of the adjacent VETH endpoint. Optionally, checksum offloading of the received and transmitted packets can be defined.  
+You must include the `peer_if_name` in your VETH configuration. It defines the name of the peer VETH device. You can also enable checksum offloading of transmitted and received packets. 
+ 
 
 ---
 

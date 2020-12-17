@@ -3,7 +3,7 @@
 This section describes the VPP agent plugins. The information provided for each plugin includes:
 
 - Short description.
-- Pointers to the `.proto` files containing configuration/NB protobuf API definitions, the 'models.go' file defining the model, and conf file if available.  
+- Pointers to the `.proto` files containing configuration/NB protobuf API definitions, the `models.go` file defining the model, and conf file if available.  
 - Configuration programming examples, if available, using an etcd data store, REST and gPRC. 
 
 ---
@@ -2185,6 +2185,16 @@ The NAT global configuration groups configuration data under single global key. 
 - [VPP NAT global model ][nat-model]
 
 
+The NAT proto global configuration includes:
+
+  - `forwarding` to enable or disable forwarding.
+<br></br>
+  - `nat_interfaces` list of interfaces enabled for NAT. If the interface does not exist in VPP, The KV scheduler caches it, for use later. You must define every interface with a logical name, and the `is_outside` boolean.
+<br></br>
+  - `address_pool` list of "NAT-able" IP addresses.
+<br></br> 
+  - `virtual_reassembly` for datagram fragmentation handling. This allows th  correct recalculation of higher-level checksums.
+
 ---
 
 **KV Data Store**
@@ -2228,11 +2238,6 @@ Example NAT global data:
 Put NAT global:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings {"nat_interfaces":[{"name":"tap1"},{"name":"tap2","output_feature":true},{"name":"tap3","is_inside":true}],"address_pool":[{"address":"192.168.0.1"},{"address":"175.124.0.1"},{"address":"10.10.0.1"}],"virtual_reassembly":{"timeout":10,"max_reassemblies":20,"max_fragments":10,"drop_fragments":true}}
-```
-
-Delete NAT global:
-```bash
-agentctl kvdb del /vnf-agent/vpp1/config/vpp/nat/v2/nat44-global/settings
 ```
 
 ---
@@ -2330,7 +2335,7 @@ For more details and examples using gRPC, see:
 
 ### DNAT44
 
-Destination network address translation (DNAT) translates the destination IP address of a packet in one direction, and performs the inverse NAT function for packets  returning in the opposite direction. 
+Destination network address translation (DNAT) translates the destination IP address of a packet in one direction, and then performs the inverse NAT function for the packet returning in the opposite direction. 
 
 The DNAT configuration contains a list of static and/or identity mappings labelled under a single key. 
 
@@ -2357,12 +2362,12 @@ You can specify the source and destination addresses in a single rule using twic
 <br></br>
 - source **A** translates to **Y** for destination **Z**
  
-In addition, you can configure address pool to support twice NAT using the `twice_nat` boolean. This lets you specify a source IP address to use in twice NAT processing. 
+In addition, you can configure an address pool to support twice NAT using the `twice_nat` boolean. This lets you specify a source IP address to use in twice NAT processing. 
 
 You can override the default behavior of selecting the first IP address in the address pool with at least one free available port. You may have use cases where multiple twice-nat translations require different source IP addresses.
 
 !!! Note
-    VPP does not support the twice NAT address pool feature with load balancing. You can either use static mappings without load balancing where you have only one local IP, or use twice NAT without the twice NAT address pool feature.
+    VPP does not support the twice NAT address pool feature with load balancing. You can either use static mappings without load balancing where you have a single local IP, or use twice NAT without the twice NAT address pool feature.
  
 You can configure static mapping twice NAT function using:
 
@@ -2537,7 +2542,7 @@ SRv6 local SID configuration key:
 ```<SID>``` notes:
  
  - Unique ID identifying the individual local segment identifier in an SRv6 path.
- - Must be a valid IPv6 address. 
+ - Requires a valid IPv6 address. 
 
 ---
 
@@ -2571,7 +2576,7 @@ Note that ```<name>``` is a unique name for the steering configuration.
 
 ## STN Plugin
 
-In some deployments, you might deploy a host with two NICs: one controlled by VPP, and the other controlled by the host stack. 
+In some deployments, you might have a host with two NICs: one controlled by VPP, and the other controlled by the host stack. 
 
 You can implement the steal-the-NIC (STN) plugin when your host only supports a single NIC. In this [single-NIC setup][stn-contiv-vpp], the plugin steals the interface and its IP address from the host network stack just before VPP startup. Note that the VPP agent uses the same VPP interface IP address on the host-to-VPP interconnect TAP interface.  
 
@@ -2598,9 +2603,11 @@ The Telemetry plugin exports telemetry statistics from VPP to [Prometheus][prome
 - [Telemetry Runtime][telemetry-runtime]
 - [Telemetry Nodecount][telemetry-nodecount]
 
+---
+
 **Example exported data**
 
-- VPP runtime (`show runtime`)
+VPP runtime (`show runtime`):
 
 ```bash
                  Name                 State         Calls          Vectors        Suspends         Clocks       Vectors/Call
@@ -2791,7 +2798,7 @@ vpp_node_counter_count{agent="agent1",item="ipsec-output-ip4",reason="IPSec poli
     
 **Conf File**
 
-You can change the polling interval, disable export to prometheus, and disable/enable the telemetry plugin using the telemetry plugin conf file:
+You can change the polling interval, disable prometheus export, and enable/disable the telemetry plugin using the telemetry plugin conf file:
  
  - `polling-interval` time in nanoseconds between reads from the VPP. 
  - `disabled` set to `true` to disable the telemetry plugin.

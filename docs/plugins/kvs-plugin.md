@@ -2,9 +2,9 @@
 
 ---
 
-The KV Scheduler plugin addresses dependency resolution, and computes the proper programming sequence for multiple interdependent configuration items. It works with VPP and Linux agents on the southbound (SB) side, and external data stores and rpc clients on the northbound (NB) side. 
+The KV Scheduler plugin supports dependency resolution, and computes the proper programming sequence for multiple interdependent configuration items. It works with VPP and Linux agents on the southbound (SB) side, and external data stores and rpc clients on the northbound (NB) side. 
 
-To begin working with KV Scheduler right away, start with the [tutorials](../tutorials/00_tutorial-setup.md) section and work your way to the [KV Scheduler tutorial](../plugins/kvs-plugin.md).
+To begin working with the KV Scheduler right away, start with the [tutorials](../tutorials/00_tutorial-setup.md) section and work your way to the [KV Scheduler tutorial](../plugins/kvs-plugin.md).
 
 For an in-depth discussion, see the [KV Scheduler Section in the Developer Guide][kvs-dev-guide]
 
@@ -12,11 +12,11 @@ For an in-depth discussion, see the [KV Scheduler Section in the Developer Guide
 
 - [Ligato Framework](../intro/framework.md)
 - [Tutorials](../tutorials/00_tutorial-setup.md)
-- [User Guide concepts](../user-guide/concepts.md)
+- [Concepts](../user-guide/concepts.md)
 - [Agentctl](../user-guide/agentctl.md)
 - [KV Scheduler REST APIs](../api/api-kvs.md)
 - [Developer Guide KV Scheduler section][kvs-dev-guide]
-- [Developer Guide KVS troubleshooting section](../developer-guide/kvs-troubleshooting.md)
+- [Developer Guide KVS Troubleshooting section](../developer-guide/kvs-troubleshooting.md)
 - [Developer Guide KV Descriptors section](../developer-guide/kvdescriptor.md)
 
 
