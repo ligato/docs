@@ -68,11 +68,15 @@ You must include the `peer_if_name` in your VETH configuration. It defines the n
 
 ### TAP
 
-The TAP interface is a virtual network kernel interface that simulates a link-layer device. TAP interfaces are not directly created by the VPP agent. They are automatically put to the host OS default namespace by VPP after the VPP-TAP interface is created. The [VPP interface proto][vpp-interface-proto] for the TAP interface includes the `host_if_name` that defines the host name of the Linux TAP interface that is created.
+The TAP kernel interface simulates a link-layer device. The VPP agent does not directly create a TAP interface. Instead, VPP puts the TAP interface into the host OS default namespace once you create a VPP-TAP interface. 
+
+The [VPP interface proto][vpp-interface-proto] for the TAP interface includes the `host_if_name`. This field defines the TAP interface name as known to the host. 
  
-After the VPP-TAP interface is created, the Linux interface can be modified by the Linux interface plugin. IP and MAC addresses can be set, or the interface can be moved to a different namespace.
+After you create a VPP-TAP interface, the plugin lets you configure TAP interface IP and MAC addresses, or the move the interface to a different namespace. 
  
 If a Linux TAP delete action is invoked, the interface is reverted to the original state.  All configured fields are stripped, and it is moved back to the default namespace. The interface disappears when its VPP counterpart is removed. 
+
+If you delete a TAP interface, it reverts to its original state. This process strips all configured fields, and moves it back to the default namespace. The interface disappears after you remove its VPP counterpart.  
 
 ---
 
@@ -80,9 +84,7 @@ If a Linux TAP delete action is invoked, the interface is reverted to the origin
 
 **KV Data Store**
  
-Put the interface configuration data into an etcd data store using the correct [interface key][linux-key-reference].
-
-Example configuration for VETH. Keep in mind that the two interfaces must be defined with the correct peer name.
+Example VETH configuration. Make sure you define each interface with the correct `peer_if_name`. 
 
 First VETH:
 ```json
@@ -149,16 +151,16 @@ Tap interface:
 }
 ```
 
-Use `etcdctl` to put both interface key-value entries:
+Put interfaces:
 ```bash
 # VETH1
-etcdctl put /vnf-agent/vpp1/config/linux/interfaces/v2/interface/veth1 '{"name":"veth1","type":"VETH","namespace":{"type":"NSID","reference":"ns1"},"enabled":true,"ip_addresses":["192.168.22.1/24","10.0.2.2/24"],"phys_address":"D2:74:8C:12:67:D2","mtu":1500,"veth":{"peer_if_name":"veth2"}}'
+agentctl kvdb put /vnf-agent/vpp1/config/linux/interfaces/v2/interface/veth1 '{"name":"veth1","type":"VETH","namespace":{"type":"NSID","reference":"ns1"},"enabled":true,"ip_addresses":["192.168.22.1/24","10.0.2.2/24"],"phys_address":"D2:74:8C:12:67:D2","mtu":1500,"veth":{"peer_if_name":"veth2"}}'
 
 # VETH 2
-etcdctl put /vnf-agent/vpp1/config/linux/interfaces/v2/interface/veth2 '{"name":"veth2","type":"VETH","namespace":{"type":"NSID","reference":"ns2"},"enabled":true,"ip_addresses":["192.168.22.5/24"],"phys_address":"92:C7:42:67:AB:CD","mtu":1500,"veth":{"peer_if_name":"veth1"}}'
+agentctl kvdb put /vnf-agent/vpp1/config/linux/interfaces/v2/interface/veth2 '{"name":"veth2","type":"VETH","namespace":{"type":"NSID","reference":"ns2"},"enabled":true,"ip_addresses":["192.168.22.5/24"],"phys_address":"92:C7:42:67:AB:CD","mtu":1500,"veth":{"peer_if_name":"veth1"}}'
 
 # TAP
-etcdctl put /vnf-agent/vpp1/config/linux/interfaces/v2/interface/tap1 '{"name":"tap1","type":"TAP_TO_VPP","namespace":{"type":"NSID","reference":"ns2"},"host_if_name":"tap-host","enabled":true,"ip_addresses":["172.52.45.127/24"],"phys_address":"BC:FE:E9:5E:07:04","mtu":1500,"tap":{"vpp_tap_if_name":"tap-host"}}'
+agentctl kvdb put /vnf-agent/vpp1/config/linux/interfaces/v2/interface/tap1 '{"name":"tap1","type":"TAP_TO_VPP","namespace":{"type":"NSID","reference":"ns2"},"host_if_name":"tap-host","enabled":true,"ip_addresses":["172.52.45.127/24"],"phys_address":"BC:FE:E9:5E:07:04","mtu":1500,"tap":{"vpp_tap_if_name":"tap-host"}}'
 ```
 
 ---
@@ -170,8 +172,7 @@ API References:
 - [Linux Interfaces][linux-interfaces]
 - [Linux Interface Stats][linux-interface-stats]
 
-Use this cURL command to GET all Linux interfaces:
-
+GET all Linux interfaces:
 ```bash
 curl -X GET http://localhost:9191/dump/linux/v2/interfaces
 ```
@@ -180,7 +181,7 @@ curl -X GET http://localhost:9191/dump/linux/v2/interfaces
 
 **gRPC**
 
-Prepare the interface data (TAP):
+Prepare data:
 ```go
 linuxTap := &linuxIf.Interface{
 		Name:        "tap1",
@@ -204,7 +205,7 @@ linuxTap := &linuxIf.Interface{
 	}
 ```
 
-Prepare the gRPC configuration data:
+Prepare configuration:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -220,9 +221,7 @@ config := &configurator.Config{
 	}
 ```
 
-The configuration data can be combined with any other Linux and VPP configuration.
-
-Update data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
+Update the configuration using the client of the `ConfigurationClient` type:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -230,29 +229,44 @@ import (
 
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
+You can combine this configuration data with any other VPP or Linux configuration.
+
+For more details and examples using gRPC, see: 
+
+- [GRPC tutorial][grpc-tutorial]
+- [grpc_vpp_remote_client example](https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/remote_client)
+- [grpc_vpp_notifications example](https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/notifications)
+
 
 ---
 
 ### Limitations
 
+
 The Linux plugin namespace management requires that docker run in privileged mode with the `--privileged`) flag set. Otherwise, the VPP agent can fail to start.
+
+---
  
 ### Disable the Linux Interface Plugin
 
-Use the [Linux interface][linux-interface-conf-file] and [Linux L3 plugin][linux-l3-conf-file] conf files respectively and set both to `disabled: true`.
+You can disable the Linux interface plugin by setting `disabled: true` in the [Linux interface][linux-interface-conf-file] and [Linux L3 plugin][linux-l3-conf-file] conf files respectively.
 
 ---
 
 ## IP Tables Plugin
 
-Linux kernel networking supports a firewall function using the [iptables][iptables-digital-ocean-blog] utility. Iptables work on the notion of rulechains that consist of:
+Linux kernel networking supports a firewall function using the [iptables][iptables-digital-ocean-blog] utility. Iptables use rulechains to define firewall policies.
 
-- Chains in the kernel packet processing pipeline where a specific table is triggered. There are predefined chains such `prerouting` and `postrouting`. Custom chains can be created and instantiated as well. 
+Rulechain concepts:
+
+- Chains in the kernel packet processing pipeline where a specific table is triggered. There are predefined chains such as `prerouting` and `postrouting`. You can create and instantiate custom chains.
+<br>
+</br> 
 - Table(s) defining how packets should be evaluated at each chain as they traverse their way through the stack. 
  
 A sequence of tables and their respective chains define the rulechains that in turn, make up an iptables firewall policy.
  
-The Linux iptables proto defines the configurable options to define and manage iptables rulechains.        
+The Linux iptables proto include the configurable options for defining and managing rulechains.        
 
 **References:**
 
@@ -264,11 +278,11 @@ The Linux iptables proto defines the configurable options to define and manage i
 
 ## L3 Plugin
 
-The Linux L3 plugin is used to configure Linux ARP entries and Linux routes. The Linux L3 plugin is dependent on the [Linux interface plugin](#linux-interface-plugin). L3 configuration items support the Linux namespace in the same manner as the Linux interface.  
+The Linux L3 plugin supports the configuration of Linux ARP entries and Linux routes. The [Linux interface plugin](#linux-interface-plugin) is a dependency. L3 configuration items support the Linux namespace in the same manner as the Linux interface.  
 
 ### Linux ARP
 
-The address resolution protocol (ARP) is a communication protocol for discovering the MAC address associated with a given IP address.
+The address resolution protocol (ARP) discovers the MAC address associated with a given IP address. An interface and IP address define a unique ARP entry in the ARP table.
 
 **References**
 
@@ -278,8 +292,7 @@ The address resolution protocol (ARP) is a communication protocol for discoverin
 
 The Linux ARP proto defines an interface, IP address and MAC address fields. All fields are mandatory.
 
-The ARP entry is dependent on the associated Linux interface. An ARP configuration is postponed until the interface appears. The target namespace is derived from the interface identified by the unique name. The interface host name must be unique within the namespace 
-scope.   
+The ARP entry is dependent on the associated Linux interface. The KV Scheduler postpones ARP configuration updates until the interface appears. The target namespace is derived from the interface identified by the unique name. You must use a unique host interface name within the namespace. 
 
 ---
 
@@ -287,8 +300,6 @@ scope.
 
 **KV Data Store**
  
-Put the ARP entry configuration data into an etcd data store using the correct [Linux ARP key][linux-key-reference].
-
 Example data:
 ```json
 {  
@@ -298,14 +309,9 @@ Example data:
 }
 ```
 
-Use this `etcdctl` command to put the key-value entry:
+Put linux ARP entry:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/linux/l3/v2/arp/veth1/130.0.0.1 '{"interface":"veth1","ip_address":"130.0.0.1","hw_address":"46:06:18:DB:05:3A"}'
-```
-
-To remove the configuration:
-```bash
-etcdctl del /vnf-agent/vpp1/config/linux/l3/v2/arp/veth1/130.0.0.1
+agentctl kvdb put /vnf-agent/vpp1/config/linux/l3/v2/arp/veth1/130.0.0.1 '{"interface":"veth1","ip_address":"130.0.0.1","hw_address":"46:06:18:DB:05:3A"}'
 ```
 
 ---
@@ -314,8 +320,7 @@ etcdctl del /vnf-agent/vpp1/config/linux/l3/v2/arp/veth1/130.0.0.1
 
 API Reference: [Linux L3 ARPs][linux-l3-arps]
 
-Use this cURL command to GET all Linux ARP entries:
-
+GET all Linux ARP entries:
 ```bash
 curl -X GET http://localhost:9191/dump/linux/v2/arps
 ```
@@ -324,7 +329,7 @@ curl -X GET http://localhost:9191/dump/linux/v2/arps
 
 **gRPC**
 
-Prepare the Linux ARP data:
+Prepare data:
 ```go
 linuxArp := &linuxL3.ARPEntry{
 		Interface: "linuxIf1",
@@ -349,10 +354,8 @@ config := &configurator.Config{
 	}
 ```
 
-The configuration data can be combined with any other Linux or VPP configuration.
 
-Update data with gRPC by using the client of the `ConfigurationClient` type. Read more about how to prepare the gRPC connection, and other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
-
+Update the configuration using the client of the `ConfigurationClient` type:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -360,12 +363,20 @@ import (
 
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
+You can combine this configuration data with any other VPP or Linux configuration.
+
+For more details and examples using gRPC, see: 
+
+- [GRPC tutorial][grpc-tutorial]
+- [grpc_vpp_remote_client example](https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/remote_client)
+- [grpc_vpp_notifications example](https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/notifications)
+
 
 ---
 
 ### Linux Routes
 
-The linux routing table contains destination network prefixes, a corresponding next_hop IP address and the outbound interface.
+Linux routing table entries contain destination network prefixes, a corresponding next_hop IP address and the outbound interface.
 
 **References:**
 
@@ -373,9 +384,9 @@ The linux routing table contains destination network prefixes, a corresponding n
 - [Linux routes model][linux-l3-arp-route-models]
 - [Linux L3 conf file][linux-l3-conf-file]
 
-The interface for the route is mandatory. The namespace is derived from the interface in the same manner as Linux ARP. If the source and gateway (next_hop router) IP addresses are set, they must be valid, and the gateway IP address must be evaluated as reachable. 
+You must have an interface for the route. The namespace is derived from the interface in the same manner as Linux ARP. If you configure a destination prefix and next_hop gateway, you must use valid IP addresses.  
 
-Every route includes a scope which is the network domain where the route is applicable. The scope is defined in the route configuration.
+You can include a scope for each route, that defines the network domain where the route is applicable.  
 
 The scope options are:
 
@@ -390,8 +401,6 @@ The scope options are:
 
 **KV Data Store**
 
-Put the route data into an etcd data store using the [Linux route key][linux-key-reference].
-
 Example configuration:
 ```json
 {  
@@ -402,14 +411,9 @@ Example configuration:
 }
 ```
 
-Use this `etcdctl` command to put the key-value entry:
+Put Linux route:
 ```bash
-etcdctl put /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1 '{"outgoing_interface":"veth1","scope":"GLOBAL","dst_network":"10.0.2.0/24","metric":100}'
-```
-
-To remove the configuration:
-```bash
-etcdctl del /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1
+agentctl kvdb put /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1 '{"outgoing_interface":"veth1","scope":"GLOBAL","dst_network":"10.0.2.0/24","metric":100}'
 ```
 
 ---
@@ -418,9 +422,7 @@ etcdctl del /vnf-agent/vpp1/config/linux/l3/v2/route/10.0.2.0/24/veth1
 
 API Reference: [Linux L3 routes][linux-l3-routes]
 
-Use this cURL command to GET Linux routing table entries:
-
-
+GET Linux routing table entries:
 ```bash
 curl -X GET http://localhost:9191/dump/linux/v2/routes
 ```
@@ -429,7 +431,7 @@ curl -X GET http://localhost:9191/dump/linux/v2/routes
 
 **gRPC**
 
-Prepare the Linux route data:
+Prepare data:
 ```go
 linuxRoute := &linuxL3.Route{
 		DstNetwork:        "10.0.2.0/24",
@@ -439,7 +441,7 @@ linuxRoute := &linuxL3.Route{
 	}
 ```
 
-Prepare the gRPC config data:
+Prepare data:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -455,7 +457,7 @@ config := &configurator.Config{
 	}
 ```
 
-Update data with gRPC using the client of the `ConfigurationClient` type (read more about how to prepare the GRPC connection and about other CRUD methods in the [GRPC tutorial][grpc-tutorial]:
+Update the configuration using the client of the `ConfigurationClient` type:
 ```go
 import (
 	"github.com/ligato/vpp-agent/proto/ligato/configurator"
@@ -463,12 +465,20 @@ import (
 
 response, err := client.Update(context.Background(), &configurator.UpdateRequest{Update: config, FullResync: true})
 ```
+You can combine this configuration data with any other VPP or Linux configuration.
+
+For more details and examples using gRPC, see: 
+
+- [GRPC tutorial][grpc-tutorial]
+- [grpc_vpp_remote_client example](https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/remote_client)
+- [grpc_vpp_notifications example](https://github.com/ligato/vpp-agent/tree/master/examples/grpc_vpp/notifications)
+
 
 ---
 
 ## Namespace Plugin
 
-The namespace plugin is an auxiliary plugin used by other Linux plugins to handle namespaces and microservices.
+Linux plugins use the auxiliary namespace plugin to handle namespaces and microservices. 
 
 **References:**
 
@@ -476,24 +486,24 @@ The namespace plugin is an auxiliary plugin used by other Linux plugins to handl
 - [Linux namespace model][linux-namespace-model]
 - [Linux namespace conf file][linux-namespace-conf-file]
 
-The namespace proto contains two fields: type and reference. 
+The namespace proto contains two fields: `type` and `reference`. 
 
-The namespace type options are:
+Type options are:
  
-- named - SSID
-- process ID - PID
-- file handle reference - FD
-- docker container running a microservice. 
+- `NSID` - named namespace
+- `PID` - namespace of a given process 
+- `FD` - namespace referenced by file handle
+- `MICROSERVICE` docker container running a microservice. 
 
-The reference is a namespace identifier composed of the namespace ID, specific PID, file path or a microservice label.
+The `reference` is a string with information specific to namespace type.
 
-The namespace is imported into the [Linux interface plugin][linux-interface-guide]. It does not define any keys except for notifications. 
+The namespace plugin imports the namespace into the [Linux interface plugin][linux-interface-guide]. It does not define any keys except for notifications. 
 
 ---
 
 ### Linux Network Namespaces
 
-The VPP agent supports Linux network namespaces. It is possible to attach a Linux interface/ARP/route into a new, existing, or yet-to-be-created network namespace via the `Namespace` configuration section defined in the [Linux interface proto][linux-interface-proto].
+The VPP agent supports Linux network namespaces. You can attach a Linux interface/ARP/route into sa new, existing, or yet-to-be-created network namespace via the `Namespace` configuration section defined in the [Linux interface proto][linux-interface-proto].
 
 **References:**
 
@@ -501,21 +511,24 @@ The VPP agent supports Linux network namespaces. It is possible to attach a Linu
 - [Linux namespace model][linux-namespace-model]
 - [Linux namespace conf file][linux-namespace-conf-file]
 
-Namespace can be referenced in multiple ways. The most low-level link to a namespace is a file descriptor associated with the symbolic link. This is automatically created in the `proc` filesystem. It points to the definition of the namespace used by a given process (`/proc/<PID>/ns/net`), or to a task of a given process (`/proc/<PID>/task/<TID>/ns/net`).
+You can reference a namespace in multiple ways. One technique uses a file descriptor associated with a symbolic link to a namespace. This link is automatically created in the `proc` filesystem. It points to the definition of the namespace used by a given process (`/proc/<PID>/ns/net`), or to a task of a given process (`/proc/<PID>/task/<TID>/ns/net`).
  
-The more common approach is to use the PID of the process whose namespace we wish to attach to, or to create a bind-mount of the symbolic link into the `/var/run/netns` directory and use the filename of that mount. 
+The more common approach uses the PID:
 
-The latter is called the `named` namespace and it is created and managed, for example, by the `ip netns` command line tool from the `iproute2` package. The advantage of the `named` namespace is that it can survive, after the process that created it disappears. 
+- Of the process's namespace you want to attach to, or
+- To create a bind-mount of the symbolic link into the `/var/run/netns` directory, and use the filename of that mount.
 
-A namespace configuration section can be seen as a union of values. First, set the type, then store the reference into the appropriate field be it `pid`, `name` or `microservice`. The VPP agent supports PID-based references and `named` namespaces.
+The latter is called the `named` namespace. You can create a `named` namespace using the `ip netns` command line tool from the `iproute2` package. The `named` namespace can survive, after the process that created it disappears, which is a big advantage. 
+
+You can view the namespace configuration section as a union of values. You first set the type, and then store the reference into the appropriate `pid`, `name` or `microservice` field. The VPP agent supports PID-based references and `named` namespaces.
 
 ---
 
 ### Microservices
 
-Additionally, we provide a non-standard namespace reference, denoted as `MICROSERVICE_REF_NS`, which is specific to ecosystems with microservices. It is possible to attach a Linux interface/ARP/route into the namespace of a container that runs a microservice with a given microservice label. 
+The VPP agent also supports non-standard namespace reference, denoted as `MICROSERVICE_REF_NS`, which is specific to ecosystems with microservices. This lets you attach a Linux interface/ARP/route into the namespace of a container that runs a microservice with a given microservice label.
 
-It is not required to start the microservice before the configured item is pushed. The VPP agent will postpone interface (re)configuration until the referenced microservice is launched. Behind the scenes, the VPP agent communicates with the docker daemon to construct and maintain an up-to-date map of microservice labels to PIDs, and the IDs of their corresponding containers. Whenever a new microservice is detected, all pending interfaces are moved to its namespace.
+You are not required to start the microservice before you update the configured item. The VPP agent will postpone interface (re)configuration until you launch the referenced microservice. Behind the scenes, the VPP agent communicates with the docker daemon to construct and maintain an up-to-date map of microservice labels to PIDs, and the IDs of their corresponding containers. Whenever the VPP agent detects a new microservice, it moves all pending interfaces to the microservice namespace.
 
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [key-reference]: ../user-guide/reference.md
