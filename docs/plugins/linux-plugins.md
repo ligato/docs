@@ -38,7 +38,7 @@ The Linux interface plugin manages Linux-based host OS interfaces. It supports V
 
 The Linux interface plugin watches for changes to the supported interface types. The VPP interface plugin removes "redundant" configuration. The Linux interface plugin does not. Instead, it holds on to the state of all VETH and TAP interfaces present in the default namespace.
 
-Namespaces are supported but handled separately by the [Namespace plugin](#namespace-plugin). Interfaces in non-default namespaces remain unknown and not listed in the NB configuration, if not registered during a resync. The VPP agent uses an [external library][netlink-repo] to manage and control OS interfaces.   
+The [Namespace plugin](#namespace-plugin) handles namespaces. Interfaces in non-default namespaces remain unknown, and not listed in the NB configuration, if not registered during a resync. The VPP agent uses an [external library][netlink-repo] to manage and control OS interfaces.   
 
 The Linux interface proto describes the interface including type, name, namespace, host OS name, IP addresses, and items specific to TAP or VETH links. You must include an logical interface `name`, and can define a `host_if_name`. If you do not define one, the host interface name will match the logical interface `name`. 
 
@@ -46,7 +46,7 @@ The Linux interface proto describes the interface including type, name, namespac
 
 ### VETH
 
-The Linux interface plugin supports a [VETH interface][veth-man-page]. The characteristics of a VETH interface: 
+The Linux interface plugin supports a [VETH interface][veth-man-page]. The following lists VETH interface basics: 
  
 - VETH device is a local Ethernet tunnel 
 - Devices are created in pairs. 
@@ -526,10 +526,11 @@ You can view the namespace configuration section as a union of values. You first
 
 ### Microservices
 
-The VPP agent also supports non-standard namespace reference, denoted as `MICROSERVICE_REF_NS`, which is specific to ecosystems with microservices. This lets you attach a Linux interface/ARP/route into the namespace of a container that runs a microservice with a given microservice label.
+The VPP agent also supports non-standard namespace reference, denoted as `MICROSERVICE_REF_NS`, which is specific to ecosystems with microservices. This lets you attach a Linux interface, ARP, or route into the namespace of a container that runs a microservice with a given microservice label.
 
-You are not required to start the microservice before you update the configured item. The VPP agent will postpone interface (re)configuration until you launch the referenced microservice. Behind the scenes, the VPP agent communicates with the docker daemon to construct and maintain an up-to-date map of microservice labels to PIDs, and the IDs of their corresponding containers. Whenever the VPP agent detects a new microservice, it moves all pending interfaces to the microservice namespace.
+You are not required to start the microservice before you update the configured item. The VPP agent will postpone interface configuration until you launch the referenced microservice. Behind the scenes, the VPP agent communicates with the docker daemon to construct and maintain an up-to-date map of microservice labels to PIDs, and the IDs of their corresponding containers. Whenever the VPP agent detects a new microservice, it moves all pending interfaces to the microservice namespace.
 
+[agentctl]: ../user-guide/agentctl.md
 [grpc-tutorial]: ../tutorials/08_grpc-tutorial.md
 [key-reference]: ../user-guide/reference.md
 [linux-arp-proto]: https://github.com/ligato/vpp-agent/blob/master/proto/ligato/linux/l3/arp.proto
