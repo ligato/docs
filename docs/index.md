@@ -6,24 +6,29 @@ Welcome to the Ligato Docs, a collection of information and documentation about 
 
 ## About Ligato
 
-- [Overview](intro/overview.md): high-level overview
-- [VPP Agent Releases][vpp-agent-releases]: release info for VPP Agent
-- [Cn-infra Releases][cn-infra-releases]: release info for cn-infra
+- [Overview](intro/overview.md)
+- [VPP Agent Releases][vpp-agent-releases]
+- [Cn-infra Releases][cn-infra-releases] 
+
+---
 
 ## Using Ligato
 
-- [Quickstart](user-guide/quickstart.md) - build, run and interface with a vpp-agent/vpp container
-- [Concepts](user-guide/concepts.md) - explains models, keys and KV data store
-- [FAQ](intro/faq.md) - simple answers to common questions
+- [Quickstart](user-guide/quickstart.md)
+- [Concepts](user-guide/concepts.md)
+- [Tutorials](tutorials/00_tutorial-setup.md)
+- [FAQ](intro/faq.md)
+
+---
 
 ## Developing with Ligato
 
-- [Hello World](tutorials/01_hello-world.md) - first in a series of Ligato programming tutorials
-- [KV Scheduler](developer-guide/kvscheduler.md) and [KV Descriptors](developer-guide/kvdescriptor.md) - detailed architecture, behavior and troubleshooting aspects of the KV Scheduler framework
-- [KV Scheduler](api/api-kvs.md) and [VPP Agent](api/api-vpp-agent.md) REST API documentation, including OpenAPI definitions
-- [Go Doc](https://godoc.org/github.com/ligato/vpp-agent) - code documentation
 
-See the **Developer Guide** section for more information.
+- [KV Scheduler](developer-guide/kvscheduler.md) and [KV Descriptors](developer-guide/kvdescriptor.md)
+- [KV Scheduler REST APIs](api/api-kvs.md)
+- [VPP Agent REST APIs](api/api-vpp-agent.md)
+- [GoDoc](developer-guide/godocs.md)
+
 
 [vpp-agent-releases]: https://github.com/ligato/vpp-agent/releases
 [cn-infra-releases]: https://github.com/ligato/cn-infra/releases

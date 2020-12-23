@@ -1,24 +1,26 @@
 # Database Plugins
 
-This section discusses the set of [Ligato infrastructure][cn-infra-github] database plugins.
+This section discusses  database plugins.
 
 ---
 
 ## Datasync
 
-Datasync defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources such as data stores, message buses, or rpc-connected clients.
+Datasync defines the interfaces for data synchronization between app plugins and different backend data sources that include s data stores, message buses, or rpc-connected clients.
 
-Data synchronization addresses the situation when multiple data sets must by synchronized as a result of a published event.
+Data synchronization addresses the situation when multiple data sets must  synchronize following a published event.
 
 Examples of components that publish events:
 
-- database updates 
-- message bus consuming messages from Kafka topics
+- Database updates 
+- Message bus consuming messages from Kafka topics
 - RPC clients using gRPC or REST APIs
 
 The data synchronization APIs are centered around watching, and publishing data change events. These events are processed asynchronously.
 
-The data handled by one plugin can have references to the data of another plugin. Therefore, a proper time/order sequence of data resynchronization between plugins must be maintained. The datasync plugin initiates a full data resync in the same order as the other plugins have been registered in Init().
+The data handled by one plugin can have references to data of another plugin. Therefore, you must maintain a proper time/order sequence of data resynchronization between plugins. 
+
+The datasync plugin initiates a full data resync in the same order you have registered your plugins in the `Init() function. 
 
 **References**
 
