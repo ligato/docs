@@ -1,89 +1,94 @@
 # Database Plugins
 
-This section discusses the set of [Ligato infrastructure][cn-infra-github] database plugins.
-
-!!! Note
-    Database plugins can also be referred to as connectors.
+This section discusses  database plugins.
 
 ---
 
 ## Datasync
 
-Datasync defines the interfaces for the abstraction of data synchronization between app plugins and different backend data sources such as data stores, message buses, or rpc-connected clients.
+Datasync defines the interfaces for data synchronization between app plugins and different backend data sources that include s data stores, message buses, or rpc-connected clients.
 
-Data synchronization addresses the situation when multiple data sets must by synchronized as a result of a published event.
+Data synchronization addresses the situation when multiple data sets must  synchronize following a published event.
 
 Examples of components that publish events:
 
-- database updates 
-- message bus consuming messages from Kafka topics
+- Database updates 
+- Message bus consuming messages from Kafka topics
 - RPC clients using gRPC or REST APIs
 
-The data synchronization APIs are centered around watching, and publishing data change events. These events are processed asynchronously.
+The data synchronization APIs watch, and publish, asynchronously processed data change events. 
 
-The data handled by one plugin can have references to the data of another plugin. Therefore, a proper time/order sequence of data resynchronization between plugins must be maintained. The datasync plugin initiates a full data resync in the same order as the other plugins have been registered in Init().
+You might have data handled by one plugin containing references to data of another plugin. Therefore, you must maintain a proper time/order sequence of data resynchronization between plugins. 
+
+The datasync plugin initiates a full data resync in the same order you  register your plugins in the `Init()` function. 
 
 **References**
 
 - [Ligato cn-infra repo][cn-infra-github]
 - [Datasync repo folder][cn-infra-datasync-repo-folder]
 
-!!! Note
-    In the discussions that follow, the term `server agent` is used to describe a server. A KV data store holds data/configuration information for multiple server agents. Mechanisms are introduced to propagate  data/configurations changes from the KV data store to the different server agents. These changes may require a resynchronization. The VPP agent is an example of a server agent.
 
 ---
 
 ### Watch Data API
 
-The watch data API is used for the following:
+The watch data API provides following functions:
 
-- Subscribe to channels for data changes using Watch(), while being “abstracted away” from the particular message source such as an etcd server.
-- Process a full Data RESYNC including startup and fault recovery scenarios. Feedback, such as success or error, is provided to the user of this API via callback.
-- Process Incremental Data CHANGE. This is an optimized variant of RESYNC, where the minimal set of changes, or deltas, to reach synchronized state are propagated to the plugins. Feedback, such as successful configuration or error, is returned to the user of this API via callback.
+- Subscribes to channels for data changes, and "abstracts away" message sources such as an etcd server.
+<br></br>
+- Processes a full data resync for startup and fault recovery scenarios. You will receive success or error feedback via callback.
+<br></br>
+- Process incremental data change. This optimized resync variant propagates to plugins, the minimal set of changes to reach synchronized state. You will receive success or error feedback via callback.
 
 
 
 ![datasync][datasync-image]
 <p style="text-align: center; font-weight: bold">Watch data API Functions</p>
 
-This API defines two types of events that a plugin should support:
+This API defines two types of events your plugins should support:
 
-- Full data RESYNC event triggers a resync of the entire configuration. This event is used after an agent start/restart, or in a fault recovery scenario, such as when agent connectivity to an external data source is lost and restored.
-- Incremental data CHANGE event triggers incremental processing of configuration changes. Each data change event contains both the previous and the new/current value. The Data synchronization is switched to this optimized mode only after a successful Full Data RESYNC.
+- Full resync event triggers a full resync of the entire configuration. This event occurs after an agent start/restart, or in a fault recovery scenario, such as lost and restored connectivity to an external data source.
+<br></br>
+- Incremental data change event triggers incremental processing of configuration changes. Each data change event contains the previous values, and the new or current values. Data synchronization switches to this optimized mode only after a successful full data resync.
+
+The **Watch data API Functions** figure above:
+ 
+ - Full resync event flow shown in **2.1 - 2.3**
+ - Incremental data change event flow shown in **3.1 - 3.4** 
 
 ---
 
 ### Publish Data API
 
-The publish data API is used by plugins to asynchronously publish events with data change values, and still remain abstracted away from the target data store, message bus or RPC client(s).
+Your plugins use the publish data API to asynchronously publish events with data change values, and still remain abstracted away from the target data store, message bus or RPC client(s). The figure below illustrates the publish event flow. 
 
 ![datasync publish][datasync-publish-image]
 <p style="text-align: center; font-weight: bold">Publish data API Functions</p>
+
+
+
 
 ---
 
 ## Data Broker 
 
-The Data Broker abstraction is based on the broker and watcher APIs:
+The Data broker abstraction is based on the broker and watcher APIs:
 
-* **Broker** - used by plugins to pull data from a data store, or push data to the data store. Data can be retrieved for a specific key or by running a query. Data can be written for a specific key. Multiple writes can be executed in a transaction.
-* **Watcher** - used by plugins to watch data on a specified key. Watching means to monitor for data changes, and receive notifications upon any change occurring.
+* **Broker** - enables your plugins to pull data from a data store, or push data to the data store. You can retrieve data for a specific key, or by running a query. You can write data for a specific key, and multiple writes can execute in a transaction.
+<br></br>
+* **Watcher** - enables your plugins to watch data on a specified key. Watching looks for data changes, and receives notifications upon any change occurring.
+<br></br>
   
 ![db][db-image]
 <p style="text-align: center; font-weight: bold">Broker and Watcher APIs Functions</p>
 
-The broker amd watcher APIs abstract common database operations implemented by different data stores such as etcd, Redis and Cassandra. Still, there are major differences between KV-based and sql-based data stores. Therefore the broker and watcher Go interfaces are defined in each package separately. The method names for a given operation are the same, the method arguments are different.
+The broker and watcher APIs abstract common database operations implemented by different data stores. However, differences exist between KV-based and sql-based data stores. Therefore, each package separately defines the Go broker and watcher interfaces. They use the same method names, but with different method arguments.
 
 ---
 
 ### Keyval Package
 
-The `keyval` package defines the client API for accessing a KV data store. It is comprised of the broker and watcher APIs:
-
-- `Broker` supports reading and manipulation of key-value pairs. 
-- `Watcher` provides functions for monitoring of changes in a data store. 
-
-Both interfaces are available with arguments of type `bytes` (raw data) and `proto.Message` (protobuf-formatted data).
+The [keyval package](https://godoc.org/github.com/ligato/cn-infra/db/keyval) defines the client API for accessing a KV data store. The broker API supports reading and manipulation of key-value pairs. The watcher API provides monitors changes in a data store. You can use arguments of type bytes and proto.Message for both interfaces. 
 
 The `keyval` package also provides a skeleton for a KV data store plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to data stores implementing the `KvPlugin` interface.
 
@@ -91,12 +96,13 @@ The `keyval` package also provides a skeleton for a KV data store plugin. A part
 
 - [Ligato cn-infra repo][cn-infra-github]
 - [Keyval repo folder][cn-infra-keyval-repo-folder]
+- [keyval package](https://godoc.org/github.com/ligato/cn-infra/db/keyval)
 
 ---
 
 ## etcd
 
-The etcd plugin provides access to an etcd KV data store. The host or server where the etcd data store is running is also known as an etcd server.
+The etcd plugin provides access to an etcd KV data store.
 
 **References**
 
@@ -107,27 +113,27 @@ The etcd plugin provides access to an etcd KV data store. The host or server whe
 
 ### Configuration
 
-The location of the etcd conf file can be defined either by the command line flag `etcd-config`, or by setting the `ETCD_CONFIG` env variable. 
+You can define the location of the etcd conf file using the command line flag `etcd-config`, or by setting the `ETCD_CONFIG` env variable. 
 
-The configuration options are described in the [etcd conf file][etcd-conf-file] section of the user guide.  
+For a list of etcd configuration options, see [etcd conf file][etcd-conf-file].  
 
 
 ### Status Check
 
-The etcd plugin will use the Status Check plugin to periodically issue a GET request to verify connection status. The etcd connection state affects the global status of the agent. If the agent cannot establish a connection with the etcd server, both the readiness and the liveness probes from the probe plugin will return a negative result.
+The etcd plugin uses status check plugin to periodically issue a GET request to verify connection status. The etcd connection state can impact the global status of your agent. If your agent cannot establish a connection with the etcd server, the readiness and liveness probes issued by the probe plugin will return a negative result.
 
 ### Compacting
 
 You can compact etcd using in one of two ways:
 
-- using an API by calling `plugin.Compact()` which will compact the database to the current revision.
-- use the conf file by setting the `auto-compact` option to the interval duration between auto compaction cycles.
+- Create an API by calling `plugin.Compact()` which will compact the database to the current revision.
+- Set the `auto-compact` option in the conf file to the interval duration between auto compaction cycles.
 
 ### Reconnect Resynchronization
 
-If connection to the etcd server is interrupted, resync can be automatically called following reconnection. This option is disabled by default, but can be enabled in the `etcd.conf` file.
-  
-Set `resync-after-reconnect` to `true` to enable the feature.
+
+
+If connection to the etcd server breaks, you can automatically call a resync following reconnection. This option is disabled by default. Set `resync-after-reconnect` to `true` in the conf file to enable the feature.
   
 
 ---

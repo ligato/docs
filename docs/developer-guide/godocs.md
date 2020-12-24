@@ -1,3 +1,8 @@
-# Go docs
+# GoDocs
 
-Ligato Go Docs are available [here](https://godoc.org/github.com/ligato/vpp-agent)
+To access Ligato GoDocs, see the following:
+
+- [VPP agent GoDocs](https://pkg.go.dev/github.com/ligato/vpp-agent).
+<br>
+</br>
+- [Cn-infra GoDocs](https://pkg.go.dev/github.com/ligato/cn-infra)

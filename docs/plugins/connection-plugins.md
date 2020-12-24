@@ -1,14 +1,20 @@
 # Connection Plugins
 
-The Ligato framework defines connection plugins as those that can communicate with internal or external applications and components using REST and gRPC APIs.
+---
+
+This section describes connection plugins supported by Ligato.
+
+---
+
+Connection plugins communicate with internal or external applications and components using REST and gRPC APIs.
 
 ---
 
 ## REST Plugin
 
-The VPP agent REST plugin supports the retrieval of VPP configuration information. This is referred to as `dumping`. REST cannot be used to add, modify or delete configuration data. 
+The REST plugin can retrieve, or rather dump, VPP configuration data. You cannot use REST to add, modify, or delete configuration data. 
 
-The plugin also provides a general purpose HTTP server that can be used by plugins to expose a REST API to external clients. 
+The plugin provides a general purpose HTTP server so you can use so you can expose your plugincan be used by plugins to expose a REST API to external clients. 
 
 The [REST handler tutorial][rest-handler-tutorial] illustrates how to implement a REST API for a customized plugin.
 
@@ -25,9 +31,9 @@ The [REST handler tutorial][rest-handler-tutorial] illustrates how to implement 
 
 ### Configuration
 
-REST plugin functionality is enabled without the need for any external configuration file. The default HTTP server endpoint is opened on port `0.0.0.0:9191`. 
+You do not require an external file to open the default HTTP server endpoint on port `0.0.0.0:9191`. 
 
-There are several options for configuring a different port number:
+However, you can configure a different port number with one of the following options:
  
 - VPP agent flag:
 ```
@@ -35,6 +41,7 @@ There are several options for configuring a different port number:
 ```
 
 - Set the `HTTP_PORT` env variable to a desired value
+<br></br>
 - Set the endpoint field in the [REST conf file][rest-conf-file]:
 ```json
 endpoint: 0.0.0.0:9191
@@ -46,43 +53,39 @@ endpoint: 0.0.0.0:9191
 
 **cURL** 
 
-Specify the VPP agent target HTTP IP address:port with a link to the desired data. All URLs are accessible via the `GET` method.
+To execute VPP agent REST APIs, specify the `GET` method, target HTTP IP address:port, and the path.
 
-Example:
+cURL example using GET /dump/vpp/v2/interfaces:
 ```
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
 
-Reference: [VPP Agent REST API Docs][api-vpp-agent-rest]
+You will see that all VPP agent REST API include `/dump` in the path, indicating read-only support. 
+
+To see more cURL examples, see [VPP Agent REST API][api-vpp-agent-rest].
 
 ---
 
-### Supported URLs
+### Supported URL
 
-**Index Page**
+For a complete list of all supported VPP agent REST APIs, with examples and OpenAPI definitions, see [VPP Agent REST API][api-vpp-agent-rest].
 
-Index of supported REST API URLs:
-```
-curl -X GET http://localhost:9191/
-```
-
-See [VPP Agent REST API Docs][api-vpp-agent-rest] for specific URL and sample responses.
 
 ---
 
 
 ## HTTP Security
 
-The REST plugin supports several mechanisms for HTTP security.
+The REST plugin supports several HTTP security mechanisms.
 
-Configurable security functions:
+Here's a list of the configurable security options:
 
 - server certificate (HTTPS)
 - Basic HTTP Authentication - username & password
 - client certificates
 - token based authorization
 
-All are disabled by default and can be enabled by a config file:
+All options are disabled by default. You can enable option using a conf file:
 
 ```yaml
 endpoint: 127.0.0.1:9292
@@ -95,17 +98,17 @@ client-basic-auth:
   - "foo:bar"
 ```
 
-If `server-cert-file` and `server-key-file` are defined, the server requires HTTPS instead of HTTP for all of its endpoints.
+If you define `server-cert-file` and `server-key-file`, the server requires HTTPS instead of HTTP for all of its endpoints.
 
-`client-cert-files` is the list of the root certificate authorities (CA) the server uses to validate client certificates. If the list is _NOT_ empty, only clients who provide a valid certificate are allowed to access the server.
+`client-cert-files` - list of the root certificate authorities (CA) the server uses to validate client certificates. If you have at least one entry in this list, only clients who provide a valid certificate can access the server.
 
-`client-basic-auth` allows one to define user/password credentials permitting access to the server. The config option defines a static list of allowed user(s). If the list is _NOT_ empty, default staticAuthenticator is instantiated. Alternatively, you can implement custom authenticator and inject it into the plugin. This would be applicable if you wanted to read credentials from etcd.
+`client-basic-auth` - lets you to define user/password credentials permitting access to the server. The config option defines a static list of allowed user(s). If you have at least one entry in this list, the default staticAuthenticator is instantiated. Alternatively, you can implement an custom authenticator, and inject it into the plugin. You would use this approach if you need to read credentials from etcd.
 
 ---
 
 **Example**
 
-In order to generate self-signed certificates, use the following commands:
+To generate self-signed certificates, use the following commands:
 
 ```bash
 #generate key for "Our Certificate Authority"
@@ -126,50 +129,48 @@ openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out c
 
 ```
 
-Once the security features are enabled, the endpoint can be accessed with the following commands:
+---
+
+Once you enable the security features,  you can access the endpoint using the following commands:
 
 - `HTTPS`
-where `ca.pem` is a CA where server certificates should be validated, in the case of self-signed certificates
-
+where `ca.pem` specifies the CA where you validate server certificates, in the case of self-signed certificates.
+<br></br>
 - `curl --cacert ca.crt  https://127.0.0.1:9292/log/list`
-
-
-- `HTTPS + client cert` where `client.crt` is a valid client certificate
-  ```
-  curl --cacert ca.crt  --cert client.crt --key client.key  https://127.0.0.1:9292/log/list
-  ```
-
-- `HTTPS + basic auth` where `user:pass` is a valid username password pair.
-  ```
-  curl --cacert ca.crt  -u user:pass  https://127.0.0.1:9292/log/list
-  ```
-
+<br></br>
+- `HTTPS + client cert` where `client.crt` defines a valid client certificate.
+<br></br>
+- `curl --cacert ca.crt  --cert client.crt --key client.key  https://127.0.0.1:9292/log/list`
+<br></br>
+- `HTTPS + basic auth` where `user:pass` defines a valid username password pair.
+<br></br>
+-  `curl --cacert ca.crt  -u user:pass  https://127.0.0.1:9292/log/list`
+<br></br> 
 - `HTTPS + client cert + basic auth`
-  ```
-  curl --cacert ca.crt  --cert client.crt --key client.key -u user:pass  https://127.0.0.1:9292/log/list
-  ```
+<br></br>
+- `curl --cacert ca.crt  --cert client.crt --key client.key -u user:pass  https://127.0.0.1:9292/log/list`
 
 ---
   
 ### Token-based Authorization
 
-The REST plugin supports authorization based on tokens. To enable this feature, use the paramter contained in the [REST conf file][rest-conf-file]:
+The REST plugin supports token based authorization. You can enable this feature by setting `enable-token-auth` parameter contained in the [REST plugin conf file][rest-conf-file]:
 
 ```
 enable-token-auth: true
 ```
 
-Authorization restricts access to all registered permission group URLs. The user receives a token after login, which grants access to all permitted sites. The token is valid until the user is logged out, or until it expires.
+Authorization restricts access to all registered permission group URLs. The user receives a token after login, which grants access to all permitted sites. The token is valid until the user logs out, or until the it expires.
 
-The expiration time is a token claim set in the [REST plugin config file][rest-conf-file]:
+You can set the token expiration time with the `token-expiration` parameter contained in the [REST plugin config file][rest-conf-file]:
 
 ```
 token-expiration: 600000000000  
 ```
 
-Note that time is in nanoseconds. If no time is provided, the default value of 1 hour is set.
+Note that time is in nanoseconds. If you do not configure a time, the default of 1 hour is set.
 
-By default, token uses a pre-defined signature string as the key to sign it. This can be changed in [REST conf file][rest-conf-file].
+By default, token uses a pre-defined signature string as the key to sign it. You can changes this using the `token-signature` parameter contained in the [REST plugin conf file][rest-conf-file].
 
 ```
 token-signature: <string>
@@ -241,16 +242,14 @@ To log out, post the username to `http://localhost:9191/logout`.
 
 ## GRPC Plugin
 
-gRPC support is provided by the GRPC plugin. It is a [Ligato infrastructure][ligato-cn-infra-framework] plugin that enables applications and plugins to utilize gRPC APIs to interact with other system components including the VPP agent.
-
-!!! Note
-    The documentation will use the terms: "GRPC" and "gRPC". GRPC refers to the Ligato-specific GRPC components such as the plugin, tutorials and examples. gRPC refers to the functions, flows, definitions and behaviors independent of a specific implementation, as noted in [gRPC open source project][grpc-io] documentation. 
-
+The gRPC plugin enables applications and plugins to utilize gRPC APIs to interact with other system components, including the VPP agent.
+ 
 **References** 
 
 * [Ligato cn-infra repo][cn-infra-github]
 * [GRPC plugin repo folder][grpc-cn-infra-repo-folder]
 * [GRPC conf file][grpc-conf-file]
+* [gRPC open source project][grpc-io]
 
 The GRPC plugin supports the following:
 
@@ -258,22 +257,22 @@ The GRPC plugin supports the following:
 * Retrieve (dump) configuration from VPP
 * Start a notification watcher
 
-The following remote procedure calls (RPC) are defined:
+gRPC defines the following remote procedure calls:
 
-* **Get** creates new configuration or updates an existing configuration
+* **Get** creates a new configuration, or updates an existing configuration
 * **Delete** removes an existing configuration
 * **Dump** reads existing configuration data from VPP
-* **Notify** subscribes GRPC to the notification service
+* **Notify** subscribes gRPC to the notification service
 
-To enable the GRPC server, the GRPC plugin must be added to the plugin pool and loaded. Currently, the GRPC plugin is a [part of the Configurator plugin dependencies][configurator-grpc]. The plugin also requires a [conf file][grpc-conf-file] where the endpoint is defined. 
+To enable the GRPC server, you must add the gRPC plugin to the plugin pool and then load it. Currently, the [configurator plugin dependencies][configurator-grpc] include the gRPC plugin. You must define the endpoint in the [gRPC conf file][grpc-conf-file]. 
 
 ---
 
 ### Configuration
 
-Clients can reach the GRPC Server with an endpoint IP:Port address, or by a unix domain socket file.  
+Clients can reach the GRPC Server with an endpoint IP:Port address, or by a unix domain socket file. The GRPC endpoint is the address of the gRPC netListener. 
 
-The GRPC endpoint is the address of the gRPC netListener. There are two way to modify the endpoint address: using the port flag, or modifying the GRPC conf file.
+You can modify the endpoint address:Port address by using the port flag, or by modifying the GRPC conf file.
 
 GRPC port flag:
 ```
@@ -284,36 +283,38 @@ Endpoint field in the [GRPC conf file][grpc-conf-file]:
 endpoint: 0.0.0.0:9191
 ```
 
-If a unix domain socket file is used, the socket type can be modified using the network field of the [GRPC conf file][grpc-conf-file]:
+If you use the unix domain socket file, you can modify the network field of the [GRPC conf file][grpc-conf-file]:
 ```json
 network: tcp
 ```
-TCP is set as the default, but other types are possible, including TCP6, unix, and unixpacket.
+The default is TCP. You can also set this field to other types that include TCP6, unix, and unixpacket.
 
 ---
 
 ### Plugin API
 
-Application plugins can handle gRPC requests as follows:
+Your application plugins handle gRPC using the following step in order:
 
-- The GRPC Plugin starts the GRPC server + net listener in its own goroutine
-- Plugins register their handlers with the `GRPC Plugin`. To service gRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. The GRPC Plugin uses an GRPC request multiplexer from `grpc/Server`.
-- GRPC Server routes gRPC requests to their respective registered handlers using the `grpc/Server`.
+- gRPC plugin starts the gRPC server + net listener in its own goroutine.
+<br></br>
+- Plugins register their handlers with the `GRPC Plugin`. To service gRPC requests, a plugin must implement a handler function and register it at a given URL path using the `RegisterService` method. The gRPC plugin uses an GRPC request multiplexer from `grpc/Server`.
+<br></br>
+- GRPC server routes gRPC requests to their respective registered handlers using the `grpc/Server`.
 
 ![grpc][grpc-image]
 <p style="text-align: center; font-weight: bold">GRPC Plugin API</p>
 <br/>
 
-The [GRPC server example][grpc-server-example] demonstrates the usage of the plugin API GetServer():
+The [gRPC server example][grpc-server-example] demonstrates the usage of the plugin API GetServer():
 ```
 // Register our GRPC request handler/service using generated RegisterGreeterServer:
 RegisterGreeterServer(plugin.GRPC.Server(), &GreeterService{})
 ```
-Once the handler is registered with the GRPC plugin, and the agent is running, you can use a gRPC client to call the service.
+Once the handler registers with the GRPC plugin, you have an up and running agent. Now, you can use a gRPC client to call the service.
 
 ---
 
-**Examples & Tutorials**
+**gRPC examples and tutorials**
 
 * [GRPC client example][grpc-client-example] shows how to create a client for the GRPC Server
 * [GRPC server example][grpc-server-example] shows how to create a GRPC Server
