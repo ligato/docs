@@ -6,15 +6,15 @@ This section discusses  database plugins.
 
 ## Datasync
 
-Datasync defines the interfaces for data synchronization between app plugins and different backend data sources that include s data stores, message buses, or rpc-connected clients.
+Datasync defines the interfaces for data synchronization between app plugins and different backend data sources that include data stores, message buses, or rpc clients.
 
 Data synchronization addresses the situation when multiple data sets must  synchronize following a published event.
 
 Examples of components that publish events:
 
-- Database updates 
-- Message bus consuming messages from Kafka topics
-- RPC clients using gRPC or REST APIs
+- Database updates. 
+- Message bus consuming messages from Kafka topics.
+- RPC clients using gRPC or REST APIs.
 
 The data synchronization APIs watch, and publish, asynchronously processed data change events. 
 
@@ -36,9 +36,9 @@ The watch data API provides following functions:
 
 - Subscribes to channels for data changes, and "abstracts away" message sources such as an etcd server.
 <br></br>
-- Processes a full data resync for startup and fault recovery scenarios. You will receive success or error feedback via callback.
+- Processes a full data resync for startup and fault recovery scenarios. You will receive success, or error, feedback via a callback.
 <br></br>
-- Process incremental data change. This optimized resync variant propagates to plugins, the minimal set of changes to reach synchronized state. You will receive success or error feedback via callback.
+- Processes incremental data changes. This optimized resync variant propagates to plugins, the minimal set of changes to reach synchronized state. You will receive success, or error, feedback via a callback.
 
 
 
@@ -47,11 +47,11 @@ The watch data API provides following functions:
 
 This API defines two types of events your plugins should support:
 
-- Full resync event triggers a full resync of the entire configuration. This event occurs after an agent start/restart, or in a fault recovery scenario, such as lost and restored connectivity to an external data source.
+- **Full resync event** triggers a full resync of the entire configuration. This event occurs after an agent start/restart, or in a fault recovery scenario, such as lost and restored connectivity to an external data source. 
 <br></br>
-- Incremental data change event triggers incremental processing of configuration changes. Each data change event contains the previous values, and the new or current values. Data synchronization switches to this optimized mode only after a successful full data resync.
+- **Incremental data change event** triggers incremental processing of configuration changes. Each data change event contains the previous values, and the new or current values. Data synchronization switches to this optimized mode only after a successful full data resync. 
 
-The **Watch data API Functions** figure above:
+The Watch data API Functions figure above depicts both event flows:
  
  - Full resync event flow shown in **2.1 - 2.3**
  - Incremental data change event flow shown in **3.1 - 3.4** 
@@ -60,7 +60,9 @@ The **Watch data API Functions** figure above:
 
 ### Publish Data API
 
-Your plugins use the publish data API to asynchronously publish events with data change values, and still remain abstracted away from the target data store, message bus or RPC client(s). The figure below illustrates the publish event flow. 
+Your plugins use the publish data API to asynchronously publish events with data change values. This API provides a common abstraction for your plugins that interact with target data store, message bus, or rpc clients.  
+
+The Publish data API Functions figure below illustrates the publish event flow. 
 
 ![datasync publish][datasync-publish-image]
 <p style="text-align: center; font-weight: bold">Publish data API Functions</p>
@@ -88,9 +90,9 @@ The broker and watcher APIs abstract common database operations implemented by d
 
 ### Keyval Package
 
-The [keyval package](https://godoc.org/github.com/ligato/cn-infra/db/keyval) defines the client API for accessing a KV data store. The broker API supports reading and manipulation of key-value pairs. The watcher API provides monitors changes in a data store. You can use arguments of type bytes and proto.Message for both interfaces. 
+The [keyval package](https://godoc.org/github.com/ligato/cn-infra/db/keyval) defines the client API for accessing a KV data store. The broker API supports reading and manipulation of key-value pairs. The watcher API monitors changes in a data store. You can use arguments of type bytes, and type proto.Message, for both interfaces. 
 
-The `keyval` package also provides a skeleton for a KV data store plugin. A particular data store is selected in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle and provides unified access to data stores implementing the `KvPlugin` interface.
+The `keyval` package also provides a skeleton for a KV data store plugin. You select a data store in the `NewSkeleton` constructor using an argument of type `CoreBrokerWatcher`. The skeleton handles the plugin's life-cycle, and offers unified access to data stores implementing the `KvPlugin` interface.
 
 **References**
 
@@ -120,7 +122,7 @@ For a list of etcd configuration options, see [etcd conf file][etcd-conf-file].
 
 ### Status Check
 
-The etcd plugin uses status check plugin to periodically issue a GET request to verify connection status. The etcd connection state can impact the global status of your agent. If your agent cannot establish a connection with the etcd server, the readiness and liveness probes issued by the probe plugin will return a negative result.
+The etcd plugin uses the status check plugin to verify connection status by issuing periodic GET requests. The etcd connection state can impact the global status of your agent. If your agent cannot establish a connection with the etcd server, the readiness and liveness probes issued by the probe plugin will return a negative result.
 
 ### Compacting
 
@@ -129,9 +131,7 @@ You can compact etcd using in one of two ways:
 - Create an API by calling `plugin.Compact()` which will compact the database to the current revision.
 - Set the `auto-compact` option in the conf file to the interval duration between auto compaction cycles.
 
-### Reconnect Resynchronization
-
-
+### Reconnect Resync
 
 If connection to the etcd server breaks, you can automatically call a resync following reconnection. This option is disabled by default. Set `resync-after-reconnect` to `true` in the conf file to enable the feature.
   
@@ -140,13 +140,28 @@ If connection to the etcd server breaks, you can automatically call a resync fol
 
 ## Redis
 
+The redis plugin provides access to a Redis data store.
+
 **References**
 
 - [KV data store concepts][kv-data-store-concepts]
 - [Redis concepts][redis-concepts]
 - [Redis plugin folder][redis-plugin-folder]
 
-The code snippets below provide examples to help you get started. For simplicity, error handling is omitted.
+---
+
+The following list describes the steps to integrate a Redis data store:
+
+- Import dependencies.
+- Define client configuration.
+- Create connection.
+- Create brokers and watchers.
+- Perform CRUD operations.
+- Key space event subscription.
+ 
+
+!!! Note
+    The code examples that follow omit error handling. 
 
 ### Import Dependencies
 
@@ -159,18 +174,25 @@ import "github.com/ligato/cn-infra/logging/logrus"
 
 ### Define Client Configuration
 
-- Single Node
-var cfg redis.NodeConfig
-- Sentinel Enabled Cluster
-var cfg redis.SentinelConfig
-- Redis Cluster
-var cfg redis.ClusterConfig
+You can configure different types of clients:
 
-You can initialize any of the above configuration instances in memory, or load the settings from a file using: 
+- Single Node
+```
+var cfg redis.NodeConfig
+```
+- Sentinel Enabled Cluster
+```
+var cfg redis.SentinelConfig
+```
+- Redis Cluster
+```
+var cfg redis.ClusterConfig
+```
+You can initialize any of the above configuration instances in memory, or load the settings from a file using the following: 
 ```
 err = config.ParseConfigFromYamlFile(configFile, &cfg)
 ```
-You can also load any of the three configuration files using:
+You can also load any of the three configuration files using the following:
 ```
 var cfg interface{}
 cfg, err := redis.LoadConfig(configFile)
@@ -282,24 +304,13 @@ config SET notify-keyspace-events KA
 
 ### Resiliency
 
-Connection/read/write time-outs, failover, reconnection and recovery are validated by running the [airport example][redis-airport-example] against a Redis Sentinel Cluster. Redis nodes are paused selectively to simulate server down:
-```
-$ docker-compose ps
-```
-|Name   |Command  |State|Ports|
-|-------|---------|-----|-----|
-|dockerredissentinel_master_1 | docker-entrypoint.sh redis ... | Paused | 6379/tcp |
-|dockerredissentinel_slave_1 | docker-entrypoint.sh redis ... | Up | 6379/tcp |
-|dockerredissentinel_slave_2 | docker-entrypoint.sh redis ... | Up | 6379/tcp |
-|dockerredissentinel_sentinel_1 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
-|dockerredissentinel_sentinel_2 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
-|dockerredissentinel_sentinel_3 | sentinel-entrypoint.sh | Up | 26379/tcp, 6379/tcp |
+To examine how the Redis plugin handles time-outs, failover, reconnection and recovery, execute the [airport example][redis-airport-example] against a Redis sentinel cluster. The example selectively pauses Redis nodes to simulate server down events.
 
-Redis is the implementation of the KV data broker client API for the Redis KV data store. The entity `BytesConnectionRedis` provides access to CRUD as well as event subscription APIs.
+The following figure illustrates the KV data broker client API for the Redis KV data store. The entity `BytesConnectionRedis` provides access to CRUD as well as event subscription APIs.
 ```
-   +-----+   (Broker)   +------------------------+ -->  CRUD      +-------+ -->
-   | app |                   |  BytesConnectionRedis  |                 | Redis |
-   +-----+    <-- (KeyValProtoWatcher)  +------------------------+  <--  events    +-------+
++-----+         (Broker)          +------------------------+ --->   CRUD     +-------+ 
+| app |                           |  BytesConnectionRedis  |                 | Redis |
++-----+ <-- (KeyValProtoWatcher)  +------------------------+ <---  events    +-------+
 ```
 
 ---
@@ -317,19 +328,18 @@ The Consul plugin provides access to a Consul KV data store.
 
 ### Configuration
 
-The location of the Consul configuration file can be defined by the command line flag `consul-config`, or set via the `CONSUL_CONFIG` env variable.
+You can define the location of the etcd conf file using the command line flag `consul-config`, or by setting the `CONSUL_CONFIG` environment variable.
 
-The configuration options are described in the [Consul conf file][consul-conf-file] section of the user guide. 
+For a list of consult configuration options, see [Consul conf file][consul-conf-file]. 
 
 ### Status Check
 
-The Consul plugin will use the Status Check plugin to periodically issue a GET request to verify connection status. The Consul connection state affects the global status of the agent. If the agent cannot establish a connection with Consul, both the readiness and the liveness probes from the probe plugin will return a negative result. 
+The Consul plugin uses the status check plugin to verify connection status by issuing periodic GET requests. The Consul connection state can impact the global status of your agent. If your agent cannot establish a connection with the Consul server, the readiness and liveness probes issued by the probe plugin will return a negative result.
+ 
 
 ### Reconnect Resync
 
-If connection to the Consul data store is interrupted, resync can be automatically called upon reconnection. This option is disabled by default, but can be enabled in the Consul conf file. 
-
-Set `resync-after-reconnect` to `true` to enable the feature.
+If connection to the Consul server breaks, you can automatically call a resync following reconnection. This option is disabled by default. Set `resync-after-reconnect` to `true` in the conf file to enable the feature.
 
 ---
 
@@ -337,7 +347,7 @@ Set `resync-after-reconnect` to `true` to enable the feature.
 
 The fileDB plugin uses the operating system's file system as a KV data store. This plugin watches for pre-defined files or directories, reads a configuration file, and generates events according to configuration changes.
 
-All configuration data is resynced in the beginning just as it is for KV data stores. Configuration files can then be added, updated, moved, renamed or deleted. The plugin performs all of the necessary changes.
+As with other KV data stores, the KV Scheduler resyncs all configuration data at startup. You can then add, update, move, rename, or delete configuration files. The plugin handles all necessary changes.
 
 **References**
 
@@ -348,16 +358,8 @@ All configuration data is resynced in the beginning just as it is for KV data st
 
 ### Configuration
 
-All files or directories used as a data store must be defined in the conf file. The location of the file can be defined either by the command line flag `filedb-config`, or set using the `FILEDB_CONFIG` environment variable.
+You must define all data store files or directories in the conf file. You can define the location of the filedb conf file using the command line flag `filedb-config`, or by setting the `FILEDB_CONFIG` environment variable.
 
-### Supported Formats
-
-JSON and YAML-formatted data are supported.
-
-* JSON `(*.json)`
-* YAML `(*.yaml)`
-
-The configuration options are described in the [FileDB conf file][filedb-conf-file] section of the user guide. 
 
 ### Data Structure
 
@@ -397,13 +399,13 @@ data:
 
 ```
 
-The `key` must contain a prefix with a [microservice label][microsoft-label-prefix]. The fileDB plugin uses the prefix to identify the data in the conf file it will use to configure the system. All configuration data is stored internally in a local database. This allows a user or an application to compare events and respond with the correct `previous` value for a given key.
+The `key` must contain a prefix with a [microservice label][microsoft-label-prefix]. The fileDB plugin uses the prefix to identify the data for configuring the system. You store all configuration data internally in a local database. This lets you compare events and respond with the correct `previous` value for a given key.
 
 The `value` identifies a configuration item such as an interface.
 
 ### Data State Propagation
 
-Data types such as interfaces and bridge domains that support status propagation can store their state in the filesystem. Set the `status-path` field in the conf file in order to store status. Status data will be stored in JSON or YAML formats.
+Data types, such as interfaces and bridge domains, that support status propagation can store their state in the filesystem. To store state, set the `status-path` field in the conf file. 
 
 [cn-infra-datasync-repo-folder]: https://github.com/ligato/cn-infra/tree/master/datasync
 [cn-infra-db-repo-folder]: https://github.com/ligato/cn-infra/tree/master/db
