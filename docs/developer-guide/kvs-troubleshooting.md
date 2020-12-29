@@ -507,9 +507,17 @@ This section covers how-to and other techniques for debugging KV Scheduler probl
 
 ### How to set up logging
 
-You can change the agent's per-logger or global log levels using a conf file, environment variable, agentctl, or REST.
+The [log manager plugin](../plugins/infra-plugins.md#log-manager) allows you to view and modify agent loggers and log levels. You can change the agent's per-logger and global log levels using a conf file, environment variable, agentctl, or REST.
 
-The log level choices consist of one of the following: `debug`,`info`,`warning`,`error`,`fatal`, `panic`.
+The log level choices consist of one of the following: 
+
+- `debug`
+- `info`
+- `warning`
+- `error`
+- `fatal`
+- `panic`
+
 
 ---
  
