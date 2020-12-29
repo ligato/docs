@@ -1,12 +1,12 @@
 # Infra Plugins
 
-This section describes the set of [Ligato infrastructure][cn-infra-github] plugins.
+This section describes infra plugins.
 
 ---
 
 ## Status Check
 
-The status check plugin monitors the overall status of a cn-infra based application by collecting and aggregating the status of agent plugins. The plugin exposes the status to external clients using agentctl, etcd plugins, or [REST][rest-plugin]. 
+The status check plugin monitors the overall status of a cn-infra based application. It collects and aggregates the status of your agent plugins. The plugin exposes the status to external clients using [agentctl status](../user-guide/agentctl.md#status), etcdctl plugins, or [REST][rest-plugin]. 
 
 
 ![status check][status-check-image]
@@ -23,9 +23,7 @@ The status check plugin monitors the overall status of a cn-infra based applicat
 
 ### Overall Agent Status
 
-The overall agent status is aggregated from all plugins' status. Conceptually, this is a  `logical AND` for each plugin's status. The status check plugin aggregates each plugin's status, to arrive at the overall agent status. Conceptually, it performs a logical and on the collective plugin status to determine the overall agent status. 
-
-The status check plugin can provide the overall status of the agent. It does so by performing a logical and on the plugin status  
+The status check plugin aggregates each plugin's status, to arrive at the overall agent status. Conceptually, it performs a _logical and_ on each plugin's status to determine the overall agent status. 
 
 Key to retrieve current agent status: 
 ```
@@ -40,15 +38,18 @@ $ agentctl kvdb get /vnf-agent/<agent-label>/check/status/v1/agent
 {"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
 ```
 
-You can verify the agent status via HTTP, use the `/liveness` and `/readiness` URL endpoints:
+You can verify agent status with HTTP by using the `/liveness` and `/readiness` URL endpoints.
 ```
+// liveness example
 $ curl -X GET http://localhost:9191/liveness
 {"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
+
+// readiness example
 $ curl -X GET http://localhost:9191/readiness
 {"build_version":"e059fdfcd96565eb976a947b59ce56cfb7b1e8a0","build_date":"2017-06-16.14:59","state":1,"start_time":1497617981,"last_change":1497617981,"last_update":1497617991}
 ```
 
-You can change the HTTP server port (default `9191`), use the `http-port` flag:
+You can change the HTTP server port by setting the `http-port` flag.
 ```
 $ vpp-agent -http-port 9090
 ```
@@ -57,7 +58,7 @@ $ vpp-agent -http-port 9090
 
 ### Plugin Status
 
-Your plugins may use the `PluginStatusWriter.ReportStateChange` API to push status information at any time. For optimal performance, `statuscheck` propagates the status report to external clients, if and only if, it has changed since the last update. 
+Your plugins may use the `PluginStatusWriter.ReportStateChange` API to push status information. For optimal performance, the status check plugin propagates the status report to external clients, if and only if, status data has changed since the last update. 
 
  
 
@@ -66,14 +67,14 @@ Your plugins may use the `PluginStatusWriter.ReportStateChange` API to push stat
 
 ---
 
-Alternatively, your plugins can use the pull-based approach, and define the `probe` function passed to `PluginStatusWriter.Register` API. Statuscheck periodically probes the plugin for the current status. Once again, statuscheck propagates the status. only if it has changed since the last enquiry. 
+Alternatively, your plugins can use a pull-based approach, and define the `probe` function in the `PluginStatusWriter.Register` API. The status check periodically probes the plugin for the current status. Once again, the plugin propagates the status report, if and only if, status data has changed since the last update. 
 
 
 ![status check pull][status-check-pull-image]
 <p style="text-align: center; font-weight: bold">Plugin Status using Pull approach</p>
 
 !!! Note
-    You should not NOT mix the push and the pull approaches within the same plugin.
+    You should NOT mix the push and the pull approaches in the same plugin.
 
 Key template to retrieve the plugin's current status from etcd:
 ```
@@ -86,6 +87,11 @@ $ agentctl kvdb get /vnf-agent/<agent-label>/check/status/v1/plugin/GOVPP
 /vnf-agent/<agent-label>/check/status/v1/plugin/GOVPP
 {"state":2,"last_change":1496322205,"last_update":1496322361,"error":"VPP disconnected"}
 ```
+The _Plugin Status using Pull approach_ figure above illustrates this approach.
+ 
+ - Register your plugins for status checks in **1.- 2.**
+ - Probe plugin status, return (ok) in **3. - 4.** 
+ - Probe plugin status, return (err) in **5. - 6.** 
 
 ---
 
@@ -101,40 +107,49 @@ The idxmap package provides a mapping structure to support the following use cas
 
 - [Ligato cn-infra repo][cn-infra-github]
 - [Index Map repo folder][idxmap-repo-folder]
-- [Index Map GoDoc description][idxmap-godoc]
+- [Index Map GoDocs][idxmap-godoc]
 
 ---
 
 ### Exposing Local Data Use Case
 
-App plugins often need to expose some structured data to other plugins inside the agent. You can provide read-only access to the structured plugin data stored in the idxmap using the following: 
+App plugins often need to expose some structured data to other plugins inside the agent. You can provide read-only access to the structured plugin data written to the idxmap cache using the following: 
 
 - Lookup using primary keys or secondary indices.
-- Watching for data changes in the map using channels or callbacks. You can subscribe to channels that provide notifications for changes by adding, deleting, or removing an item. 
+<br></br>
+- Watching for data changes in the map using channels or callbacks. You subscribe to channels that provide notifications for changes when you add, delete or remove a configuration item. 
+<br></br>
 
 ![idxmap local][idx-map-local-image]
 <p style="text-align: center; font-weight: bold">Using idxmap to expose local data</p>
+
+The _Using idxmap to expose local data_ figure above depicts the lookup and watch methods.
 
 ---
 
 ### Caching Use Case
 
-You will find it useful to cache data from a KV data store when you perform the following:
+You will find it useful to cache data from a KV data store when you need to:
 
 - Minimize the number of lookups into the KV data store.
-- Execute lookups by secondary indexes for KV data stores that do not necessarily support secondary indexing. Not that etcd does not support secondary indexing.
+<br></br>
+- Execute lookups by secondary indexes for KV data stores that do not support secondary indexing. Not that etcd does not support secondary indexing.
 
-[CacheHelper](https://github.com/ligato/cn-infra/blob/master/idxmap/mem/cache_helper.go) turns idxmap, injected as field `IDX`, into an indexed local copy of remotely stored key-value data. CacheHelper watches the target KV data store for data changes and resync events. It transforms the received key-value pairs into the name-value pairs, including secondary indices if defined. Cachehelper stores the transformed data in the injected idxmap instance. 
+[CacheHelper](https://github.com/ligato/cn-infra/blob/master/idxmap/mem/cache_helper.go) turns the idxmap, injected as field `IDX`, into an indexed local copy of remotely stored key-value data. CacheHelper watches the target KV data store for data changes and resync events. It transforms the received key-value pairs into the name-value pairs, including secondary indices if defined. Cachehelper stores the transformed data in the injected idxmap instance.
+<br></br>
 
+ 
 ![idxmap cache][idx-map-cache-image]
 <p style="text-align: center; font-weight: bold">idxmap caching</p>
+
+The _idxmap caching_ figure shows how `CacheHelper` assists your plugins in accessing remote KV data store values through a local cache. 
 
 ---
   
 ## Log Manager
 
 
-The log manager plugin allows you to view and modify the agent loggers and log levels using REST, agentctl, environment variables and conf files.
+The log manager plugin lets you view and modify the agent loggers and log levels using REST, agentctl, environment variables, and conf files.
 
 **References:**
 
@@ -157,15 +172,12 @@ The log level choices consist of one of the following:
 
 ---
  
-**Using the conf file or environment variable**
+**Using the environment variable**
 
-* To set a default for all loggers, per-logger levels, and external link hooks, use the [logs.conf](../user-guide/config-files.md#log-manager) file.
-</br>
-</br>
-* To configure a list of external link hooks, set the `hooks:` fields in the logs.conf file. For example, you can define hooks as links to external logs such as [Logstath][logstash] and [Fluentd][fluentd].
-<br>
-</br>
-* To override the entries in the `logs.conf` file, use the `INITIAL_LOGLVL=<level>` environment variable.
+To set a global log level for all loggers, use the `INITIAL_LOGLVL=<level>` environment variable.
+
+!!! Note
+    `INITIAL_LOGLVL=<level>` overrides all entries contained in the `logs.conf` file.
 
 
 ---
@@ -186,7 +198,7 @@ agentctl log set kvscheduler debug
 
 ---
 
-**Using a REST API**
+**Using REST**
 
 * List loggers and log levels:
 ```
@@ -198,15 +210,17 @@ curl -X GET http://localhost:9191/log/list
 curl -X POST http://localhost:9191/log/<logger-name>/<log-level>
 ```
    
-**Conf File**
+**Using the Conf File**
 
-The logger conf file is composed of several parts: 
+The conf file includes the following: 
 
-- default level applied for all plugins
-- map defining individual loggers and associated log levels:
-- Hooks defining a list of one or more external links to external logs such as [Logstath][logstash] and [Fluentd][fluentd].
+- `default-level` log level applied to all plugins.
+<br></br>
+- `loggers` map defining individual loggers and associated log levels.
+<br></br>
+- `hooks` defining a list of one or more links to external logs such as [Logstath][logstash] and [Fluentd][fluentd].
 
-Conf file template:
+Example `logs.conf` file:
 ```json
 default-level: debug
 loggers:
@@ -228,12 +242,19 @@ hooks:
 #    - panic
 ```
 
+!!! Note
+    Do not confuse "hooks" context. Log manager conf file hooks define links to external logs. [Supervisor plugin](#supervisor-conf-file) hooks define actions to perform when an event occurs.
 
 --- 
   
 ### Tracer
 
 You can log events across time periods using the tracer utility.
+
+**References:**
+
+- [Tracer proto](https://github.com/ligato/cn-infra/blob/master/logging/measure/model/apitrace/apitrace.proto)
+- [tracer.go](https://github.com/ligato/cn-infra/blob/master/logging/measure/tracer.go)
 
 Create a new tracer:
 ```
@@ -246,14 +267,14 @@ t.LogTime(entity string, start Time)
 ``` 
 where `entity` denotes a string representation of a measured object, and `start` is the start time.  
 
-Tracer can measure a repeating event, as might occur in a loop for example. Tracer stores events with an index in an internal database. The trace object contains a list of entries and overall time duration.
+Tracer can measure a repeating event, as might occur in a loop for example. Tracer stores events with an index in an internal database. The tracer object contains a list of entries and overall time duration.
 
-You can read all tracer measurements using the following method:
+You can read all tracer measurements using:
 ```
 t.Get()
 ```
 
-You can remove all tracer entries from the internal database using the following method:
+You can remove all tracer entries from the internal database using:
 ```
 t.Clear()
 ```
@@ -282,7 +303,7 @@ The mux component implements the session multiplexer that allows multiple plugin
 
 The [Sarama][sarama] library determines the minimum supported version of Kafka you can use.  
 
-If you do not have Kafka installed locally, you can use docker image for testing:
+If you do not have Kafka installed locally, you can use the docker image for testing.
 ```
 sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
  --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
@@ -296,9 +317,9 @@ The Kafka plugin provides access to Kafka brokers.
 
 **Configuration**
 
-You can define the location of the Kafka conf file using the command line flag `kafka-config`, or by setting the `KAFKA_CONFIG` env variable. 
+You define the location of the Kafka conf file using the command line flag `kafka-config`, or by setting the `KAFKA_CONFIG` env variable. 
 
-For a list of Kafka configuration options, see [Kafka conf file][etcd-conf-file].  
+For a list of Kafka configuration options, see [Kafka conf file][kafka-conf-file].  
 
 **Status Check**
 
@@ -306,9 +327,11 @@ The Kafka plugin uses the status check plugin to verify connection status.
 
 ### Multiplexer
 
-The [multiplexer][kafka-mux] instance provides access to Kafka brokers through connections. You can implement a connection supporting two messages type: `[ ]byte`, or `proto.Message`.
+The [multiplexer][kafka-mux] instance provides access to Kafka brokers through connections. You can implement a connection supporting two messages type: `byte`, or `proto.Message`.
 
-Both can create SyncPublishers and AsyncPublishers that implement the `BytesPublisher` or `ProtoPubliser` interfaces. The connections provide an API for consuming messages implementing the `BytesMessage` interface, or `ProtoMessage` interface respectively.
+Both can create SyncPublishers and AsyncPublishers that implement the `BytesPublisher` or `ProtoPubliser` interfaces. The connections provide an API for consuming messages implementing the `BytesMessage` interface, or `ProtoMessage` interface. 
+<br></br>
+
 
 ```
    
@@ -331,6 +354,10 @@ Both can create SyncPublishers and AsyncPublishers that implement the `BytesPubl
 
 ```
 
+<p style="text-align: center; font-weight: bold">Kafka plugin architecture</p>
+
+The _Kafka plugin architecture_ figure shows the Kafka mux, connection and publishers.
+
 ---
 
 ## Process Manager
@@ -340,31 +367,36 @@ The process manager plugin enables the creation of processes to manage and monit
 **References:**
 
 - [Process proto](https://github.com/ligato/cn-infra/blob/master/exec/processmanager/template/model/process/process.proto)
+- [Process.go](https://github.com/ligato/cn-infra/blob/master/exec/processmanager/process.go)
 - [Process manager conf file][pm-conf-file]
-- [Process package GoDoc](https://pkg.go.dev/github.com/ligato/cn-infra@v1.7.0/process)
+- [Process GoDocs](https://pkg.go.dev/github.com/ligato/cn-infra@v1.7.0/process)
 
-You can obtain a process instance with `ProcessManager` API using the one of the following techniques:
+You obtain a process instance with the `ProcessManager` API using one of the following techniques:
 
-- New process with options: using method `NewProcess(<cmd>, <options>...)`. You need a command and set of optional parameters.
+- **New process with options**: Use the `NewProcess(<cmd>, <options>...)` method. You need a command and set of optional parameters.
 <br></br> 
-- New process from template: using method `NewProcessFromTemplate(<tmp>)`. You need a parameter template.
+- **New process from template**: Use the `NewProcessFromTemplate(<tmp>)` method. You need a parameter template.
 <br></br>
-- Attach to existing process: using method `AttachProcess(<pid>)`. You need a process id to attach to the existing process. 
+- **Attach to existing process**: Use the `AttachProcess(<pid>)` method. You need a process id to attach to the existing process. 
 
 ---
 
 ### Management
 
 !!! note
-    The application is parent to all processes. Application termination causes all started processes to terminate. You can change this with the `Detach` option in the process options.
+    The application is parent to all processes. Application termination causes all started processes to terminate. You can change this with the `Detach` option in process options.
+    
+Process management and process monitor methods are defined in the [process.go](https://github.com/ligato/cn-infra/blob/master/exec/processmanager/process.go) file. 
 
 **Process management methods:**
+
+You can manage the process state including start, stop, re-start and kill using the following process management methods:
 
 - `Start()` starts the plugin-defined process, stores the instance, and performs an initial status file read.
 <br></br>
 - `Restart()` attempts to gracefully stop, force stop if it fails, and then start or re-start the process.
 <br></br> 
-- `Stop()` stops the instance using a SIGTERM signal. Process is not guaranteed to stop. Note this method could result in un-detached child processes termination.
+- `Stop()` stops the instance using a SIGTERM signal. Process is not guaranteed to stop. Note this method could result in un-detached child process termination.
 <br></br> 
 - `StopAndWait()` stops the instance using a SIGTERM signal, and waits until the process completes. 
 <br></br>
@@ -378,9 +410,11 @@ You can obtain a process instance with `ProcessManager` API using the one of the
 
 **Process monitor methods:**
 
+You can monitor process run-time using the following process monitor methods:
+
 - `IsAlive()` returns true if process is running.
 <br></br>
-- `GetNotificationChan()` returns a channel for sending process status notifications. Use this method when you create a process via template with `notify` field set to true. In other cases, you will provide the channel. 
+- `GetNotificationChan()` returns a channel for sending process status notifications. Use this method when you create a process via a template with the `notify` field set to true. In other cases, you provide the channel. 
 <br></br>
 - `GetName` returns the process name as defined in the status file.
 <br></br>
@@ -400,7 +434,7 @@ You can obtain a process instance with `ProcessManager` API using the one of the
 
 ### Status Watcher
 
-The status watcher looks for process status changes independent of process creation method, and running state. The watcher uses the standard status labels includes running, sleeping, and idle. You can read state, including all reported changes, from a process status file.  
+The status watcher plugin looks for process status changes independent of the process creation method, and running state. The watcher uses the standard status labels includes running, sleeping, and idle. You can read state, including all reported changes, from a process status file.  
 
 The following lists several system-wide status types supported by the plugin:
 
@@ -432,7 +466,7 @@ The following lists the [process options](https://github.com/ligato/cn-infra/blo
 <br></br>
 - **Detach:** no parameters applicable. Started process detaches from the parent application and given to the current user. This setting allows the process to run even after parent termination.
 <br></br>
-- **EnvVar:** define environment variables. For example, us`os.Environ` for all.
+- **EnvVar:** define environment variables. For example, use`os.Environ` for all.
 <br></br>
 - **Template:** requires name `run-on-startup` flag. This creates a template upon process creation. You must set the template path in the plugin.
 <br></br>
@@ -500,7 +534,7 @@ The following describes the conf file definitions for a program:
 
 
 !!! Warning
-    Do not try to outsmart OS CPU scheduling. If a program has its own config file to manage CPUs, prioritize it. Incorrect use may slow down certain applications, or that the application may contain its own CPU manager which overrides this value. Locking process to CPU does NOT keep other processes off that CPU.
+    Do not try to outsmart OS CPU scheduling! If a program has its own config file to manage CPUs, prioritize it. Incorrect use may slow down certain applications. Or an application may contain its own CPU manager which overrides any of your configured values. Locking process to CPU does NOT keep other processes off that CPU.
 
 ---
 
@@ -540,10 +574,12 @@ The [supervisor.conf file][supervisor-conf-file] example found in the repo inclu
 #    cmd: "/tmp/test.sh"
 ``` 
 
-The following default env variables are set before starting any hook:
+The following default environment variables are set before starting any hook:
 
 - **SUPERVISOR_PROCESS_NAME** is set to the program name, and to start hooks bound to a specific process.
+<br></br>
 - **SUPERVISOR_PROCESS_STATE** is a label marking what happened with the process in a given event such as  started, idle, sleeping, and terminated.
+<br></br>
 - **SUPERVISOR_EVENT_TYPE** defines event type.
 
 All hooks start with all environment variables set.
@@ -565,7 +601,9 @@ The service label plugin provides other plugins with the ability to support [mic
 You can define the microservice label with one of the following options:
 
 - Set the command line flag `microservice-label`
+<br></br>
 - Set the `MICROSERVICE_LABEL` environment variable.
+<br></br>
 - Use the [service label conf file][service-label-conf-file]
 
 Example of retrieving and using the microservice label:

@@ -1,6 +1,6 @@
 # Keys Reference
 
-This page describes the VPP and Linux keys supported by the VPP agent.
+This section describes the VPP and Linux keys supported by the VPP agent.
 
 ---
 

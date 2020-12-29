@@ -28,11 +28,11 @@ COMMANDS
   
 ## GoVPPMux Plugin
 
-The GoVPPMux plugin allows a VPP plugin to talk to VPP through its own dedicated communication channel using connection multiplexing.
+The GoVPPMux plugin allows a VPP plugin to talk to VPP through its own dedicated communication channel.  using connection multiplexing.
 
 A VPP plugin interacts with VPP by asking the GoVPPMux plugin to obtain a communication channel. Behind the scenes, all channels share the same connection between the GoVPP core, and the VPP process. Plugin initialization creates the channel-to-multiplexed connection using the GoVPP core function. 
 
-Channel multiplexing figure from the [fd.io/govpp repository][fdio-govpp-repo].  
+The _Channel multiplexing using GoVPP_ figure below is taken from the [fd.io/govpp repository][fdio-govpp-repo].  
 
 
 ```
@@ -59,6 +59,8 @@ Channel multiplexing figure from the [fd.io/govpp repository][fdio-govpp-repo].
     +--------------+
 ```
 
+<p style="text-align: center; font-weight: bold">Channel multiplexing using GoVPP</p>
+
 ---
 
 ### Connection
@@ -80,7 +82,7 @@ You must include the SHM prefix in the [GoVPPMux conf file][govppmux-conf-file],
 
 The `NewAPIChannel()` call returns a new API channel for communication with VPP using the GoVPP core. It uses a default buffer size of 100 messages for the request and reply Go channels. 
 
-You can customize the request and reply Go channel buffer sizes using the `NewAPIChannelBuffered`call:
+You can customize the request and reply Go channel buffer sizes using the `NewAPIChannelBuffered`call.
 
 - Increase `reqChanBufSize()` to avoid VPP overload if your plugin sends configuration requests in bulk mode. 
 <br>
@@ -128,7 +130,7 @@ Some particulars of plugin interface types:
 - You can only _configure_ a PCI and physical DPDK interface; you cannot create or delete these interface types.
 <br>
 </br>
-- You must meet any necessary pre-conditions before you create or remove an interface. For example, before creating an AF_PACKET interface, you need a host VETH interface in place to attach it to.        
+- You must meet any necessary pre-conditions before you create or remove an interface. For example, before creating an AF_PACKET interface, you need a host VETH interface in place to attach to.        
 </br>
 
 
@@ -144,17 +146,17 @@ The VPP agent translates NB configuration statements into a sequence of binary A
 
 ---
  
-The VPP agent divides interface proto files into two parts:
+The VPP agent divides the interface proto into two parts:
  
- - Configuration items common to all interface types. Excepts exist. You cannot define common fields on some interface types. For example, you cannot set a physical address for an AF_PACKET or DPDK interface despite the presence of the field in the definition. If set, the value is silently ignored.
+ - **Configuration items common to all interface types**. Excepts exist. You cannot define common fields on some interface types. For example, you cannot set a physical address for an AF_PACKET or DPDK interface despite the presence of the field in the definition. If set, the value is silently ignored.
 <br>
 </br> 
- - Configuration items specific to a given interface type.
+ - **Configuration items specific to a given interface type**.
   
-The `type` and `name` fields are mandatory and limited to 63 characters. The interface proto file may contains fields unique for a given type.
+The `type` and `name` fields are mandatory and limited to 63 characters. The interface proto contains fields unique for a given type.
 
 !!! Note
-    You must use a unique interface `name` across all VPP interfaces of the same type. For example, two memif interfaces cannot share the same `name`. 
+    You must assign a unique interface `name` across all VPP interfaces of the same type. For example, two memif interfaces cannot share the same `name` of `memif22`. 
 ---
 
 The VPP agent defines every interface type with a key.
@@ -169,9 +171,9 @@ To learn more about keys, see [keys concepts][concept-keys] and [keys reference]
 
 ---
 
-The VPP agent uses the interface's logical name as a reference for other models, such as bridge domains, that use the interface. VPP works with indexes that are generated when you create a new instance of an interface. The index is a unique integer for VPP internal referencing and identification. 
+The VPP agent uses the interface's logical name as a reference for other models, such as bridge domains, that use the interface. VPP works with indexes generated when you create a new instance of an interface. The index is a unique integer for VPP internal referencing and identification. 
 
-In order to parse the name and index, the VPP agent uses a corresponding tag in the VPP binary API. With this "name-to-index" mapping entry, the VPP agent can locate the interface name and corresponding index. 
+In order to parse the name and index, the VPP agent uses a corresponding tag in the VPP binary API. With this "name-to-index" mapping entry, the VPP agent locates the interface name and corresponding index. 
 
 ---
 
@@ -179,11 +181,11 @@ In order to parse the name and index, the VPP agent uses a corresponding tag in 
 
 You typically assign an IPv4 address, an IPv6 address, or both, to an interface. You can also define an interface as _unnumbered_. In this scenario, the VPP interface "borrows" the IP address from another interface, which is called the target interface. 
 
-To configure an unnumbered interface, omit `ip_addresses` and set `interface_with_ip`. The target interface must exist and configured with at least one IP address. If the target interface does not exist, the VPP agent will not configure the unnumbered interface until the required target interface appears. 
+To set up an unnumbered interface, omit `ip_addresses` and set `interface_with_ip` in your interface configuration. The target interface must exist, and have at least one assigned IP address. If the target interface does not exist, the VPP agent will not configure the unnumbered interface until the required target interface appears. 
 
 ### Maximum Transmission Unit
 
-The MTU is the size of the largest protocol data unit (PDU) VPP can transmit on the "wire". You can customize the interface MTU size using the `mtu` value in the interface definition. If you leave the field empty, VPP uses a default MTU size of 0.
+The MTU is the size of the largest protocol data unit (PDU) VPP can transmit on the "wire". You can customize the interface MTU size using the `mtu` value in your interface definition. If you leave the field empty, VPP uses a default MTU size of 0.
 
 The VPP agent provides an option to automatically set the MTU size for an interface using the [interface conf file][interface-config-file]. If you set the global MTU size to a non-zero value, but define a different local value in the interface configuration, the _local value takes precedence_ over the global value.
 
@@ -191,7 +193,7 @@ The VPP agent provides an option to automatically set the MTU size for an interf
 
 ### Interface Types
 
-This table contains the interface type name and notes. Any words labeled as `code` correspond to message names or field names contained in the interface proto file.
+The following table contains the interface type name and notes. Any words labeled as `code` correspond to message names or field names contained in the interface proto.
 
  
 | Type| Description |
@@ -235,7 +237,7 @@ Example interface data:
 }
 ```
 
-Put interface:
+Put `loop1` interface:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"phys_address":"7C:4E:E7:8A:63:68","ip_addresses":["192.168.25.3/24","172.125.45.1/24"],"mtu":1478}'
 ```
@@ -260,7 +262,7 @@ Example memif interface data. Note the memif-specific fields in the `memif` sect
 }
 ```
 
-Put `MEMIF` interface:
+Put `memif1` interface:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/memif1 '{"name":"memif1","type":"MEMIF","enabled":true,"phys_address":"4E:93:2A:38:A7:77","ip_addresses":["172.125.40.1/24"],"mtu":1478,"memif":{"master":true,"id":1,"socket_filename":"/tmp/memif1.sock","secret":"secret"}}'
 ```
@@ -359,7 +361,7 @@ For more details and examples using gRPC, see:
 
 ### Interface Status
 
-The interface plugin collects interface status information composed of counters, state, and stats. You can store this information in an external database, or generate and transmit a notification.
+The interface plugin collects interface status information composed of counters, state, and stats. You can store this information in an external database, or generate and send a notification.
 
 The VPP agent waits on several types of VPP events such as object creation, object deletion, or counter updates. It processes the event, and extracts all data. 
 
@@ -376,12 +378,12 @@ Using the collected information, the VPP agent builds a notification, and then s
 
 The interface status proto defines three objects:
 
- - InterfaceStats - contains counters.
+ - **InterfaceStats** - contains counters.
  <br>
  </br>
- - InterfaceState - contains status data
+ - **InterfaceState** - contains status data
 <br></br>
- - InterfaceNotification -  state wrapper with additional information required to send a status notification.
+ - **InterfaceNotification** -  state wrapper with additional information required to send a status notification.
 
 Key for interface status:
 ```
@@ -397,7 +399,7 @@ Key for interface errors:
 
 **Interface Status Usage**
 
-To read status data, use any tool with access to a given database. etcdctl and agentctl to access etcd; redis-cli to access Redis; boltbrowser to access BoltDB, consul cli for consul, and so on. 
+To read status data, you can use any tool with access to a given database. For example, etcdctl and agentctl provide easy access to an etcd data store. 
 
 Read interface status for all interfaces:
 ```
@@ -699,7 +701,7 @@ Example xconnect data:
 }
 ```
 
-Put xconnect:
+Put `if1` xconnect:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/l2/v2/xconnect/if1 '{"receive_interface":"if1","transmit_interface":"if2"}'
 ```
@@ -878,14 +880,14 @@ For more details and examples using gRPC, see:
 
 ### Proxy ARP
 
-Proxy ARP is a technique whereby a device on a subnet responds to ARP queries for the IP address of a host on a different network. You must enable the desired interfaces to support proxy ARP.   
+Proxy ARP is a technique in which a device on a subnet responds to ARP queries for the IP address of a host on a different network. You must enable interfaces to support proxy ARP.   
 
 **References:**
 
 - [VPP Proxy ARP proto][L3-proto]
 - [VPP Proxy ARP model][L3-models]  
 
-The Proxy ARP proto lays out a list of IP address ranges, and another list for interfaces. You must configure the interface before enabling it for proxy ARP. 
+The proxy ARP proto lays out a list of IP address ranges, and another list for interfaces. You must configure the interface before enabling proxy ARP. 
 
 ---
 
@@ -1002,22 +1004,21 @@ For more details and examples using gRPC, see:
 
 ### Routes 
 
-The VPP routing table contains destination network prefixes, a corresponding next_hop IP address and the outbound interface. You can deploy one or more virtual routing and forwarding (VRF) tables, with a default table of index 0.
+The VPP routing table contains destination network prefixes, a corresponding next_hop IP address, and the outbound interface. You can deploy one or more virtual routing and forwarding (VRF) tables. The default VRF table uses index 0.
 
 **References:**
 
 - [VPP routes proto][route-proto]
 - [VPP routes model][L3-models]
 
-The VPP routes proto defines the standard routing table fields such a destination network, next_hop IP address. The proto includes weight and preference fields to assist in path selection.  
+The VPP routes proto defines the standard routing table fields such a destination network, next_hop IP address, and outgoing interface. The proto includes weight and preference fields to assist in path selection.  
 
 The proto defines several route types:
 
-- Intra-VRF route: prefix lookup done in the local VRF table.
-
-- Inter-VRF route: prefix lookup an done in an external VRF table. 
- 
-- Drop route: drops packets destined for specified IP address.
+- **Intra-VRF route**: prefix lookup done in the local VRF table.
+<br></br>
+- **Inter-VRF route**: prefix lookup done in an external VRF table defined in the `via_vrf_id` field.<br></br>  
+- **Drop route**: drops packets destined for a specified IP address.
 
 ---
  
@@ -1127,7 +1128,7 @@ For more details and examples using gRPC, see:
  
 ### IP Scan-Neighbor
 
-The VPP IP scan-neighbor feature supports periodic IP neighbor scans. You can enable or disable this feature. The IP scan-neighbor proto defines scan intervals, timers, delays, IPv4 mode, IPv6 mode or dual-stack.
+The VPP IP scan-neighbor feature supports periodic IP neighbor scans. You can enable or disable this feature. The IP scan-neighbor proto defines scan intervals, timers, delays, IPv4 mode, IPv6 mode, and dual-stack.
 
 **References:**
 
@@ -1140,7 +1141,7 @@ The VPP IP scan-neighbor feature supports periodic IP neighbor scans. You can en
 
 **KV Data Store**
 
-Example IP scan neighbor data:
+Example IP scan neighbor:
 ```json
 {  
     "mode":"BOTH",
@@ -1254,7 +1255,9 @@ The VRF table proto defines an ID, protocol setting for IPv4 or IPv6, optional l
 
 ### VRRP
 
-The L3 plugin supports the [virtual router redundancy protocol](https://tools.ietf.org/html/rfc5798) (VRRP). This protocol enables hosts on a LAN access to one of several gateway routers on the same LAN. You configure a group of VRRP routers as a single virtual router supporting a single gateway address. If the primary router in the group fails, a secondary router with the same gateway address takes over.   
+The L3 plugin supports the [virtual router redundancy protocol](https://tools.ietf.org/html/rfc5798) (VRRP). This protocol enables hosts on a LAN to use one of several gateway routers on the same LAN. 
+
+You configure a group of VRRP routers as a single virtual router supporting a single gateway address. If the primary router in the group fails, a secondary router with the same gateway address takes over.   
 
 **References:**
 
@@ -1292,11 +1295,13 @@ curl -X GET http://localhost:9191/dump/vpp/v2/vrrps
 
 ## IPFIX Plugin
 
-The IPFIX plugin is used to manage [IPFIX][ipfix-rfc] configuration in VPP. It allows one to:
+The IPFIX plugin manages [IPFIX][ipfix-rfc] configuration in VPP. It lets you:
 
-- configure export of flowprobe information
-- configure flowprobe parameters
-- enable/disable the flowprobe feature for a specific interface
+- Configure flowprobe data export.
+<br></br>
+- Configure flowprobe parameters.
+<br></br>
+- Enable/disable the flowprobe feature for a specific interface.
 
 **References**
 
@@ -1306,8 +1311,9 @@ The IPFIX plugin is used to manage [IPFIX][ipfix-rfc] configuration in VPP. It a
 
 Items to keep in mind when deploying flowprobe functionality on an interface:
 
-- flowprobe `cannot` be configured for any interface if flowprobe parameters were not set.
-- flowprobe parameters `cannot` be changed if the flowprobe Feature was enabled for at least one interface.
+- You can't configure flowprobe for an interface if you did not set up flowprobe parameters.
+<br></br>
+- You can't change flowprobe parameters if you already configured flowprobe on at least one interface.
 
 ---
 
@@ -1710,7 +1716,7 @@ IP redirect enables traffic that arrives on an interface, and matching a given I
 - [VPP IP redirect proto][punt-proto]
 - [VPP IP redirect model][punt-model] 
 
-IP redirect is defined as the `IpRedirect` object in the proto file. The L3 protocol is defined as a `string` value that is transformed to numeric in the VPP binary API call. 
+IP redirect is defined as the `IpRedirect` object in the proto. The L3 protocol is defined as a `string` value that is transformed to numeric in the VPP binary API call. 
 
 If L3 protocol is set to `ALL`, the respective API is called for IPv4 and IPv6 separately.
 

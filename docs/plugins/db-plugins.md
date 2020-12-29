@@ -1,6 +1,6 @@
 # Database Plugins
 
-This section discusses database plugins.
+This section describes database plugins.
 
 ---
 
@@ -50,9 +50,9 @@ Your plugins should support two types of events defined by this API.
 <br></br>
 - **Incremental data change event** triggers incremental processing of configuration changes. Each data change event contains the previous values, and the new or current values. Data synchronization switches to this optimized mode only after a successful full data resync. 
 
-The Watch data API Functions figure above depicts both event flows.
+The _Watch data API Functions_ figure above depicts both event flows.
  
- - Full resync event flow shown in **2.1 - 2.3**
+ - Full resync event flow shown in **2.1 - 2.4**
  - Incremental data change event flow shown in **3.1 - 3.4** 
 
 ---
@@ -61,7 +61,7 @@ The Watch data API Functions figure above depicts both event flows.
 
 Your plugins use the publish data API to asynchronously publish events with data change values. This API provides a common abstraction for your plugins that communicate with a target data store, message bus, or RPC clients.  
 
-The Publish data API Functions figure below illustrates publish event flow. 
+The _Publish data API Functions_ figure below illustrates publish event flow. 
 
 ![datasync publish][datasync-publish-image]
 <p style="text-align: center; font-weight: bold">Publish data API Functions</p>
@@ -96,7 +96,7 @@ The `keyval` package also provides a skeleton for a KV data store plugin. You se
 **References**
 
 - [Keyval repo folder][cn-infra-keyval-repo-folder]
-- [keyval package](https://godoc.org/github.com/ligato/cn-infra/db/keyval)
+- [keyval GoDocs](https://godoc.org/github.com/ligato/cn-infra/db/keyval)
 
 ---
 
@@ -120,7 +120,7 @@ For a list of etcd configuration options, see [etcd conf file][etcd-conf-file].
 
 ### Status Check
 
-The etcd plugin uses the status check plugin to verify connection status. The etcd connection state impacts the global status of your agent. If your agent cannot establish a connection with the etcd server, the readiness and liveness probes issued by the probe plugin return a negative result.
+The etcd plugin uses the [status check plugin](infra-plugins.md#status-check) to verify connection status. It performs this task by sending periodic probes. The etcd connection state impacts the global status of your agent. If your agent cannot establish a connection with the etcd server, the readiness and liveness probes issued by the probe plugin return a negative result.
 
 ### Compacting
 
@@ -337,7 +337,7 @@ For a list of Consul configuration options, see [Consul conf file][consul-conf-f
 
 ### Status Check
 
-The Consul plugin uses the status check plugin to verify connection status. The Consul connection state impacts the global status of your agent. If your agent cannot establish a connection with the Consul server, the readiness and liveness probes issued by the probe plugin return a negative result.
+The Consul plugin uses the [status check plugin](infra-plugins.md#status-check) to verify connection status. It performs this task by sending periodic probes. The Consul connection state impacts the global status of your agent. If your agent cannot establish a connection with the Consul server, the readiness and liveness probes issued by the probe plugin return a negative result.
  
 
 ### Reconnect Resync
