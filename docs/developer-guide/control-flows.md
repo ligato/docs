@@ -80,7 +80,7 @@ This example covers the situation where you need to update an interface configur
 !!! Note
     You can view a configuration item update as just an "update operation". The incremental update or full configuration re-creation happens "under the covers" between the VPP agent and the data plane.<br></br> Incremental update is always preferred. Configuration updates require full re-creation if the specific item or attribute does not support incremental updates.   
 
-The KV Scheduler supports re-creation scenario using the `UpdateWithRecreate()` method. It lets a descriptor inform the KV Scheduler if an item requires full re-creation before applying the configuration update. 
+The KV Scheduler supports the re-creation scenario using the `UpdateWithRecreate()` method. It lets a descriptor inform the KV Scheduler if an item requires full re-creation before applying the configuration update. 
 
 The control flow diagram shows interface re-creation using a VPP TAP interface, wth a NB request to modify its RX ring size. You cannot modify this configuration because the interface already exists. In addition, an L3 route is attached to the interface. The route cannot exist without the interface. 
 
