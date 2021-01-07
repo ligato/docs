@@ -288,6 +288,26 @@ x-------------------------------------------------------------------------------
 
 ---
 
+### WaitDone
+
+In some scenarios, you could have configuration updates that depend on a data plane event. Problems can arise if your agent expects a completed configuration update, while the underlying data plane is not fully configured. In other words, the configurator signals `config update finished`, but transaction key-values are still PENDING. 
+
+See [Issue #1732](https://github.com/ligato/vpp-agent/issues/1732) for a description of this problem.
+
+You can tell the configurator to wait until all key-value pairs are non-PENDING with the WaitDone option. The configurator proto defines a `wait_done` boolean. If you set to true, the configurator waits for all transaction key-values to reach non-PENDING state before signaling `config update finished`, or until the request times out.
+
+The WaitDone option works for update requests and delete requests.
+
+For more information on WaitDone, see the following:
+
+- [configurator proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/configurator/configurator.proto)
+- [configurator.go](https://github.com/ligato/vpp-agent/blob/master/plugins/configurator/configurator.go)
+- [feat: Add support for waiting until config update is done #1734](https://github.com/ligato/vpp-agent/pull/1734)
+- [feat: Implement WaitDone for Delete in Configurator service #1756](https://github.com/ligato/vpp-agent/pull/1756)
+
+
+---
+
 ### KV Scheduler API
 
 A separate [sub-package "api"][kvscheduler-api-dir] of the [KV Scheduler plugin][plugin] defines the KV Scheduler API. 
