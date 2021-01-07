@@ -415,7 +415,7 @@ agentctl config delete --waitdone update1.yaml
 ```
 
 !!! note  
-    The `--waitdone` flag tells the configurator to block an update or delete request until all transaction keys are non-pending.<br></br>To learn more about this feature, see [configurator proto](https://github.com/ligato/vpp-agent/blob/effbcadbb8d02cf89caaf8bcbfd6d134eae9361d/proto/ligato/configurator/configurator.proto#L26), [issue #1732](https://github.com/ligato/vpp-agent/issues/1732), [PR #1734](https://github.com/ligato/vpp-agent/pull/1734), and [PR #1745](https://github.com/ligato/vpp-agent/pull/1756).  
+    The `--waitdone` flag tells the configurator to block an update or delete request until all transaction keys are non-pending.<br></br>To learn more about this feature, see [WaitDone](../developer-guide/kvscheduler.md#waitdone).  
 
 ---
 
