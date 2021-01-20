@@ -16,16 +16,38 @@ By applying the Kubernetes lifecycle to CNFs, you can spin up different network 
 - Cloud service bundles composed of CNFs strung together in a service function chain.
 - VPN Internet Gateway solutions employing IPsec crypto/tunnel CNFs. 
 
-Notes:
+CNFs require two more very important attributes:
 
-CNFs require a performance NF data plane. Provided by fd.io
-CNFs should be programmable using cloud native APIs including k8s CRDs, gRPCs, etcd data stores 
+- High performance data plane.
+- Programmability using cloud native APIs including k8s CRDs, gRPCs, etcd data stores
 
 CNF solutions must keep pace with cloud native adoption and growth. The cloud native developer community requires solutions that simplify and expedite the development and implementation of customized, scalable and versatile CNFs. 
 
 That's where Ligato comes into play.
 
+To learn more about CNFs, check out the following:
+
+- [What is a CNF?](https://ligato.io/cnf/cnf-def/)
+- [X-Factor CNFs](https://x.cnf.dev/config/)
+- [CNFs with a Dose of Ligato and FD.io/VPP](https://ligato.io/blog/cnf-ligato-fdio/)
+- 
+
 ---
+
+## 10K foot View
+
+_**Ligato is a Golang (Go) framework for developing software agents to control and manage cloud native network functions (CNF).**_
+
+Notes
+
+- CNFs with different personalities will exist in cloud native networks. Some replicate existing NFs/VNF but under cloud-native control. Others new developed to support emerging cloud-native functions 
+- Ligato provides you, the developer with the tools, libraries, protobufs, plugins and docs so you can build and deploy CNF control plane and management agents
+- focuses on the control plane agents, while leveraging fd.io data plane. Caters to VPP, but Linux supported
+- Does not do all on its own. Embraces integration with other open source projects.
+
+
+![overview][docs-overview]
+
 
 ## VPP Agent
 
@@ -79,7 +101,7 @@ _**Ligato provides the infrastructure and agents developers can use to build cus
 - Stateless configuration management based on KV data store "watch" paradigm
 - Godocs
 
-
+[docs-overview]: ../img/intro/docs-overview-ligato.svg
 
 
 

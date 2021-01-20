@@ -115,6 +115,7 @@ Ligato plugins are defined using a common pattern making it straightforward to u
 [vpp-agent]: ../img/intro/vpp_agent.png "VPP Agent & plugins on top of CN-infra"
 [vpp-agent-new]: ../img/intro/ligato-framework-vpp-agent2-picture.svg
 [vpp-agent-10k]: ../img/intro/vpp_agent_10K_feet.png
+[docs-overview]: ../img/intro/docs-overview-ligato.svg
 
 *[ACL]: Access Control List
 *[DPDK]: Data Plane Development Kit
