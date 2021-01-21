@@ -1,10 +1,14 @@
 # Overview
 
-_**Ligato is a Golang (Go) framework for developing software agents to control and manage cloud native network functions (CNF).**_
+_****_
 
 ---
 
 ## CNF
+
+_**A cloud native network function (CNF) is a cloud native application that implements network functionality. A CNF consists of one or more microservices and has been developed using Cloud Native Principles including immutable infrastructure, declarative APIs, and a “repeatable deployment process”.**_<br></br>Source: [CNCF definition](https://github.com/cncf/telecom-user-group/blob/master/whitepaper/cloud_native_thinking_for_telecommunications.md#14-cloud-native-network-functions)
+
+---
 
 Cloud providers are shifting towards a cloud native approach for application development, operations and management. Applications are packaged up in containers. Kubernetes automates container startup, placement and teardown based on policies, services, scale and resiliency. The cloud native lifecycle simplifies the steps beginning with development all the way to deployment and operations in modern cloud environments. 
 
@@ -30,34 +34,64 @@ To learn more about CNFs, check out the following:
 - [What is a CNF?](https://ligato.io/cnf/cnf-def/)
 - [X-Factor CNFs](https://x.cnf.dev/config/)
 - [CNFs with a Dose of Ligato and FD.io/VPP](https://ligato.io/blog/cnf-ligato-fdio/)
-- 
+- [Cloud Native Thinking for Telecommunications](https://github.com/cncf/telecom-user-group/blob/master/whitepaper/cloud_native_thinking_for_telecommunications.md)
 
 ---
 
-## 10K foot View
+## 100K foot View
 
-_**Ligato is a Golang (Go) framework for developing software agents to control and manage cloud native network functions (CNF).**_
+_**Ligato is a Golang (Go) framework for developing software agents to control and manage CNFs.**_
 
-Notes
+CNF solutions with different personalities will exist in cloud native networks. Some replicate the functions of existing physical (PNF) and virtual NFs (VNF). Others will support new and emerging cloud-native functions.
 
-- CNFs with different personalities will exist in cloud native networks. Some replicate existing NFs/VNF but under cloud-native control. Others new developed to support emerging cloud-native functions 
-- Ligato provides you, the developer with the tools, libraries, protobufs, plugins and docs so you can build and deploy CNF control plane and management agents
-- focuses on the control plane agents, while leveraging fd.io data plane. Caters to VPP, but Linux supported
-- Does not do all on its own. Embraces integration with other open source projects.
+![overview][docs-overview-100k]
+
+With Ligato, you can develop CNFs that meet your individual network functionality requirements. 
+
+- Features devoted to cloud native development and operational deployment.
+- Focus on management and control plane agents for CNFs.
+- Tailored for the high-performance FD.io/VPP data plane.
+- Embraces integration with other open source projects.   
+  
+
+--- 
+
+##10K foot View
+
+_**Ligato provides the plugins and infrastructure to develop software agents.**
+
+The next figure takes you down to the "10K foot" level. You have the following beginning at the top:
+
+- **Applications** - External applications, rpc clients, telemetry apps, and data stores that typically run in their own separate containers. They communicate via declarative APIs to Ligato NB plugins.
+<br></br>
+- **KV Scheduler** - Core plugin that supports configuration item dependency resolution, and computes the proper programming sequence for multiple interdependent configuration items. The KV Scheduler receives configuration data from NB, determines configuration item dependencies, executure CRUD callbacks in the SB towards the VPP or Linux plugins.
+<br></br>
+- **VPP and Linux Plugins** - Set of plugins providing network functions, such as VPP routes or ACLs, you can use to assemble your Ligato agent. Note that you can "cherry pick" plugins as needed. And you can developer your own custom plugins.
+<br></br>
+- **Infra** - Provides plugin lifecycle management including initialization and graceful shutdown of plugins). Infra includes a set of framework or infrastructure plugins supporting health checking, NB data store communications, messaging, logging, and rpc APIs.     
 
 
-![overview][docs-overview]
+![docs-overview-10k][docs-overview-10k]
 
+You will most likely implement a mix of cn-infra plugins, VPP agent plugins, and/or custom plugins, to define CNF functionality.
 
-## VPP Agent
+---
+
+## VPP Agent Functions
 
 _** Ligato provides a VPP agent for programming a VPP data plane**_
 
-* Supplies VPP-specific plugins
-* VPP agent and VPP packaged up in single container
+You will likely hear the term, VPP agent, associated with Ligato. It loosely describes a Ligato agent that configures and monitors a VPP data plane.
+
+This term also refers to the VPP agent repository containing plugin code, models and protos.
+
+The following lists VPP agent functions: 
+
+* Comes with VPP-specific plugins
+* VPP agent and VPP data plane packaged up in single container
 * Dependency handling between related configuration items
 * Transaction-based configuration processing and tracking
-* Failover synchronization mechanisms, also known as resync
+* Failover NB/SB synchronization mechanisms
 * Stateless configuration management based on a KV data store "watch" paradigm
 * Direct access via REST or gRPC
 * Component health checks
@@ -65,25 +99,15 @@ _** Ligato provides a VPP agent for programming a VPP data plane**_
 * Multi-version configuration support
 
 !!! Note
-    The VPP agent is a control/management plane. It provides a configuration and monitoring services for the VPP data plane. It does not decide what to do with packets arriving on any of the VPP interfaces and does not change any of the configuration parameters (routes, FIBs) based on the actual VPP state.
+    The VPP agent provides a configuration and monitoring services for the VPP data plane. It does not provide packet processing functions. The VPP data plane handles that. 
  
 
 ---
 
-    
-## Cn-infra
-
-_**Ligato provides the infrastructure and agents developers can use to build customized CNF solutions**_
-
-* Supplies an assortment of reusable plugins allowing developers to "cherry pick" and implement as needed
-* Plugins for VPP, Linux, etcd, Kafka, Redis, Cassandra, gRPC, REST and more
-* Model-driven architecture for configuration object (i.e. interface) abstraction
-* Northbound APIs based on protobufs
-* Connectors for interfacing with external databases
-* Examples and tutorials for building customized plugins
-
 
 ## Developer Resources
+
+_** Ligato provides a multitude of developer resources**_
 
 - VPP agent and VPP dataplane in one container
 - Golang programming language
@@ -93,15 +117,17 @@ _**Ligato provides the infrastructure and agents developers can use to build cus
 - Automatic plugin lookup and dependency injection
 - KV scheduler core plugin for handling plugin dependencies and programming sequence
 - Common KV descriptor API
-- agentctl
-- developer guide
+- VPP and KV Scheduler APIs
+- Agentctl CLI
+- Developer guide
 - Troubleshooting guide
-- tutorials, examples
+- Tutorials and code examples
 - Detailed logging
 - Stateless configuration management based on KV data store "watch" paradigm
 - Godocs
 
-[docs-overview]: ../img/intro/docs-overview-ligato.svg
+[docs-overview-100k]: ../img/intro/docs-overview-ligato.svg
+[docs-overview-10k]: ../img/intro/docs-overview-10k.svg
 
 
 
