@@ -1,6 +1,8 @@
 # Overview
 
-_****_
+---
+
+This section overviews Ligato and lists developer resources.
 
 ---
 
@@ -37,64 +39,81 @@ _**Ligato is a Golang (Go) framework for developing software agents to control a
 
 CNF solutions with different personalities exist in cloud native networks. Some replicate the functions of existing physical (PNF) and virtual NFs (VNF). Others will support new and emerging cloud native functions.
 
+The following figure shows a high-level conceptual view of Ligato CNF solutions, Ligato features, and a sampling of compatible open source components. 
+
 ![overview][docs-overview-100k]
 <p style="text-align: center; font-weight: bold">Ligato at a 100K foot view</p>
 
-With Ligato, you can develop CNFs that meet your individual network functionality requirements. Ligato provides the following: 
+---
 
-- Features devoted to cloud native development and operational deployment.
-- Focus on management and control plane agents for CNFs.
+You can develop CNFs that address your individual cloud native network requirements. The following lists the Ligato "take-aways" to help you achieve that: 
+
+- Features devoted to CNF development and operational deployment.
+- Focus on CNF configuration and monitoring.
 - Tailored for the high-performance FD.io/VPP data plane.
-- Embraces integration with other open source projects.   
-  
+- Embraces integration with other open source projects.
+     
 
 --- 
 
 ##10K foot View
 
-_**Ligato provides the plugins and infrastructure to develop software agents.**_
+_**Ligato supplies you with the plugins, infrastructure and code to develop software agents.**_
 
-The next figure takes you down to the "10K foot" level. You have the following beginning at the top:
+The next figure takes you down to a "10K foot" view, beginning at the top:
 
 ![docs-overview-10k][docs-overview-10k]
-<p style="text-align: center; font-weight: bold">Ligato at the 10K foot view</p>
+<p style="text-align: center; font-weight: bold">Ligato at a 10K foot view</p>
 
-- **Applications** - External applications, rpc clients, telemetry apps, and data stores that typically run in their own containers. They communicate via declarative APIs to Ligato NB plugins.
+---
+
+- **Applications** - External applications, rpc clients, telemetry apps, and data stores. They communicate via declarative APIs to Ligato NB plugins.
 <br></br>
-- **KV Scheduler** - Core plugin that supports configuration item dependency resolution, and computes the proper programming sequence for multiple interdependent configuration items. The KV Scheduler receives configuration data from NB, determines the configuration item dependencies, executes CRUD callbacks in the SB towards the VPP or Linux plugins.
+- **Northbound Plugins** - Set of reusable plugins enabling Ligato agents to communicate with external applications.
+<br></br> 
+- **KV Scheduler** - Core plugin that supports configuration item dependency resolution, and computes the proper programming sequence for multiple interdependent configuration items. The KV Scheduler receives configuration data from NB, determines dependencies, and executes CRUD callbacks in the SB towards the VPP or Linux plugins.
 <br></br>
-- **VPP and Linux Plugins** - Set of plugins providing network functions, such as VPP routes or ACLs, you can use to assemble your Ligato agent. Note that you can "cherry pick" plugins as needed. And you can develop your own custom plugins.
+- **VPP and Linux Plugins** - Set of plugins providing network functions, such as VPP routes or ACLs, you can use to assemble your Ligato agent. Note that you can "cherry pick" plugins as needed. And you can develop your own custom plugins. To learn about all plugins, see [Ligato plugins](../plugins/plugin-overview.md).
 <br></br>
-- **Infra** - Provides plugin lifecycle management including initialization and graceful shutdown of plugins. Infra includes a set of framework or infrastructure plugins supporting health checking, NB data store communications, messaging, logging, and rpc APIs. To look more into the infra code and plugins, see the [cn-infra repository](https://github.com/ligato/cn-infra). 
+- **Infra** - Provides plugin lifecycle management including initialization and graceful shutdown of plugins. Infra includes a set of infrastructure plugins for health checking, NB data store communications, messaging, logging, and rpc APIs. To look more into the infra code and plugins, see the [cn-infra repository](https://github.com/ligato/cn-infra). 
        
 
-You will most likely implement a mix of cn-infra plugins, VPP agent plugins, and/or custom plugins, to define your CNF functionality.
+You will implement a mix of cn-infra plugins, VPP agent plugins, and/or custom plugins, to define your CNF functionality.
+
+!!! Note
+    Two repositories contain the Ligato code: [VPP agent](https://github.com/ligato/vpp-agent) and [cn-infra](https://github.com/ligato/cn-infra) 
 
 ---
 
 ## VPP Agent Functions
 
-_** Ligato provides the pieces to construct a VPP agent for programming a VPP data plane**_
+_** Ligato provides you with the pieces to construct a VPP agent for programming a VPP data plane**_
 
 You will likely hear the term, VPP agent, associated with Ligato. It loosely describes a Ligato agent that configures and monitors a VPP data plane.
 
-This term also refers to the [VPP agent repository](https://github.com/ligato/vpp-agent) containing plugin code, models and protos.
-
 The following lists VPP agent functions: 
 
-* Comes with VPP-specific plugins.
-* VPP agent and VPP data plane packaged in a single container.
+* VPP and Linux plugins.
+* VPP agent + VPP data plane in one container.
+* Multi-VPP configuration support.
+* Multi-version configuration support.
+
+---
+
 * Dependency handling between related configuration items.
 * Transaction-based configuration processing and tracking.
 * Failover NB/SB synchronization mechanisms.
 * Stateless configuration management based on a KV data store "watch" paradigm.
+
+---
+
 * Direct access via REST or gRPC.
 * Component health checks.
-* Multi-VPP configuration support.
-* Multi-version configuration support.
+* Agentctl CLI
+
 
 !!! Note
-    The VPP agent provides a configuration and monitoring services for the VPP data plane. It does not provide packet processing functions. The VPP data plane handles that. 
+    The VPP agent does not perform packet processing when forwarding packets. The VPP data plane handles those functions. 
  
 
 ---
@@ -102,25 +121,36 @@ The following lists VPP agent functions:
 
 ## Developer Resources
 
-_** Ligato supports a multitude of developer resources**_
+_** Ligato provides you with a multitude of developer resources**_
 
-- Quickstart Guide
-- VPP agent setup instructions 
-- VPP agent and VPP dataplane in one container.
+- Quickstart Guide.
+- VPP agent setup instructions.
+- Agentctl CLI
+- Tutorials and code examples.
+
+---
+ 
 - Golang programming language.
 - Model-driven protobuf APIs.
 - Common programming pattern for agents.
-- Multiple out-of-the-box VPP plugins.
+
+---
+
+- Multiple out-of-the-box plugins.
 - Automatic plugin lookup and dependency injection.
+- Plugin KV data store, REST and gRPC examples.
 - KV scheduler core plugin for handling plugin dependencies and programming sequence
-- Common KV descriptor API
-- VPP and KV Scheduler APIs
-- Agentctl CLI
+
+---
+
+- KV descriptor API
+- VPP and KV Scheduler REST APIs
+
+---
+
 - Developer guide
 - KV Scheduler troubleshooting guide
-- Tutorials and code examples.
 - Detailed logging.
-- Stateless configuration management based on KV data store "watch" paradigm.
 - Godocs
 
 [docs-overview-100k]: ../img/intro/docs-overview-ligato.svg
