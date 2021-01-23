@@ -20,7 +20,6 @@ extra_css:
 nav:
   - INTRODUCTION:
     - Overview: intro/overview.md
-    - Framework: intro/framework.md
     - FAQ: intro/faq.md
   - USER GUIDE:
     - Quickstart Guide: user-guide/quickstart.md
