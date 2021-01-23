@@ -10,7 +10,7 @@ For an in-depth discussion, see the [KV Scheduler Section in the Developer Guide
 
 **References:** 
 
-- [Ligato Framework](../intro/framework.md)
+- [Ligato Overview](../intro/overview.md)
 - [Tutorials](../tutorials/00_tutorial-setup.md)
 - [Concepts](../user-guide/concepts.md)
 - [Agentctl](../user-guide/agentctl.md)

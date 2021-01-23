@@ -6,7 +6,7 @@
 
 ### What is the VPP agent?
 
-A [control plane agent for a VPP data plane](framework.md#VPP agent). It comes with various plugins for programming data plane network functions. The VPP agent is separate from VPP data plane. You can use the VPP agent for developing customized or out-of-the-box VPP-based CNFs. 
+A control plane agent for a VPP data plane. It comes with various plugins for programming data plane network functions. The VPP agent is separate from VPP data plane. You can use the VPP agent for developing customized or out-of-the-box VPP-based CNFs. 
 
 Note that you can use the VPP agent with the Linux kernel data plane to develop applications. 
 
@@ -14,7 +14,7 @@ Note that you can use the VPP agent with the Linux kernel data plane to develop 
 
 ### What is cn-infra?
 
-[Framework of libraries and plugins](framework.md#infra) for building control plane agents for CNFs and applications.
+Infrastructure and plugins for building control plane agents for CNFs and applications.
 
 ---
 
