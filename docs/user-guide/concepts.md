@@ -1,30 +1,20 @@
 # Concepts
 
-This section describes several concepts that are fundamental to the Ligato VPP agent and Cn-infra architecture and functions.
-
-* Model as a representation of an object managed by the VPP agent
-* Key Prefix / Keys for indexing and interacting with configuration objects
-* proto.Messages for defining and generating protobuf APIs and keys
-* KV data store serving as a repository for configuration information
-* KV Scheduler providing a transaction-based system for dependency resolution and configuration management
-* KV Descriptors that describe configuration objects for use by the KV Scheduler
-* VPP configuration processing as performed by CLI and the KV Scheduler
-* Multi-Version support consisting of multiple versions of the VPP dataplane as well as multiple instances of a VPP agent
-* Plugin conf files for modifying plugin behavior at startup
-
+This section describes Ligato concepts.
 
 ---
 
 ## What is a Model?
 
-The model represents an abstraction of an object that can be managed through northbound APIs exposed by the VPP agent. The model is used to generate a complete __key__ associated with a value for the object stored in a Key Value (KV) data store.
+The model represents an abstraction of a configuration object. You manage configuration objects through northbound (NB) APIs exposed by your Ligao agent. Ligato uses models to generate a complete __key__ associated with a value for the objec. You can store object key values in a Key Value (KV) data store.
 
+---
 
 ### Model Components
 
-- model spec
-- protobuf message (`proto.Message`)
-- name template (optional)
+- Model spec
+- Protobuf message (`proto.Message`)
+- Name template (optional)
 
 ---
 
@@ -34,22 +24,22 @@ The model specification (spec) describes the model using the module, version and
 
 - `module` -  groups models belonging to the same configuration entity. For example, VPP configuration models identify with a VPP module; Linux configuration models with a Linux module.
 - `version` - current version of the VPP agent API. This value changes upon release of a new version.
-- `type` - keyword describing the given model such as interfaces or bridge-domains.
+- `type` - keyword describing the given model type such as interfaces or bridge-domains.
 
-Model specs are defined in the __models.go__ files located in the [proto folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato) of the VPP agent repository.
+Ligato defines model specs in the `models.go` files located in the VPP agent repository [proto folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).
 
 ---
 
 ### Key Prefix
 
-The three fields of the `model spec` are used to form a __key prefix__.
+The three fields of the `model spec` form a key prefix:
 ```
 config/<module>/<version>/<type>/
 ```
 
-The [agentctl model commands](../user-guide/agentctl.md#model) return model spec information, key prefix and more in a simple json format.
+The [agentctl model commands](../user-guide/agentctl.md#model) return model spec information, key prefix, and additional information in json format.
 
-Agentctl model inspect using the `vpp.interfaces` model as an example:
+Agentctl model inspect for the `vpp.interfaces` model:
 ```json
 agentctl model inspect vpp.interfaces
 ``` 
@@ -76,40 +66,44 @@ Sample output:
 
 ### Keys
 
-A key is used to index and interact with a CNF-managed object stored in a KV data store. Note that this is *not* the key associated with a value structured as key-value pairs (kv pairs) contained in the KV data store.
+A key lets you index and interact with a CNF-managed object stored in a KV data store. A key is formed by prepending a key prefix to a more specific object identifier, such as an index, name, or combination of fields. 
 
-A key is formed by prepending a key prefix to a more specific object identifier, such as an index, name or combination of fields. There are two types of key formats: 
+There are two types of key formats: 
 
-* short form key
-* long form key.
+* Short form key
+* Long form key.
 
-A short form key is composed of just a key prefix and object identifier. A long form key is prepended with a [microservice-label-prefix](#keys-and-microservice-label). This prefix contains a label referred to as a microservice label that identifies a specific instance of a VPP agent. Objects sharing the same microservice-label-prefix in their long form keys are managed exclusively by that VPP agent. The use of the microservice-label-prefix is required in environments where multiple VPP agents share the same KV data store.   
+A short form key consists of a key prefix and object identifier. 
 
-short form key:
+A long form key prepends a [microservice-label-prefix](#keys-and-microservice-label) to the short form key. This prefix contains a label referred to as a microservice label. The label identifies a specific instance of a VPP agent. 
+
+A VPP agent with a given label will only manage objects that contain the same label in their long form keys. You must use the microservice-label-prefix in environments where you have multiple VPP agents sharing the same KV data store.   
+
+Short form key structure:
 ```
 /config/<key prefix>/<identifier>
 ```
 
 
-short form key example for a VPP interface called `loop1`:
+Short form key example for a VPP interface called `loop1`:
 ```
 /config/vpp/v2/interfaces/loop1
 ```
 
-long form key:
+Long form key structure:
 ```
 /vnf-agent/<microservice label>/config/<key prefix>/<identifier>
 ```
 
 
-long form key example for the same VPP interface called `loop1`:
+Long form key example for the same VPP interface called `loop1`:
 ```
 /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 
-If the object is `read only`, then `/config/` is replaced by `/status/` in the key.
+A read-only object uses `/status/`instead of `/config/` in its key.
 
-An example of a long form key in action is shown in [section 5 of the Quickstart Guide][quickstart-guide-keys]. A VPP loopback interface is configured and put into an etcd KV data store.
+You can see a long form key in action in [section 5 of the Quickstart Guide][quickstart-guide-keys]. You put your VPP loopback interface configuration into an etcd KV data store.
 
 ```
 $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
@@ -117,28 +111,33 @@ $ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 ``` 
 This example employs a long form VPP interface key with `loop1` as the `<name>` identifier. The microservice label is `vpp1`.
 
-Keys can also be distinguished by the composition of the object identifier:
+You can distinguish keys by the composition of the object identifier:
 
-* Composite keys are composed of a `key prefix` and `combination of fields`. Example: [vpp route](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go).    
-* Specific keys are composed of a `key prefix` and `unique parameter`. Example: [vpp interface name](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go).
-* Global keys are composed of a `key prefix` and `some constant string`. Only one message of the given type can be stored under a global key. Example: [Nat44Global](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go).
+* **Composite keys** - key prefix and combination of fields. Example: [vpp route](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/models.go).
+<br></br>    
+* **Specific keys** -  key prefix and unique parameter. Example: [vpp interface name](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/interfaces/models.go).
+<br></br>
+* **Global keys** - key prefix and constant string. Only one message of the given type can be stored under a global key. Example: [Nat44Global](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/nat/models.go).
 
-A list of keys supported by the VPP agent can be found in the [keys reference][key reference] section of the user guide. 
+To see a complete list of supported keys, check out [keys reference][key reference]. 
 
 ---
 
 ### proto.Message
 
-The __proto.Message__ defines the structure and serialized format of data associated with an object in [protobuf][protobuf] message format. It serves multiple purposes:
+The proto.Message defines the structure and serialized format of data associated with an object in [protobuf][protobuf] message format. It serves multiple purposes:
 
-- Describes an object's name and type fields in a protobuf message format. This simplifies development and documentation readability. 
-- Generates northbound __protobuf APIs__ used by external entities for interacting with configured objects. 
-- Used with the model specification to generate a key.
+- Describes an object's name and type fields in a protobuf message format. This simplifies development and documentation readability.
+<br></br> 
+- Generates northbound protobuf APIs used by external entities for interacting with configured objects.
+<br></br>  
+- Used with the model spec to generate a key.
+<br></br> 
 - Used with model and model spec to populate a model registry.
 
 If the object is a route, then the proto.Message contained in the [route.proto](https://github.com/ligato/vpp-agent/blob/master/proto/ligato/vpp/l3/route.proto) file will define messages and associated name and type fields. 
 
-A code snippet from the __route.proto__:
+A code snippet from the `route.proto`:
 ```json
 message Route {
     enum RouteType {
@@ -166,15 +165,19 @@ message Route {
 }
 
 ```
-Again, the combination of the model and proto.Message define the northbound protobuf APIs exposed to external entities such as a KV data store or rpc client. In addition, the model, in conjunction with the proto.Message and model specification, are registered with a model registry. This simplifies access to the model keyspace from other parts of the system such as the KV Scheduler. 
+The figure below shows the relationship between a model, model spec, and proto.Messages. The combination of the model and proto.Message define the NB protobuf APIs. 
+
+In addition, the model, in conjunction with the proto.Message and model spec, register with a model registry. This simplifies access to the model keyspace from other parts of the system such as the KV Scheduler. 
 
 Note that KV Descriptors describe objects to the KV Scheduler. Both will be covered later in this section. 
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KVS.svg)
+<p style="text-align: center; font-weight: bold">Model spec and proto.Message relationship</p>
 
 
+---
 
-Use the [agentctl model list][agentctl model list] command to print the model name, proto.Message name and key prefix. The `vpp.interfaces` model is used in this example:
+Use [agentctl model list][agentctl model list] to print the model name, proto.Message name and key prefix. This example uses the `vpp.interfaces` model:
 ```json
 agentctl model ls vpp.interfaces 
 ```
@@ -184,42 +187,53 @@ MODEL NAME      CLASS   PROTO MESSAGE                    KEY PREFIX
 vpp.interfaces  config  ligato.vpp.interfaces.Interface  config/vpp/v2/interfaces/
 ```
 
-The .proto files containing the proto.Message definitions can be found in the [proto folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato) of the VPP agent repository.  
+You can find the proto files containing the proto.Message definitions in the [VPP agent proto folder](https://github.com/ligato/vpp-agent/tree/master/proto/ligato).  
 
 ---
 
 ### Name Templates
 
-Templates enable a developer to generate keys with custom identifiers.
+You can generate keys with custom identifiers using name templates.
 
-Refer to the [Custom Templates][developer-guide-custom-templates] section of the Developer Guide for a detailed discussion of name templates.
+For more details on name templates, see [Custom Templates][developer-guide-custom-templates].
 
 ---
 
 ## Key-Value Data Store
 
 !!! Note
-    KV database, KVDB, KV store and KV data store are terms used to define a data store or database of structured data objects. We will use the term `KV data store` in the documentation. The term `KVDB` will continue to be used in the agentctl and code examples.
+    KV database, KVDB, KV store and KV data store are terms used to define a data store or database of structured data objects. We will use the term `KV data store` in the documentation. Agentctl commands, code, and code examples use `KVDB`.
     
     `Connector` is a plugin providing connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
 
 
-The VPP agent uses an external KV data store for several reasons:
+You can employ an external KV data store for stateless CNF configuration management. The following lists several features you might find useful: 
  
- - persist the desired state of the VPP and Linux configuration because CNFs are stateless.
- - To store and export certain VPP statistics.
- - Exploit the `"watch"` paradigm for stateless configuration management. This is a common approach used in other configuration systems such as [confd][confd].
- - Enables asynchronous configuration of resources, even when not defined, available or running.
+ - Persist the desired state of the VPP and Linux configurations. CNFs should be stateless.
+ <br></br>
+ - Store and export certain VPP statistics.
+ <br></br>
+ - Exploit the `"watch"` paradigm for stateless configuration management. Other configuration systems such as [confd][confd] use this approach.
+ <br></br>
+ - Enables asynchronous configuration of resources, even when they are not defined, available or running.
+ <br></br>
  - Support self configuration on start/restart required in cloud native environments.
  
- Interacting with KV data stores is an important feature of the Ligato framework and is covered in several places in the documentation.
+ ---
  
- * [Supported KV Data Stores](#supported-kv-data-stores) provides examples on swapping out one KV data store for another. It also summarizes the KV data stores supported by Ligato out of the box.
- * [KV Data Store](../tutorials/04_kv-store.md) is a tutorial for wiring up the __Hello World__ plugin to an etcd KV data store.
- * [Database Plugins](../plugins/db-plugins.md) goes into more details on datasync, watch and publish data APIs, data broker and the keyval package.
- * [KV Data Store in a Plugin](#kv-data-store-in-a-plugin) runs through an example of setting up a plugin that uses a KV data store to watch for and publish data.  
+ Ligato provides support for multiple KV data stores. For more information on Ligato support for KV data stores, see the following:
+ 
+ * [Supported KV Data Stores](#supported-kv-data-stores) provides examples on swapping out one KV data store for another. It also summarizes the KV data stores supported by Ligato.
+ <br></br>
+ * [KV Data Store](../tutorials/04_kv-store.md) tutorial to show you how to wire up the __Hello World__ plugin to an etcd KV data store.
+ <br></br>
+ * [Database Plugins](../plugins/db-plugins.md) goes into more details on datasync, watch and publish data APIs, data broker. and the keyval package.
+ <br></br>
+ * [KV Data Store in a Plugin](#kv-data-store-in-a-plugin) runs through an example of setting up a plugin that uses a KV data store to watch for and publish data.
+ <br></br>  
  * [Conf Files](config-files.md) covers data store conf file details.
- * [Agentctl KVDB](agentctl.md#kvdb) commands can be used to interact with KV data stores.  
+ <br></br>
+ * [Agentctl kvdb](agentctl.md#kvdb) commands to interact with KV data stores.  
  
 ---
 
