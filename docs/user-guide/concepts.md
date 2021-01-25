@@ -213,7 +213,7 @@ You can employ an external KV data store for stateless CNF configuration managem
  <br></br>
  - Store and export certain VPP statistics.
  <br></br>
- - Exploit the `"watch"` paradigm for stateless configuration management. Other configuration systems such as [confd][confd] use this approach.
+ - Exploit the _watch_ paradigm for stateless configuration management. Other configuration systems such as [confd][confd] use this approach.
  <br></br>
  - Enables asynchronous configuration of resources, even when they are not defined, available or running.
  <br></br>
@@ -221,7 +221,7 @@ You can employ an external KV data store for stateless CNF configuration managem
  
  ---
  
- Ligato provides support for multiple KV data stores. For more information on Ligato support for KV data stores, see the following:
+ For more information on Ligato support for KV data stores, see the following:
  
  * [Supported KV Data Stores](#supported-kv-data-stores) provides examples on swapping out one KV data store for another. It also summarizes the KV data stores supported by Ligato.
  <br></br>
@@ -265,9 +265,9 @@ It should be noted that the VPP agent _does not require_ a KV data store. Config
 
 ### Supported KV Data Stores
 
-The VPP agent provides [connectors to different KV data stores](../plugins/db-plugins.md). All are built on a common abstraction called [kvdbsync][kvdbsync]. This approach simplifies the process of changing out one KV data store for another.
+The VPP agent provides [connectors to different KV data stores](../plugins/db-plugins.md). All are built on a common abstraction called [kvdbsync][kvdbsync]. This approach simplifies the task of changing out one KV data store for another.
 
-Here is an example beginning with the etcd connector:
+Code snippet beginning with the etcd connector:
 ```go
 import (
 	"github.com/ligato/cn-infra/db/keyval/etcd"
@@ -292,7 +292,9 @@ func New() *VPPAgent {
 
 The code above prepares the kvdbsync plugin with the etcd connector. The kvdbsync plugin serves as a watcher to other plugins, or a writer if passed as the `KVProtoWriters` object. The orchestrator connects to the etcd server.
 
-Now switch to Redis:
+---
+
+Code snippet to switch to Redis:
 ```go
 import (
 	"github.com/ligato/cn-infra/db/keyval/redis"
@@ -313,9 +315,9 @@ func New() *VPPAgent {
 }
 ```
  
-The etcd connector is replaced by the Redis connector in the code. The orchestrator now connects to a Redis server.
+You have replaced the etcd connector with the Redis connector. The orchestrator now connects to a Redis server.
 
-To add support for a new KV data store:
+To add support for a new KV data store in your code:
 
 * Write a plugin that can establish a connection to the new data store.
 * Wire it up with the kvdbsync plugin.
@@ -326,7 +328,7 @@ To add support for a new KV data store:
 
 Reference: [etcd connector][etcd-plugin]
 
-[etcd](https://etcd.io/) is a distributed KV data store that provides data read/write capabilities. The machine hosting the KV data store is referred to as the `etcd server`. The recommended tool to manage etcd data is [etcdctl][etcdctl]. The VPP agent must start with the kvdbsync plugin using the etcd connector.
+[etcd](https://etcd.io/) is a distributed KV data store. You can perform read/write operations against the etcd data store using [etcdctl][etcdctl]. You must start the VPP agent with the kvdbsync plugin using the etcd connector.
  
 Here is an example of an etcd conf file defining the IP address and port number of the etcd server:
 ```
@@ -386,7 +388,7 @@ fileDB requires the [conf file](../user-guide/config-files.md#filedb) to load us
 
 ### KV Data Store in a Plugin
 
-Implementing a plugin that uses a KV data store for publishing or watching data begins with the following:
+You can implement a plugin that uses a KV data store for publishing or watching data. Begin with the following:
 
 ```go 
 import (
@@ -431,7 +433,7 @@ func New() *VPPAgent {
 
 Back in the plugin, start the watcher. The watcher requires two channel types: `datasync.ChangeEvent` and `datasync.ResyncEvent`. 
 
-It also requires a set of key prefixes to watch.
+You also need a set of key prefixes to watch.
 
 ```go
 p.resyncEventChannel := make(chan datasync.ResyncEvent)
@@ -441,8 +443,9 @@ keyPrefixes := []string{<prefixes>...}
 watchRegistration, err = p.Watcher.Watch("plugin-resync-name", p.resyncEventChannel, p.changeEventChannel, keyPrefixes)
 ```
 
-Data change and resync events arrive on a particular channel. Next, start the watcher in a new Go routine:
+Data change and resync events arrive on a particular channel. 
 
+Next, start the watcher in a new Go routine:
 ```go
 func (p *Plugin) watchEvents() {
 	for {
@@ -470,16 +473,19 @@ The `KeyProtoValWriter` object defines a method, `Put(<key>, <value>, <variadic-
 
 ## KV Scheduler & Descriptors
 
-Successfully programming the VPP data plane can be a challenge. Dependencies between configuration items will exist. There is a strict order of the programming actions, using either CLI or VPP binary API calls, that must be adhered to. This manifests itself into two distinct problems to solve:
+Successfully programming the VPP data plane can be a challenge. Dependencies between configuration items will exist. You must adhere to a strict order of the programming actions, using either VPP CLI or VPP binary API calls. 
 
-* A configuration item dependent on any other configuration item cannot be created "in advance". The dependency must be addressed first.
-* VPP data plane functions may not behave as desired, or fail altogether, if a dependency is removed out of order.
+This manifests itself into two distinct problems to solve:
 
-The [KV Scheduler](../developer-guide/kvscheduler.md) is a transaction-based system designed to address dependency resolution and compute the proper programming sequence in the presence of multiple interdependent configuration items. It is a core plugin that works with VPP and Linux agents on the southbound side, and external entities such as data stores and rpc clients on the northbound side.  
+* You cannot create, in advance, a configuration item with a dependency on another configuration item. You must address the dependency first. 
+<br></br>
+* VPP data plane functions may not behave as desired, or fail altogether, if you remove a dependency out of order.
+
+The [KV Scheduler](../developer-guide/kvscheduler.md) is a transaction-based system designed to address dependency resolution and compute the proper programming sequence in the presence of multiple interdependent configuration items. This core plugin works with VPP and Linux agents on the southbound side, and external entities such as data stores and rpc clients on the northbound side.  
 
 [KV Descriptors](../developer-guide/kvdescriptor.md) are constructs used by the KV Scheduler. For each configuration item, they implement CRUD operations that can be performed on an object. They define derived values and dependencies, and include the key prefix the KV Scheduler should watch in case configuration updates arrive from a KV data store.
 
-VPP and Linux plugins define descriptors for their own specific configuration items such as interfaces or routes. New KV Descriptors can be added to existing plugins or as part of a custom plugin. KV Descriptors are registered with the KV Scheduler so that it may manipulate the kv pairs without needing to understand what they represent. 
+VPP and Linux plugins define descriptors for their own specific configuration items such as interfaces or routes. You can add new KV Descriptors to existing plugins or as part of a custom plugin. KV Descriptors are registered with the KV Scheduler so that it may manipulate the kv pairs without needing to understand what they represent. 
 
 Here is a code snippet of the __VPP route descriptor__ showing name, key prefix, CRUD callbacks and dependencies:
 
@@ -504,9 +510,21 @@ Here is a code snippet of the __VPP route descriptor__ showing name, key prefix,
 
 Internally, the KV Scheduler builds a graph to model system state. The vertices represent configuration items. The edges represent relationships between the configuration items. The KV Scheduler walks the tree to mark dependencies and compute the sequence of programming actions to perform. 
 
-It builds a transaction plan that drives CRUD operations to the VPP agent in the southbound direction. Configuration items can be cached until outstanding dependencies are resolved. Partial or full state synchronization is supported. Information on transaction plans, cached values and errors are exposed via agentctl, logs and REST APIs.
+Additional KV Scheduler functions include the following:
 
+- Builds a transaction plan that drives CRUD operations to the VPP agent in the southbound direction.
+<br></br>
+- Caches configuration items until outstanding dependencies are resolved.
+<br></br>
+- Performs partial or full state synchronization. 
+<br></br>
+- Exposes transaction plans, cached values and errors to agentctl, logs and REST APIs.
+
+<br></br>
 ![kvs-system][kvs-system]
+<p style="text-align: center; font-weight: bold">KV Scheduler</p>
+
+---
 
 Use the [GET scheduler/dump](../api/api-kvs.md#dump) REST API to print the registered descriptors and key prefixes under watch:
 ```
@@ -517,18 +535,42 @@ Use [agentctl dump][agentctl dump] commands to print the KV Scheduler's running 
 agentctl dump all
 ```
 
+---
+
+## Resync
+
+Resync is one of the major features available with the VPP agent. It ensures consistency between the configuration provided from an external source, internal VPP agent state, and the actual VPP state. The automatic resync fetches all configuration data from a connected persistent data store such as  etcd, and reflects any changes to VPP. 
+
+The resync is initiated by default, upon VPP agent startup. In addition, it can be automatically launched on events such as VPP restart or reconnection to the data base. 
 
 ## VPP Configuration Order
 
-The best way to illustrate how the VPP agent KV Scheduler handles dependencies is through an example.
+Configuring VPP via a CLI is challenging. The CLI commands mostly reflect low-level binary API calls and must be executed in a specific order or sequence for the configuration to succeed. In some cases, a configuration item (e.g. interface) could depend on another separate configuration item. In other cases, a specific sequence of commands, each handling an individual configuration item, must be completed before the system is brought up to the desired state. As networks scale and the number of configuration items grows, it becomes vastly more difficult to ensure correct network configuration deployment and operation. 
 
-* First, use the VPP CLI to configure an interface, bridge domain and L2FIB in that order. Then show what happens when the interface and bridge domain are removed.
-* Use agentctl to configure the same information through the VPP agent but in reverse order - L2FIB, bridge domain and interface. Then observe what happens when the bridge interface is removed. 
+The VPP agent addresses this challenge by providing a mechanism to sort out dependencies for the entire configuration, all accessible from a northbound (NB) protobuf API. Configuration items use logical names instead of software indexes to ensure consistent configuration setup, even across process runtimes. For example, interfaces can be referenced before they are even created because the user defines each with a logical name.  
 
-As will be shown, the KV Scheduler is able to choreograph and sequence the series of actions resulting in a successful VPP configuration, even when confronted by multiple dependencies.    
+The VPP agent configuration behavior is as follows:
+
+* Configuration items with all dependencies satisfied, or no dependencies are programmed into VPP.
+
+* Incomplete configuration items with unresolved dependencies) are cached, or if possible, partially completed.
+
+*  At some later point in time, when the missing dependency items appear, all pending configuration items are re-validated and executed. All configuration items including those with dependencies between VPP and Linux, are managed in the same way. 
+
+Another important feature is the ability to retrieve existing VPP configuration. In addition to status reporting, this data is used to perform resynchronization. This is the process by which the active VPP configuration is compared to the desired VPP configuration to resolve any required changes and to minimize the impact during restarts.
+
+### VPP Configuration Order Examples    
+
+Two examples below illustrate VPP configuration using the VPP CLI and the VPP agent KV Scheduler. 
+
+- **Using VPP CLI** configures an interface, bridge domain and L2FIB in that order. Then show what happens when you remove the interface and bridge domain.
+<br></br>
+- **Using the KV Scheduler** employs agentctl to configure the same information through the VPP agent but in reverse order - L2FIB, bridge domain and interface. Then observe what happens when you remove the bridge interface. 
+
+You will observe how the KV Scheduler choreographs and sequences the series of actions resulting in a successful VPP configuration, even when confronted by multiple dependencies.    
 
 !!! note
-    An active VPP, VPP agent and etcd system is required to demonstrate the CLI and VPP agent configuration functions. Follow the steps in the [quick start guide][quickstart-guide] to prepare a system. The `agentctl vpp cli` command will be used to interface with the VPP CLI. For the KV Scheduler section, the `agentctl kvdb put/del` command will be used to program VPP. The `agentctl config history --format=log` command will be used to print the transaction logs.  
+    You will need an active VPP, VPP agent and etcd data store to demonstrate the CLI and VPP agent configuration functions. Follow the steps in the [quick start guide][quickstart-guide] to prepare a system. Use `agentctl vpp cli` to interface with the VPP CLI. For the KV Scheduler section, use `agentctl kvdb put/del` to program VPP. Use `agentctl config history --format=log` to print the transaction logs.  
 
 
 ---
@@ -538,7 +580,7 @@ As will be shown, the KV Scheduler is able to choreograph and sequence the serie
 Interfaces are the most common configuration item programmed into VPP. After interface creation, VPP generates an index, which serves as a reference for other configuration items that use an interface. Examples are bridge domains, routes, and ARP entries. Other items, such as FIBs may have more complicated dependencies involving additional configuration items.
 
 !!! Note
-    If for some reason the agentctl vpp cli commands fail, drop down directly to the VPP CLI console using `docker exec -it vpp-agent vppctl -s localhost:5002`. Then type in the commands but be sure to omit `agentctl vpp cli` prefix.
+    If for some reason the agentctl vpp cli commands fail, you can access the VPP CLI console using `docker exec -it vpp-agent vppctl -s localhost:5002`. 
 
 
 Start with an empty VPP and configure an interface:
@@ -603,7 +645,7 @@ Now, remove the interface:
 agentctl vpp cli delete loopback interface intfc loop0
 ```
 
-The output of the `show l2fib verbose`command reveals that the `interface-name` was changed from `loop0` to `Stale`:
+The output of the `show l2fib verbose`command reveals that the `interface-name` changed from `loop0` to `Stale`:
 ```json
     Mac-Address     BD-Idx If-Idx BSN-ISN Age(min) static filter bvi         Interface-Name
  52:54:00:53:18:57    1      1      0/0      no      -      -     -               Stale
@@ -856,12 +898,23 @@ A resync can also be triggered using the [agentctl config resync](agentctl.md#co
 Incremental configuration updates can be applied using the [agentctl config update](agentctl.md#config) command.  
 
 ---
+
+## Plugins
+
+The Ligato VPP agent is built on a plugin architecture. In general, a plugin is a small chunk of code that performs a specific function or functions. You can assemble plugins in any combination to build solutions ranging from simple elementary tasks such as basic configuration, to larger more complex operations such as managing configuration state across multiple nodes in a network. 
+
+You can setup and/or modify some plugin functions at startup using a conf file. Ligato outlines a common plugin definition. You can easily build customized plugins to create new solutions and applications.
+
+To learn more about plugins, see the following:
+
+- [Plugins](../plugins/plugin-overview.md)
+- [Customize new VPP plugin](https://github.com/ligato/vpp-agent/tree/master/examples/customize/custom_vpp_plugin)
    
-## Plugin Conf Files
+### Plugin Conf Files
 
 Some plugins require external information to ensure proper behavior. An example is the etcd connector plugin that needs to communicate with an external etcd server to retrieve configuration data. By default, the plugin attempts to connect to a default IP address:port. If connectivity to a different IP address:port is desired, this information must be conveyed to the plugin.
 
-For that purpose, VPP agent plugins support [conf files][config-files]. A plugin conf file contains plugin-specific fields, which can be modified, to affect changes in plugin behavior.
+For that purpose, VPP agent plugins support [conf files][config-files]. A plugin conf file contains plugin-specific fields, that you can modify, to affect changes in plugin behavior.
 
 ### Conf File Definition
 
@@ -878,7 +931,7 @@ Another option is to set the related env variable:
 export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 ```
 
-The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so the plugin can be successfully started without the conf file.
+The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so you can start the plugin without the conf file.
 
 Here is a conf file code snippet for the etcd connector plugin:
 ```json
