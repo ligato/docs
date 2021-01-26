@@ -66,7 +66,7 @@ Sample output:
 
 ### Keys
 
-A key lets you index and interact with a CNF-managed object stored in a KV data store. A key is formed by prepending a key prefix to a more specific object identifier, such as an index, name, or combination of fields. 
+A key lets you index and manage object values stored in a KV data store. A key is formed by prepending a key prefix to a more specific object identifier, such as an index, name, or combination of fields. 
 
 There are two types of key formats: 
 
@@ -75,7 +75,7 @@ There are two types of key formats:
 
 A short form key consists of a key prefix and object identifier. 
 
-A long form key prepends a [microservice-label-prefix](#keys-and-microservice-label) to the short form key. This prefix contains a label referred to as a microservice label. The label identifies a specific instance of a VPP agent. 
+A long form key prepends a [microservice-label-prefix](#keys-and-microservice-label) to the short form key. This prefix contains a label referred to as a microservice label. The label identifies an instance of a VPP agent that manages the key value pairs. 
 
 A VPP agent with a given label will only manage objects that contain the same label in their long form keys. You must use the microservice-label-prefix in environments where you have multiple VPP agents sharing the same KV data store.   
 
@@ -129,7 +129,7 @@ The proto.Message defines the structure and serialized format of data associated
 
 - Describes an object's name and type fields in a protobuf message format. This simplifies development and documentation readability.
 <br></br> 
-- Generates northbound protobuf APIs used by external entities for interacting with configured objects.
+- Generates northbound protobuf APIs used by external entities for interacting with configuration objects such as an ACL.
 <br></br>  
 - Used with the model spec to generate a key.
 <br></br> 
@@ -169,7 +169,7 @@ The figure below shows the relationship between a model, model spec, and proto.M
 
 In addition, the model, in conjunction with the proto.Message and model spec, register with a model registry. This simplifies access to the model keyspace from other parts of the system such as the KV Scheduler. 
 
-Note that KV Descriptors describe objects to the KV Scheduler. Both will be covered later in this section. 
+Note that KV Descriptors describe objects to the KV Scheduler. Both are covered later in this section. 
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KVS.svg)
 <p style="text-align: center; font-weight: bold">Model spec and proto.Message relationship</p>
@@ -204,9 +204,7 @@ For more details on name templates, see [Custom Templates][developer-guide-custo
 !!! Note
     KV database, KVDB, KV store and KV data store are terms used to define a data store or database of structured data objects. We will use the term `KV data store` in the documentation. Agentctl commands, code, and code examples use `KVDB`.
     
-    `Connector` is a plugin providing connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
-
-
+ 
 You can employ an external KV data store for stateless CNF configuration management. The following lists several features you might find useful: 
  
  - Persist the desired state of the VPP and Linux configurations. CNFs should be stateless.
@@ -257,13 +255,17 @@ Additionally, if the key is [registered](../developer-guide/model-registration.m
 This architecture promotes VPP agent configuration flexibility in several ways:
 
 - Single KV data store can support multiple VPP agent groups by using a unique microservice-label-prefix per group.
+<br></br>
 - VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" to VPP agent plugins.
 
-It should be noted that the VPP agent _does not require_ a KV data store. Configuration data can be provided using gRPC, agentctl, Client v2, CLI or  customized methods. That said, use of a KV data store to manage and distribute configuration data removes the burden of handling state in the CNFs.
+It should be noted that the VPP agent _does not require_ a KV data store. You can convey configuration data using gRPC, agentctl, Client v2, CLI or  customized methods. However, you remove the burden of handling state by using a KV data store to store and distribute configuration data to your CNFs.
 
 ---
 
 ### Supported KV Data Stores
+
+!!! Note
+    Connector is a type of plugin providing connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
 
 The VPP agent provides [connectors to different KV data stores](../plugins/db-plugins.md). All are built on a common abstraction called [kvdbsync][kvdbsync]. This approach simplifies the task of changing out one KV data store for another.
 
@@ -543,21 +545,25 @@ Resync is one of the major features available with the VPP agent. It ensures con
 
 The resync is initiated by default, upon VPP agent startup. In addition, it can be automatically launched on events such as VPP restart or reconnection to the data base. 
 
+---
+
 ## VPP Configuration Order
 
-Configuring VPP via a CLI is challenging. The CLI commands mostly reflect low-level binary API calls and must be executed in a specific order or sequence for the configuration to succeed. In some cases, a configuration item (e.g. interface) could depend on another separate configuration item. In other cases, a specific sequence of commands, each handling an individual configuration item, must be completed before the system is brought up to the desired state. As networks scale and the number of configuration items grows, it becomes vastly more difficult to ensure correct network configuration deployment and operation. 
+Configuring VPP via a CLI is challenging. The CLI commands mostly reflect low-level binary API calls and must be executed in a specific order for the configuration to succeed. In some cases, a configuration item (e.g. interface) could depend on another separate configuration item. In other cases, a specific sequence of commands, each handling an individual configuration item, must be completed before the system is brought up to the desired state. As networks scale and the number of configuration items grows, it becomes vastly more difficult to ensure correct network configuration deployment and operation. 
 
 The VPP agent addresses this challenge by providing a mechanism to sort out dependencies for the entire configuration, all accessible from a northbound (NB) protobuf API. Configuration items use logical names instead of software indexes to ensure consistent configuration setup, even across process runtimes. For example, interfaces can be referenced before they are even created because the user defines each with a logical name.  
 
-The VPP agent configuration behavior is as follows:
+The VPP agent configuration behavior consists of the following:
 
-* Configuration items with all dependencies satisfied, or no dependencies are programmed into VPP.
-
-* Incomplete configuration items with unresolved dependencies) are cached, or if possible, partially completed.
-
-*  At some later point in time, when the missing dependency items appear, all pending configuration items are re-validated and executed. All configuration items including those with dependencies between VPP and Linux, are managed in the same way. 
+* Configuration items with all dependencies satisfied, or no dependencies, are programmed into VPP.
+<br></br>
+* Incomplete configuration items with unresolved dependencies are cached, or if possible, partially completed.
+<br></br>
+* At some later point in time, when the missing dependency items appear, all pending configuration items are re-validated and executed. All configuration items including those with dependencies between VPP and Linux, are managed in the same way. 
 
 Another important feature is the ability to retrieve existing VPP configuration. In addition to status reporting, this data is used to perform resynchronization. This is the process by which the active VPP configuration is compared to the desired VPP configuration to resolve any required changes and to minimize the impact during restarts.
+
+---
 
 ### VPP Configuration Order Examples    
 
@@ -565,23 +571,26 @@ Two examples below illustrate VPP configuration using the VPP CLI and the VPP ag
 
 - **Using VPP CLI** configures an interface, bridge domain and L2FIB in that order. Then show what happens when you remove the interface and bridge domain.
 <br></br>
-- **Using the KV Scheduler** employs agentctl to configure the same information through the VPP agent but in reverse order - L2FIB, bridge domain and interface. Then observe what happens when you remove the bridge interface. 
+- **Using the KV Scheduler** configures the same information through the VPP agent but in reverse order: L2FIB, bridge domain and interface. Then you can see what happens when you remove the bridge interface. 
 
 You will observe how the KV Scheduler choreographs and sequences the series of actions resulting in a successful VPP configuration, even when confronted by multiple dependencies.    
 
 !!! note
-    You will need an active VPP, VPP agent and etcd data store to demonstrate the CLI and VPP agent configuration functions. Follow the steps in the [quick start guide][quickstart-guide] to prepare a system. Use `agentctl vpp cli` to interface with the VPP CLI. For the KV Scheduler section, use `agentctl kvdb put/del` to program VPP. Use `agentctl config history --format=log` to print the transaction logs.  
+    You will need an active VPP, VPP agent and etcd data store to demonstrate the CLI and VPP agent configuration functions. Follow the steps in the [quick start guide][quickstart-guide] to prepare a system.<br></br>  
 
 
 ---
 
 ### Using VPP CLI
 
-Interfaces are the most common configuration item programmed into VPP. After interface creation, VPP generates an index, which serves as a reference for other configuration items that use an interface. Examples are bridge domains, routes, and ARP entries. Other items, such as FIBs may have more complicated dependencies involving additional configuration items.
+You can define VPP data plane interfaces using the VPP CLI. After interface creation, VPP generates an index, that serves as a reference for other configuration items that use an interface. 
+
+Examples of configuration items that depend on interfaces include bridge domains, routes, and ARP entries. Other items, such as FIBs, may have more complicated dependencies involving additional configuration items.
 
 !!! Note
-    If for some reason the agentctl vpp cli commands fail, you can access the VPP CLI console using `docker exec -it vpp-agent vppctl -s localhost:5002`. 
+    Use `agentctl vpp cli` to run VPP CLI commands. If for some reason this fails, you can access the VPP CLI console using `docker exec -it vpp-agent vppctl -s localhost:5002`. 
 
+---
 
 Start with an empty VPP and configure an interface:
 ```bash
@@ -592,7 +601,9 @@ Output:
 loop0
 ```
 
-The `loop` interface is added. The interface name and index (Idx) are generated. 
+The `loop` interface is added. The interface name and index (Idx) are generated.
+
+--- 
 
 Show interfaces:
 ```
@@ -605,10 +616,13 @@ local0                            0     down          0/0/0/0
 loop0                             1     down         9000/0/0/0
 ```
 
+
 Set the interface to the `UP` state: 
 ```bash
 agentctl vpp cli set interface state loop0 up
 ``` 
+
+---
 
 Create a bridge domain:
 ```bash
@@ -620,7 +634,9 @@ The bridge domain is currently empty. Assign the interface to the bridge domain:
 agentctl vpp cli set interface l2 bridge loop0 1 
 ``` 
 
-The `loop0` interface is set to the bridge domain with an index of 1. It is not possible to use a nonexistent interface because the name, `loop0`, is generated at interface creation. The same holds true for a nonexistent bridge domain.
+The `loop0` interface is set to the bridge domain with an index of 1. It is not possible to use a _nonexistent_ interface because the name, `loop0`, is generated at interface creation. The same holds true for a nonexistent bridge domain.
+
+---
 
 Configure the L2FIB table entry:
 ```bash
@@ -640,7 +656,7 @@ The `l2fib add` command performed above illustrates the dependencies on the `loo
 ---
 
 
-Now, remove the interface:
+Remove the interface:
 ```json
 agentctl vpp cli delete loopback interface intfc loop0
 ```
@@ -651,18 +667,20 @@ The output of the `show l2fib verbose`command reveals that the `interface-name` 
  52:54:00:53:18:57    1      1      0/0      no      -      -     -               Stale
 ```
 
+---
+
 Remove the bridge domain:
 ```bash
 agentctl vpp cli create bridge-domain 1 del
 ```
 
-The output of the `show l2fib verbose` command is unchanged. This becomes a problem because attempts to remove the L2FIB dependencies of `bridge domain 1` and interface `loop0` have been performed. 
+The output of the `show l2fib verbose` command is unchanged. This becomes a problem because you attempted to remove the L2FIB dependencies of `bridge domain 1` and interface `loop0`. 
 ```bash
 vpp# sh l2fib verbose
     Mac-Address     BD-Idx If-Idx BSN-ISN Age(min) static filter bvi         Interface-Name        
  52:54:00:53:18:57    1      1      0/0      no      *      -     -               Stale                     
 ``` 
-An attempt to remove the L2FIB entry is invalid. Note this command was executed from the VPP CLI console:
+Your attempt to remove the L2FIB entry is invalid.
 ```bash
 l2fib del 52:54:00:53:18:57 1 
 ```
@@ -671,13 +689,19 @@ Output:
 l2fib del: bridge domain ID 1 invalid
 ```
 
-The end result is a configuration item, L2FIB, cannot be removed until the bridge domain and interface dependencies are re-created, after they had already been removed! This could complicate configuration operations, in particular, if multiple VPP data planes are involved.  
+---
+
+**Conclusion:** 
+
+You cannot remove the L2FIB configuration items until you re-create the bridge domain and interface dependencies. But, you already removed both dependencies! This could complicate configuration operations.  
+
+This is where the KV Scheduler comes into play.
 
 ---
 
 ### Using the KV Scheduler
 
-The VPP agent exposes a northbound (NB) API definition for every supported configuration item. NB configuration of an interface through an API creates the interface, sets state, assigns MAC address and IP addresses and any other parameter values as needed.
+The VPP agent exposes a northbound (NB) API definition for every supported configuration item. The NB configuration of an interface through an API creates the interface, sets state, assigns MAC address and IP addresses and any other parameter values as needed.
 
 The VPP agent goes further by permitting the configuration of VPP items with nonexistent references. Such an item is not programmed into the VPP data plane per se, but rather the KV Scheduler holds on to the information and postpones VPP programming until all dependencies are resolved. This removes the strict VPP configuration ordering constraint demonstrated in the previous section.
 
@@ -693,14 +717,18 @@ Log output:
     - value: { phys_address:"62:89:C6:A3:6D:5C"  bridge_domain:"bd1"  outgoing_interface:"if1" } 
 ```
 
-There was one `CREATE` operation performed for an L2FIB entry with interface `if1` and bridge domain `bd1`. None of these exist, so the programming operation is postponed and flagged as `[NOOP IS-PENDING]`.
+The KV Scheduler executes a `CREATE` operation for an L2FIB entry with interface `if1` and bridge domain `bd1`. None of these exist, so it postpones the programming operation and flags it as `[NOOP IS-PENDING]`.
+
+---
 
 Configure the bridge domain:
 ```json
 agenctl kvdb put /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1 '{"name":"bd1","interfaces":[{"name":"if1"}]}'
 ```
 
-A bridge domain with an interface `if1` is created. Log output:
+This creates a bridge domain with an interface `if1`. 
+
+Log output:
 ```bash
 1. CREATE:
     - key: config/vpp/l2/v2/bridge-domain/bd1
@@ -710,12 +738,15 @@ A bridge domain with an interface `if1` is created. Log output:
     - value: { name:"if1" }
 ```
 
-There were two operations performed: 
+The log shows two operations: 
 
-* bridge domain `bd1` is created with no restrictions. 
-* interface `if1` is flagged as: `[DERIVED NOOP IS-PENDING]`. `DERIVED` indicates an internal function performed by the KV Scheduler. `[NOOP IS-PENDING]` indicates that interface `if1` is not present yet.
+- `1. CREATE` creats the bridge domain `bd1` with no restrictions.
+<br></br> 
+- `2.CREATE: [DERIVED NOOP IS-PENDING]` flags interface `if1` as: `[DERIVED NOOP IS-PENDING]`. `DERIVED` indicates an internal function performed by the KV Scheduler. `[NOOP IS-PENDING]` means that interface `if1` is not present yet.
 
-Confirm that only the bridge domain has been programmed into the VPP runtime configuration by executing the `agentctl config retrieve` command. Partial output:
+Use `agentctl config retrieve` to confirm that only the bridge domain has been programmed into the VPP runtime configuration.
+
+Partial command output:
 ```json
 vppConfig:
   interfaces:
@@ -728,7 +759,9 @@ vppConfig:
 ...
 ```
 
-Next, add the `if` interface:
+---
+
+Add the `if` interface:
 ```bash
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/if1 '{"name":"if1","type":"SOFTWARE_LOOPBACK","enabled":true}'
 ```
@@ -747,13 +780,17 @@ Log output:
   - value: { phys_address:"62:89:C6:A3:6D:5C" bridge_domain:"bd1" outgoing_interface:"if1" }
 ```
 
-There were three operations performed. The first one is the interface itself that was created and enabled.
+The log shows three operations:
+ 
+- `1. CREATE` creates and enables interface `if1`.
+<br></br>
+- `2. CREATE [DERIVED WAS-PENDING]` is marked as `DERIVED` which is an internal KV Scheduler designation. `WAS-PENDING` means the cached value is resolved. This operation shows that the interface was added to the bridge domain as defined in the bridge domain configuration.
+<br></br>
+- `3. CREATE [WAS-PENDING]` is marked `WAS-PENDING` and represents the L2FIB entry that was cached up until now. Since the bridge domain and interface dependencies were resolved, the L2FIB entry was programmed into the VPP runtime configuration. 
 
-The second operation is marked as `DERIVED` which is an internal KV Scheduler designation, and `WAS-PENDING` meaning the cached value can be resolved. This operation shows that the interface was added to the bridge domain as defined in the bridge domain configuration.
+Use `agentctl config retrieve` to confirm the VPP runtime configuration.  
 
-The last operation is marked `WAS-PENDING` as well and represents the L2FIB entry that was cached up until now. Since the bridge domain and interface dependencies were resolved, the L2FIB entry was programmed into the VPP runtime configuration. 
-
-Confirm the VPP runtime configuration with the `agentctl config retrieve` command. Partial output:
+Partial command output:
 ```json
 vppConfig:
   interfaces:
@@ -773,7 +810,9 @@ vppConfig:
   ...
 ```
 
-Now remove the bridge domain:
+---
+
+Remove the bridge domain:
 ```bash
 agentctl kvdb del /vnf-agent/vpp1/config/vpp/l2/v2/bridge-domain/bd1
 ```
@@ -791,16 +830,24 @@ Log output:
   - value: { name:"bd1" interfaces:{name:"if1"} } 
 ```
 
-Observe that the first operation was the removal of the L2FIB entry. The value was not discarded by the VPP agent because it still exists in the etcd data store as confirmed by the output of the `agentctl kvdb list /vnf-agent/vpp1/config/vpp/l2/v2/fib/` command:
+The log shows three operations:
+
+- `1. DELETE [IS-PENDING]` removes the L2FIB entry. The KV Scheduler does not discard this entry because it still exists in the etcd data store. 
+ 
+ Use `agentctl kvdb list /vnf-agent/vpp1/config/vpp/l2/v2/fib/` to confirm that the L2FIB entry remains in the etcd data store. 
+ 
+ Command output:
 ```json
 /vnf-agent/vpp1/config/vpp/l2/v2/fib/bd1/mac/62:89:C6:A3:6D:5C
 {"phys_address":"62:89:C6:A3:6D:5C","bridge_domain":"bd1","outgoing_interface":"if1","action":"FORWARD"}
 ``` 
-The KV Scheduler returns this value to the cache. The L2FIB entry no longer exists in VPP because of unresolved dependencies. This eliminates the possibility of a VPP misconfiguration or stranded configuration value. However, if the bridge domain reappears, the L2FIB entry will be added back into the VPP runtime configuration without external intervention.
+The KV Scheduler returns this value to the cache. The L2FIB entry no longer exists in VPP because of unresolved dependencies. This eliminates the possibility of a VPP misconfiguration or stranded configuration value. However, if the bridge domain reappears, the KV Scheduler will add the L2FIB entry back into the VPP runtime configuration without external intervention.
 
-The second operation indicates that the interface `if1` was removed from the bridge domain prior to the removal of the bridge domain itself as performed in the third operation.
+- `2. DELETE [DERIVED]` removes interface `if1` from the bridge domain.
+<br></br>
+- `3. DELETE` removes the bridge domain.
 
-For more information, refer to the discussion of the [KV Scheduler][KVs] in the Developer Guide.
+For more information, refer to [KV Scheduler][KVs].
 
 ---
 
@@ -885,17 +932,19 @@ Client v2 defines an API for configuration management of VPP and Linux plugins. 
 
 The API calls can be split into two groups:
 
-- **resync** applies a given (full) configuration. An existing configuration, if present, is replaced. It is applied at initialization, and following any system event resulting in an out-of-sync configuration. Recovering stale configuration options is impossible to determine locally, because for example, connectivity to the data store is temporarily lost.
-- **data change** delivers incremental configuration changes.
+- **Resync** applies a given (full) configuration. An existing configuration, if present, is replaced. It is applied at initialization, and following any system event resulting in an out-of-sync configuration. Recovering stale configuration options is impossible to determine locally, because for example, connectivity to the data store is temporarily lost.
+<br></br>
+- **Data change** delivers incremental configuration changes.
 
-There are two Client v2 implementations:
+The two Client v2 implementations consist of the following:
 
-- **local client** runs inside the same process as the VPP agent and delivers configuration data through Go channels directly to the plugins.
-- **remote client** stores the configuration data in a data store using the given `keyval.broker`.
+- **Local client** runs inside the same process as the VPP agent and delivers configuration data through Go channels directly to the plugins.
+<br></br>
+- **Remote client** stores the configuration data in a data store using the given `keyval.broker`.
 
-A resync can also be triggered using the [agentctl config resync](agentctl.md#config) command, or by the [POST scheduler/downstream-resync](../api/api-kvs.md#downstream-resync) REST API. 
+You can trigger a resync using the [agentctl config resync](agentctl.md#config) command, or by the [POST scheduler/downstream-resync](../api/api-kvs.md#downstream-resync) REST API. 
 
-Incremental configuration updates can be applied using the [agentctl config update](agentctl.md#config) command.  
+You can apply incremental configuration updates using the [agentctl config update](agentctl.md#config) command.  
 
 ---
 
@@ -918,7 +967,7 @@ For that purpose, VPP agent plugins support [conf files][config-files]. A plugin
 
 ### Conf File Definition
 
-The configuration file is passed to the plugin via VPP agent flags. The [`vpp-agent -h`](config-files.md#vpp-agent--h-command) command print the list of all plugins and their corresponding conf file command flags and env variables.
+You can pass configuration data to the plugin with VPP agent flags. The [`vpp-agent -h`](config-files.md#vpp-agent--h-command) command prints the list of all plugins and their corresponding conf file command flags and env variables.
 
 Here is an example using VPP agent flags to pass an etcd conf file to the plugin:
 
