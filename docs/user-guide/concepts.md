@@ -240,25 +240,49 @@ You can employ an external KV data store for stateless CNF configuration managem
 !!! Note
     To distinguish between the key prefix and key definitions described above, we will refer to the `/vnf-agent/<microservice label>/` value as the `microservice-label-prefix`
 
-Each VPP agent is defined with a construct known as the __microservice label__. It is used to group VPP agents with their configuration objects stored in the KV data store. VPP agents configured with the same microservice label will prepend that value to a key prefix described above to form a __microservice-label-prefix__. VPP agents will then watch for object changes with a key that matches their own microservice-label-prefix.
+Your CNF deployment might have multiple VPP agents that share a common etcd data store. This requires a method to identify key-values associated with a specific VPP Agent.
 
-In the figure below, __VPP Agent 1__ on the left with a microservice label = `vpp1` will watch for configuration changes to objects with the microservice-label-prefix of `/vnf-agent/vpp1/`. VPP Agent 1 is not concerned with configuration updates beginning with `/vnf-agent/vpp2/` because those are affiliated with __VPP Agent 2__ on the right.
+The Ligato servicelabel plugins upports the microservice label and microservice-label-prefix. You assign a unique microservice label to each VPP Agent. The microservicelabel prefix contains the microservicelabel and an agentPrefix. The VPP agent prepends each of its shortform keys wiht the microservice-label-prefix. 
+
+Microservice label example:
+```
+vpp1
+```
+AgentPrefix example:
+```
+vnf-agent
+```
+Long form key example from above that includes the microservice-label-prefix:
+```
+/vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+```
+
+The figure below shows the following:
+
+- Common data store holding key-values for two VPP agents: agent1 and agent2
+<br></br>
+- Agent1 microservice label of `vpp1`; agentPrefixof `vnf-agent1`. microservice-label-prefix of `/vnf-agent/vpp1`
+<br></br>
+- Agent2 microservice label of `vpp2`; agentPrefix of `vnf-agent1`. microservice-label-prefix of `/vnf-agent/vpp2`
 
 
 [![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
+<p style="text-align: center; font-weight: bold">Two VPP agents with different microservice labels</p>
 
+This approach provides the following:
+
+- Avoids key space overlap between multiple VPP agents
+- Provides keyspace context for the VPP Agent 
+- Defines a common prefix for all keys used by a single VPP Agent.
 
 The VPP agent validates the microservice-label-prefix and if the label matches, the KV pair is passed to VPP agent configuration watchers.
 
-Additionally, if the key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing. Programming the VPP data plane is an example of the processing that can take place.
+If the key is [registered](../developer-guide/model-registration.md), the VPP agent passes the key-value to a watcher for processing such as VPP data plane programming.
 
-This architecture promotes VPP agent configuration flexibility in several ways:
+VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" to VPP agent plugins.
 
-- Single KV data store can support multiple VPP agent groups by using a unique microservice-label-prefix per group.
-<br></br>
-- VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" to VPP agent plugins.
-
-It should be noted that the VPP agent _does not require_ a KV data store. You can convey configuration data using gRPC, agentctl, Client v2, CLI or  customized methods. However, you remove the burden of handling state by using a KV data store to store and distribute configuration data to your CNFs.
+!!! Note
+    The VPP agent _does not require_ a KV data store. You can convey configuration data using gRPC, agentctl, Client v2, CLI or customized methods. However, you remove the burden of handling state by using a KV data store to store and distribute configuration data to your CNFs.
 
 ---
 
