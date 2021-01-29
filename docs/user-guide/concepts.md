@@ -75,10 +75,10 @@ There are two types of key formats:
 
 A short form key consists of a key prefix and object identifier. 
 
-A long form key prepends a [microservice-label-prefix](#keys-and-microservice-label) to the short form key. This prefix contains a label referred to as a microservice label. The label identifies an instance of a VPP agent that manages the key value pairs. 
+A long form key prepends a [microservice-label-prefix](#keys-and-microservice-label) to the short form key. This prefix contains a label referred to as a microservice-label. The label identifies the VPP agent associated with key-values prepended with the corresponding microservice-label-prefix.  
 
-A VPP agent with a given label will only manage objects that contain the same label in their long form keys. You must use the microservice-label-prefix in environments where you have multiple VPP agents sharing the same KV data store.   
-
+---
+   
 Short form key structure:
 ```
 /config/<key prefix>/<identifier>
@@ -103,13 +103,15 @@ Long form key example for the same VPP interface called `loop1`:
 
 A read-only object uses `/status/`instead of `/config/` in its key.
 
-You can see a long form key in action in [section 5 of the Quickstart Guide][quickstart-guide-keys]. You put your VPP loopback interface configuration into an etcd KV data store.
+---
+
+You can see a long form key in action in [section 5 of the Quickstart Guide][quickstart-guide-keys]. You put your VPP loopback interface configuration into an etcd data store.
 
 ```
-$ docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
+docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ``` 
-This example employs a long form VPP interface key with `loop1` as the `<name>` identifier. The microservice label is `vpp1`.
+This example uses a long form VPP interface key with `loop1` as the `<name>` identifier. The microservice-label is `vpp1`.
 
 You can distinguish keys by the composition of the object identifier:
 
@@ -240,25 +242,79 @@ You can employ an external KV data store for stateless CNF configuration managem
 !!! Note
     To distinguish between the key prefix and key definitions described above, we will refer to the `/vnf-agent/<microservice label>/` value as the `microservice-label-prefix`
 
-Each VPP agent is defined with a construct known as the __microservice label__. It is used to group VPP agents with their configuration objects stored in the KV data store. VPP agents configured with the same microservice label will prepend that value to a key prefix described above to form a __microservice-label-prefix__. VPP agents will then watch for object changes with a key that matches their own microservice-label-prefix.
+Your CNF deployment might have multiple VPP agents that share a common etcd data store. This requires a method to associate key-values with the corresponding VPP agent.
 
-In the figure below, __VPP Agent 1__ on the left with a microservice label = `vpp1` will watch for configuration changes to objects with the microservice-label-prefix of `/vnf-agent/vpp1/`. VPP Agent 1 is not concerned with configuration updates beginning with `/vnf-agent/vpp2/` because those are affiliated with __VPP Agent 2__ on the right.
+The Ligato [service label](../plugins/infra-plugins.md#service-label) plugin supports the microservice label and microservice-label-prefix. You assign a unique microservice label to each VPP agent. The microservice-label-prefix contains an agentPrefix and microservice label. 
+
+---
+
+microservice label example:
+```
+vpp1
+```
+agentPrefix example:
+```
+/vnf-agent/
+```
+microservice-label-prefix example:
+```
+/vnf-agent/vpp1
+```
+
+Long form key example from above that includes the microservice-label-prefix:
+```
+/vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
+```
+
+---
+
+The figure below shows a single etcd data store supporting two VPP agents: Agent 1 and Agent 2.
+
+**Agent 1**
+
+- microservice label = `vpp1`
+- agentPrefix = `/vnf-agent/`
+- microservice-label-prefix = `/vnf-agent/vpp1`
+
+---
+
+**Agent 2**
+
+- microservice label = `vpp2`
+- agentPrefix = `/vnf-agent/`
+- microservice-label-prefix = `/vnf-agent/vpp2`
 
 
-[![KVDB_microservice_label](../img/user-guide/kvdb-microservice-label.png)](https://www.draw.io/?state=%7B%22ids%22:%5B%221ShslDzO9eDHuiWrbWkxKNRu-1-8w8vFZ%22%5D,%22action%22:%22open%22,%22userId%22:%22109151548687004401479%22%7D#Hligato%2Fdocs%2Fmaster%2Fdocs%2Fimg%2Fuser-guide%2Fkvdb-microservice-label.xml)
+![kvdb-microservice-label](../img/intro/kvdb-microservice-label.svg)
+<p style="text-align: center; font-weight: bold">Two VPP agents with different microservice labels</p>
 
+---
 
-The VPP agent validates the microservice-label-prefix and if the label matches, the KV pair is passed to VPP agent configuration watchers.
+When you put a configuration key-value to the etcd data store, you include the microservice-label-prefix in the key.
 
-Additionally, if the key is [registered](../developer-guide/model-registration.md), the KV pair is sent to a watcher for processing. Programming the VPP data plane is an example of the processing that can take place.
+Example of an etcd data store put operation with a microservice-label-prefix of `/vnf-agent/vpp1`:
 
-This architecture promotes VPP agent configuration flexibility in several ways:
+```
+agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
+'{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
+``` 
 
-- Single KV data store can support multiple VPP agent groups by using a unique microservice-label-prefix per group.
-<br></br>
-- VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" to VPP agent plugins.
+---
 
-It should be noted that the VPP agent _does not require_ a KV data store. You can convey configuration data using gRPC, agentctl, Client v2, CLI or  customized methods. However, you remove the burden of handling state by using a KV data store to store and distribute configuration data to your CNFs.
+This approach provides the following:
+
+- Avoids key space overlap between multiple VPP agents.
+- Provides keyspace context for the VPP agent. 
+- Defines a common prefix for all keys used by a single VPP agent.
+
+The VPP agent validates the microservice-label-prefix and if the microservice label matches, it passes the key-value to VPP agent configuration watchers.
+
+If the key is [registered](../developer-guide/model-registration.md), the VPP agent passes the key-value to a watcher for processing such as VPP data plane programming.
+
+VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" to VPP agent plugins.
+
+!!! Note
+    The VPP agent _does not require_ a KV data store. You can convey configuration data using gRPC, agentctl, Client v2, CLI or customized methods. However, you remove the burden of handling state by using a KV data store to store and distribute configuration data to your CNFs.
 
 ---
 
