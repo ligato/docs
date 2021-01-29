@@ -285,7 +285,7 @@ The figure below shows a single etcd data store supporting two VPP agents: Agent
 - microservice-label-prefix = `/vnf-agent/vpp2`
 
 
-![kvdb-microservice-label](../img/intro/kvdb-microservice-label.svg)
+![kvdb-microservice-label](../img/user-guide/kvdb-microservice-label.svg)
 <p style="text-align: center; font-weight: bold">Two VPP agents with different microservice labels</p>
 
 ---
