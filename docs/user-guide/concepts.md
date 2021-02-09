@@ -909,17 +909,22 @@ For more information, refer to [KV Scheduler][KVs].
 
 ## VPP Multi-Version Support
 
-The VPP agent is highly dependent on the version of the VPP binary API used to send and receive configuration message types. The VPP binary API is evolving and changing over time, adding new binary calls, modifying, or removing existing ones. The latter is the most crucial from the VPP agent perspective since it introduces incompatibilities between the VPP agent and VPP.
+The VPP agent depends on the version of the VPP binary API to send and receive configuration message types. Over time, the VPP binary API will add new binary calls, and modify or remove existing ones. The VPP agent must ensure VPP binary API changes do not introduce incompatibilities with VPP.
 
-For that reason, the VPP agent performs a compatibility check in the [GoVPP multiplex plugin][govppmux-plugin]. Note that the GoVPP component provides an API for communication with VPP. The compatibility check attempts to read the message identifier (ID). If just one message ID is not found per validation in the cyclic redundancy code, VPP is considered incompatible, and the VPP agent will not connect. The message validation step is essential for a successful connection.
+For that reason, the VPP agent performs a compatibility check in the [GoVPPMux plugin][govppmux-plugin]. Note that the GoVPP component provides an API for communication with VPP. The compatibility check reads the message identifier (ID). You will encounter a VPP incompatibility, and the VPP agent will not connect, if just one message ID is not found per validation in the cyclic redundancy code. The message validation step is essential for a successful connection.
 
-The VPP agent is tightly bound to the version of VPP. For that reason, the VPP agent image is shipped together with a compatible VPP data plane version to safeguard against potential inconsistencies.
+The VPP agent is tightly bound to the version of VPP. For this reason, the VPP agent image ships with a compatible VPP version to safeguard against potential inconsistencies.
 
 ---
 
 ### VPP Compatibility
 
-The VPP agent bindings are generated from VPP JSON API definitions. Those can be found in the path `/usr/share/vpp/api`. Full VPP installation is a prerequisite if definitions need to be generated. The JSON API definition is then transformed to the `*.ba.go` file using `binapi-generator`, which is a part of the [GoVPP project][govpp-project]. All generated structures implement the GoVPP `Message` interface providing the message name, CRC or message type. This represents the generic type for all messages that can be sent across a VPP channel.
+Ligato generates the VPP agent bindings from VPP JSON API definitions. You can find those definitions in the `/usr/share/vpp/api` path. You must perform a complete VPP installation to generate new definitions. 
+
+The [GoVPP project][govpp-project] `binapi-generator` transforms the VPP JSON API definition to a `*.ba.go` file. All generated structures implement the GoVPP `Message` interface providing the message name, CRC, or message type. This represents the generic type for all messages sent across a VPP channel. You can find `*.ba.go` files in the [binapi](https://github.com/ligato/vpp-agent/tree/master/plugins/vpp/binapi) folder. 
+
+
+
 
 Example:
 ```go
@@ -938,7 +943,7 @@ func (*CreateLoopback) GetMessageType() api.MessageType {
 }
 ```
 
-The code above is generated from `create_loopback` within `interface.api.json`. The structure represents the VPP binary API request call. Usually, this contains a set of fields, which can be set to one or more required values. An example is the MAC address of a loopback interface.
+The `create_loopback` within `interface.api.json` generates the code shown above. The structure represents the VPP binary API request call. This contains a set of fields that you can set to one or more required values. An example is the MAC address of a loopback interface.
 
 Every VPP binary API request call requires a response:
 
@@ -959,44 +964,63 @@ func (*CreateLoopbackReply) GetMessageType() api.MessageType {
 }
 ``` 
 
-The response has a `Retval` field, which is `0` if the API call was successful. In an error is returned, the field contains a numerical index of a VPP-defined error message. Other fields can be present with information generated within VPP. An example is the `SwIfIndex` of the created interface.
+The response contains a `Retval` field consisting of one of the following:
+ 
+ - `0` if the API call is successful.
+ <br></br>
+ - Numerical index of a VPP-defined error message, if the API call is unsuccessful. 
+ 
+You can have other fields present with information generated from VPP. An example is the `SwIfIndex` of the created interface.
 
-Note that the response message has the same name as the request message but with a `Reply` suffix. In our example, `CreateLoopback` is the request; `CreateLoopbackReply` is the response. Other types of messages may provide information from VPP. Those VPP binary API calls have a suffix of `Dump`, and the corresponding reply message contains a suffix of `Details`.
+Note that the response message uses the same name as the request message,  but with a `Reply` suffix. In the example above, `CreateLoopback` is the request; `CreateLoopbackReply` is the response. 
 
-If the JSON API was changed, it must be re-generated in the VPP agent. All changes caused by the modified binary API structures must be resolved.  
+Other types of messages may provide information from VPP.  Those VPP binary API requests contains a suffix of `Dump`. The corresponding reply message contains a suffix of `Details`.
+
+If the VPP JSON API definition changes, then a new `*.ba.go` file must be regenerated in the VPP agent. You must resolve all changes caused by changes to the VPP binary API structures.  
 
 ---
 
 ### Multi-Version
 
-In order to minimize updates for the various VPP versions, the VPP agent introduced multi-version support. The VPP agent can switch to a different VPP version with the corresponding APIs. There are no changes incurred by the VPP agent, and there is no need to rebuild the VPP agent binary. Plugins can now obtain the version of the VPP and the VPP agent to connect and initialize the appropriate set of `vppcalls`.
+The VPP agent provides multi-version support to minimize updates for the various VPP versions. The VPP agent can switch to a different VPP version with the corresponding APIs. 
 
-The following figure depicts the version-agnostic and version-specific components used by VPP and custom agents supporting multiple VPP versions. 
+There are no changes incurred by the VPP agent. You do not need to rebuild the VPP agent binary. Plugins obtain the VPP and VPP agent versions to connect and initialize the appropriate set of `vppcalls`.
+
+The following figure depicts the version-agnostic and version-specific components used by VPP agents, and custom agents, supporting multiple VPP versions. 
 
 ![vpp-multi-version-support](../img/user-guide/vpp-multiversion-support.png)
+<p style="text-align: center; font-weight: bold">VPP Multi-version Architecture</p>
 
-Every `vppcalls` handler registers itself with the VPP version it will support (e.g. `vpp1810`, `vpp1901`, etc.). During initialization, the VPP agent performs a compatibility check with all available handlers, searching for one that is compatible with the required messages. The chosen handler must be in line with all messages, as it is not possible to use multiple handlers for a single VPP. When the compatibility check locates a workable handler, it is returned to the main plugin.
+---
 
-One drawback of this solution is some code duplication across `vppcalls`. This is a consequence of trivial API changes observed across different versions, which is seen in the majority of cases.
+Every `vppcalls` handler registers itself with the VPP version it will support. You can find the supported VPP versions in the `vppcalls/` folder of each plugin. 
+
+During initialization, the VPP agent performs a compatibility check with all available handlers, searching for one compatible with the required messages. The chosen handler must support all messages. A single VPP cannot use multiple handlers. When the compatibility check locates a workable handler, it is returned to the main plugin.
+
+Some code duplication occurs across `vppcalls`. This is a consequence of trivial API changes observed across different VPP versions. 
 
 
 ---
 
 ## Client v2
 
-Client v2 defines an API for configuration management of VPP and Linux plugins. How the configuration is transported between APIs and the plugins is fully abstracted from the user.
+Client v2 defines an API for configuration management of VPP and Linux plugins. It abstracts, from you, the configuration transport details between the APIs and plugins. 
 
-The API calls can be split into two groups:
+The API calls are split into two groups:
 
-- **Resync** applies a given (full) configuration. An existing configuration, if present, is replaced. It is applied at initialization, and following any system event resulting in an out-of-sync configuration. Recovering stale configuration options is impossible to determine locally, because for example, connectivity to the data store is temporarily lost.
+- **Resync** applies a given (full) configuration. An existing configuration, if present, is replaced. Client v2 applies the configuration at initialization, and following any system event resulting in an out-of-sync configuration.<br></br>You cannot recover stale configuration due to lost connectivity to the data store.
 <br></br>
 - **Data change** delivers incremental configuration changes.
 
+---
+
 The two Client v2 implementations consist of the following:
 
-- **Local client** runs inside the same process as the VPP agent and delivers configuration data through Go channels directly to the plugins.
+- **Local client** runs inside the same process as the VPP agent. It delivers configuration data through Go channels directly to the plugins.
 <br></br>
 - **Remote client** stores the configuration data in a data store using the given `keyval.broker`.
+
+---
 
 You can trigger a resync using the [agentctl config resync](agentctl.md#config) command, or by the [POST scheduler/downstream-resync](../api/api-kvs.md#downstream-resync) REST API. 
 
@@ -1006,14 +1030,33 @@ You can apply incremental configuration updates using the [agentctl config updat
 
 ## Plugins
 
-The Ligato VPP agent is built on a plugin architecture. In general, a plugin is a small chunk of code that performs a specific function or functions. You can assemble plugins in any combination to build solutions ranging from simple elementary tasks such as basic configuration, to larger more complex operations such as managing configuration state across multiple nodes in a network. 
+The Ligato VPP agent incorporates a plugin architecture. In general, a plugin is a small chunk of code that performs a specific function or functions. You can assemble plugins in any combination to build agents to meet your requirements.
 
 You can setup and/or modify some plugin functions at startup using a conf file. Ligato outlines a common plugin definition. You can easily build customized plugins to create new solutions and applications.
+
+Subset of VPP agent VPP plugins contained in the [plugins/vpp folder](https://github.com/ligato/vpp-agent/tree/master/plugins/vpp):
+
+```
+├── abfplugin
+├── aclplugin
+├── ifplugin
+├── ipfixplugin
+├── ipsecplugin
+├── l2plugin
+├── l3plugin
+├── natplugin
+├── puntplugin
+├── srplugin
+├── stnplugin
+└── wireguardplugin
+```
 
 To learn more about plugins, see the following:
 
 - [Plugins](../plugins/plugin-overview.md)
 - [Customize new VPP plugin](https://github.com/ligato/vpp-agent/tree/master/examples/customize/custom_vpp_plugin)
+
+---
    
 ### Plugin Conf Files
 
@@ -1021,24 +1064,28 @@ Some plugins require external information to ensure proper behavior. An example 
 
 For that purpose, VPP agent plugins support [conf files][config-files]. A plugin conf file contains plugin-specific fields, that you can modify, to affect changes in plugin behavior.
 
+---
+
 ### Conf File Definition
 
 You can pass configuration data to the plugin with VPP agent flags. The [`vpp-agent -h`](config-files.md#vpp-agent--h-command) command prints the list of all plugins and their corresponding conf file command flags and env variables.
 
-Here is an example using VPP agent flags to pass an etcd conf file to the plugin:
+Example using VPP agent flags to pass an etcd conf file to the plugin:
 
 ```bash
 vpp-agent -etcd-config=/opt/vpp-agent/dev/etcd.conf
 ```
 
-Another option is to set the related env variable:
+Example of setting the related env variable:
 ```bash
 export ETCD_CONFIG=/opt/vpp-agent/dev/etcd.conf
 ```
 
-The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` go structure. All fields are then processed, usually in the plugin `Init()`. It is good practice to always use default values in case the conf file or any of its fields are not provided. This is so you can start the plugin without the conf file.
+The conf file conforms to YAML syntax and is un-marshaled to a defined `Config` Go structure. All fields are then processed, usually in the plugin `Init()`. You should always use default values in case the conf file or any of its fields are not provided. This lets you start the plugin without the conf file.
 
-Here is a conf file code snippet for the etcd connector plugin:
+---
+
+Conf file code snippet for the etcd connector plugin:
 ```json
 # A list of host IP addresses of ETCD database server.
 endpoints:
@@ -1078,6 +1125,8 @@ allow-delayed-start: false
 # Interval between ETCD reconnect attempts in ns. Default value is 2 seconds. Has no use if `delayed start` is turned off
 reconnect-interval: 2000000000
 ```
+
+---
 
 Every plugin supporting a conf file defines its content as a separate structure. For example, here is a code snippet for the etcd conf file struct definition:
 ```go
