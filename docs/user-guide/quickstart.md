@@ -88,7 +88,7 @@ ligato/vpp-agent        latest              05ad16109a2b        3 days ago      
 
 ### 3.1 Start etcd
 
-Open a new terminal session. Start the etcd server in a docker container. If you don't have etcd on your localhost, docker will download it for you. Note `etcd` is the name of the docker container.
+Open a new terminal session. Start the etcd server in a docker container. If you don't have etcd on your localhost, docker downloads it for you. Note `etcd` is the name of the docker container.
 ```
 docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
