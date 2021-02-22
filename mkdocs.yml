@@ -49,6 +49,7 @@ nav:
     - Connection Plugins: plugins/connection-plugins.md
     - Database Plugins: plugins/db-plugins.md
     - Infra Plugins: plugins/infra-plugins.md
+    - Custom Plugin: plugins/custom-plugin.md
   - DEVELOPER GUIDE:
     - Plugin Lookup: developer-guide/plugin-lookup.md
     - KV Scheduler: developer-guide/kvscheduler.md
