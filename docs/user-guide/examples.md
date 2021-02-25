@@ -73,7 +73,7 @@ docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /u
 </br>
 
   
-Note: **For ARM64 see the information for [kafka][kafka-arm64]**.
+Note: **For more information about Kafka and ARM64, see [Kafka ARM64](get-vpp-agent.md#kafka-arm64)**.
 
  **3. Start VPP**
  ```

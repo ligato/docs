@@ -1,6 +1,6 @@
 # VPP Agent Setup
 
-This section shows you how to prepare and run an environment supporting the VPP agent and VPP in a single container.  
+This section shows you how to prepare and run an environment supporting the VPP agent.   
 
 !!! Terminology
     `VPP Agent` refers to a Ligato agent tailored for a VPP data plane. Both run in a single container. `vpp-agent` refers to the actual code, syntax, or container name. `VPP` refers to the VPP data plane.  
@@ -10,12 +10,12 @@ This section shows you how to prepare and run an environment supporting the VPP 
 
 ## Set Up Your Environment
 
-You have two options to set up your enviroment:
+You have two options to set up your environment:
 
-* Pre-built docker image pull from [dockerhub][dockerhub]
-* Build a Local Image
+* Pre-built docker image pull from [dockerhub][dockerhub].
+* Build a Local Image.
 
-The simplest option is a pull a pre-built docker image image. The local build option includes a couple of extra steps.
+Pulling a pre-built docker image is the simplest option. The local build option includes a couple of extra steps.
   
 !!! note
     The instructions below use Docker 19.03.5. Use the `docker --version` command to determine the version you are running.
@@ -38,7 +38,7 @@ You can run the VPP agent in the following supported architectures:
 * ARM64 (AArch64)
 
 !!! Note
-    For more details on working with ARM64 (AArch64), see [arm64](arm64.md).
+    For more details on working with ARM64 (AArch64), see [ARM64 considerations](#arm64-considerations).
 
 ---
 
@@ -60,11 +60,6 @@ The pre-built production image comes with the following:
 ```
 docker pull ligato/vpp-agent
 ```
-
-Next, you can follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install etcd, start and run the VPP agent.
-
-Alternatively, you can follow the steps below.
-
 
 ---
 
@@ -91,13 +86,6 @@ docker pull ligato/dev-vpp-agent
 
 ---
 
-Next, you can follow the [steps](quickstart.md#2-download-image) in the quickstart guide to install etcd, start and run the VPP agent.
-
-Alternatively, you can follow the steps below.
-
----
-
-
 ### Local Image Build
 
 !!! Note
@@ -115,14 +103,14 @@ git clone git@github.com:ligato/vpp-agent.git
 
 Navigate to the [docker][docker] folder. You can choose either the production image or development image to work with.
 
-If you wish to build the production image:
+Build the production image:
 ```
 make prod-image
 ```    
 
 ---
 
-If you wish to build the development image:
+Build the development image:
 
 ```
 make dev-image 
@@ -130,7 +118,7 @@ make dev-image
 
 ---
 
-If you wish to build both images: 
+Build both images: 
 
 ```
 make images 
@@ -152,15 +140,13 @@ The build scripts perform the following:
 
 **Development image in debug mode**
 
-You can build the development image in `DEBUG` mode:
+Build the development image in `DEBUG` mode:
 
 ```
 $ VPP_DEBUG_DEB=y ./build.sh
 ```
 
-This builds an image with debug mode support. 
-
-You can start the image in debug mode using the `RUN_VPP_DEBUG` environment variable:
+Start the image in debug mode using the `RUN_VPP_DEBUG` environment variable:
 ```
 sudo docker run -it --name vpp_agent --privileged -e RUN_VPP_DEBUG=y --rm dev_vpp_agent
 ``` 
@@ -171,7 +157,7 @@ sudo docker run -it --name vpp_agent --privileged -e RUN_VPP_DEBUG=y --rm dev_vp
 ### Start the Image
 
 !!! Note
-    The following steps use the production image, and include the VPP data plane.
+    You cannot start VPP agent pre-built images unless you have fist installed and started an etcd or Kafka data store. See [Connect to a Key-Value Data Store](#connect-to-a-key-value-data-store) for more details.
 
 ---
 
@@ -181,7 +167,7 @@ Start the VPP agent:
 sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
 ```
 
-The VPP agent and VPP start automatically by default.
+The VPP agent and VPP start automatically by default in a single container.
 
 ---
 
@@ -192,7 +178,7 @@ Note that the VPP agent executes in `privileged` mode. Several VPP agent operati
 
 ---
 
-You can assign the following environment variables with `docker -e` on image start:
+You can assign the following environment variables with `docker -e` at image start:
 
 - `OMIT_AGENT` - do not start the VPP agent together with the image:
 ```
@@ -269,7 +255,7 @@ vppctl -s localhost:5002
 
 You can implement additional functions and features using VPP agent plugins. 
 
-To learn more about VPP agent plugins, including how to build your own custom plugins, see [plugins](../plugins/plugin-overview.md).
+To learn more about VPP agent plugins, including how to build your own custom plugins, see [plugins](../plugins/plugin-overview.md) and [custom plugin](../plugins/custom-plugin.md).
 
 ---
 
@@ -280,14 +266,14 @@ Ligato stores VPP agent configuration information in a [KV data store](concepts.
 
 The instructions below use etcd and Kafka as two examples of KV data stores. 
 
-To learn more about other data stores supported by Ligato, see the following:
+To learn more about data stores supported by Ligato, see the following:
 
-- [Supported KV data stores](../user-guide/concepts.md#supported-kv-data-stores) 
+- [Supported KV data stores](../user-guide/concepts.md#supported-kv-data-stores). 
 - [Database plugins](../plugins/db-plugins.md).
 
 ---
 
-**Start etcd:**
+#### Start etcd
 
 
 Open a terminal session. Start the etcd server in a docker container. If you don't have etcd on your localhost, docker downloads it for you.
@@ -314,7 +300,7 @@ endpoints:
  - "172.17.0.1:2379"
 ```
 
-You can start the VPP agent to point to the `/opt/vpp-agent/dev` directory containing the `etcd.conf` file:
+You can start the VPP agent and point to the `/opt/vpp-agent/dev` directory containing the `etcd.conf` file:
 ```
 vpp-agent --etcd-config=/opt/vpp-agent/dev/etcd.conf
 ```
@@ -323,7 +309,7 @@ To review etcd plugin configuration options, see [etcd conf files](config-files.
 
 ---
 
-**Start Kafka** 
+#### Start Kafka 
 
 Open a terminal session. Start Kafka in a docker container. If you don't have Kafka on your localhost, docker downloads it for you.  
 
@@ -331,7 +317,7 @@ Open a terminal session. Start Kafka in a docker container. If you don't have Ka
 docker run -p 2181:2181 -p 9092:9092 --name kafka --rm --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 spotify/kafka
 ```
 
-In the default docker environment, the VPP agent communicates with the kafka server at `172.17.0.1:2379`.
+In the default docker environment, the VPP agent communicates with the kafka server at `172.17.0.1:9092`.
 You can define a different Kafka IP address:port number in the `kafka.conf` file.
 
 Example `kafka.conf` file:
@@ -350,7 +336,7 @@ For more information on Kafka plugin configuration options, see [kafka conf file
 
 ---
 
-### Executables
+## Executables
 
 
 The [`cmd` package](https://pkg.go.dev/github.com/ligato/vpp-agent@v1.8.1/cmd) groups executables built from sources in the VPP agent repository. 
@@ -364,7 +350,7 @@ The [cmd/ folder](https://github.com/ligato/vpp-agent/tree/master/cmd) contains 
 └── vpp-agent-init
 ```
 
-- **agentctl** - [agentctl](../user-guide/agentctl.md)
+- **agentctl** - [agentctl](../user-guide/agentctl.md).
 <br></br>
 - **vpp-agent** - default off-the-shelf VPP agent executable without app or extenstion plugins. Bundled with off-the-shelf VPP.
 <br></br>
@@ -373,7 +359,7 @@ The [cmd/ folder](https://github.com/ligato/vpp-agent/tree/master/cmd) contains 
 
 ---
 
-### Using Multiple VPP Agents
+## Using Multiple VPP Agents
 
 !!! Note
     Multiple VPP agents means multiple VPP agents talking to a single KV data store instance. [Multi-Version](../user-guide/concepts.md#multi-version) refers to the case where your VPP agent communicates with a specific version of VPP.
@@ -389,15 +375,15 @@ You distinguish VPP agents by using a `microservice-label`. You assign a unique 
 The default microservice label is `vpp1`. You can modify this value using one of the following options:
 
 
-- Set the command line flag `microservice-label`
+- Set the command line flag `microservice-label`.
 <br></br>
 - Set the `MICROSERVICE_LABEL` environment variable.
 <br></br>
-- Use the [service label conf file][service-label-conf-file]
+- Use the [service label conf file](config-files.md#service-label).
 
 You could use the same label to "broadcast" shared configuration data to multiple VPP agents. However, this approach is generally not recommended.
 
-For more details on microservice labels, see [keys and microservice labels](../user-guide/concepts.md#keys-and-microservice-label)
+For more details on microservice labels, see [keys and microservice labels](../user-guide/concepts.md#keys-and-microservice-label).
 
 ---
 
@@ -434,9 +420,9 @@ agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/route/vrf/1/dst/10.1.1.3/32/gw/1
 
 To look over other configuration examples using the KV data store, see the following:
 
-- [Quickstart](../user-guide/quickstart.md#5-managing-the-vpp-agent)
+- [Quickstart](../user-guide/quickstart.md#5-managing-the-vpp-agent).
 <br></br>
-- Plugin Configuration Examples in [Plugins](../plugins/plugin-overview.md)
+- Plugin Configuration Examples in [Plugins](../plugins/plugin-overview.md).
 
 ---
 
@@ -445,6 +431,108 @@ To look over other configuration examples using the KV data store, see the follo
 The [clientv2][clientv2] package contains API definitions for the supported configuration items. You can use client v2 to pass configuration data without the use of an external KV data store.
 
 To look over client v2 examples, see [examples](examples.md).
+
+---
+
+## ARM64 Considerations
+
+You can run the VPP agent on an ARM64 architecture. The procedures for VPP agent ARM64 mirror those outlined above for the AMD64 (x86_64) architecture. However, there are two exceptions: etcd and Kafka installation and startup. 
+
+!!! Note
+    The ARM64 docker images have not been updated since early 2020. Check with the Ligato development team on slack or github issues to find out more about ARM64 support and image status.
+
+---
+    
+### ARM64 Docker Image Pull
+
+Pull the pre-built ARM64 production image:
+```json
+docker pull ligato/vpp-agent-arm64
+```
+
+Pull the pre-built ARM64 development image:
+```json
+docker pull ligato/dev-vpp-agent-arm64
+```
+
+---
+
+### Start VPP Agent ARM64
+
+!!! Note
+    You cannot start VPP agent ARM64 pre-built images unless you have fist installed and started an etcd or Kafka data store. See [etcd ARM64](#etcd-arm64) and [Kafka ARM64](#kafka-arm64) for more details.
+
+---
+
+Start Production Image
+```json
+docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent-arm64
+```
+Start Development Image
+```json
+docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/dev-vpp-agent-arm64
+```
+
+---
+
+Check the status using [agentctl][agentctl]:
+```json
+docker exec -it vpp-agent agentctl status
+```
+---
+
+### etcd ARM64
+
+!!! note
+    Check for the proper etcd ARM64 docker image in the [official repository][etcd]. You must use the parameter `-e ETCD_UNSUPPORTED_ARCH=arm64` when installing etcd.
+    
+Open a terminal session. Start the etcd server in a docker container. If you don't have etcd on your localhost, docker downloads it for you.
+```
+docker run -p 2379:2379 --name etcd -e ETCDCTL_API=3 -e ETCD_UNSUPPORTED_ARCH=arm64 \
+    quay.io/coreos/etcd:v3.3.8-arm64 /usr/local/bin/etcd \
+    -advertise-client-urls http://0.0.0.0:2379 \
+    -listen-client-urls http://0.0.0.0:2379
+```
+
+---
+
+### Kafka ARM64
+
+An official spotify/kafka image for the ARM64 platform is not supported. However, you can build a kafka-arm64 image following the steps outlined in the [Kafka repository][kafka].
+
+---
+
+Modify the Kafka/Dockerfile before building the image:
+```
+//FROM java:openjdk-8-jre
+FROM openjdk:8-jre
+...
+// ENV KAFKA_VERSION 0.10.1.0
+ENV KAFKA_VERSION 0.10.2.1
+...
+```
+
+---
+
+Prepare the kafka-arm64 image:
+
+```
+git clone https://github.com/spotify/docker-kafka.git
+cd docker-kafka
+sed -i -e "s/FROM java:openjdk-8-jre/FROM openjdk:8-jre/g" kafka/Dockerfile
+sed -i -e "s/ENV KAFKA_VERSION 0.10.1.0/ENV KAFKA_VERSION 0.10.2.1/g" kafka/Dockerfile
+docker build -t kafka-arm64 kafka/
+```
+
+---
+
+Start Kafka in a separate container:
+```
+sudo docker run -p 2181:2181 -p 9092:9092 --name kafka --rm \
+ --env ADVERTISED_HOST=172.17.0.1 --env ADVERTISED_PORT=9092 kafka-arm64
+```
+
+
 
 
 
@@ -463,7 +551,8 @@ To look over client v2 examples, see [examples](examples.md).
 [concepts]: ../user-guide/concepts.md
 [quickstart-guide-51-keys]: ../user-guide/quickstart.md#51-configure-the-vpp-dataplane-using-the-vpp-agent 
 [ligato-vpp-agent-repo]: https://github.com/ligato/vpp-agent  
-
+[kafka]: https://github.com/spotify/docker-kafka#build-from-source
+[etcd]: https://quay.io/repository/coreos/etcd?tag=latest&tab=tags
 *[DPDK]: Data Plane Development Kit
 *[KVDB]: Key-Value Database
 *[NAT]: Network Address Translation

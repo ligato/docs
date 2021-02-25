@@ -24,7 +24,6 @@ nav:
   - USER GUIDE:
     - Quickstart Guide: user-guide/quickstart.md
     - VPP Agent Setup: user-guide/get-vpp-agent.md
-    - ARM64: user-guide/arm64.md
     - Keys Reference: user-guide/reference.md
     - Concepts: user-guide/concepts.md
     - Conf Files: user-guide/config-files.md
