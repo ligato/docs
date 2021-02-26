@@ -96,7 +96,13 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 
 **VPP Agent Version**
 
-* [GET /dump/info/version](#version)
+* [GET /info/version](#version)
+
+---
+
+**VPP Agent Configuration JSON Schema**
+
+* [GET /info/configuration/jsonschema](#configuration-json-schema)
 
 ---
 
@@ -1204,6 +1210,57 @@ Sample Response:
   "Arch": "amd64"
 }
 ```
+---
+
+## Configuration JSON Schema
+
+Description: GET JSON Schema for VPP agent configuration
+```
+curl -X GET http://localhost:9191/info/configuration/jsonschema
+```
+
+Sample response:
+```
+                // Partial response
+               "bridgeDomains": {
+                    "items": {
+                        "$schema": "http://json-schema.org/draft-04/schema#",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "flood": {
+                                "type": "boolean"
+                            },
+                            "unknown_unicast_flood": {
+                                "type": "boolean"
+                            },
+                            "unknownUnicastFlood": {
+                                "type": "boolean"
+                            },
+                            "forward": {
+                                "type": "boolean"
+                            },
+                            "learn": {
+                                "type": "boolean"
+                            },
+                            "arp_termination": {
+                                "type": "boolean"
+                            },
+                            "arpTermination": {
+                                "type": "boolean"
+                            },
+                            "mac_age": {
+                                "type": "integer"
+                            },
+                            "macAge": {
+                                "type": "integer"
+                            },
+                            "interfaces": {
+                                "items": {
+                                    "$schema": "http://json-schema.org/draft-04/schema#",
+```
+
 ---
 
 ## VPP CLI Command
