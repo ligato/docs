@@ -6,20 +6,16 @@ This section describes the Agentctl CLI tool.
 ---
 ## Introduction
 
-You can manage and interact with Ligato software components using the agentctl CLI command line tool. Agentctl supports the following functions:
+You can manage and interact with Ligato software components using the agentctl CLI command line tool. Agentctl lets you manage VPP agent configurations, dump the KV scheduler runtime state, check status, and configure logs. 
 
-- Manage VPP agent configurations. 
-- Inspect and generate models.
-- KV data store list, get, put and delete operations.
-- Check status.
-- Manage services.
-- Configure logs.
-- Gather stats.
-- Perform system dumps.
-- Extract runtime reports for troubleshooting.
-- Configure event watch.  
+For troubleshooting purposes, you can generate system-wide runtime reports. You can also perform operations against a KV data store, and collect metrics.
+
+Agentctl uses gRPC to communicate with different Ligato components and your custom agents. VPP agent docker images and local image builds include agentctl.
 
 ![agentctl](../img/tools/agentctl.png)
+<div>
+<p style="text-align: center; font-weight: bold">Agentctl Architecture</p>
+</div>
 
 ---
 
@@ -110,7 +106,7 @@ Run 'agentctl COMMAND --help' for more information on a command.
 
 ### NB Access Methods
 
-Agentctl uses various NB access methods provided by the Ligato agents. You can modify the default values as needed.
+Agentctl uses NB access methods provided by the Ligato agent. You can modify the default values as needed.
 
 - Agent host instance runs on `127.0.0.1` by default.
     * Use option `-H`/`--host` or env var `AGENT_HOST` to update.
@@ -149,7 +145,7 @@ Agentctl subcommands:
 
 ### Config
 
-Use `agentctl config` with the appropriate command, to manage VPP agent configuration data.
+Use `agentctl config` with the appropriate command, to manage VPP agent configurations.
 
 ```
 Manage agent configuration
@@ -336,7 +332,7 @@ dump:
 
 #### config update
 
-Update a VPP agent configuration. You must define the configuration inside a file. 
+Update a VPP agent configuration. You must define the updated configuration inside a file. 
 
 ```
 Update configuration in agent from file
@@ -346,7 +342,7 @@ OPTIONS:
   -t, --timeout duration   Timeout for sending updated data (default 5m0s)
 ```
 
-Update1.yaml file containing configuration:
+`Update1.yaml` file containing configuration:
 ```json
 # update1.yaml
 vppConfig:
@@ -377,13 +373,13 @@ linuxConfig:
       peer_if_name: "veth1"
 ```
 
-Update using the update1.yaml file with a timeout duration of 6m0s:
+Update the VPP agent configuration using `update1.yaml` with a timeout duration of 6m0s:
 ```json
 agentctl config update --timeout=6m0s update1.yaml
 ```
-You can replace an existing configuration with a new configuration using the `--replace` flag. Define your new configuration in a separate file.
+You can replace an existing configuration with a new configuration using the `--replace` flag. You must define your new configuration in a separate file.
 
-Config update replaces the update1.yaml configuration file with an updateNew.yaml configuration file:
+Config update replaces the `update1.yaml` configuration with an `updateNew.yaml` configuration:
 ```
 agentctl config update --replace ./updateNew.yaml
 ```
@@ -405,11 +401,11 @@ OPTIONS:
   -v, --verbose         Show verbose output
       --waitdone        Waits until config update is done
 ```
-Config delete using the update1.yaml file:
+Config delete using the `update1.yaml` file:
 ```
 agentctl config delete update1.yaml
 ```
-Config delete using the update1.yaml file with --waitdone flag:
+Config delete using the `update1.yaml` file with `--waitdone` flag:
 ```
 agentctl config delete --waitdone update1.yaml
 ```
@@ -421,7 +417,7 @@ agentctl config delete --waitdone update1.yaml
 
 #### config watch
 
-Watch events.
+Watch events generated from the SB.
 
 ```
 Usage:	agentctl config watch
@@ -497,7 +493,7 @@ Value: interface: {
 
 ### Dump
 
-Use this command to dump the KV Scheduler running state.
+Dump the KV Scheduler runtime state.
 
 ```
 Usage:	agentctl dump MODEL
@@ -728,7 +724,7 @@ Sample output:
 
 ### Model
 
-Use this command to gather information about models.
+Gather information about models.
 
 ```
 Usage:	agentctl model [options] COMMAND
@@ -812,9 +808,11 @@ Sample output:
 
 ### Report
 
-Use this command to generate runtime system reports. The report is packaged as a zipfile containing multiple subreport files. 
+Generate runtime system reports. The report is packaged as a zipfile containing multiple subreport files. 
 
-Most of the subreport files contain output of individual CLI commands or REST API calls. In addition, the files contain error and problem source information. You will save time and effort, and reduce problem resolution time.
+Most of the subreport files contain the output of individual CLI commands or REST API calls. The files also contain error and problem source information.
+<br></br> 
+
 
 ```
 Usage:	agentctl report
@@ -878,6 +876,8 @@ The `_report.txt` describes each subreport file. For user convenience, errors ap
 <br></br>
 * Subreport file contains location where retrieved information should appear when running.   
 
+---
+
 Example error contained in the `_failed-reports.txt` file:
 ```json
 Retrieving agent kvscheduler NB configuration... failed due to:
@@ -887,7 +887,7 @@ Failed to get data for NB view and key prefix config/vpp/wg/v1/peer/ due to: Err
 }
 ```
 
-Note this error appears in the `agent-kvscheduler-NB-config-view.txt` subreport.
+The same example error appears in the `agent-kvscheduler-NB-config-view.txt` subreport.
 
 ---
 ### Status
@@ -995,7 +995,9 @@ vpp.vrf-table          id/0/protocol/IPV6                                  obtai
 
 ### KVDB
 
-Use this command to perform KV data store get, put, del, or list operations. This looks and functions much like `etcdctl`. It supports short form [keys][keys], but you must use the `--service-label` flag in the specific command operation.
+Use this command to perform KV data store get, put, del, or list operations. This looks and functions much like `etcdctl` with an etcd KV data store.
+
+It supports short form [keys][keys], but you must use the `--service-label` flag in the specific command operation.
 
 ```
 Usage:	agentctl kvdb [options] COMMAND
@@ -1030,9 +1032,10 @@ Sample output:
 ```
 Depending on the number of entries in your KV data store, you could find the returned output large and difficult to read. You can whittle this down by using a more specific key.
 
+
 ---
 
-**list** only the configured interfaces:
+- **list** only the configured interfaces:
 ```json
 agentctl kvdb list /vnf-agent/vpp1/config/vpp/v2/interfaces/ 
 ``` 
@@ -1044,16 +1047,23 @@ Sample output:
 {“name”:”tap1”,”type”:”TAP”,”enabled”:true,”ip_addresses”:[“192.168.1.1/24”]}
 ```
 
+You can use short form [keys][keys], but you must use the `--service-label` flag in the `agentctl kvdb` command. 
+
+- **List** only the configured interfaces using a short form key:
+```
+agentctl kvdb list --service-label=vpp1 /config/vpp/v2/interfaces/ 
+```
+
 ---
 
-**put** a `loop1` loopback interface:
+- **put** a `loop1` loopback interface:
 ```json
 agentctl kvdb put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
 
 ---
 
-**get** `loop1` loopback interface using the long form key:
+- **get** `loop1` loopback interface using the long form key:
 ```
 agentctl kvdb get /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
@@ -1063,13 +1073,12 @@ Sample output:
 ```
 ---
 
-**delete** `loop1` loopback interface using the long form key:
+- **delete** `loop1` loopback interface using the long form key:
 ```
 agentctl kvdb del /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1
 ```
 
 You will generate a `key not found` message if you attempt to **get** a deleted entry. 
-
 
 
 ---
@@ -1148,7 +1157,7 @@ Command line arguments:
 
 ### Import
 
-Use this command to import configuration data from an external file using etcd or gRPC.  
+Use this command to import configuration data from an external file.  
 
 
 
@@ -1196,14 +1205,16 @@ OPTIONS:
 
 ---
 
-Use short form keys with the microservice label. The `myconfig` file contains the following:
+You can use short form keys in your configuration file. However, you must include a microservice label in your `agentctl import` command. 
+
+The `myconfig` file contains the following configuration using short form keys:
 ```
 config/vpp/v2/interfaces/loop1 {"name":"loop1","type":"SOFTWARE_LOOPBACK"}
 config/vpp/v2/interfaces/loop2 {"name":"loop2","type":"MEMIF"}
 config/vpp/l2/v2/bridge-domain/bd1 {"name":"bd1","interfaces":[{"name":"loop1"},{"name":"loop2"}]}
 ```
 
-Import the `myconfig` file contents using the `agent1` service-label:
+Import the `myconfig` file. Use the  `--service-label` flag to define the microservice label equal to `agent1`:
 ```
 agentctl --service-label=agent1 import ./myconfig
 ```

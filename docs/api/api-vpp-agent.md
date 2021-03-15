@@ -108,7 +108,7 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 
 **VPP CLI**
 
-* [POST /dump/command](#vpp-cli-command)
+* [POST /vpp/command](#vpp-cli-command)
 
 ---
 
