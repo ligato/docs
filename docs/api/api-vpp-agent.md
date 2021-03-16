@@ -7,7 +7,7 @@ This section describes the REST APIs supported by the VPP agent.
 ---
 
 !!! Note
-    REST supports the retrieval of the existing configuration for VPP and Linux plugins. You cannot use REST APIs to add, modify, or delete configuration data. Use [agentctl](../user-guide/agentctl.md) to perform those tasks.<br></br>Note that Ligato REST APIs use `9191` as the default port number. You can change this value using one of the [REST plugin configuration options][rest-plugin-config-options]. 
+    Ligato REST APIs use `9191` as the default port number. You can change this value using one of the [REST plugin configuration options][rest-plugin-config-options]. 
 
 ---
 
@@ -23,17 +23,21 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 
 ## RESTAPI Plugin
 
-Description: Returns an html-formatted index of REST APIs defined in the restapi plugin [urls.go](https://github.com/ligato/vpp-agent/blob/master/plugins/restapi/resturl/urls.go). This file contains the VPP and Linux APIs documented above. 
+Description: Returns an html-formatted index of REST APIs defined in the restapi plugin [urls.go](https://github.com/ligato/vpp-agent/blob/master/plugins/restapi/resturl/urls.go).
+
 
 ```
 curl -X GET http://localhost:9191/
 ```
+
+For more details on the RESTAPI plugin, see [RESTAPI](https://github.com/ligato/vpp-agent/tree/master/plugins/restapi).
+
 ---
 
 
 ## Dump
 
-The VPP agent "dump" APIs retrieve the actual VPP runtime configuration by calling the VPP binary API/CLI API in the SB.  
+The VPP agent's /dump APIs retrieve the actual VPP runtime configuration by calling the VPP binary API/CLI API in the SB.  
 
 **VPP Interfaces**
 
@@ -1185,10 +1189,13 @@ Sample response:
 
 ## Configuration
 
+The northbound (NB) VPP agent /configuration APIs support the GET, PUT and validate operations of VPP configuration information in the NB. This occurs between an external REST client and the agent's plugins that expose REST APIs.
+
 - [PUT /configuration](#config-update)
 - [PUT /configuration?replace](#config-replace)
 - [GET /configuration](#config-get)
-- [GET /info/configuration/jsonschema](#config-json-schema) 
+- [GET /info/configuration/jsonschema](#config-json-schema)
+- [POST /configuration/validate](#config-validate) 
 
 ---
 
@@ -1233,6 +1240,8 @@ vppConfig:
 
 You can embed the yaml configuration in an http request body.
 
+
+---
 
 ### Config Get
 
@@ -1306,6 +1315,117 @@ Sample response:
 
 ---
 
+### Config Validate
+
+Description: Validates the yaml configuration
+```
+curl -X POST -H "Content-Type: application/yaml" --data-binary @good-yaml-config.yaml "http://localhost:9191/configuration/validate"
+```
+
+Response is nil if the validation check passes.
+
+Sample good yaml config file:
+```
+# good yaml file
+netallocConfig: {}
+linuxConfig: {}
+vppConfig:
+  interfaces:
+    - name: vpp-tap1
+      type: TAP
+      enabled: true
+      ipAddresses:
+        - 10.10.10.1/24
+      tap:
+        version: 2
+        toMicroservice: test-microservice1
+    - name: red
+      type: MEMIF
+      enabled: true
+      ipAddresses:
+        - 100.0.0.1/24
+      mtu: 9200
+      memif:
+        id: 1
+        socketFilename: /var/run/memif_k8s-master.sock
+    - name: black
+      type: MEMIF
+      enabled: true
+      ipAddresses:
+        - 192.168.20.1/24
+      mtu: 9200
+      memif:
+        id: 2
+        socketFilename: /var/run/memif_k8s-master.sock
+    - name: loop-test-1
+      type: SOFTWARE_LOOPBACK
+      enabled: true
+      ipAddresses:
+        - 10.10.1.1/24
+      mtu: 1500
+  srv6Global:
+    encapSourceAddress: 10.1.1.1
+```
+
+---
+
+Response contains errors if the validation check fails.
+
+Sample bad yaml config file:
+```
+netallocConfig: {}
+linuxConfig: {}
+vppConfig:
+  routes:
+    - type: INTRA_VRF
+      dstNetwork: 10.1.0.0/16
+      nextHopAddr: 4.10.x10.1
+      outgoingInterface: cgnat-to-gw
+    - type: INTRA_VRF
+      dstNetwork: 10.2.0.0/16
+      nextHopAddr: 5.10.10.1x
+      outgoingInterface: cgnat-to-gw
+  srv6Localsids:
+    - sid: A::0
+      endFunctionDx6:
+        outgoingInterface: test
+        nextHop: B::X
+  proxyArp:
+    ranges:
+      - firstIpAddr: 10.0.0.1x      
+        lastIpAddr: 10.0.0.2
+      - firstIpAddr: 10.0.0.3      
+        lastIpAddr: 10.0.0.4
+```
+
+Sample response after running the validate API against the bad yaml file:
+```
+[
+  {
+    "Path": "vppConfig.routes*.gw_addr",
+    "Error": "invalid IP address: 4.10.x10.1",
+    "ErrorConfigPart": "dstNetwork: 10.1.0.0/16\nnextHopAddr: 4.10.x10.1\noutgoingInterface: cgnat-to-gw\n"
+  },
+  {
+    "Path": "vppConfig.routes*.gw_addr",
+    "Error": "invalid IP address: 5.10.10.1x",
+    "ErrorConfigPart": "dstNetwork: 10.2.0.0/16\nnextHopAddr: 5.10.10.1x\noutgoingInterface: cgnat-to-gw\n"
+  },
+  {
+    "Path": "vppConfig.proxyArp.ranges.firstIpAddr",
+    "Error": "invalid IP address"
+  },
+  {
+    "Path": "vppConfig.srv6Localsids*.EndFunctionDX6.NextHop",
+    "Error": "failed to parse next hop B::X, should be a valid ipv6 address:  \"B::X\" is not ip address",
+    "ErrorConfigPart": "endFunctionDx6:\n  nextHop: B::X\n  outgoingInterface: test\nsid: A::0\n"
+  }
+]
+```
+
+You can embed the yaml configuration in an http request body. 
+
+---
 
 ## Telemetry
 
