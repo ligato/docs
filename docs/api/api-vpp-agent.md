@@ -2,12 +2,12 @@
 
 ---
 
-This section describes the REST APIs exposed by the VPP agent. 
+This section describes the REST APIs supported by the VPP agent. 
 
 ---
 
 !!! Note
-    REST supports the retrieval of the existing configuration for VPP and Linux plugins. You cannot use REST APIs to add, modify, or delete configuration data. Use [agentctl](../user-guide/agentctl.md) to perform those tasks.<br></br>Note that Ligato REST APIs use `9191` as the default port number. You can change this value using one of the [REST plugin configuration options][rest-plugin-config-options]. 
+    Ligato REST APIs use `9191` as the default port number. You can change this value using one of the [REST plugin configuration options][rest-plugin-config-options]. 
 
 ---
 
@@ -21,7 +21,23 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 
 ---
 
-## Index
+## RESTAPI Plugin
+
+Description: Returns an html-formatted index of REST APIs defined in the restapi plugin [urls.go](https://github.com/ligato/vpp-agent/blob/master/plugins/restapi/resturl/urls.go).
+
+
+```
+curl -X GET http://localhost:9191/
+```
+
+For more details on the RESTAPI plugin, see [RESTAPI](https://github.com/ligato/vpp-agent/tree/master/plugins/restapi).
+
+---
+
+
+## Dump
+
+The VPP agent's /dump APIs retrieve the actual VPP runtime configuration by calling the VPP binary API/CLI API in the SB.  
 
 **VPP Interfaces**
 
@@ -83,35 +99,6 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 
 * [GET /dump/vpp/v2/punt/sockets](#vpp-punt-socket)
 
----
-
-**VPP Telemetry**
-
-* [GET /dump/vpp/telemetry](#vpp-telemetry)
-* [GET /dump/vpp/telemetry/memory](#vpp-telemetrymemory)
-* [GET /dump/vpp/telemetry/runtime](#vpp-telemetryruntime)
-* [GET /dump/vpp/telemetry/nodecount](#vpp-telemetrynodecount)
-
----
-
-**VPP Agent Version**
-
-* [GET /info/version](#version)
-
----
-
-**VPP Agent Configuration JSON Schema**
-
-* [GET /info/configuration/jsonschema](#configuration-json-schema)
-
----
-
-**VPP CLI**
-
-* [POST /vpp/command](#vpp-cli-command)
-
----
-
 **Linux**
 
 * [GET /dump/linux/v2/interfaces](#linux-interfaces)
@@ -119,25 +106,11 @@ OpenAPI (swagger) definitions provide additional details for describing, produci
 * [GET /dump/linux/v2/routes](#linux-l3-routes)
 * [GET /dump/stats/linux/interfaces](#linux-interface-stats)
 
----
-
-**Configurator**
-
-* [GET /dump/stats/configurator](#statsconfigurator)
 
 ---
 
 
-## RESTAPI Plugin
-
-Description: Returns an html-formatted index of REST APIs defined in the restapi plugin [urls.go](https://github.com/ligato/vpp-agent/blob/master/plugins/restapi/resturl/urls.go). This file contains the VPP and Linux APIs documented above. 
-
-```
-curl -X GET http://localhost:9191/
-```
----
-
-## VPP Interfaces
+### VPP Interfaces
 
 Description: GET all interfaces.
 
@@ -226,7 +199,7 @@ Sample response:
 ```
 ---
 
-## VPP Interfaces/Loopback
+### VPP Interfaces/Loopback
 
 Description: GET loopback interfaces.
 
@@ -271,7 +244,7 @@ Sample response:
 ```
 ---
 
-## VPP Interfaces/Ethernet
+### VPP Interfaces/Ethernet
 
 Description: GET ethernet interfaces.
 
@@ -332,7 +305,7 @@ Sample response:
 ```
 ---
 
-## VPP Interfaces/Vxlan
+### VPP Interfaces/Vxlan
 
 Description: GET vxlan interfaces.
 ```json
@@ -382,7 +355,7 @@ Sample response:
 ```
 ---
 
-## VPP Interfaces/Tap
+### VPP Interfaces/Tap
 
 Description: GET tap interfaces.
 ```json
@@ -447,7 +420,7 @@ Sample response:
 ```
 ---
 
-## VPP Interfaces/Memif
+### VPP Interfaces/Memif
 
 Description: GET memif interfaces.
 ```json
@@ -501,7 +474,7 @@ Sample response:
 ```
 ---
 
-## VPP Interfaces/Afpacket
+### VPP Interfaces/Afpacket
 
 Description: GET afpacket interfaces.
 
@@ -510,7 +483,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/interfaces/afpacket
 ```
 ---
 
-## VPP ACL IP
+### VPP ACL IP
 
 Description: GET IP ACL entries.
 ```json
@@ -558,7 +531,7 @@ Sample response:
 
 ---
 
-## VPP ACL MACIP
+### VPP ACL MACIP
 
 Description: GET MACIP ACL entries.
 ```json
@@ -566,7 +539,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/acl/macip
 ```
 ---
 
-## VPP ABF
+### VPP ABF
 
 Description: GET ABF entries.
 ```json
@@ -574,7 +547,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/abf
 ```
 ---
 
-## VPP L2 Bridge Domain
+### VPP L2 Bridge Domain
 
 Description: GET bridge domain information.
 ```json
@@ -607,7 +580,7 @@ Sample response:
 ```
 ---
 
-## VPP L2 FIB
+### VPP L2 FIB
 
 Description: GET L2 FIB information.
 ```json
@@ -645,7 +618,7 @@ Sample response:
 ```
 ---
 
-## VPP L2 X-connect
+### VPP L2 X-connect
 
 Description: GET L2 x-connect information.
 ```json
@@ -653,7 +626,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/xc
 ```
 ---
 
-## VPP L3 Routes
+### VPP L3 Routes
 
 Description: GET L3 routing table entries.
 ```json
@@ -717,7 +690,7 @@ Sample response:
 ---
 
 
-## VPP L3 ARPs
+### VPP L3 ARPs
 
 Description: GET ARP entries.
 ```json
@@ -795,7 +768,7 @@ Sample response:
 ...
 ```
 
-## VPP L3 IP Scan Neighbor
+### VPP L3 IP Scan Neighbor
 
 Description: GET L3 IP scan neighbor data.
 ```json
@@ -815,7 +788,7 @@ Sampe response:
 
 ---
 
-## VPP L3 Proxy ARP Interfaces
+### VPP L3 Proxy ARP Interfaces
 
 Description: GET proxy ARP interface information.
 ```json
@@ -824,7 +797,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/interfaces
 
 ---
 
-## VPP L3 Proxy ARP Ranges
+### VPP L3 Proxy ARP Ranges
 
 Description: GET proxy ARP range information.
 ```json
@@ -833,7 +806,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/proxyarp/ranges
 
 ---
 
-## VPP L3 VRRP
+### VPP L3 VRRP
 
 Description: GET VRRP
 
@@ -843,7 +816,7 @@ curl -X GET http://localhost:9191/dump/vpp/v2/vrrps
 
 ---
 
-## VPP NAT Global
+### VPP NAT Global
 
 Description: GET NAT global configuration information.
 ```json
@@ -862,7 +835,7 @@ Sample response:
 ```
 ---
 
-## VPP NAT DNAT
+### VPP NAT DNAT
 
 Description: GET destination-based NAT entries.
 ```json
@@ -911,7 +884,7 @@ Sample response:
 ```
 ---
 
-## VPP NAT Interfaces
+### VPP NAT Interfaces
 
 Description: GET interface-specific NAT information.
 ```json
@@ -950,7 +923,7 @@ Sample response:
 ```
 ---
 
-## VPP NAT Pool
+### VPP NAT Pool
 
 Description: GET NAT address pool information.
 ```json
@@ -973,7 +946,7 @@ Sample response:
 ```
 ---
 
-## VPP IPsec SPD
+### VPP IPsec SPD
 
 Description: GET IPsec security policy database (SPD) entries. 
 ```json
@@ -995,7 +968,7 @@ Sample response:
 
 ---
 
-## VPP IPsec SA
+### VPP IPsec SA
 
 Description: GET IPsec security association (SA) entries.
 ```json
@@ -1033,7 +1006,7 @@ Sample response:
 
 ---
 
-## VPP IPsec SP
+### VPP IPsec SP
 
 Description: GET IPsec security policies
 ```json
@@ -1062,7 +1035,7 @@ Sample response:
 
 ---
 
-## VPP Punt Socket
+### VPP Punt Socket
 
 Description: GET punt socket data.
 ```json
@@ -1070,7 +1043,400 @@ curl -X GET http://localhost:9191/dump/vpp/v2/punt/sockets
 ```
 ---
 
-## VPP Telemetry
+---
+
+### Linux Interfaces
+
+Description: GET all Linux interfaces.
+```json
+curl -X GET http://localhost:9191/dump/linux/v2/interfaces
+```
+Sample response:
+```json
+[
+  {
+    "interface": {
+      "name": "tap-vpp1",
+      "type": "TAP_TO_VPP",
+      "hostIfName": "vpp1",
+      "enabled": true,
+      "ipAddresses": ["172.30.1.2/24"],
+      "physAddress": "ca:aa:bc:5d:76:9c",
+      "mtu": 1450,
+      "tap": {
+        "vppTapIfName": "tap-vpp2"
+      }
+    },
+    "interface_meta": {
+      "linux_if_index": 6,
+      "parent_index": 0,
+      "master_index": 0,
+      "oper_state": 0,
+      "flags": 69699,
+      "encapsulation": "ether",
+      "num_rx_queue": 0,
+      "num_tx_queue": 0,
+      "tx_queue_len": 500
+    }
+  },
+// additional linux interfaces
+...
+```
+---
+
+### Linux L3 ARPs
+
+Description: GET Linux L3 ARP entries.
+```json
+curl -X GET http://localhost:9191/dump/linux/v2/arps
+```
+Sample response:
+```json
+[
+  {
+    "linux_arp": {
+      "interface": "linux-tap-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a8",
+      "ip_address": "10.1.1.1",
+      "hw_address": "02:fe:af:aa:51:e6"
+    },
+    "linux_arp_meta": {
+      "interface_index": 7,
+      "ip_family": 2,
+      "vni": 0
+    }
+  },
+...
+```
+---
+
+### Linux Interface Stats
+
+Description: GET Linux interface stats.
+```json
+curl -X GET http://localhost:9191/stats/linux/interfaces
+```
+Sample response:
+```json
+{
+  "interface_name": "tap-vpp1",
+  "interface_type": 2,
+  "linux_if_index": 6,
+  "rx_packets": 58919,
+  "tx_packets": 54273,
+  "rx_bytes": 83203332,
+  "tx_bytes": 85581834,
+  "rx_errors": 0,
+  "tx_errors": 0,
+  "rx_dropped": 0,
+  "tx_dropped": 0
+},
+{
+  "interface_name": "linux-loop-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a",
+  "interface_type": 3,
+  "linux_if_index": 1,
+  "rx_packets": 50540,
+  "tx_packets": 50540,
+  "rx_bytes": 4033092,
+  "tx_bytes": 4033092,
+  "rx_errors": 0,
+  "tx_errors": 0,
+  "rx_dropped": 0,
+  "tx_dropped": 0
+},
+...
+```
+---
+
+### Linux L3 Routes
+
+Description: GET Linux L3 routing table entries.
+```json
+curl -X GET http://localhost:9191/dump/linux/v2/routes
+```
+Sample response:
+```json
+[
+  {
+    "Route": {
+      "outgoing_interface": "tap-vpp1",
+      "dst_network": "10.1.0.0/16",
+      "gw_addr": "172.30.1.1"
+    },
+    "Meta": {
+      "interface_index": 6,
+      "link_scope": 0,
+      "protocol": 3,
+      "mtu": 0
+    }
+  },
+  {
+    "Route": {
+      "outgoing_interface": "tap-vpp1",
+      "dst_network": "10.96.0.0/12",
+      "gw_addr": "172.30.1.1"
+    },
+    "Meta": {
+      "interface_index": 6,
+      "link_scope": 0,
+      "protocol": 3,
+      "mtu": 0
+    }
+  },
+// more Linux routes
+...
+```
+---
+
+## Configuration
+
+The northbound (NB) VPP agent /configuration APIs support the GET, PUT and validate operations of VPP configuration information in the NB. This occurs between an external REST client and the agent's plugins that expose REST APIs.
+
+- [PUT /configuration](#config-update)
+- [PUT /configuration?replace](#config-replace)
+- [GET /configuration](#config-get)
+- [GET /info/configuration/jsonschema](#config-json-schema)
+- [POST /configuration/validate](#config-validate) 
+
+---
+
+### Config Update
+
+Description: PUT NB VPP agent configuration update
+```
+curl -X PUT -H "Content-Type: application/yaml" --data-binary @loop1.yaml http://localhost:9191/configuration
+```
+Sample `loop1.yaml` configuration
+```
+# loop1.yaml 
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+```
+
+You can embed the yaml configuration in an http request body.
+
+---
+
+### Config Replace
+
+Description: PUT NB Agent configuration update with a replacement
+```
+curl -X PUT -H "Content-Type: application/yaml" --data-binary @loop3.yaml "http://localhost:9191/configuration?replace=true"
+```
+Sample `loop3.yaml` file containing the replacement configuration
+```
+vppConfig:
+  interfaces:
+  - name: "loop1"
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.3/24
+```
+
+You can embed the yaml configuration in an http request body.
+
+
+---
+
+### Config Get
+
+Description: GET NB VPP agent configuration
+```
+curl -X GET http://localhost:9191/configuration
+``` 
+Sample output:
+```
+netallocConfig: {}
+linuxConfig: {}
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.3/24
+```
+
+---
+
+### Config JSON Schema
+
+Description: GET JSON Schema for VPP agent configuration
+```
+curl -X GET http://localhost:9191/info/configuration/jsonschema
+```
+
+Sample response:
+```
+                // Partial response
+               "bridgeDomains": {
+                    "items": {
+                        "$schema": "http://json-schema.org/draft-04/schema#",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "flood": {
+                                "type": "boolean"
+                            },
+                            "unknown_unicast_flood": {
+                                "type": "boolean"
+                            },
+                            "unknownUnicastFlood": {
+                                "type": "boolean"
+                            },
+                            "forward": {
+                                "type": "boolean"
+                            },
+                            "learn": {
+                                "type": "boolean"
+                            },
+                            "arp_termination": {
+                                "type": "boolean"
+                            },
+                            "arpTermination": {
+                                "type": "boolean"
+                            },
+                            "mac_age": {
+                                "type": "integer"
+                            },
+                            "macAge": {
+                                "type": "integer"
+                            },
+                            "interfaces": {
+                                "items": {
+                                    "$schema": "http://json-schema.org/draft-04/schema#",
+```
+
+---
+
+### Config Validate
+
+Description: Validates the yaml configuration
+```
+curl -X POST -H "Content-Type: application/yaml" --data-binary @good-yaml-config.yaml "http://localhost:9191/configuration/validate"
+```
+
+Response is nil if the validation check passes.
+
+Sample good yaml config file:
+```
+# good yaml file
+netallocConfig: {}
+linuxConfig: {}
+vppConfig:
+  interfaces:
+    - name: vpp-tap1
+      type: TAP
+      enabled: true
+      ipAddresses:
+        - 10.10.10.1/24
+      tap:
+        version: 2
+        toMicroservice: test-microservice1
+    - name: red
+      type: MEMIF
+      enabled: true
+      ipAddresses:
+        - 100.0.0.1/24
+      mtu: 9200
+      memif:
+        id: 1
+        socketFilename: /var/run/memif_k8s-master.sock
+    - name: black
+      type: MEMIF
+      enabled: true
+      ipAddresses:
+        - 192.168.20.1/24
+      mtu: 9200
+      memif:
+        id: 2
+        socketFilename: /var/run/memif_k8s-master.sock
+    - name: loop-test-1
+      type: SOFTWARE_LOOPBACK
+      enabled: true
+      ipAddresses:
+        - 10.10.1.1/24
+      mtu: 1500
+  srv6Global:
+    encapSourceAddress: 10.1.1.1
+```
+
+---
+
+Response contains errors if the validation check fails.
+
+Sample bad yaml config file:
+```
+netallocConfig: {}
+linuxConfig: {}
+vppConfig:
+  routes:
+    - type: INTRA_VRF
+      dstNetwork: 10.1.0.0/16
+      nextHopAddr: 4.10.x10.1
+      outgoingInterface: cgnat-to-gw
+    - type: INTRA_VRF
+      dstNetwork: 10.2.0.0/16
+      nextHopAddr: 5.10.10.1x
+      outgoingInterface: cgnat-to-gw
+  srv6Localsids:
+    - sid: A::0
+      endFunctionDx6:
+        outgoingInterface: test
+        nextHop: B::X
+  proxyArp:
+    ranges:
+      - firstIpAddr: 10.0.0.1x      
+        lastIpAddr: 10.0.0.2
+      - firstIpAddr: 10.0.0.3      
+        lastIpAddr: 10.0.0.4
+```
+
+Sample response after running the validate API against the bad yaml file:
+```
+[
+  {
+    "Path": "vppConfig.routes*.gw_addr",
+    "Error": "invalid IP address: 4.10.x10.1",
+    "ErrorConfigPart": "dstNetwork: 10.1.0.0/16\nnextHopAddr: 4.10.x10.1\noutgoingInterface: cgnat-to-gw\n"
+  },
+  {
+    "Path": "vppConfig.routes*.gw_addr",
+    "Error": "invalid IP address: 5.10.10.1x",
+    "ErrorConfigPart": "dstNetwork: 10.2.0.0/16\nnextHopAddr: 5.10.10.1x\noutgoingInterface: cgnat-to-gw\n"
+  },
+  {
+    "Path": "vppConfig.proxyArp.ranges.firstIpAddr",
+    "Error": "invalid IP address"
+  },
+  {
+    "Path": "vppConfig.srv6Localsids*.EndFunctionDX6.NextHop",
+    "Error": "failed to parse next hop B::X, should be a valid ipv6 address:  \"B::X\" is not ip address",
+    "ErrorConfigPart": "endFunctionDx6:\n  nextHop: B::X\n  outgoingInterface: test\nsid: A::0\n"
+  }
+]
+```
+
+You can embed the yaml configuration in an http request body. 
+
+---
+
+## Telemetry
+
+**VPP Telemetry**
+
+* [GET /dump/vpp/telemetry](#vpp-telemetry)
+* [GET /dump/vpp/telemetry/memory](#vpp-telemetrymemory)
+* [GET /dump/vpp/telemetry/runtime](#vpp-telemetryruntime)
+* [GET /dump/vpp/telemetry/nodecount](#vpp-telemetrynodecount)
+
+### VPP Telemetry
 
 Description: GET VPP telemetry information.
 ```json
@@ -1078,7 +1444,7 @@ curl -X GET http://localhost:9191/vpp/telemetry
 ```
 ---
 
-## VPP Telemetry/Memory
+### VPP Telemetry/Memory
 
 Description: GET VPP telemetry memory stats.
 ```json
@@ -1108,7 +1474,7 @@ Sample response:
 
 ---
 
-## VPP Telemetry/Runtime
+### VPP Telemetry/Runtime
 
 Description: GET VPP telemetry runtime stats.
 ```json
@@ -1157,7 +1523,7 @@ Sample response:
 
 ---
 
-## VPP Telemetry/Nodecount
+### VPP Telemetry/Nodecount
 
 Description: GET VPP telemetry nodecount stats.
 ```json
@@ -1212,58 +1578,7 @@ Sample Response:
 ```
 ---
 
-## Configuration JSON Schema
-
-Description: GET JSON Schema for VPP agent configuration
-```
-curl -X GET http://localhost:9191/info/configuration/jsonschema
-```
-
-Sample response:
-```
-                // Partial response
-               "bridgeDomains": {
-                    "items": {
-                        "$schema": "http://json-schema.org/draft-04/schema#",
-                        "properties": {
-                            "name": {
-                                "type": "string"
-                            },
-                            "flood": {
-                                "type": "boolean"
-                            },
-                            "unknown_unicast_flood": {
-                                "type": "boolean"
-                            },
-                            "unknownUnicastFlood": {
-                                "type": "boolean"
-                            },
-                            "forward": {
-                                "type": "boolean"
-                            },
-                            "learn": {
-                                "type": "boolean"
-                            },
-                            "arp_termination": {
-                                "type": "boolean"
-                            },
-                            "arpTermination": {
-                                "type": "boolean"
-                            },
-                            "mac_age": {
-                                "type": "integer"
-                            },
-                            "macAge": {
-                                "type": "integer"
-                            },
-                            "interfaces": {
-                                "items": {
-                                    "$schema": "http://json-schema.org/draft-04/schema#",
-```
-
----
-
-## VPP CLI Command
+## VPP CLI
 
 Description: Execute VPP CLI commands through a REST API.
 
@@ -1279,148 +1594,6 @@ Sample response:
 
 ---
 
-## Linux Interfaces
-
-Description: GET all Linux interfaces.
-```json
-curl -X GET http://localhost:9191/dump/linux/v2/interfaces
-```
-Sample response:
-```json
-[
-  {
-    "interface": {
-      "name": "tap-vpp1",
-      "type": "TAP_TO_VPP",
-      "hostIfName": "vpp1",
-      "enabled": true,
-      "ipAddresses": ["172.30.1.2/24"],
-      "physAddress": "ca:aa:bc:5d:76:9c",
-      "mtu": 1450,
-      "tap": {
-        "vppTapIfName": "tap-vpp2"
-      }
-    },
-    "interface_meta": {
-      "linux_if_index": 6,
-      "parent_index": 0,
-      "master_index": 0,
-      "oper_state": 0,
-      "flags": 69699,
-      "encapsulation": "ether",
-      "num_rx_queue": 0,
-      "num_tx_queue": 0,
-      "tx_queue_len": 500
-    }
-  },
-// additional linux interfaces
-...
-```
----
-
-## Linux L3 ARPs
-
-Description: GET Linux L3 ARP entries.
-```json
-curl -X GET http://localhost:9191/dump/linux/v2/arps
-```
-Sample response:
-```json
-[
-  {
-    "linux_arp": {
-      "interface": "linux-tap-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a8",
-      "ip_address": "10.1.1.1",
-      "hw_address": "02:fe:af:aa:51:e6"
-    },
-    "linux_arp_meta": {
-      "interface_index": 7,
-      "ip_family": 2,
-      "vni": 0
-    }
-  },
-...
-```
----
-
-## Linux Interface Stats
-
-Description: GET Linux interface stats.
-```json
-curl -X GET http://localhost:9191/stats/linux/interfaces
-```
-Sample response:
-```json
-{
-  "interface_name": "tap-vpp1",
-  "interface_type": 2,
-  "linux_if_index": 6,
-  "rx_packets": 58919,
-  "tx_packets": 54273,
-  "rx_bytes": 83203332,
-  "tx_bytes": 85581834,
-  "rx_errors": 0,
-  "tx_errors": 0,
-  "rx_dropped": 0,
-  "tx_dropped": 0
-},
-{
-  "interface_name": "linux-loop-61c1f434be0396de2d2347cbebc51a822799f3ee78f0f98a101a",
-  "interface_type": 3,
-  "linux_if_index": 1,
-  "rx_packets": 50540,
-  "tx_packets": 50540,
-  "rx_bytes": 4033092,
-  "tx_bytes": 4033092,
-  "rx_errors": 0,
-  "tx_errors": 0,
-  "rx_dropped": 0,
-  "tx_dropped": 0
-},
-...
-```
----
-
-## Linux L3 Routes
-
-Description: GET Linux L3 routing table entries.
-```json
-curl -X GET http://localhost:9191/dump/linux/v2/routes
-```
-Sample response:
-```json
-[
-  {
-    "Route": {
-      "outgoing_interface": "tap-vpp1",
-      "dst_network": "10.1.0.0/16",
-      "gw_addr": "172.30.1.1"
-    },
-    "Meta": {
-      "interface_index": 6,
-      "link_scope": 0,
-      "protocol": 3,
-      "mtu": 0
-    }
-  },
-  {
-    "Route": {
-      "outgoing_interface": "tap-vpp1",
-      "dst_network": "10.96.0.0/12",
-      "gw_addr": "172.30.1.1"
-    },
-    "Meta": {
-      "interface_index": 6,
-      "link_scope": 0,
-      "protocol": 3,
-      "mtu": 0
-    }
-  },
-// more Linux routes
-...
-```
----
-
 ## Stats/Configurator
 
 Description: GET configurator operations stats. 
@@ -1428,6 +1601,14 @@ Description: GET configurator operations stats.
 curl -X GET http://localhost:9191/stats/configurator
 ```
 ---
+
+
+
+
+
+
+
+
 
 [agentctl]: ../user-guide/agentctl.md
 [quickstart-guide]: ../user-guide/quickstart.md
