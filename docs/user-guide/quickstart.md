@@ -151,7 +151,7 @@ Open a new terminal session. Start the VPP agent in a new docker container. Note
 docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ``` 
 
-You will see the scrolling VPP agent log. Look it over as you put and delete  configuration items. The log comes in handy when you need to observe and troubleshoot VPP agent activities.
+You will see the scrolling VPP agent log. Look it over as you put and delete configuration items. The log comes in handy when you need to observe and troubleshoot VPP agent activities.
 
 Open a new terminal session. Verify you have a running `vpp-agent` container:
 
@@ -180,10 +180,20 @@ You can interact with the VPP agent using the following:
 - [VPP CLI](#53-vpp-cli)
 <br></br>
 - [Agentctl](#54-agentctl)
+
+!!! Note
+    Northbound (NB) refers to the communication between external clients and a VPP agent. You manage the desired VPP agent configuration across the NB.<br></br>Southbound (SB) refers to the communication between the VPP agent and VPP data plane. VPP data plane events, notifications and running configuration dumps occur across the SB.
  
+
+
 ---
 
 ### 5.1 etcdctl
+
+etcdctl lets you put and get NB configuration data between an etcd data store and the VPP agent.
+
+!!! Note
+    If you prefer to use REST to manage VPP agent configuration data, skip this sub-section and go to [5.2](#52-rest-api).
 
 VPP agent entries in the etcd data store use a prefix of `/vnf-agent/`. 
 
@@ -224,7 +234,7 @@ Configure a **loopback interface** with an IP address. Put the key-value pairs t
 docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
-You will note the key-value pairs put to the etcd data store contain your loopback interface configuration.
+Note the key-value pairs put to the etcd data store contain your loopback interface configuration.
 
 ---
 
@@ -263,13 +273,62 @@ Sample output:
 ---
 
 ### 5.2 REST API
+ 
+REST supports VPP agent NB configuration management and SB VPP configuration dumps. 
 
-!!! Note
-    REST only supports configuration dumps. You can't add, modify or delete configuration data.
+To configure the VPP agent across the SB using REST, you must define the configuration in a yaml file. 
+
+Sample `loop-bd.yaml` file containing a loopback interface and bridge domain configuration:
+```
+vppConfig:
+  interfaces:
+  - name: "loop1"
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+    - name: bd1
+      forward: true
+      learn: true
+      interfaces:
+        - name: loop1
+```
+
+Configure the VPP agent with the configuration defined in `loop-bd.yaml`:
+```
+curl -X PUT -H "Content-Type: application/yaml" --data-binary @loop-bd.yaml http://localhost:9191/configuration
+```
+Get the VPP agent configuration:
+```
+curl -X GET http://localhost:9191/configuration
+```
+Sample response:
+```
+netallocConfig: {}
+linuxConfig: {}
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+```
+
+
 
 ---
 
-Call [GET /dump/vpp/v2/interfaces](../api/api-vpp-agent.md#vpp-interfaces) to dump all interface configuration data:
+
+
+Call [GET /dump/vpp/v2/interfaces](../api/api-vpp-agent.md#vpp-interfaces) to dump all VPP data plane interface configuration data:
 ```
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
@@ -378,7 +437,10 @@ Sample response:
 
 ```
 
+
+
 For more information on VPP agent REST APIs including sample responses, see [VPP Agent API Documentation](../api/api-vpp-agent.md). 
+
 
 ---
 
