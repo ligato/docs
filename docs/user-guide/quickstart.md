@@ -14,14 +14,14 @@ This section provides a quickstart guide for the VPP agent. You will learn how t
 The figure below illustrates your quickstart guide environment.
 
 ![quickstart-topology](../img/user-guide/quickstart-topo-w-agentctl.svg)
-<p style="text-align: center; font-weight: bold">Quickstart Guide Environment</p>
+<p style="margin: 0px 0px 24px 150px; font-weight: bold">Quickstart Guide Environment</p>
  
 ---
 
 
 **Steps**
 
-List of steps you will follow for the quickstart:
+List of steps to follow for the quickstart:
 
 1. Prerequsites
 <br></br>
@@ -39,7 +39,7 @@ List of steps you will follow for the quickstart:
 
 List of prerequisites to run the quickstart:
 
-- Laptop or local machine running macos or linux.
+- Laptop or local machine running macOS or linux.
 <br></br>
 - Docker software - (Docker ce [installation manual][docker-install])
 <br></br>
@@ -53,7 +53,7 @@ docker exec
 - Ability to run CLI and cURL commands. 
 
 !!! Note
-    The steps described in this quickstart guide use Docker 19.03.5. Use the `docker --version` command to determine version you are running.
+    The steps described in this quickstart guide use Docker 19.03.5. Use the `docker --version` command to check your version. 
 
 ---
 
@@ -93,7 +93,7 @@ Open a new terminal session. Start the etcd server in a docker container. If you
 docker run --rm --name etcd -p 2379:2379 -e ETCDCTL_API=3 quay.io/coreos/etcd /usr/local/bin/etcd -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379
 ```
 
-You will see a scrolling etcd log. Leave that alone for now.  
+You will see a scrolling etcd log.  
 
 Open a new terminal session and verify you have a running `etcd` container:
 ```sh
@@ -140,7 +140,7 @@ $ apt-get install etcd-client
 $ brew install etcd
 ```
 
-As this point, you have installed and started your etcd container. You can access the etcd data store with etcdctl. 
+As this point, you have installed and started your etcd container, and etcdctl is ready to go.
 
 ---
 
@@ -151,7 +151,7 @@ Open a new terminal session. Start the VPP agent in a new docker container. Note
 docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ``` 
 
-You will see the scrolling VPP agent log. Look it over as you put and delete  configuration items. The log comes in handy when you need to observe and troubleshoot VPP agent activities.
+You will see the scrolling VPP agent log. Look this over as you put and delete configuration items. The log comes in handy when you need to observe and troubleshoot VPP agent activities.
 
 Open a new terminal session. Verify you have a running `vpp-agent` container:
 
@@ -180,12 +180,24 @@ You can interact with the VPP agent using the following:
 - [VPP CLI](#53-vpp-cli)
 <br></br>
 - [Agentctl](#54-agentctl)
+
+!!! Note
+    Northbound (NB) refers to the communication between external clients and a VPP agent. You manage the __desired VPP agent configuration__ across the __NB__.<br></br>Southbound (SB) refers to the communication between the VPP agent and VPP data plane. VPP data plane events, notifications and __runtime VPP configuration__ dumps occur across the __SB__.
  
+
+
 ---
 
 ### 5.1 etcdctl
 
-VPP agent entries in the etcd data store use a prefix of `/vnf-agent/`. 
+etcdctl lets you put and get NB configuration data between an etcd data store and the VPP agent.
+
+!!! Note
+    If you prefer to use REST to manage VPP agent configuration data, skip this sub-section and go to [5.2](#52-rest-api) **VPP agent NB configuration** below. 
+
+---
+
+VPP agent entries contained in the etcd data store use a prefix of `/vnf-agent/`. 
 
 List key-value pairs with the  `/vnf-agent/` prefix:
 ```
@@ -224,7 +236,7 @@ Configure a **loopback interface** with an IP address. Put the key-value pairs t
 docker exec etcd etcdctl put /vnf-agent/vpp1/config/vpp/v2/interfaces/loop1 \
 '{"name":"loop1","type":"SOFTWARE_LOOPBACK","enabled":true,"ip_addresses":["192.168.1.1/24"]}'
 ```
-You will note the key-value pairs put to the etcd data store contain your loopback interface configuration.
+Note the key-value pairs put to the etcd data store contain your loopback interface configuration.
 
 ---
 
@@ -263,13 +275,77 @@ Sample output:
 ---
 
 ### 5.2 REST API
-
-!!! Note
-    REST only supports configuration dumps. You can't add, modify or delete configuration data.
+ 
+REST supports VPP agent NB configuration management and SB VPP configuration dumps. 
 
 ---
 
-Call [GET /dump/vpp/v2/interfaces](../api/api-vpp-agent.md#vpp-interfaces) to dump all interface configuration data:
+#### VPP agent NB configuration
+
+To configure the VPP agent across the NB using REST, you must define the configuration in a yaml file. 
+
+Sample `loop-bd.yaml` file containing a **loopback interface** and **bridge domain configuration**:
+```
+vppConfig:
+  interfaces:
+  - name: "loop1"
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+    - name: bd1
+      forward: true
+      learn: true
+      interfaces:
+        - name: loop1
+```
+
+---
+
+Configure the VPP agent with the NB configuration defined in `loop-bd.yaml`:
+```
+curl -X PUT -H "Content-Type: application/yaml" --data-binary @loop-bd.yaml http://localhost:9191/configuration
+```
+---
+
+Get the VPP agent configuration:
+```
+curl -X GET http://localhost:9191/configuration
+```
+Sample response:
+```
+netallocConfig: {}
+linuxConfig: {}
+vppConfig:
+  interfaces:
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+```
+
+
+
+---
+
+#### Dump runtime VPP configuration
+
+You can dump the runtime VPP configuration using GET /dump/vpp/ REST calls. 
+
+!!! Note
+    You can run GET /dump/vpp/ REST API calls independent of the VPP agent NB configuration method your application employs. 
+
+---
+
+Call [GET /dump/vpp/v2/interfaces](../api/api-vpp-agent.md#vpp-interfaces) to dump all VPP data plane interface configuration data:
 ```
 curl -X GET http://localhost:9191/dump/vpp/v2/interfaces
 ```
@@ -378,13 +454,16 @@ Sample response:
 
 ```
 
-For more information on VPP agent REST APIs including sample responses, see [VPP Agent API Documentation](../api/api-vpp-agent.md). 
+
+
+For more information on VPP agent REST APIs including sample responses, see [VPP Agent API Docs](../api/api-vpp-agent.md). 
+
 
 ---
 
 ### 5.3 VPP CLI
 
-Start the VPP CLI in the VPP agent container:
+Start the VPP CLI in the `vpp-agent` container you set up in the steps above.
 ```
 docker exec -it vpp-agent vppctl -s localhost:5002
 ```
@@ -438,11 +517,9 @@ docker exec -it vpp-agent vppctl -s localhost:5002 show interface addr
 docker exec -it vpp-agent vppctl -s localhost:5002 show bridge-domain
 ```
 
----
-
 You can run VPP CLI commands using REST. To view the syntax with an example, see [VPP CLI REST](../api/api-vpp-agent.md#vpp-cli-command) 
 
-
+---
 
 Use the `quit` command to exit the VPP CLI.
 
@@ -499,7 +576,7 @@ OPTIONS:
 Run 'agentctl COMMAND --help' for more information on a command.
 ```
 
-Get VPP agent configuration data:
+Get VPP agent NB configuration:
 ```json
 docker exec -it vpp-agent agentctl config get
 ```
@@ -522,10 +599,41 @@ linuxConfig: {}
 netallocConfig: {}
 ```
 
-See [agentctl](agentctl.md) for more information and examples.
+Note this command produces the same output as the `GET /localhost:9191/configuration` REST API you called above.
+
+---
+
+Dump runtime VPP configuration:
+```
+docker exec -it vpp-agent agentctl -e 172.17.0.2:2379 config retrieve
+```
+Sample output (partial):
+```
+vppConfig:
+  interfaces:
+  - name: UNTAGGED-local0
+    type: SOFTWARE_LOOPBACK
+    physAddress: 00:00:00:00:00:00
+  - name: loop1
+    type: SOFTWARE_LOOPBACK
+    enabled: true
+    physAddress: de:ad:00:00:00:00
+    ipAddresses:
+    - 192.168.1.1/24
+  bridgeDomains:
+  - name: bd1
+    forward: true
+    learn: true
+    interfaces:
+    - name: loop1
+```
+
+Note that the yaml-formatted partial output includes a VPP interface `phyAddress`. If you do not assign an interface mac address, Ligato generates a random mac address.   
+
+---
+
+To learn more about `agentctl config` commands, see [agentctl config](agentctl.md#config).
  
-!!! Note
-    If you run `agentctl kvdb` and receive an `ERROR: connecting to KVDB failed` message, see [agentctl kvdb](agentctl.md#kvdb) on how to resolve. 
 
 ---
 
@@ -533,7 +641,7 @@ See [agentctl](agentctl.md) for more information and examples.
 
 **VPP agent container starts and immediately closes**
   
-- Check the [start etcd steps](#31-start-etcd). You must have a running etcd container. 
+- Check the [start etcd steps](#31-start-etcd). You must have a running etcd container to work with the quickstart configuration. 
 
 ---
 
@@ -557,7 +665,7 @@ See [agentctl](agentctl.md) for more information and examples.
 
 Agentctl kvdb `ERROR: connecting to KVDB failed` problem.
 
-- Agentctl uses `127.0.0.1:2379 as the etcd server address. However, in the examples above, the etcd data store runs in a separate container. To resolve:
+- Agentctl uses `127.0.0.1:2379` as the etcd server address. However, in the examples above, the etcd data store runs in a separate container. To resolve:
 
 Obtain the IP address of the etcd server:
 ```json
@@ -567,7 +675,7 @@ Output:
 ```json
 172.17.0.2
 ```
-Then pass this address to agentctl using the `-e` or `--etcd-endpoints` flags:
+Then pass this address to agentctl using the `-e` or `--etcd-endpoints` flag:
 ```json
 docker exec -it vpp-agent agentctl -e 172.17.0.2:2379 kvdb <COMMAND>
 ```

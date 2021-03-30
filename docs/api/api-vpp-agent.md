@@ -13,7 +13,7 @@ This section describes the REST APIs supported by the VPP agent.
 
 ##OpenAPI
 
-OpenAPI (swagger) definitions provide additional details for describing, producing and consuming VPP agent REST APIs.  
+[OpenAPI](https://www.openapis.org/) (swagger) definitions provide additional details for describing, producing and consuming VPP agent REST APIs.  
 
 <div class="swagbutton">
     <a href="https://app.swaggerhub.com/apis/chrisM9/ligato-vpp_agent_rest_ap_is/3">View OpenAPI definitions</a>
@@ -31,6 +31,13 @@ curl -X GET http://localhost:9191/
 ```
 
 For more details on the RESTAPI plugin, see [RESTAPI](https://github.com/ligato/vpp-agent/tree/master/plugins/restapi).
+
+---
+
+
+!!! Note
+    Northbound (NB) refers to the communication between external clients and a VPP agent. You manage the __desired VPP agent configuration__ across the __NB__. See [configuration APIs](#configuration).<br></br>Southbound (SB) refers to the communication between the VPP agent and VPP data plane. VPP data plane events, notifications and __runtime VPP configuration__ dumps occur across the __SB__. See [dump APIs](#dump).
+
 
 ---
 
