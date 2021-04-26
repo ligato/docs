@@ -146,9 +146,9 @@ Build the development image in `DEBUG` mode:
 $ VPP_DEBUG_DEB=y ./build.sh
 ```
 
-Start the image in debug mode using the `RUN_VPP_DEBUG` environment variable:
+Start the development image in debug mode using the `RUN_VPP_DEBUG` environment variable:
 ```
-sudo docker run -it --name vpp_agent --privileged -e RUN_VPP_DEBUG=y --rm dev_vpp_agent
+sudo docker run -it --name dev-vpp-agent --privileged -e RUN_VPP_DEBUG=y --rm ligato/dev-vpp-agent
 ``` 
 
 ---
@@ -164,7 +164,7 @@ sudo docker run -it --name vpp_agent --privileged -e RUN_VPP_DEBUG=y --rm dev_vp
 Start the VPP agent:
 
 ```
-sudo docker run -it --name vpp_agent --privileged --rm prod_vpp_agent
+sudo docker run -it --name vpp-agent --privileged --rm ligato/vpp-agent
 ```
 
 The VPP agent and VPP start automatically by default in a single container.
@@ -174,7 +174,7 @@ The VPP agent and VPP start automatically by default in a single container.
 Note that the VPP agent executes in `privileged` mode. Several VPP agent operations, such as Linux namespace handling, require permissions on the target host instance. Running in non-privileged mode may cause the VPP agent to fail to start.
 
 !!! Note
-    `vpp_agent` is the name of the container. `prod_vpp_agent` is the name of the image.
+    `vpp-agent` is the name of the container. `ligato/vpp-agent` is the name of the image.
 
 ---
 
@@ -182,11 +182,11 @@ You can assign the following environment variables with `docker -e` at image sta
 
 - `OMIT_AGENT` - do not start the VPP agent together with the image:
 ```
-sudo docker run -it --name vpp_agent --privileged -e OMIT_AGENT --rm prod_vpp_agent
+sudo docker run -it --name vpp-agent --privileged -e OMIT_AGENT --rm ligato/vpp-agent
 ```
 - `RETAIN_SUPERVISOR` - prevents the situation where an unexpected VPP agent, or VPP, causes the supervisor to quit:
 ```
-sudo docker run -it --name vpp_agent --privileged -e RETAIN_SUPERVISOR --rm prod_vpp_agent
+sudo docker run -it --name vpp-agent --privileged -e RETAIN_SUPERVISOR --rm ligato/vpp-agent
 ```
 
 ---
@@ -201,7 +201,7 @@ You can separately start VPP and the VPP agent.
 
 Open a terminal session:
 ```
-sudo docker exec -it vpp_agent bash
+sudo docker exec -it vpp-agent bash
 ```
 
 ---
@@ -229,7 +229,7 @@ vpp unix { interactive } plugins { plugin dpdk_plugin.so { disable } }
 
 Open a terminal session:
 ```
-sudo docker exec -it vpp_agent bash
+sudo docker exec -it vpp-agent bash
 ```
 
 Start the VPP agent:
@@ -354,7 +354,7 @@ The [cmd/ folder](https://github.com/ligato/vpp-agent/tree/master/cmd) contains 
 <br></br>
 - **vpp-agent** - default off-the-shelf VPP agent executable without app or extenstion plugins. Bundled with off-the-shelf VPP.
 <br></br>
-- **vpp-agent-init** - VPP agent init container structered as a generic agent. 
+- **vpp-agent-init** - VPP agent init container structured as a generic agent. 
 
 
 ---
@@ -466,18 +466,18 @@ docker pull ligato/dev-vpp-agent-arm64
 
 Start Production Image
 ```json
-docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent-arm64
+docker run -it --rm --name vpp-agent-arm64 -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent-arm64
 ```
 Start Development Image
 ```json
-docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/dev-vpp-agent-arm64
+docker run -it --rm --name dev-vpp-agent-64 -p 5002:5002 -p 9191:9191 --privileged ligato/dev-vpp-agent-arm64
 ```
 
 ---
 
 Check the status using [agentctl][agentctl]:
 ```json
-docker exec -it vpp-agent agentctl status
+docker exec -it vpp-agent-arm64 agentctl status
 ```
 ---
 
