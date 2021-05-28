@@ -28,7 +28,7 @@ COMMANDS
   
 ## GoVPPMux Plugin
 
-The GoVPPMux plugin allows a VPP plugin to talk to VPP through its own dedicated communication channel.  using connection multiplexing.
+The GoVPPMux plugin allows a VPP plugin to talk to VPP through its own dedicated communication channel using connection multiplexing.
 
 A VPP plugin interacts with VPP by asking the GoVPPMux plugin to obtain a communication channel. Behind the scenes, all channels share the same connection between the GoVPP core, and the VPP process. Plugin initialization creates the channel-to-multiplexed connection using the GoVPP core function. 
 
