@@ -109,7 +109,7 @@ You can employ any mix of cn-infra plugins, VPP agent plugins and custom plugins
 _** Ligato makes it easy to develop a VPP agent for programming a VPP data plane.**_
 
 You will hear the term, VPP agent, associated with Ligato. It describes a software agent that configures and
-monitors a VPP data plane. This software agent can include infrastructure and custom plugins too as well. 
+monitors a VPP data plane. This software agent can include infrastructure and custom plugins as well. 
 
 VPP agent features include:
 
