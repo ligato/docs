@@ -9,7 +9,7 @@ This section provides a quickstart guide for the VPP agent. You will learn how t
 
 --- 
 
-## Environment and Steps
+## Environment and steps
 
 The figure below illustrates your quickstart guide environment.
 
@@ -57,7 +57,7 @@ docker exec
 
 ---
 
-## 2. Download Image
+## 2. Download image
 
 Open a new terminal session. Pull the VPP agent image from [DockerHub][dockerhub]. This image contains the VPP agent and a compatible VPP data plane. 
 
@@ -144,7 +144,7 @@ As this point, you have installed and started your etcd container, and etcdctl i
 
 ---
 
-## 4. Start VPP Agent
+## 4. Start VPP agent
 
 Open a new terminal session. Start the VPP agent in a new docker container. Note `vpp-agent` is the name of the docker container. 
 ```
@@ -169,7 +169,7 @@ Now you have the etcd and VPP agent containers running and ready to use.
 
 ---
 
-## 5. Managing the VPP Agent
+## 5. Managing the VPP agent
 
 You can interact with the VPP agent using the following:
  
@@ -693,7 +693,7 @@ docker ps -f name=vpp-agent
 docker stop <XX> ; with <XX> equals first to 2 characters of CONTAINER ID from the docker ps command
 ```
 3. Restart the VPP agent container with different port numbers:
-``
+```
 docker run -it --rm --name vpp-agent -p 5002:5002 -p 9191:9191 --privileged ligato/vpp-agent
 ```
     
