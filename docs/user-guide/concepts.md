@@ -4,13 +4,13 @@ This section describes Ligato concepts.
 
 ---
 
-## What is a Model?
+## What is a model?
 
 The model represents an abstraction of a configuration object. You manage configuration objects through northbound (NB) APIs exposed by your Ligao agent. Ligato uses models to generate a complete __key__ associated with a value for the objec. You can store object key values in a Key Value (KV) data store.
 
 ---
 
-### Model Components
+### Model components
 
 - Model spec
 - Protobuf message (`proto.Message`)
@@ -18,7 +18,7 @@ The model represents an abstraction of a configuration object. You manage config
 
 ---
 
-### Model Specification
+### Model specification
 
 The model specification (spec) describes the model using the module, version and type fields:
 
@@ -30,7 +30,7 @@ Ligato defines model specs in the `models.go` files located in the VPP agent rep
 
 ---
 
-### Key Prefix
+### Key prefix
 
 The three fields of the `model spec` form a key prefix:
 ```
@@ -171,7 +171,7 @@ The figure below shows the relationship between a model, model spec, and proto.M
 
 In addition, the model, in conjunction with the proto.Message and model spec, register with a model registry. This simplifies access to the model keyspace from other parts of the system such as the KV Scheduler. 
 
-Note that KV Descriptors describe objects to the KV Scheduler. Both are covered later in this section. 
+Note that KV Descriptors describe objects to the KV Scheduler. Both are covered in the [KV scheduler and descriptors](#kv-scheduler-and-descriptors) explanation later in this section. 
 
 ![model-proto-KV-store](../img/user-guide/model-proto-KVS.svg)
 <p style="text-align: center; font-weight: bold">Model spec and proto.Message relationship</p>
@@ -193,7 +193,7 @@ You can find the proto files containing the proto.Message definitions in the [VP
 
 ---
 
-### Name Templates
+### Name templates
 
 You can generate keys with custom identifiers using name templates.
 
@@ -201,10 +201,10 @@ For more details on name templates, see [Custom Templates][developer-guide-custo
 
 ---
 
-## Key-Value Data Store
+## Key-Value data store
 
 !!! Note
-    KV database, KVDB, KV store and KV data store are terms used to define a data store or database of structured data objects. We will use the term `KV data store` in the documentation. Agentctl commands, code, and code examples use `KVDB`.
+    KV database, KVDB, KV store and KV data store are terms that define a data store or database of structured data objects. We will use the term `KV data store` in the documentation. Agentctl commands, code and code examples use `KVDB`.
     
  
 You can employ an external KV data store for stateless CNF configuration management. The following lists several features you might find useful: 
@@ -237,7 +237,7 @@ You can employ an external KV data store for stateless CNF configuration managem
  
 ---
 
-### Keys and Microservice Label
+### Keys and microservice label
 
 !!! Note
     To distinguish between the key prefix and key definitions described above, we will refer to the `/vnf-agent/<microservice label>/` value as the `microservice-label-prefix`
@@ -314,11 +314,11 @@ If the key is [registered](../developer-guide/model-registration.md), the VPP ag
 VPP agents can receive configuration data from multiple sources such as a KV data store or gRPC client. An [orchestrator plugin][orchestrator plugin] synchronizes and resolves any conflicts from the individual sources. This presents a "single configuration source" to VPP agent plugins.
 
 !!! Note
-    The VPP agent _does not require_ a KV data store. You can convey configuration data using gRPC, agentctl, Client v2, CLI or customized methods. However, you remove the burden of handling state by using a KV data store to store and distribute configuration data to your CNFs.
+    The VPP agent _does not require_ a KV data store. You can convey configuration data using gRPC, REST, agentctl, Client v2, CLI or customized methods. However, you remove the burden of handling state by using a KV data store to store and distribute configuration data to your CNFs.
 
 ---
 
-### Supported KV Data Stores
+### Supported KV data stores
 
 !!! Note
     Connector is a type of plugin providing connectivity to an external entity such as a KV data store. The etcd plugin is considered a connector.
@@ -420,7 +420,7 @@ The redis conf file can be passed to the VPP agent using the flag `--redis-confi
 
 Reference: [Consul connector][consul-plugin]
 
-[Consul](https://www.consul.io/) is a service mesh solution that offers a full featured control plane with service discovery, configuration, and segmentation functionality. The Consul connector plugin provides access to a Consul KV data store. The location of the [Consul conf file](../user-guide/config-files.md#consul) is defined using the `--consul-config` flag or set using the `CONSUL_CONFIG` environment variable.
+[Consul](https://www.consul.io/) is a service mesh solution that offers a full featured control plane with service discovery, configuration and segmentation functionality. The Consul connector plugin provides access to a Consul KV data store. The location of the [Consul conf file](../user-guide/config-files.md#consul) is defined using the `--consul-config` flag or set using the `CONSUL_CONFIG` environment variable.
 
 ---
 
@@ -436,15 +436,15 @@ Reference: [Bolt connector](https://github.com/ligato/cn-infra/tree/master/db/ke
 
 Reference: [fileDB connector][filedb-plugin]
 
-fileDB is unique in that it uses the host OS filesystem as a database. The key value configuration is stored in text files in a defined path. The fileDB connector works like any other KV data store connector. It reacts to data change events in real time and supports all KV data store features including resync, versioning, and microservice labels.
+fileDB uses the host OS filesystem as a database. The key value configuration is stored in text files accessible through a defined path. The fileDB connector works like any other KV data store connector. It reacts to data change events in real time and supports all KV data store features including resync, versioning and microservice labels.
 
-fileDB is not a process so it does not need to be started. The VPP agent only requires the correct permissions to access configuration files, and write access if the status is published.
+fileDB is not a process so it does not need to be started. The VPP agent only requires the correct permissions to access configuration files. If status data is published, you will need write access. 
 
 fileDB requires the [conf file](../user-guide/config-files.md#filedb) to load using the `--filedb-config=<path>` flag. However, the absence of the conf file does not prevent the VPP agent from starting, since the conf file data can be created and consumed at a later point in time.
 
 ---
 
-### KV Data Store in a Plugin
+### KV data store in a plugin
 
 You can implement a plugin that uses a KV data store for publishing or watching data. Begin with the following:
 
@@ -519,7 +519,7 @@ func (p *Plugin) watchEvents() {
 }
 ```
 
-It is a good practice to start the event watcher before watcher registration. 
+It is good practice to start the event watcher before watcher registration. 
 
 ---
 
@@ -529,7 +529,7 @@ The `KeyProtoValWriter` object defines a method, `Put(<key>, <value>, <variadic-
 
 ---
 
-## KV Scheduler & Descriptors
+## KV scheduler and descriptors
 
 Successfully programming the VPP data plane can be a challenge. Dependencies between configuration items will exist. You must adhere to a strict order of the programming actions, using either VPP CLI or VPP binary API calls. 
 
@@ -597,15 +597,15 @@ agentctl dump all
 
 ## Resync
 
-Resync is one of the major features available with the VPP agent. It ensures consistency between the configuration provided from an external source, internal VPP agent state, and the actual VPP state. The automatic resync fetches all configuration data from a connected persistent data store such as  etcd, and reflects any changes to VPP. 
+Resync is one of the major features available with the VPP agent. It ensures consistency between the configuration provided from an external source, internal VPP agent state and the actual VPP state. The automatic resync fetches all configuration data from a connected persistent data store such as etcd, and reflects any changes to VPP. 
 
-The resync is initiated by default, upon VPP agent startup. In addition, it can be automatically launched on events such as VPP restart or reconnection to the data base. 
+The resync is initiated by default upon VPP agent startup. In addition, it can be automatically launched on events such as VPP restart or reconnection to the data base. 
 
 ---
 
-## VPP Configuration Order
+## VPP configuration order
 
-Configuring VPP via a CLI is challenging. The CLI commands mostly reflect low-level binary API calls and must be executed in a specific order for the configuration to succeed. In some cases, a configuration item (e.g. interface) could depend on another separate configuration item. In other cases, a specific sequence of commands, each handling an individual configuration item, must be completed before the system is brought up to the desired state. As networks scale and the number of configuration items grows, it becomes vastly more difficult to ensure correct network configuration deployment and operation. 
+Configuring VPP via a CLI is challenging. The CLI commands mostly reflect low-level binary API calls and must be executed in a specific order for the configuration to succeed. In some cases, a configuration item (e.g. interface) could depend on another separate configuration item. In other cases, a specific sequence of commands, each handling an individual configuration item, must be completed before the system achieves the desired state. As networks scale and the number of configuration items grows, it becomes vastly more difficult to ensure correct network configuration deployment and operation. 
 
 The VPP agent addresses this challenge by providing a mechanism to sort out dependencies for the entire configuration, all accessible from a northbound (NB) protobuf API. Configuration items use logical names instead of software indexes to ensure consistent configuration setup, even across process runtimes. For example, interfaces can be referenced before they are even created because the user defines each with a logical name.  
 
@@ -621,11 +621,11 @@ Another important feature is the ability to retrieve existing VPP configuration.
 
 ---
 
-### VPP Configuration Order Examples    
+### VPP configuration order examples    
 
 Two examples below illustrate VPP configuration using the VPP CLI and the VPP agent KV Scheduler. 
 
-- **Using VPP CLI** configures an interface, bridge domain and L2FIB in that order. Then show what happens when you remove the interface and bridge domain.
+- **Using VPP CLI** configures an interface, bridge domain and L2FIB in that order. Then you will see what happens when you remove the interface and bridge domain.
 <br></br>
 - **Using the KV Scheduler** configures the same information through the VPP agent but in reverse order: L2FIB, bridge domain and interface. Then you can see what happens when you remove the bridge interface. 
 
@@ -639,9 +639,9 @@ You will observe how the KV Scheduler choreographs and sequences the series of a
 
 ### Using VPP CLI
 
-You can define VPP data plane interfaces using the VPP CLI. After interface creation, VPP generates an index, that serves as a reference for other configuration items that use an interface. 
+You can define VPP data plane interfaces using the VPP CLI. After interface creation, VPP generates an index that serves as a reference for other configuration items that use an interface. 
 
-Examples of configuration items that depend on interfaces include bridge domains, routes, and ARP entries. Other items, such as FIBs, may have more complicated dependencies involving additional configuration items.
+Examples of configuration items that depend on interfaces include bridge domains, routes and ARP entries. Other items, such as FIBs, may have more complicated dependencies involving additional configuration items.
 
 !!! Note
     Use `agentctl vpp cli` to run VPP CLI commands. If for some reason this fails, you can access the VPP CLI console using `docker exec -it vpp-agent vppctl -s localhost:5002`. 
@@ -755,7 +755,7 @@ This is where the KV Scheduler comes into play.
 
 ---
 
-### Using the KV Scheduler
+### Using the KV scheduler
 
 The VPP agent exposes a northbound (NB) API definition for every supported configuration item. The NB configuration of an interface through an API creates the interface, sets state, assigns MAC address and IP addresses and any other parameter values as needed.
 
@@ -907,7 +907,7 @@ For more information, refer to [KV Scheduler][KVs].
 
 ---
 
-## VPP Multi-Version Support
+## VPP multi-version support
 
 The VPP agent depends on the version of the VPP binary API to send and receive configuration message types. Over time, the VPP binary API will add new binary calls, and modify or remove existing ones. The VPP agent must ensure VPP binary API changes do not introduce incompatibilities with VPP.
 
@@ -917,7 +917,7 @@ The VPP agent is tightly bound to the version of VPP. For this reason, the VPP a
 
 ---
 
-### VPP Compatibility
+### VPP compatibility
 
 Ligato generates the VPP agent bindings from VPP JSON API definitions. You can find those definitions in the `/usr/share/vpp/api` path. You must perform a complete VPP installation to generate new definitions. 
 
@@ -968,7 +968,7 @@ The response contains a `Retval` field consisting of one of the following:
  
  - `0` if the API call is successful.
  <br></br>
- - Numerical index of a VPP-defined error message, if the API call is unsuccessful. 
+ - Numerical index of a VPP-defined error message if the API call is unsuccessful. 
  
 You can have other fields present with information generated from VPP. An example is the `SwIfIndex` of the created interface.
 
@@ -1004,7 +1004,7 @@ Some code duplication occurs across `vppcalls`. This is a consequence of trivial
 
 ## Client v2
 
-Client v2 defines an API for configuration management of VPP and Linux plugins. It abstracts, from you, the configuration transport details between the APIs and plugins. 
+Client v2 defines an API for configuration management of VPP and Linux plugins. It abstracts the configuration transport details between the APIs and plugins. 
 
 The API calls are split into two groups:
 
@@ -1058,15 +1058,15 @@ To learn more about plugins, see the following:
 
 ---
    
-### Plugin Conf Files
+### Plugin conf files
 
 Some plugins require external information to ensure proper behavior. An example is the etcd connector plugin that needs to communicate with an external etcd server to retrieve configuration data. By default, the plugin attempts to connect to a default IP address:port. If connectivity to a different IP address:port is desired, this information must be conveyed to the plugin.
 
-For that purpose, VPP agent plugins support [conf files][config-files]. A plugin conf file contains plugin-specific fields, that you can modify, to affect changes in plugin behavior.
+For that purpose, VPP agent plugins support [conf files][config-files]. A plugin conf file contains plugin-specific fields that you can modify to affect changes in plugin behavior.
 
 ---
 
-### Conf File Definition
+### Conf file definition
 
 You can pass configuration data to the plugin with VPP agent flags. The [`vpp-agent -h`](config-files.md#vpp-agent--h-command) command prints the list of all plugins and their corresponding conf file command flags and env variables.
 

@@ -8,7 +8,7 @@ This section shows you how to prepare and run an environment supporting the VPP 
 
 ---
 
-## Set Up Your Environment
+## Set up your environment
 
 You have two options to set up your environment:
 
@@ -22,7 +22,7 @@ Pulling a pre-built docker image is the simplest option. The local build option 
 
 ---
 
-### Docker Image Pull
+### Docker image pull
 
 The docker image exists in two versions: 
 
@@ -86,7 +86,7 @@ docker pull ligato/dev-vpp-agent
 
 ---
 
-### Local Image Build
+### Local image build
 
 !!! Note
     Local image build steps described below use the Linux OS.
@@ -154,7 +154,7 @@ sudo docker run -it --name dev-vpp-agent --privileged -e RUN_VPP_DEBUG=y --rm li
 ---
 
 
-### Start the Image
+### Start the image
 
 !!! Note
     You cannot start VPP agent pre-built images unless you have fist installed and started an etcd or Kafka data store. See [Connect to a Key-Value Data Store](#connect-to-a-key-value-data-store) for more details.
@@ -191,7 +191,7 @@ sudo docker run -it --name vpp-agent --privileged -e RETAIN_SUPERVISOR --rm liga
 
 ---
 
-## Start VPP and the VPP Agent
+## Start VPP and the VPP agent
 
 You can separately start VPP and the VPP agent.
 
@@ -260,7 +260,7 @@ To learn more about VPP agent plugins, including how to build your own custom pl
 ---
 
 
-### Connect to a Key-Value Data Store
+### Connect to a key-value data store
 
 Ligato stores VPP agent configuration information in a [KV data store](concepts.md#key-value-data-store) as key-value pairs. The VPP agent uses the [etcd plugin](../plugins/db-plugins.md#etcd) to communicate with the etcd server. The VPP agent listens for configuration updates published by the KV data store. 
 
@@ -309,7 +309,7 @@ To review etcd plugin configuration options, see [etcd conf files](config-files.
 
 ---
 
-#### Start Kafka 
+#### Start kafka 
 
 Open a terminal session. Start Kafka in a docker container. If you don't have Kafka on your localhost, docker downloads it for you.  
 
@@ -359,7 +359,7 @@ The [cmd/ folder](https://github.com/ligato/vpp-agent/tree/master/cmd) contains 
 
 ---
 
-## Using Multiple VPP Agents
+## Using multiple VPP agents
 
 !!! Note
     Multiple VPP agents means multiple VPP agents talking to a single KV data store instance. [Multi-Version](../user-guide/concepts.md#multi-version) refers to the case where your VPP agent communicates with a specific version of VPP.
@@ -396,7 +396,7 @@ To learn more about shared memory prefixes, see [GoVPP mux plugin][govppmux-plug
 ---
 
 
-## Create Your First Configuration
+## Create your first configuration
 
 **Put configuration to the KV data store:**
 
@@ -434,7 +434,7 @@ To look over client v2 examples, see [examples](examples.md).
 
 ---
 
-## ARM64 Considerations
+## ARM64 considerations
 
 You can run the VPP agent on an ARM64 architecture. The procedures for VPP agent ARM64 mirror those outlined above for the AMD64 (x86_64) architecture. However, there are two exceptions: etcd and Kafka installation and startup. 
 
@@ -443,7 +443,7 @@ You can run the VPP agent on an ARM64 architecture. The procedures for VPP agent
 
 ---
     
-### ARM64 Docker Image Pull
+### ARM64 docker image pull
 
 Pull the pre-built ARM64 production image:
 ```json
@@ -457,7 +457,7 @@ docker pull ligato/dev-vpp-agent-arm64
 
 ---
 
-### Start VPP Agent ARM64
+### Start VPP agent ARM64
 
 !!! Note
     You cannot start VPP agent ARM64 pre-built images unless you have fist installed and started an etcd or Kafka data store. See [etcd ARM64](#etcd-arm64) and [Kafka ARM64](#kafka-arm64) for more details.
