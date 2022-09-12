@@ -94,7 +94,7 @@ For more details on the Log API, see [infra/logging/log_api.go](https://github.c
 !!! Note
     The Ligato documentation uses the term, __conf file__, to refer to a plugin's config or configuration file. The contents of this file contain parameters defining the plugin's behavior at startup. For more information on conf files, see the [Conf Files](../user-guide/config-files.md) section of the _User Guide_. 
 
-Now, you can load the plugin's conf file. By default, the name of the configuration file is derived from the plugin name with an extension of `.conf`.
+Now you can load the plugin's conf file. By default, the name of the configuration file is derived from the plugin name with an extension of `.conf`.
 
 The conf file name of your HelloWorld plugin is `helloworld.conf`.
 
