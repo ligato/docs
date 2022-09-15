@@ -8,6 +8,12 @@ This section shows you how to prepare and run an environment supporting the VPP 
 
 ---
 
+## Supported VPP versions
+
+The VPP agent supports different VPP versions. You can find out about the compatible VPP versions by referring to the [VPP agent release notes](https://github.com/ligato/vpp-agent/releases) and the [vpp.env environment variable.](https://github.com/ligato/vpp-agent/blob/master/vpp.env) 
+
+---
+
 ## Set up your environment
 
 You have two options to set up your environment:
